@@ -1,0 +1,247 @@
+Share a 100 ms JPEG cache and coalesce stale refreshes, using ETags and failing closed by clearing cached frames.
+Give /screen.jpg independent rate buckets and exclude it from boundary-wide budgets.
+Transcode off-loop with Pillow and poll the browser every 100 ms.
+```python
+"""Temporary public viewer relay. No operator routes, credentials, or generic proxy."""
+import argparse, asyncio, collections, io, re, time
+from pathlib import Path
+import aiohttp
+from aiohttp import web
+from PIL import Image
+ORIGIN = 'https://subzerone.live'
+SEGMENT = re.compile(r'^sub01-[0-9]{8}-[0-9]{6}-[0-9]+\.ts$')
+HEADERS = {'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}
+
+def chat_ack_response(data):
+    ok = data.get('ok') is True
+    reason = str(data.get('reason') or '')
+    if ok: code, why, status = 'received', 'Message received.', 200
+    elif reason == 'duplicate': code, why, status = 'duplicate', 'This message was already received. Try a different message.', 409
+    elif reason.startswith('one message every ') or 'busy' in reason.lower():
+        code, why, status = 'rate_limited', 'Chat is busy. Please wait 10 seconds and try again.', 429
+    else: code, why, status = 'filtered', 'Message rejected by the chat filter.', 400
+    return web.json_response({'ok':ok, 'code':code, 'why':why}, status=status)
+
+def create_app(root, stop_file, token_file=None):
+    root = Path(root).resolve()
+    messages = collections.deque(maxlen=30)
+    rates = collections.OrderedDict()
+    global_chat = collections.deque()
+    slots = asyncio.Semaphore(8)
+    screen_task = None
+    screen_jpg_task = None
+    screen_jpg_cache = None
+    def limited(ip, kind, period, maximum):
+        now = time.monotonic(); key = (ip, kind)
+        q = rates.setdefault(key, collections.deque()); rates.move_to_end(key)
+        while q and q[0] < now-period: q.popleft()
+        while len(rates) > 2048: rates.popitem(last=False)
+        if len(q) >= maximum: return True
+        q.append(now); return False
+    @web.middleware
+    async def boundary(request, handler):
+        if request.headers.get('Origin') not in (None, ORIGIN):
+            return web.Response(status=403, text='Origin refused')
+        ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
+        if request.path != '/screen.jpg' and (limited(ip, 'all', 10, 120) or limited('global', 'all', 1, 100)):
+            return web.Response(status=429, text='Please wait', headers=HEADERS)
+        try: response = await handler(request)
+        except web.HTTPException as exc: response = web.Response(status=exc.status, text='Unavailable')
+        response.headers.update(HEADERS)
+        return response
+    def playlist():
+        p = root/'live.m3u8'
+        if not p.is_file() or time.time()-p.stat().st_mtime > 20: return None, set()
+        raw = p.read_text()
+        if len(raw) > 65536: return None, set()
+        names = {line.strip() for line in raw.splitlines() if line.strip() and not line.startswith('#')}
+        if not names or not all(SEGMENT.fullmatch(n) for n in names): return None, set()
+        return raw, names
+    async def media(request):
+        if '%' in request.raw_path or request.query_string: raise web.HTTPNotFound()
+        name = request.match_info['name']; raw, names = playlist()
+        if raw is None: return web.Response(status=503, text='Stream offline')
+        if name == 'live.m3u8': return web.Response(text=raw, content_type='application/vnd.apple.mpegurl')
+        # Only currently referenced media; neither arbitrary files nor paths are accepted.
+        if name not in names or not SEGMENT.fullmatch(name): raise web.HTTPNotFound()
+        p = root/name
+        if p.is_symlink() or p.resolve().parent != root or not p.is_file(): raise web.HTTPNotFound()
+        if p.stat().st_size > 32*1024*1024: raise web.HTTPServiceUnavailable()
+        async with slots:
+            data = await asyncio.to_thread(p.read_bytes)
+        return web.Response(body=data, content_type='video/mp2t')
+    async def capture_screen():
+        try:
+            token = Path(token_file).read_text().strip()
+            async with asyncio.timeout(3):
+                async with aiohttp.ClientSession() as client:
+                    async with client.get('http://127.0.0.1:8838/pc/frame.png',
+                            headers={'X-Admin-Token':token}, allow_redirects=False) as r:
+                        if r.status != 200 or r.content_type != 'image/png': raise web.HTTPServiceUnavailable()
+                        data = bytearray()
+                        async for chunk in r.content.iter_chunked(65536):
+                            data.extend(chunk)
+                            if len(data) > 4*1024*1024: raise web.HTTPServiceUnavailable()
+                        if not data.startswith(b'\x89PNG\r\n\x1a\n'): raise web.HTTPServiceUnavailable()
+                        return bytes(data)
+        except (TimeoutError, aiohttp.ClientError, OSError, ValueError):
+            raise web.HTTPServiceUnavailable()
+    def transcode_screen(data):
+        with Image.open(io.BytesIO(data)) as source:
+            image = source.convert('RGB').resize((960, 540), Image.BILINEAR)
+            output = io.BytesIO()
+            image.save(output, format='JPEG', quality=70)
+            return output.getvalue()
+    async def capture_screen_jpg():
+        nonlocal screen_jpg_cache
+        cached = screen_jpg_cache
+        try:
+            token = Path(token_file).read_text().strip()
+            headers = {'X-Admin-Token':token}
+            if cached is not None and cached[1]: headers['If-None-Match'] = cached[1]
+            async with asyncio.timeout(3):
+                async with aiohttp.ClientSession() as client:
+                    async with client.get('http://127.0.0.1:8838/pc/frame.png',
+                            headers=headers, allow_redirects=False) as r:
+                        if r.status == 304 and cached is not None:
+                            screen_jpg_cache = (cached[0], cached[1], time.monotonic())
+                            return cached[0]
+                        if r.status != 200 or r.content_type != 'image/png': raise web.HTTPServiceUnavailable()
+                        data = bytearray()
+                        async for chunk in r.content.iter_chunked(65536):
+                            data.extend(chunk)
+                            if len(data) > 4*1024*1024: raise web.HTTPServiceUnavailable()
+                        if not data.startswith(b'\x89PNG\r\n\x1a\n'): raise web.HTTPServiceUnavailable()
+                        etag = r.headers.get('ETag')
+            jpeg = await asyncio.to_thread(transcode_screen, bytes(data))
+            screen_jpg_cache = (jpeg, etag, time.monotonic())
+            return jpeg
+        except Exception:
+            screen_jpg_cache = None
+            raise web.HTTPServiceUnavailable() from None
+    def discard_capture(task):
+        nonlocal screen_task
+        if screen_task is task: screen_task = None
+        if not task.cancelled(): task.exception()
+    def discard_jpg_capture(task):
+        nonlocal screen_jpg_task
+        if screen_jpg_task is task: screen_jpg_task = None
+        if not task.cancelled(): task.exception()
+    async def screen(request):
+        nonlocal screen_task
+        if request.query_string or token_file is None: raise web.HTTPNotFound()
+        ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
+        if limited(ip, 'screen', 10, 30) or limited('global', 'screen', 1, 15): raise web.HTTPTooManyRequests()
+        if screen_task is None or screen_task.done():
+            screen_task = asyncio.create_task(capture_screen())
+            screen_task.add_done_callback(discard_capture)
+        task = screen_task
+        data = await asyncio.shield(task)
+        return web.Response(body=data,content_type='image/png')
+    async def screen_jpg(request):
+        nonlocal screen_jpg_task
+        if request.query_string or token_file is None: raise web.HTTPNotFound()
+        ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
+        if limited(ip, 'screenjpg', 10, 120) or limited('global', 'screenjpg', 1, 300): raise web.HTTPTooManyRequests()
+        if screen_jpg_cache is not None and time.monotonic()-screen_jpg_cache[2] < 0.1:
+            return web.Response(body=screen_jpg_cache[0], content_type='image/jpeg')
+        if screen_jpg_task is None or screen_jpg_task.done():
+            screen_jpg_task = asyncio.create_task(capture_screen_jpg())
+            screen_jpg_task.add_done_callback(discard_jpg_capture)
+        task = screen_jpg_task
+        data = await asyncio.shield(task)
+        return web.Response(body=data, content_type='image/jpeg')
+    async def status(request):
+        raw, _ = playlist()
+        return web.json_response({'online':raw is not None, 'agent':'paused' if Path(stop_file).exists() else 'checks', 'messages':list(messages)})
+    async def chat(request):
+        if request.headers.get('Origin') != ORIGIN or request.content_type != 'text/plain': raise web.HTTPForbidden()
+        ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
+        now = time.monotonic()
+        while global_chat and global_chat[0] < now-10: global_chat.popleft()
+        if len(global_chat) >= 20 or limited(ip, 'chat', 12, 1): return web.json_response({'ok':False,'code':'rate_limited','why':'Please wait a few seconds.'}, status=429)
+        text = (await request.text()).strip()
+        if not 1 <= len(text) <= 280 or any(ord(c)<32 and c not in '\n\t' for c in text): raise web.HTTPBadRequest()
+        global_chat.append(now)
+        try:
+            async with asyncio.timeout(12):
+                async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(local_addr=('127.0.0.2',0))) as client:
+                    async with client.ws_connect('http://127.0.0.1:8830/ws', max_msg_size=2*1024*1024) as ws:
+                        await ws.send_json({'type':'chat','nick':'viewer','text':text})
+                        async for msg in ws:
+                            if msg.type == aiohttp.WSMsgType.TEXT:
+                                data = msg.json()
+                                if data.get('type') == 'chat_ack':
+                                    ok = data.get('ok') is True
+                                    if ok: messages.append({'text':text,'at':int(time.time())})
+                                    return chat_ack_response(data)
+        except (TimeoutError, aiohttp.ClientError, ValueError): pass
+        return web.json_response({'ok':False,'code':'offline','why':'Chat unavailable. Please try again later.'}, status=503)
+    app = web.Application(client_max_size=2048, middlewares=[boundary])
+    app.router.add_get('/hls/{name}', media, allow_head=False)
+    app.router.add_get('/screen.png', screen, allow_head=False)
+    app.router.add_get('/screen.jpg', screen_jpg, allow_head=False)
+    app.router.add_get('/status', status, allow_head=False)
+    app.router.add_post('/chat', chat)
+    return app
+
+if __name__ == '__main__':
+    p=argparse.ArgumentParser();p.add_argument('--hls', required=True);p.add_argument('--stop',required=True);p.add_argument('--token-file');p.add_argument('--port',type=int,default=8841);a=p.parse_args()
+    web.run_app(create_app(a.hls,a.stop,a.token_file),host='127.0.0.1',port=a.port,access_log=None)
+```
+```javascript
+async function pollPC(){const generation=pcGeneration;let candidate=null;try{if(document.hidden||!navigator.onLine||!base){clearPC('Screen unavailable');return;}pcAbort=new AbortController();const controller=pcAbort,timer=setTimeout(()=>controller.abort(),3000);try{const response=await fetch(base+'/screen.jpg',{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error();const blob=await response.blob();candidate=URL.createObjectURL(blob);const next=new Image();next.src=candidate;await next.decode();if(generation!==pcGeneration||document.hidden||!navigator.onLine)return;const old=pcURL;pcURL=candidate;candidate=null;pcFrame.src=pcURL;pcFrame.hidden=false;pcState.textContent='';if(old)URL.revokeObjectURL(old);clearTimeout(pcExpiry);pcExpiry=setTimeout(()=>clearPC('Screen unavailable'),3000);}finally{clearTimeout(timer);}}catch{if(generation===pcGeneration)clearPC('Screen hidden or unavailable');}finally{if(candidate)URL.revokeObjectURL(candidate);pcAbort=null;setTimeout(pollPC,100);}}
+```
+```python
+import asyncio,io,tempfile,unittest
+from pathlib import Path
+from unittest.mock import patch
+from aiohttp.test_utils import TestClient,TestServer
+from PIL import Image
+from relay import create_app
+class Response:
+ def __init__(self,status=200,data=b'',headers=None):self.status=status;self.content_type='image/png';self.data=data;self.headers=headers or {};self.content=self
+ async def __aenter__(self):return self
+ async def __aexit__(self,*a):pass
+ async def iter_chunked(self,size):
+  for i in range(0,len(self.data),size):yield self.data[i:i+size]
+class ScreenJpgTests(unittest.IsolatedAsyncioTestCase):
+ async def asyncSetUp(self):
+  self.tmp=tempfile.TemporaryDirectory();p=Path(self.tmp.name);(p/'token').write_text('private-test-token')
+  output=io.BytesIO();Image.new('RGB',(1280,720),(20,40,60)).save(output,format='PNG');self.png=output.getvalue()
+  self.calls=[]
+  self.client=TestClient(TestServer(create_app(p,p/'STOP',p/'token')));await self.client.start_server()
+ async def asyncTearDown(self):await self.client.close();self.tmp.cleanup()
+ def upstream(self,*responses):
+  class Client:
+   async def __aenter__(self):return self
+   async def __aexit__(self,*a):pass
+   def get(c,url,**kw):
+    self.assertEqual(url,'http://127.0.0.1:8838/pc/frame.png');self.assertFalse(kw['allow_redirects']);self.assertEqual(kw['headers']['X-Admin-Token'],'private-test-token')
+    self.calls.append(kw['headers']);return responses[len(self.calls)-1]
+  return patch('relay.aiohttp.ClientSession',Client)
+ async def test_jpeg_served_and_cached(self):
+  with self.upstream(Response(data=self.png,headers={'ETag':'frame-1'})):
+   first=await self.client.get('/screen.jpg');self.assertEqual(first.status,200);self.assertEqual(first.content_type,'image/jpeg');body=await first.read()
+   second=await self.client.get('/screen.jpg');self.assertEqual(second.status,200);self.assertEqual(await second.read(),body)
+  self.assertEqual(len(self.calls),1);self.assertTrue(body.startswith(b'\xff\xd8'))
+  with Image.open(io.BytesIO(body)) as image:self.assertEqual(image.size,(960,540))
+ async def test_304_reuses_cache(self):
+  with self.upstream(Response(data=self.png,headers={'ETag':'frame-1'}),Response(status=304)):
+   first=await self.client.get('/screen.jpg');body=await first.read();await asyncio.sleep(0.11)
+   second=await self.client.get('/screen.jpg');self.assertEqual(second.status,200);self.assertEqual(await second.read(),body)
+   third=await self.client.get('/screen.jpg');self.assertEqual(third.status,200);self.assertEqual(await third.read(),body)
+  self.assertEqual(len(self.calls),2);self.assertEqual(self.calls[1]['If-None-Match'],'frame-1')
+ async def test_privacy_drops_cache(self):
+  with self.upstream(Response(data=self.png),Response(status=409),Response(status=409)):
+   self.assertEqual((await self.client.get('/screen.jpg')).status,200);await asyncio.sleep(0.11)
+   self.assertEqual((await self.client.get('/screen.jpg')).status,503)
+   self.assertEqual((await self.client.get('/screen.jpg')).status,503)
+  self.assertEqual(len(self.calls),3)
+ async def test_query_string_not_found(self):
+  r=await self.client.get('/screen.jpg?x=1');self.assertEqual(r.status,404);self.assertEqual(self.calls,[])
+ async def test_all_budget_not_consumed(self):
+  with self.upstream(Response(data=self.png)):
+   for _ in range(120):self.assertEqual((await self.client.get('/screen.jpg')).status,200)
+  self.assertEqual((await self.client.get('/status')).status,200);self.assertEqual(len(self.calls),1)
+```

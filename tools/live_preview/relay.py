@@ -1,8 +1,9 @@
 """Temporary public viewer relay. No operator routes, credentials, or generic proxy."""
-import argparse, asyncio, collections, re, time
+import argparse, asyncio, collections, io, re, time
 from pathlib import Path
 import aiohttp
 from aiohttp import web
+from PIL import Image
 ORIGIN = 'https://subzerone.live'
 SEGMENT = re.compile(r'^sub01-[0-9]{8}-[0-9]{6}-[0-9]+\.ts$')
 HEADERS = {'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}
@@ -24,6 +25,8 @@ def create_app(root, stop_file, token_file=None):
     global_chat = collections.deque()
     slots = asyncio.Semaphore(8)
     screen_task = None
+    screen_jpg_task = None
+    screen_jpg_cache = None
     def limited(ip, kind, period, maximum):
         now = time.monotonic(); key = (ip, kind)
         q = rates.setdefault(key, collections.deque()); rates.move_to_end(key)
@@ -36,7 +39,7 @@ def create_app(root, stop_file, token_file=None):
         if request.headers.get('Origin') not in (None, ORIGIN):
             return web.Response(status=403, text='Origin refused')
         ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
-        if limited(ip, 'all', 10, 120) or limited('global', 'all', 1, 100):
+        if request.path != '/screen.jpg' and (limited(ip, 'all', 10, 120) or limited('global', 'all', 1, 100)):
             return web.Response(status=429, text='Please wait', headers=HEADERS)
         try: response = await handler(request)
         except web.HTTPException as exc: response = web.Response(status=exc.status, text='Unavailable')
@@ -79,9 +82,46 @@ def create_app(root, stop_file, token_file=None):
                         return bytes(data)
         except (TimeoutError, aiohttp.ClientError, OSError, ValueError):
             raise web.HTTPServiceUnavailable()
+    def transcode_screen(data):
+        with Image.open(io.BytesIO(data)) as source:
+            image = source.convert('RGB').resize((960, 540), Image.BILINEAR)
+            output = io.BytesIO()
+            image.save(output, format='JPEG', quality=70)
+            return output.getvalue()
+    async def capture_screen_jpg():
+        nonlocal screen_jpg_cache
+        cached = screen_jpg_cache
+        try:
+            token = Path(token_file).read_text().strip()
+            headers = {'X-Admin-Token':token}
+            if cached is not None and cached[1]: headers['If-None-Match'] = cached[1]
+            async with asyncio.timeout(3):
+                async with aiohttp.ClientSession() as client:
+                    async with client.get('http://127.0.0.1:8838/pc/frame.png',
+                            headers=headers, allow_redirects=False) as r:
+                        if r.status == 304 and cached is not None:
+                            screen_jpg_cache = (cached[0], cached[1], time.monotonic())
+                            return cached[0]
+                        if r.status != 200 or r.content_type != 'image/png': raise web.HTTPServiceUnavailable()
+                        data = bytearray()
+                        async for chunk in r.content.iter_chunked(65536):
+                            data.extend(chunk)
+                            if len(data) > 4*1024*1024: raise web.HTTPServiceUnavailable()
+                        if not data.startswith(b'\x89PNG\r\n\x1a\n'): raise web.HTTPServiceUnavailable()
+                        etag = r.headers.get('ETag')
+            jpeg = await asyncio.to_thread(transcode_screen, bytes(data))
+            screen_jpg_cache = (jpeg, etag, time.monotonic())
+            return jpeg
+        except Exception:
+            screen_jpg_cache = None
+            raise web.HTTPServiceUnavailable() from None
     def discard_capture(task):
         nonlocal screen_task
         if screen_task is task: screen_task = None
+        if not task.cancelled(): task.exception()
+    def discard_jpg_capture(task):
+        nonlocal screen_jpg_task
+        if screen_jpg_task is task: screen_jpg_task = None
         if not task.cancelled(): task.exception()
     async def screen(request):
         nonlocal screen_task
@@ -94,6 +134,19 @@ def create_app(root, stop_file, token_file=None):
         task = screen_task
         data = await asyncio.shield(task)
         return web.Response(body=data,content_type='image/png')
+    async def screen_jpg(request):
+        nonlocal screen_jpg_task
+        if request.query_string or token_file is None: raise web.HTTPNotFound()
+        ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
+        if limited(ip, 'screenjpg', 10, 120) or limited('global', 'screenjpg', 1, 300): raise web.HTTPTooManyRequests()
+        if screen_jpg_cache is not None and time.monotonic()-screen_jpg_cache[2] < 0.1:
+            return web.Response(body=screen_jpg_cache[0], content_type='image/jpeg')
+        if screen_jpg_task is None or screen_jpg_task.done():
+            screen_jpg_task = asyncio.create_task(capture_screen_jpg())
+            screen_jpg_task.add_done_callback(discard_jpg_capture)
+        task = screen_jpg_task
+        data = await asyncio.shield(task)
+        return web.Response(body=data, content_type='image/jpeg')
     async def status(request):
         raw, _ = playlist()
         return web.json_response({'online':raw is not None, 'agent':'paused' if Path(stop_file).exists() else 'checks', 'messages':list(messages)})
@@ -123,6 +176,7 @@ def create_app(root, stop_file, token_file=None):
     app = web.Application(client_max_size=2048, middlewares=[boundary])
     app.router.add_get('/hls/{name}', media, allow_head=False)
     app.router.add_get('/screen.png', screen, allow_head=False)
+    app.router.add_get('/screen.jpg', screen_jpg, allow_head=False)
     app.router.add_get('/status', status, allow_head=False)
     app.router.add_post('/chat', chat)
     return app
