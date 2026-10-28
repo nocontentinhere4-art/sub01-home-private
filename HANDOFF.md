@@ -236,6 +236,12 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
 - Chat context across viewers (0df4382, agent new29 19:15): vague follow-ups continue the last viewer search.
 - Railway: the 2nd `railway up` (site UI rebuild 3678126) was stuck in "Performing healthchecks"; logs requested.
 - 19:37 agent new30 (f5530be): a click is judged by its target region (sidebar clicks while a video plays).
+- 20:20-20:50 (owner awake): identity file written by the owner (sub714095@gmail.com, username Subzerone01; Chrome
+  already signed in to that Google account). Agent new31-new34 (ae4123a..fcadb81): chat may ask for sign-up/log-in
+  (logins on; secrets, inbox reading, account changes still refused); unchanged typing is a focus check; sign-ups
+  anywhere, plays whoever he likes (owner overruled the computer-only rule); a sign-up is finished through Gmail (link
+  or code); "open gmail and confirm..." navigates to Gmail. Verified live 20:50: lichess account Subzerone01 created,
+  confirmed by the Gmail link, game in progress.
 - 19:55 LOOP STOPPED: RunPod balance $15.39 at $1.26/h (below $15 ~20:13; owner rule). Stream delay flat (segment
   59.99 fps, no lag_restart since 18:43). Pending for the owner: top-up decision, run set_sub01_login.py for logins,
   Railway healthcheck logs. Runtime: director = 503c236 + live-layouts file; agent = new30 (git f5530be + the two
