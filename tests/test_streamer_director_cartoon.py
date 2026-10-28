@@ -266,9 +266,10 @@ def test_cartoon_wanted_without_the_input_shows_the_webcam_then_relaunches_with_
 
 
 def test_cartoon_tick_drops_a_gone_writer_at_once_and_adds_it_only_for_the_cartoon_layout(tmp_path):
+    """Restart switching: the input is added only for the cartoon layout. Live switching: see the next test."""
     async def body():
         now, seen = [1000.0], []
-        director, _ = base.make_director(tmp_path, [lambda: None], cartoon_fifo=FIFO)
+        director, _ = base.make_director(tmp_path, [lambda: None], cartoon_fifo=FIFO, layout_switch="restart")
         avail = [(False, "no process writes to the cartoon FIFO")]
         director._check_cartoon = lambda writer=True: (seen.append(writer), avail[0])[1]
         director._clock = lambda: now[0]
@@ -288,6 +289,24 @@ def test_cartoon_tick_drops_a_gone_writer_at_once_and_adds_it_only_for_the_carto
         plain, _ = base.make_director(tmp_path / "plain", [lambda: None])
         plain.proc = base.FakeProc(2)
         assert await plain.cartoon_tick() == "idle" and plain.cartoon_tap is None
+    base.run(body())
+
+
+def test_live_switching_adds_the_cartoon_input_as_soon_as_the_feeder_is_back(tmp_path):
+    """Owner 10-28: a clip aired as a grey screen. The run had started while the feeder was reattaching, so the cartoon
+    input came only with the clip (a relaunch that ate it). Live switching adds it once the writer is there."""
+    async def body():
+        now = [1000.0]
+        director, _ = base.make_director(tmp_path, [lambda: None], cartoon_fifo=FIFO, layout_switch="live")
+        director._check_cartoon = lambda writer=True: (True, "writer present")
+        director._clock = lambda: now[0]
+        director.proc, director.cartoon, director.started_mono = base.FakeProc(1), False, 1000.0
+        now[0] += 5
+        assert await director.cartoon_tick() == "wait"
+        assert await director.cartoon_tick() == "wait"                     # two good checks, but the run is 5 s old
+        now[0] += sd.CARTOON_MIN_UPTIME
+        assert await director.cartoon_tick() == "add" and director._restart_reason == "cartoon came online"
+        assert director.wanted() != "cartoon"
     base.run(body())
 
 

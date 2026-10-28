@@ -2336,9 +2336,11 @@ class Director:
         if self.cartoon and available and self.cartoon_tap.ident != self._cartoon_ident:
             available, reason = False, "cartoon FIFO was replaced (ffmpeg still reads the old one)"
         self.cartoon_now = available
+        # live switching (owner 10-28, a clip aired as a grey screen): a run that started before the feeder reattached is
+        # relaunched with the cartoon input once it is there, not when a clip is already playing (that relaunch ate it)
+        wanted = bool(layout_spec(self.wanted()).get("needs_cartoon")) or self.cfg.layout_switch == "live"
         action, self.cartoon_checks = cam2_decision(self.cartoon, available, self.cartoon_checks, uptime=self.uptime(),
-                                                    wanted=bool(layout_spec(self.wanted()).get("needs_cartoon")),
-                                                    min_uptime=CARTOON_MIN_UPTIME)
+                                                    wanted=wanted, min_uptime=CARTOON_MIN_UPTIME)
         if action == "drop":
             self.cartoon_reason = reason
             self.event("cartoon_changed", cartoon=False, reason=reason, run=self.prefix)

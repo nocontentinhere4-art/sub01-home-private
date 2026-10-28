@@ -185,11 +185,12 @@ def create_app(root, stop_file, token_file=None):
         text = (await request.text()).strip()
         if not 1 <= len(text) <= 280 or any(ord(c)<32 and c not in '\n\t' for c in text): raise web.HTTPBadRequest()
         global_chat.append(now)
-        if token_file and CARTOON.match(text):   # owner 10-28 "no filters": the agent moderates cartoon lines itself
-            try:
+        if token_file:   # owner 10-28 "no filter for the chat": every line goes straight to the agent (cartoon lines
+            try:         # to its cartoon moderation); the backend's filtered chat path is only the fallback
                 async with asyncio.timeout(8):
                     async with aiohttp.ClientSession() as client:
-                        async with client.post('http://127.0.0.1:8836/cartoon', json={'text':text,'nick':'viewer'},
+                        path = '/cartoon' if CARTOON.match(text) else '/chat'
+                        async with client.post('http://127.0.0.1:8836' + path, json={'text':text,'nick':'viewer'},
                                                headers={'X-Admin-Token':Path(token_file).read_text().strip()}) as r:
                             if r.status == 200 and (await r.json()).get('ok') is True:
                                 messages.append({'text':text,'at':int(time.time())})

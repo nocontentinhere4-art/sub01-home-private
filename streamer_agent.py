@@ -199,6 +199,17 @@ CARTOON_MONEY_OK = ("no requests for money", "no trading or get-rich talk", "tic
 def cartoon_seqs(seq):
     return (seq,) if seq >= 0 else ()
 
+
+# POST /chat (owner 10-28: "no filter for the chat, everything passes"): the relay hands every site line to this agent;
+# the backend's content filter is not in the way. These lines are numbered from DIRECT_SEQ_BASE: they never move the
+# backend chat cursor and are never reported to the backend as answered. Kept: spam (duplicates), the prompt-injection
+# and credential answers, the honest "are you human" line; his own speech still passes reply_problem().
+DIRECT_SEQ_BASE = 1_000_000_000
+
+
+def backend_seq(seq):
+    return 0 <= seq < DIRECT_SEQ_BASE
+
 CARTOON_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
 CARTOON_DONE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}\.json")
 CARTOON_RESTORE_TRIES = 4               # steps the director may fail to take the previous layout back before we give up
@@ -1013,8 +1024,6 @@ class ChatGate:
         text = " ".join(str(msg.get("text") or "").split())[:280]
         nick = self.nick_of(msg)
         why = spam_reason(text) if text else "empty"
-        if why is None and chat_blocked(text):
-            why = "filtered"
         if why is None:
             key = dedupe_key(text)
             if now - self.keys.get(key, -1e9) < 180:
@@ -1023,7 +1032,7 @@ class ChatGate:
             if len(self.keys) > 500:
                 for k in sorted(self.keys, key=self.keys.get)[:100]:
                     self.keys.pop(k, None)
-        if why is None:
+        if why is None and nick.lower() not in CARTOON_GENERIC_NICKS:   # the site's one "viewer" is many people
             q = self.by_nick[nick or "?"]
             while q and now - q[0] > 30:
                 q.popleft()
@@ -1039,8 +1048,6 @@ class ChatGate:
             cls, direct = "human", True
         elif INJECT.search(text) or CREDS.search(text):
             cls, direct = "inject", False                     # a refusal is not an answer to a question
-        elif FINANCE.search(text) or MONEY_Q.search(text):
-            cls, direct = "finance", False
         else:
             cls = "ok"
         overlap = len(set(words_of(text)) & page_words)
@@ -1560,6 +1567,43 @@ def refused(reason):
 
 def doable(kind, action=None, **extra):
     return {"kind": kind, "action": action, "refused": None, **extra}
+
+
+# A vague search ("search youtube for the trailer") takes its subject from the chat just before it (owner 10-28: "Let's
+# watch the GTA 6 trailer" ... "Just search on youtube for the trailer" searched "the trailer").
+VAGUE_Q = {"the", "a", "an", "it", "that", "this", "one", "video", "videos", "trailer", "trailers", "clip", "clips", "song",
+           "songs", "music", "official", "new", "full", "on", "youtube", "for", "of", "please", "pls", "gameplay", "reaction"}
+TOPIC_SKIP = {"let's", "lets", "let", "what", "whats", "what's", "just", "i", "i'm", "you", "your", "can", "could", "please",
+              "yo", "bro", "hey", "search", "watch", "play", "open", "go", "put", "sub", "sub-01", "how", "why", "do", "does",
+              "is", "are", "the", "a", "an", "and", "ok", "okay", "lol", "chat", "we", "my", "it", "that", "this", "youtube"}
+CONTEXT_S = 180.0
+
+
+def topic_words(text):
+    """The subject of a chat line: its capitalised words, all-caps words and numbers ("GTA 6"), filler left out."""
+    out = []
+    for w in re.findall(r"[A-Za-z0-9][A-Za-z0-9'&-]*", str(text or "")):
+        if w.lower() in TOPIC_SKIP:
+            continue
+        if w[0].isupper() or w.isdigit() or any(ch.isdigit() for ch in w):
+            out.append(w)
+    return out[:5]
+
+
+def contextual_query(q, recent, now):
+    """q itself, or, when every word of it is vague, the newest earlier chat subject (within CONTEXT_S) plus its words."""
+    words = str(q or "").split()
+    if not words or any(w.lower() not in VAGUE_Q for w in words):
+        return q
+    for t, text in reversed(recent):
+        if now - t > CONTEXT_S:
+            break
+        topic = topic_words(text)
+        if topic:
+            rest = [w for w in words if w.lower() not in ("the", "a", "an", "it", "that", "this", "on", "for", "of",
+                                                            "please", "pls")]
+            return " ".join(topic + rest)[:60]
+    return q
 
 
 def search_doable(q, **extra):
@@ -3295,6 +3339,7 @@ class Agent:
                         "last_accept": -1e9, "last_line": -1e9, "last_line_text": None, "day": "", "count": 0, "unreadable": {},
                         "library": [], "library_mtime": None}
         self.cartoon_direct = 0                               # the last negative seq given to a POST /cartoon line
+        self.chat_direct = 0                                  # POST /chat lines: DIRECT_SEQ_BASE + this
         self.cartoon_load(self.clock())
         self.pending = {}                                     # seq -> classified chat item waiting for a batch
         self.recent_chat = collections.deque(maxlen=40)       # (time, text) of what viewers wrote: never copied into actions
@@ -3585,7 +3630,8 @@ class Agent:
             item = self.gate.classify(m, page_words)
             if item is None:
                 continue
-            self.chat_since = max(self.chat_since, item["seq"])
+            if backend_seq(item["seq"]):
+                self.chat_since = max(self.chat_since, item["seq"])
             self.counters["chat_seen"] += 1
             if "ignored" in item:
                 self.counters["chat_ignored"] += 1
@@ -3680,6 +3726,12 @@ class Agent:
         """A chat line that asks for something: refused (one short line), queued, dropped, or next up (start_request logs
         that one as executed)."""
         req = dict(req, seq=item["seq"], user=item["nick"] or "anon", nick=item["nick"], text=item["text"], t=now)
+        if req["kind"] == "search" and not req["refused"]:
+            earlier = list(self.recent_chat)[:-1]             # the lines before this one (it was just appended)
+            q = contextual_query(req.get("query"), earlier, now)
+            if q != req.get("query") and not SENSITIVE_Q.search(q):
+                self.log("request_context", seq=item["seq"], query=str(req.get("query"))[:60], resolved=q)
+                req = dict(req, query=q, action=dict(req["action"], query=q))
         if not req["refused"] and account_change(req["text"]):   # Kimi: the same predicate again, whatever parse_request did
             req["refused"] = "credentials"
         if not req["refused"] and self.pc.vagon:              # the remote PC: nothing while it is not connected; games by flag
@@ -4016,8 +4068,10 @@ class Agent:
             self.counters["chat_answered"] += len(item.seqs)
             if item.nick:
                 self.answered_nicks.append(item.nick)
-            self.said_retry.append({"seq": item.seqs[0], "seqs": list(item.seqs), "text": item.text, "nick": item.nick,
-                                    "voice": voiced, "source": "streamer_agent", "t": round(now, 3)})
+            told = [q for q in item.seqs if backend_seq(q)]   # direct lines (POST /chat) are not the backend's to mark
+            if told:
+                self.said_retry.append({"seq": told[0], "seqs": told, "text": item.text, "nick": item.nick,
+                                        "voice": voiced, "source": "streamer_agent", "t": round(now, 3)})
             await self.flush_said()
         return True
 
@@ -5411,7 +5465,8 @@ class Agent:
         vote = poll_answer(self.poll, text) if text else None
         if vote is None or chat_blocked(text) or INJECT.search(text) or CREDS.search(text):
             return False
-        self.chat_since = max(self.chat_since, seq)
+        if backend_seq(seq):
+            self.chat_since = max(self.chat_since, seq)
         self.counters["chat_seen"] += 1
         self.poll["votes"][self.gate.nick_of(m) or f"seq{seq}"] = vote
         self.counters["poll_votes"] += 1
@@ -5564,7 +5619,8 @@ class Agent:
         except (TypeError, ValueError):
             return False
         nick = self.gate.nick_of(m)
-        self.chat_since = max(self.chat_since, seq)
+        if backend_seq(seq):
+            self.chat_since = max(self.chat_since, seq)
         self.counters["chat_seen"] += 1
         self.log("chat", seq=seq, cls="cartoon", text=text[:60])
         action = parse_cartoon(text)
@@ -6623,6 +6679,19 @@ class Agent:
                 return web.json_response({"ok": False, "error": "not a cartoon request"}, status=400)
             return web.json_response({"ok": True})
 
+        async def chat(request):
+            try:
+                body = await request.json()
+            except ValueError:
+                body = None
+            text = body.get("text") if isinstance(body, dict) else None
+            if not isinstance(text, str) or not 1 <= len(text) <= CARTOON_DIRECT_MAX:
+                return web.json_response({"ok": False, "error": 'body must be {"text": "...", "nick": "..."}'}, status=400)
+            self.chat_direct += 1
+            self.ingest_chat([{"seq": DIRECT_SEQ_BASE + self.chat_direct, "text": text,
+                               "nick": str(body.get("nick") or "")[:32]}])
+            return web.json_response({"ok": True})
+
         async def inject(request):
             try:
                 body = await request.json()
@@ -6642,6 +6711,7 @@ class Agent:
         app.router.add_post("/resume", guarded(resume))
         app.router.add_post("/inject", guarded(inject))
         app.router.add_post("/cartoon", guarded(cartoon))
+        app.router.add_post("/chat", guarded(chat))
         app.router.add_post("/lease", guarded(lease))
         app.router.add_delete("/lease", guarded(lease))
         return app
