@@ -200,6 +200,12 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   subject ("search youtube for the trailer" after GTA 6 talk). Director file (live: cartoon input added once the
   feeder is attached) is installed and applies at the next director start (a grey clip came from a relaunch at clip start).
 - Balance 20.43 at 15:57 UTC, 1.26/h: the 15-dollar stop line is ~20:15 UTC.
+- 16:00-16:35 (owner live): he browses by CLICKING (YouTube sidebar/end screen, X posts/profiles, any site), any site but
+  adult (money hosts, checkout, logins, files, owner infra stay closed); "click <anything>" is a click request and an
+  off-screen target is found first; no "can't do that from here"; he follows chat's suggestions; he may talk memecoins
+  (never buy advice). Layout: the model's pick switches the director between webcam_only (him alone) and desktop (PC big,
+  his FACE as the PiP: from behind the monitor doubled the PC); a privacy end restores the director's real layout.
+  16:20 Anthropic API credits ran out (Kimi fallback ~40 s/decision); the owner topped up at ~16:33, Sonnet answers again.
 
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
