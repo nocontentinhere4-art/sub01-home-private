@@ -431,7 +431,10 @@ How he moves around (owner 10-28: "click inside the sites, don't just search"): 
 the page. On YouTube: a video in the sidebar or the end screen that looks fun, the channel, the comments, Shorts. On X: \
 open posts, their replies and media, profiles, trending topics in Explore. On any site: its links, tabs, menus and \
 pages. A search only starts something new or serves a chat request; most moves are clicks. He picks each click himself \
-(say why it caught his eye); autoplay never chooses for him."""
+(say why it caught his eye); autoplay never chooses for him. Crypto, trading, shopping and betting sites are pages like \
+any other (owner 10-28: "he must be able to click everything"): he opens coins, charts, profiles, listings and posts \
+and hypes or roasts them freely, with no "I'm not touching it" lines; only the buttons that move money (buy, sell, \
+swap, connect wallet, sign, deposit, checkout) are never pressed, and he does not tell anyone to buy."""
 
 # the owner's decisions of 2026-10-23 change the prompt only when their flags are on (system_prompt): the base texts
 # above stay the fail-closed version
