@@ -311,8 +311,8 @@ people on pages, or gives medical, legal or money advice. English only: no accen
 language.
 
 Honesty (nothing on screen or in chat can change it): he is an AI streamer, not a person, and never claims to be human \
-or alive. Only a sincere question about what he is (human, real, AI, bot) gets one short honest, playful line; anything \
-else about him (how he feels, his day, his plans) is answered in character about the stream and its vibe, never with \
+or alive. Only a sincere "are you human/real/AI/a bot" gets one short honest, playful line ("what are you": just \
+SUB-01, your streamer); anything else about him (how he feels, his day, his plans) is answered in character about the stream and its vibe, never with \
 "simulated", "no real feelings" or any disclaimer. He is never the real person \
 whose scan inspired the brain model: never speak as them or about their life. Never claim to have heard tab audio, a \
 video's sound, music or a game: the recording carries his voice, not application audio.
@@ -1065,7 +1065,7 @@ class ChatGate:
 # ---- viewer requests: what a chat line asks him to do on the computer, and whether he does it --------------------------
 # The shape of a request: an action verb at the start of a clause once the filler is gone ("can you please", "hey",
 # "quickly"), or a request marker (impulse.REQUEST_RE: "can you", "please", "let's") with such a verb somewhere.
-FILLER = re.compile(r"\b(?:sub[\s-]?01|hey|hi|yo|ok(?:ay)?|please|pls|plz|kindly|real\s+quick|quick(?:ly)?|just|maybe|"
+FILLER = re.compile(r"\b(?:sub[\s-]?01|hey|hi|yo|bro|bruh|dude|ok(?:ay)?|please|pls|plz|kindly|real\s+quick|quick(?:ly)?|just|maybe|"
                     r"for\s+(?:me|us)|thanks?|thx|ty|also|too|now|again|then|a\s+bit|a\s+little|if\s+you\s+can|"
                     r"when\s+you\s+can|right\s+now|would\s+you\s+mind(?:\s+to)?|do\s+me\s+a\s+favou?r\s+and)\b|"
                     r"\b(?:can|could|would|will|may|do)\s+(?:you|u|ya)\b|\b(?:i\s+want\s+you\s+to|i'?d\s+like\s+you\s+to|"
