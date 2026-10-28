@@ -345,3 +345,12 @@ def test_cartoon_on_file_turns_the_cartoon_fifo_on_without_a_supervisor_restart(
     assert str(sd.parse_args(base)[1].cartoon_fifo) == str(tmp_path / "cartoon.mjpeg")
     explicit = str(tmp_path / "other.mjpeg")
     assert str(sd.parse_args(base + ["--cartoon-fifo", explicit])[1].cartoon_fifo) == explicit   # the flag wins
+
+
+def test_the_desktop_pip_sits_bottom_left_away_from_the_sites_pc_screen_box(tmp_path):
+    """Owner 10-28: the site draws its own PC SCREEN box bottom right; with the PC big his face PiP goes bottom left."""
+    cfg = base.make_cfg(tmp_path, fps=60, desktop_fps=60, game_source="fifo")
+    live = sd.build_live_graph(cfg, False, "webcam_only", main="fifo")
+    assert f"[dm][gpa]overlay=x={sd.PIP_MARGIN}:" in live and "[gm][dpip]overlay=x=W-w-" in live
+    assert f"overlay=x={sd.PIP_MARGIN}:" in sd.build_filter_complex("desktop", cfg, main="fifo")
+    assert "overlay=x=W-w-" in sd.build_filter_complex("webcam", cfg, main="fifo")

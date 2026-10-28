@@ -191,6 +191,9 @@ CARTOON_QUEUE = "16"                    # ffmpeg thread_queue_size of the cartoo
 CARTOON_ON_FILE = "cartoon-on"          # <streamer-dir>/cartoon-on present: --cartoon-fifo defaults to <streamer-dir>/cartoon.mjpeg
 PRIVACY_REASON = "privacy"
 PIP_MARGIN = 24
+# owner 10-28: the site draws its own "PC SCREEN" box at the bottom right of the player; with the PC big (desktop) his
+# PiP sits bottom LEFT so that box never covers him
+PIP_LEFT_DESKTOP = True
 # `desktop`: the layout shows a picture of the desktop somewhere (room too: cam 2 sees the in-game monitor, which shows it)
 LAYOUTS = {
     "webcam": {"main": "game", "pip": "desktop", "needs_cam2": False, "desktop": True,
@@ -427,8 +430,9 @@ def cartoon_chain(cfg):
             f"format=yuv420p,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps={cfg.fps},tpad=stop=-1:stop_mode=clone")
 
 
-def _overlay(main, pip, out):
-    return f"[{main}][{pip}]overlay=x=W-w-{PIP_MARGIN}:y=H-h-{PIP_MARGIN}:eof_action=pass[{out}]"
+def _overlay(main, pip, out, left=False):
+    x = f"{PIP_MARGIN}" if left else f"W-w-{PIP_MARGIN}"
+    return f"[{main}][{pip}]overlay=x={x}:y=H-h-{PIP_MARGIN}:eof_action=pass[{out}]"
 
 
 def game_rate(cfg, main=None):
@@ -475,8 +479,9 @@ def build_filter_complex(layout, cfg, main=None, cam2=False):
     pip = f"scale={pw}:{ph}:flags=area"
     if spec["pip"] == "game":                # the FIFO main view as the PiP: its rate and EOF chain too (Kimi review)
         pip = (f"{rate}," if main == "fifo" else "") + game_scale(f"{pw}:{ph}", "area", main)
+    x = f"{PIP_MARGIN}" if layout == "desktop" and PIP_LEFT_DESKTOP else f"W-w-{PIP_MARGIN}"
     return (top + f"[{pip_src}]{pip},setsar=1[pip];"
-            f"[main][pip]overlay=x=W-w-{PIP_MARGIN}:y=H-h-{PIP_MARGIN}:eof_action=pass,format=yuv420p[vout]")
+            f"[main][pip]overlay=x={x}:y=H-h-{PIP_MARGIN}:eof_action=pass,format=yuv420p[vout]")
 
 
 def build_live_graph(cfg, cam2, layout, main=None, cartoon=False):
@@ -497,7 +502,7 @@ def build_live_graph(cfg, cam2, layout, main=None, cartoon=False):
              f"[gp]{pip},split=2[gpa][gpb]" if cam2 else f"[gp]{pip}[gpa]",
              f"[dp]{pip}[dpip]",
              _overlay("gm", "dpip", "lwebcam"),
-             _overlay("dm", "gpa", "ldesktop"),
+             _overlay("dm", "gpa", "ldesktop", left=PIP_LEFT_DESKTOP),
              f"[gh]scale={half_w}:{half_h}:flags=area,setsar=1[gl];[dh]scale={half_w}:{half_h}:flags=area,setsar=1[dr];"
              f"[gl][dr]hstack=inputs=2,pad={w}:{h}:0:(oh-ih)/2:black,setsar=1[lsplit]"]
     if cam2:
