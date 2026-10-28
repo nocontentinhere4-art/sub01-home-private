@@ -1898,6 +1898,24 @@ def test_pc_zoom_on_request_and_after_a_failed_click_at_most_once_per_action(tmp
     assert agent.counters["zooms"] == 2
 
 
+def test_pc_unchanged_click_is_neutral_when_the_model_confirms_it_and_a_failure_otherwise(tmp_path):
+    def clicks(ok):                                                     # a new point each time: no per-key avoid list
+        return [decision(state="mouse", action={"action": "click", "point": [100 + 40 * i, 300]}, say="", outcome_ok=ok)
+                for i in range(6)]
+    agent, world, prov, clock = pc_make(tmp_path, *clicks(True))        # focus clicks: the picture never changes
+    asyncio.run(sim(agent, clock, 40, dt=3))
+    assert len(world.acts) >= 5 and agent.held is None and agent.fail_streak == 0
+    outs = [e for e in events(agent) if e["kind"] == "outcome" and e.get("verdict") == "unchanged"]
+    assert outs and all(e["focus_check"] for e in outs)
+    assert agent.counters["actions_failed"] == 0 and agent.counters["outcome_confirmed"] >= 4
+    assert len(agent.fail_counts) <= 1                                  # confirmed: off the avoid list (the last one waits)
+    for ok in (False, None):                                            # denied, or not answered: failures as before
+        agent, world, prov, clock = pc_make(tmp_path / str(ok), *clicks(ok))
+        asyncio.run(sim(agent, clock, 40, dt=3))
+        assert agent.held and agent.held["why"] == "failures" and len(world.acts) == 3, ok
+        assert agent.counters["actions_failed"] == 3 and agent.counters["outcome_denied"] == 3
+
+
 @pytest.mark.parametrize("action, why", [
     ({"action": "type", "text": "my password is hunter2"}, "credentials"),
     ({"action": "type", "text": "card 4111 1111 1111 1111"}, "card-like number"),

@@ -5140,8 +5140,12 @@ class Agent:
             changed = pv["runner_changed"] or (diff is not None and diff >= PC_CHANGE_MIN)
             out = dict(pv["outcome"], verdict="changed" if changed else "unchanged", hash_after=pc.hash,
                        pixel_diff=None if diff is None else round(diff, 2))
-            self.note_result(pv["key"], not changed, "", now, out["action"])
-            self.counters["actions_failed"] += int(not changed)
+            if not changed and pv["kind"] == "click":         # a focus click (a text field) changes almost no pixels:
+                out["focus_check"] = True                     # the model's outcome_ok decides it (pc_confirm_outcome)
+                self.note_result(pv["key"], True, "", now, out["action"], streak=False)
+            else:
+                self.note_result(pv["key"], not changed, "", now, out["action"])
+                self.counters["actions_failed"] += int(not changed)
             self.log("outcome", **out)
             out["verify"] = "did your intended outcome happen? set outcome_ok true or false"
             self.last_outcome = out
@@ -5180,13 +5184,20 @@ class Agent:
 
     def pc_confirm_outcome(self, dec, now):
         """The model's outcome_ok for the action verified in this observation: logged; false after a `changed`
-        verdict (something moved, but not what he meant) counts as a failure like an unchanged one."""
+        verdict (something moved, but not what he meant) counts as a failure like an unchanged one. An unchanged click
+        (focus_check) is neutral when the model confirms it (a focused text field) and a failure otherwise, an
+        unanswered outcome_ok included."""
         pc, ok, last = self.pc, dec.get("outcome_ok"), self.last_outcome
-        if ok is None or not pc.last_key or not last or last.get("verdict") not in ("changed", "unchanged"):
+        if not pc.last_key or not last or last.get("verdict") not in ("changed", "unchanged"):
+            return
+        if ok is None and not last.get("focus_check"):
             return
         self.log("outcome_confirm", action=last["action"], ok=ok, verdict=last["verdict"], pixel_diff=last.get("pixel_diff"))
         self.counters["outcome_confirmed" if ok else "outcome_denied"] += 1
-        if not ok and last["verdict"] == "changed":
+        if last.get("focus_check"):
+            self.note_result(pc.last_key, not ok, "", now, last["action"], streak=not ok)   # confirmed: neutral, not avoided
+            self.counters["actions_failed"] += int(not ok)
+        elif not ok and last["verdict"] == "changed":
             self.note_result(pc.last_key, True, "", now, last["action"])
             self.counters["actions_failed"] += 1
         self.last_outcome = {k: v for k, v in last.items() if k != "verify"}

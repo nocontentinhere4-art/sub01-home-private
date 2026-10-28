@@ -60,6 +60,23 @@ code that runs; the pod's runtime copy is `/home/sub01-recovery-stage-20261026/r
   - Re-arm: `POST 127.0.0.1:8836/lease {"minutes":60}` with the X-Admin-Token from `operator-token`.
   - After 3 unchanged actions in a row he is `held`; clear it with `POST /resume`.
 
+### Session 2026-10-28 02:05 UTC (claude/compassionate-heisenberg-2fvnf6)
+- RunPod read 02:02 UTC: balance $37.96, spend $1.26/h (this session is the sole caller; ledger in its scratchpad).
+  Pod access: owner OK (02:07) to read the Jupyter password from the RunPod API into the scratchpad `pods.json`.
+- Item 6 DONE: an unchanged click is a `focus_check`; the model's outcome_ok decides (true = neutral and off the
+  avoid list; false or unanswered = failure as before). Deployed 02:16 on top of the runtime file (which keeps its
+  two runtime-only edits: `sequence` init from the clock, `allow_credentials` default False); backup
+  `/home/sub01-review-20261027/streamer_agent.py.bak-*`. Kimi APPROVE.
+- Item 5 DONE: owner OK (02:07) for automatic lease re-arm. `/home/unreal/.sub01-private/lease_renew.py` (as unreal,
+  copy in `tools/pod/onpod/`) re-arms 60 min when < 15 min remain, never under STOP/paused/held/frozen/audit/probation;
+  log `streamer/logs/lease-renew.log`; disable with `/home/unreal/.sub01-private/lease-renew.off` or by killing it.
+  Not supervised: restart it by hand after a pod restart.
+- Item 2 DONE: `desk_base` 0 live (owner OK); Kimi on frames: KEEP. Revert: `tune_set.py desk_base=1`.
+- Tools: `tools/pod/onpod/tune_set.py` (live keys, keeps the file's owner: the game reads it as unreal),
+  `snap.sh TAG` (4x2 HLS contact sheet), `facegrab.sh TAG` (waits for the face camera). On the pod in
+  `/home/sub01-review-20261027/tools-20261028/` (run as root).
+- Item 7 (collar): owner OK to try `hide_slot` 4/5 live; in progress.
+
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
    - In the shot from behind the wrists still cross towards the keyboard centre. The IK elbow guard slides them 8-12
