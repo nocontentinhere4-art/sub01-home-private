@@ -188,6 +188,7 @@ DEFAULT_LAYOUT = "webcam"
 PRIVATE_LAYOUT = "webcam_only"
 LAYOUT_FOLLOW_FILE = "layout-follow"    # <streamer-dir>/layout-follow present: a --layout given at launch is ignored
 CARTOON_QUEUE = "16"                    # ffmpeg thread_queue_size of the cartoon input (frames): bounds the clip delay
+LIVE_LAYOUTS_FILE = "live-layouts"     # <streamer-dir>/live-layouts (e.g. "webcam_only,desktop"): --live-layouts default
 CARTOON_ON_FILE = "cartoon-on"          # <streamer-dir>/cartoon-on present: --cartoon-fifo defaults to <streamer-dir>/cartoon.mjpeg
 PRIVACY_REASON = "privacy"
 PIP_MARGIN = 24
@@ -3062,6 +3063,16 @@ def parse_args(argv=None):
     if cartoon_fifo is None and (Path(args.streamer_dir) / CARTOON_ON_FILE).exists():   # operator flag, like layout-follow:
         cartoon_fifo = str(Path(args.streamer_dir) / "cartoon.mjpeg")                    # no supervisor restart for the flag
         print(f"streamer director: cartoon mode on ({CARTOON_ON_FILE}), --cartoon-fifo {cartoon_fifo}", file=sys.stderr)
+    live_layouts = args.live_layouts
+    layouts_file = Path(args.streamer_dir) / LIVE_LAYOUTS_FILE
+    if live_layouts is None and layouts_file.is_file():   # operator flag too: no supervisor restart for it
+        live_layouts = layouts_file.read_text(encoding="utf-8").strip() or None
+        try:
+            [validate_layout(name.strip()) for name in (live_layouts or "").split(",") if name.strip()]
+            print(f"streamer director: --live-layouts {live_layouts} ({LIVE_LAYOUTS_FILE})", file=sys.stderr)
+        except ValueError as exc:                     # a bad file never keeps the stream down: every layout instead
+            print(f"streamer director: {LIVE_LAYOUTS_FILE} ignored ({exc})", file=sys.stderr)
+            live_layouts = None
     try:
         width, height = (int(v) for v in args.size.lower().split("x"))
         pip_width, pip_height = (int(v) for v in args.pip_size.lower().split("x"))
@@ -3075,7 +3086,7 @@ def parse_args(argv=None):
             min_free_gb=args.min_free_gb, crf=args.crf, preset=args.preset,
             audio_bitrate=args.audio_bitrate, watchdog_interval=args.watchdog_interval,
             voice_interval=args.voice_interval, encoder=args.encoder, layout=layout,
-            layout_switch=args.layout_switch, live_layouts=args.live_layouts, switch_timeout=args.switch_timeout,
+            layout_switch=args.layout_switch, live_layouts=live_layouts, switch_timeout=args.switch_timeout,
             cam2_fifo=args.cam2_fifo,
             cam2_json=args.cam2_json, cam2_stale=args.cam2_stale, cam2_interval=args.cam2_interval,
             layout_interval=args.layout_interval, hls_dir=args.hls_dir, rtmp_url=rtmp_url or None,

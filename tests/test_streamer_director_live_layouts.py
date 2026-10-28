@@ -30,6 +30,11 @@ def test_config_and_cli_parse_the_live_layouts(tmp_path):
     args, cfg = sd.parse_args(["--streamer-dir", str(tmp_path), "--live-layouts", "webcam_only,desktop"])
     assert cfg.live_layouts == POD
     assert sd.parse_args(["--streamer-dir", str(tmp_path)])[1].live_layouts is None
+    (tmp_path / sd.LIVE_LAYOUTS_FILE).write_text("webcam_only, desktop\n")             # the operator file
+    assert sd.parse_args(["--streamer-dir", str(tmp_path)])[1].live_layouts == POD
+    assert sd.parse_args(["--streamer-dir", str(tmp_path), "--live-layouts", "desktop"])[1].live_layouts == ("desktop",)
+    (tmp_path / sd.LIVE_LAYOUTS_FILE).write_text("desktop,pc")
+    assert sd.parse_args(["--streamer-dir", str(tmp_path)])[1].live_layouts is None   # a bad file: every layout
 
 
 def test_live_order_keeps_the_privacy_layout_the_launch_layout_and_the_cartoon():
