@@ -158,9 +158,9 @@ ROUTINE_ASK_GAP_S = 4.0                 # two model confirmations are at least t
 DEFAULT_GAME = "Detroit: Become Human"
 
 # ---- pacing numbers (DIRECTION.md section 3/4 and the brief; jittered where a range is given) ------------------------
-SPEECH_GAP_S = 8.0                      # silence between the end of one unsolicited line and the start of the next
-COMMENT_READING_S = (35.0, 70.0)        # unsolicited remark while reading: about one a minute (owner 10-27: more interactive; Kimi)
-COMMENT_OTHER_S = (12.0, 25.0)          # ... while browsing, typing, idle (was 30-70 s)
+SPEECH_GAP_S = 4.0                      # silence between the end of one unsolicited line and the start of the next (was 8; owner 10-28: a real hype streamer)
+COMMENT_READING_S = (15.0, 28.0)        # unsolicited remark while reading (was 35-70 s; owner 10-28: high-energy streamer; Kimi GO)
+COMMENT_OTHER_S = (8.0, 16.0)           # ... while browsing, typing, idle (was 12-25 s, before that 30-70 s)
 REACT_COOLDOWN_S = 15.0
 BIG_REACT_EVERY_S = 1800.0              # level 3 at most once per 30 min
 CHAT_EVERY_S = (4.0, 8.0)               # a chat batch (owner 10-27, twice: more interactive; was 25-45 s, before that 90-180 s)
