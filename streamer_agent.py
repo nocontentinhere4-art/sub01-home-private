@@ -173,8 +173,12 @@ POLL_ANSWER_WORDS = 6                   # a rating counts only from a short mess
 # renders it and drops <streamer-dir>/cartoon/done/<id>.json -> the cartoon feeder plays it, the director shows it.
 # The file contract is documented at Agent.cartoon_load.
 CARTOON_MIN_CHARS, CARTOON_MAX_CHARS = 3, 120   # the action text after "cartoon:" / "!cartoon"
-CARTOON_QUEUE_MAX = 5                   # requests waiting for their clip (one per viewer); more: the "queue is full" line
-CARTOON_GAP_S = 20.0                    # at most one request accepted per 20 s overall
+CARTOON_QUEUE_MAX = 8                   # requests waiting for their clip (one per viewer); more: the "queue is full" line
+CARTOON_GAP_S = 5.0                     # at most one request accepted per 5 s overall (was 20; owner 10-28: "and if there
+                                        # are more requests?" - the generator renders them in parallel)
+CARTOON_GENERIC_NICKS = ("", "viewer", "anon")   # the site sends no names yet: one per viewer cannot apply to these
+CARTOON_LIBRARY = "library.json"        # ready clips for common actions (owner 10-28: minutes of waiting kill it): a hit
+                                        # plays in about a second, nothing is rendered or counted against the daily cap
 CARTOON_DAILY_MAX = 40                  # clips per Tokyo day (owner budget: 100 credits a day at 2.5 credits a clip)
 CARTOON_LINE_GAP_S = 8.0                # one spoken refusal / limit line per 8 s; the rest are logged only
 CARTOON_PENDING_TTL_S = 900.0           # a clip that never came back frees its viewer and its slot after this long
@@ -3273,7 +3277,8 @@ class Agent:
         self.viewers = Viewers(self.dir / "viewers.json", self.clock())       # regulars: nick -> visits (no text)
         self.cartoon_dir = self.dir / "cartoon"               # cartoon mode: queue.jsonl out, done/<id>.json in
         self.cartoon = {"pending": collections.OrderedDict(), "handled": collections.OrderedDict(), "playing": None,
-                        "last_accept": -1e9, "last_line": -1e9, "last_line_text": None, "day": "", "count": 0, "unreadable": {}}
+                        "last_accept": -1e9, "last_line": -1e9, "last_line_text": None, "day": "", "count": 0, "unreadable": {},
+                        "library": [], "library_mtime": None}
         self.cartoon_load(self.clock())
         self.pending = {}                                     # seq -> classified chat item waiting for a batch
         self.recent_chat = collections.deque(maxlen=40)       # (time, text) of what viewers wrote: never copied into actions
@@ -5460,6 +5465,39 @@ class Agent:
             except (ValueError, KeyError, TypeError):
                 continue
 
+    def cartoon_library(self):
+        """<cartoon>/library.json, re-read when it changes: [{"mp4": "<file in clips/>", "seconds": 5, "match": [["throw",
+        "toss"], ["pc", "computer"], ["window"]]}]; an entry matches when every group has one of its words in the action.
+        Anything malformed is skipped (no library is fine: every request is rendered)."""
+        cs, p = self.cartoon, self.cartoon_dir / CARTOON_LIBRARY
+        try:
+            mtime = p.stat().st_mtime
+        except OSError:
+            cs["library"], cs["library_mtime"] = [], None
+            return []
+        if mtime == cs["library_mtime"]:
+            return cs["library"]
+        lib = []
+        try:
+            raw = json.loads(p.read_text()[:262144])
+        except (OSError, ValueError):
+            raw = []
+        for e in raw if isinstance(raw, list) else []:
+            try:
+                mp4, groups = str(e["mp4"]), e["match"]
+                groups = [frozenset(str(w).lower() for w in g) for g in groups if isinstance(g, list) and g]
+                if CARTOON_ID.fullmatch(mp4[:-4]) and mp4.endswith(".mp4") and groups and \
+                        (self.cartoon_dir / "clips" / mp4).is_file():
+                    lib.append({"mp4": mp4, "seconds": clamp(num(e.get("seconds"), 5.0), *CARTOON_SECONDS), "match": groups})
+            except (KeyError, TypeError, ValueError):
+                continue
+        cs["library"], cs["library_mtime"] = lib, mtime
+        return lib
+
+    def cartoon_library_hit(self, action):
+        words = set(re.findall(r"[a-z]+", action.lower()))
+        return next((e for e in self.cartoon_library() if all(g & words for g in e["match"])), None)
+
     def cartoon_pick(self, with_nick, anon, nick):
         lines = [x.format(nick=nick) for x in with_nick] if nick else []
         lines = [x for x in lines if reply_problem(x) is None] or list(anon)
@@ -5524,9 +5562,10 @@ class Agent:
         if day != cs["day"]:
             cs["day"], cs["count"] = day, 0
         key = nick.lower() or "?"
-        if cs["count"] >= CARTOON_DAILY_MAX:
+        hit = self.cartoon_library_hit(action)                # a ready clip costs nothing: the daily cap is for renders
+        if cs["count"] >= CARTOON_DAILY_MAX and not hit:
             return self.cartoon_refuse(seq, nick, "daily_cap", CARTOON_DONE_LINE, now, action)
-        if any((r["nick"].lower() or "?") == key for r in cs["pending"].values()):
+        if nick.lower() not in CARTOON_GENERIC_NICKS and any(r["nick"].lower() == key for r in cs["pending"].values()):
             return self.cartoon_refuse(seq, nick, "one_per_viewer", CARTOON_BUSY_LINE, now, action)
         if len(cs["pending"]) >= CARTOON_QUEUE_MAX:
             return self.cartoon_refuse(seq, nick, "queue_full", CARTOON_FULL_LINE, now, action)
@@ -5534,18 +5573,29 @@ class Agent:
             return self.cartoon_refuse(seq, nick, "too_soon", CARTOON_WAIT_LINE, now, action)
         cid = f"c{int(now)}-{seq}-{os.urandom(2).hex()}"
         row = {"id": cid, "seq": seq, "nick": nick, "action": action, "t": round(now, 3)}
+        if hit:                                               # the generator skips rows marked "library"
+            row["library"] = hit["mp4"]
         if not self.cartoon_append(row):                      # fail closed: nothing is promised that cannot be drawn
             return self.cartoon_refuse(seq, nick, "queue_write", CARTOON_DOWN_LINE, now, action)
+        if hit:
+            try:
+                write_atomic(self.cartoon_dir / "done" / f"{cid}.json", json.dumps(
+                    {"id": cid, "ok": True, "mp4": str(self.cartoon_dir / "clips" / hit["mp4"]), "seconds": hit["seconds"]}))
+            except OSError as e:
+                self.error("cartoon library", e)
+                return self.cartoon_refuse(seq, nick, "queue_write", CARTOON_DOWN_LINE, now, action)
+        row = {k: v for k, v in row.items() if k != "library"}
         cs["pending"][cid] = row
-        cs["last_accept"], cs["count"] = now, cs["count"] + 1
+        cs["last_accept"], cs["count"] = now, cs["count"] + (0 if hit else 1)
         try:
             write_atomic(self.cartoon_dir / "state.json", json.dumps({"day": cs["day"], "count": cs["count"]}))
         except OSError as e:
             self.error("cartoon state", e)
         self.counters["cartoon_requests"] += 1
         self.log("cartoon_request", id=cid, seq=seq, user=nick or "anon", action=action, today=cs["count"],
-                 waiting=len(cs["pending"]))
-        self.enqueue(self.cartoon_pick(CARTOON_ACK_LINES, CARTOON_ACK_ANON, nick), "request", "normal", (seq,), nick, ttl=60.0)
+                 waiting=len(cs["pending"]), library=hit["mp4"] if hit else None)
+        if not hit:                                           # a ready clip needs no "cooking" line: its intro comes at once
+            self.enqueue(self.cartoon_pick(CARTOON_ACK_LINES, CARTOON_ACK_ANON, nick), "request", "normal", (seq,), nick, ttl=60.0)
         return True
 
     def cartoon_mark(self, cid):

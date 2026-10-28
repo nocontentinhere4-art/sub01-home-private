@@ -4249,27 +4249,72 @@ def test_a_cartoon_line_of_the_wrong_length_is_answered_once_and_not_sent_on(tmp
     assert [s["text"] for s in world.spoken if s["tag"] == "request"] == [SA.CARTOON_SHAPE_LINE]
 
 
-def test_cartoon_limits_one_per_viewer_five_queued_one_per_20_seconds_and_the_daily_cap(tmp_path):
+def test_cartoon_limits_one_per_viewer_a_full_queue_one_per_gap_and_the_daily_cap(tmp_path):
     agent, world, prov, clock = cartoon_agent(tmp_path)
     ask_cartoon(agent, world, clock, 1, "mika")
-    ask_cartoon(agent, world, clock, 2, "kei", advance=5)                  # 20 s overall
-    ask_cartoon(agent, world, clock, 3, "mika", advance=5)                 # mika is still waiting for hers
+    ask_cartoon(agent, world, clock, 2, "kei", advance=SA.CARTOON_GAP_S / 2)  # one per CARTOON_GAP_S overall
+    ask_cartoon(agent, world, clock, 3, "mika", advance=SA.CARTOON_GAP_S)     # mika is still waiting for hers
     assert cartoon_whys(agent) == ["too_soon", "one_per_viewer"] and len(cartoon_queue(agent)) == 1
-    for seq, nick in ((4, "kei"), (5, "nori"), (6, "hana"), (7, "yuki")):
+    nicks = [f"v{i}" for i in range(SA.CARTOON_QUEUE_MAX - 1)]
+    for seq, nick in enumerate(nicks, 4):
         ask_cartoon(agent, world, clock, seq, nick, advance=SA.CARTOON_GAP_S + 1)
-    assert [r["nick"] for r in cartoon_queue(agent)] == ["mika", "kei", "nori", "hana", "yuki"]
-    ask_cartoon(agent, world, clock, 8, "ren", advance=SA.CARTOON_GAP_S + 1)   # a sixth waits for nobody
-    assert cartoon_whys(agent)[-1] == "queue_full" and len(cartoon_queue(agent)) == 5
+    assert [r["nick"] for r in cartoon_queue(agent)] == ["mika"] + nicks
+    ask_cartoon(agent, world, clock, 50, "ren", advance=SA.CARTOON_GAP_S + 1)   # one more waits for nobody
+    assert cartoon_whys(agent)[-1] == "queue_full" and len(cartoon_queue(agent)) == SA.CARTOON_QUEUE_MAX
     asyncio.run(sim(agent, clock, 30, dt=3))
     assert SA.CARTOON_FULL_LINE in [s["text"] for s in world.spoken]
     agent.cartoon["pending"].clear()
     agent.cartoon["count"] = SA.CARTOON_DAILY_MAX                          # 40 clips today
-    ask_cartoon(agent, world, clock, 9, "sora", advance=SA.CARTOON_GAP_S + 1)
-    assert cartoon_whys(agent)[-1] == "daily_cap" and len(cartoon_queue(agent)) == 5
+    ask_cartoon(agent, world, clock, 51, "sora", advance=SA.CARTOON_GAP_S + 1)
+    assert cartoon_whys(agent)[-1] == "daily_cap" and len(cartoon_queue(agent)) == SA.CARTOON_QUEUE_MAX
     asyncio.run(sim(agent, clock, 30, dt=3))
     assert SA.CARTOON_DONE_LINE in [s["text"] for s in world.spoken]
-    ask_cartoon(agent, world, clock, 10, "sora", advance=86400)            # the next Tokyo day starts at zero again
-    assert len(cartoon_queue(agent)) == 6 and agent.cartoon["count"] == 1
+    ask_cartoon(agent, world, clock, 52, "sora", advance=86400)            # the next Tokyo day starts at zero again
+    assert len(cartoon_queue(agent)) == SA.CARTOON_QUEUE_MAX + 1 and agent.cartoon["count"] == 1
+
+
+def test_viewers_without_a_name_are_not_one_viewer(tmp_path):
+    """The site sends every line as "viewer" (owner 10-28: "and if there are more requests?"): one per viewer would make
+    the whole chat wait for one clip."""
+    agent, world, prov, clock = cartoon_agent(tmp_path)
+    for seq in range(1, 4):
+        ask_cartoon(agent, world, clock, seq, "viewer", advance=SA.CARTOON_GAP_S + 1)
+    assert cartoon_whys(agent) == [] and len(cartoon_queue(agent)) == 3
+
+
+def write_library(agent, entries):
+    d = agent.dir / "cartoon"
+    (d / "clips").mkdir(parents=True, exist_ok=True)
+    for e in entries:
+        if "/" not in e.get("mp4", "/"):
+            (d / "clips" / e["mp4"]).write_bytes(b"x")
+    (d / "library.json").write_text(json.dumps(entries))
+
+
+def test_a_library_hit_plays_at_once_without_a_render_or_the_daily_count(tmp_path):
+    agent, world, prov, clock = cartoon_agent(tmp_path)
+    write_library(agent, [{"mp4": "lib-pc-window.mp4", "seconds": 5,
+                           "match": [["throw", "toss", "yeet"], ["pc", "computer"], ["window"]]},
+                          {"mp4": "lib-dance.mp4", "seconds": 4, "match": [["dance", "dancing"]]},
+                          {"mp4": "lib-gone.mp4", "match": [["gone"]]}, {"mp4": "../x.mp4", "match": [["x"]]}, {"bad": 1}])
+    (agent.dir / "cartoon" / "clips" / "lib-gone.mp4").unlink()             # a listed clip that is missing is no hit
+    assert [e["mp4"] for e in agent.cartoon_library()] == ["lib-pc-window.mp4", "lib-dance.mp4"]
+    ask_cartoon(agent, world, clock, 1, "mika", "cartoon: Take the PC and throw it out the window!")
+    row = cartoon_queue(agent)[0]
+    assert row["library"] == "lib-pc-window.mp4" and agent.cartoon["count"] == 0
+    clock.t += 1
+    asyncio.run(agent.step())
+    assert world.feeds == [{"id": row["id"], "path": str(agent.dir / "cartoon" / "clips" / "lib-pc-window.mp4"),
+                            "caption": "mika: Take the PC and throw it out the window!"}]
+    assert world.layouts == ["cartoon"] and not any(s["tag"] == "request" for s in world.spoken)   # no "cooking" line
+    ask_cartoon(agent, world, clock, 2, "kei", "cartoon: throw the pc on the floor", advance=SA.CARTOON_GAP_S + 1)
+    assert "library" not in cartoon_queue(agent)[1] and agent.cartoon["count"] == 1   # every group must match: rendered
+    agent.cartoon["pending"].clear()
+    agent.cartoon["count"] = SA.CARTOON_DAILY_MAX                          # renders are used up; ready clips still play
+    ask_cartoon(agent, world, clock, 3, "nori", "cartoon: start dancing", advance=SA.CARTOON_GAP_S + 1)
+    assert cartoon_queue(agent)[2]["library"] == "lib-dance.mp4" and "daily_cap" not in cartoon_whys(agent)
+    ask_cartoon(agent, world, clock, 4, "hana", "cartoon: spin the chair", advance=SA.CARTOON_GAP_S + 1)
+    assert cartoon_whys(agent)[-1] == "daily_cap"
 
 
 def test_the_daily_count_and_the_waiting_requests_survive_a_restart(tmp_path):
