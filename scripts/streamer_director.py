@@ -129,6 +129,7 @@ silent start, or came back after a drop (the run's audio input hit EOF; until th
 The helpers below are pure and importable without ffmpeg.
 """
 
+import dataclasses
 import argparse
 import asyncio
 import fcntl
@@ -219,6 +220,10 @@ CARTOON_DROP = "cartoon stopped delivering"
 # owner 10-28: the graph (6 live layouts at 60 fps) ran at 0.99x real time on one thread, so the stream fell ~0.6 s
 # behind per minute; slice threads for scale/overlay give it headroom
 FILTER_THREADS = "4"
+# owner 10-28 (the stream must not fall behind): 1080p60 with six live layouts on the shared cores ran below real time
+# whatever the threads or the x264 preset (every input queue blocking, +0.5-1.6 s of delay per minute); the stream is
+# capped at 30 fps (the game itself still renders 60). --fps above this is lowered here.
+OUTPUT_FPS_MAX = 30
 CARTOON_LAUNCH_WAIT_S = 3.0  # a launch waits this long for the cartoon feeder to reattach (it does within ~1 s)
 CARTOON_MIN_UPTIME = 30.0   # a run is at least this old before it is relaunched to add the cartoon input
 SWITCH_MODES = ("live", "restart")
@@ -3011,6 +3016,8 @@ def parse_args(argv=None):
             cartoon_fifo=cartoon_fifo)
     except ValueError as exc:
         p.error(str(exc))
+    if max(cfg.fps, cfg.desktop_fps) > OUTPUT_FPS_MAX:   # validated as asked, then capped (OUTPUT_FPS_MAX)
+        cfg = dataclasses.replace(cfg, fps=min(cfg.fps, OUTPUT_FPS_MAX), desktop_fps=min(cfg.desktop_fps, OUTPUT_FPS_MAX))
     return args, cfg
 
 
