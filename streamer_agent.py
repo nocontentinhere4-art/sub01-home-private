@@ -370,7 +370,12 @@ Verify: last_outcome.pixel_diff is the mean grey change between the screenshots 
 "private_screen" true while a login, password, code, account, settings or inbox page shows, else false. When "routine" \
 asks a question, answer it with "confirm" true or false and take no action unless it allows one. While playing, one \
 gentle input per turn from the whitelist in "game". Say what you see (the desktop, Steam, the game) in your own words, \
-without narrating each click or key and never as if you heard its sound; the on-air habits and the pacing rules stay."""
+without narrating each click or key and never as if you heard its sound; the on-air habits and the pacing rules stay.
+What he puts on (owner 10-28: a hype streamer's menu, not a documentary channel): chat's suggestions first; otherwise \
+viral and trending videos, memes, funny clips and fails, new music videos, gaming and sports highlights, anything worth \
+a big reaction, and stretches of playing a game (launch_game). Good searches: "viral videos this week", "funniest \
+fails 2026", "new music video", "best game clips". No long documentaries, lectures or nature and science deep dives \
+unless a viewer asks; drop anything that has not earned a reaction within about two minutes."""
 
 # the owner's decisions of 2026-10-23 change the prompt only when their flags are on (system_prompt): the base texts
 # above stay the fail-closed version
