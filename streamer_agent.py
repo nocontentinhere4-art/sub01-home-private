@@ -445,8 +445,9 @@ Read chat as one conversation (owner 10-28): lines from different viewers a minu
 same request, so a vague one ("look at some of them", "more", "for kai cenat", "the other one", "that one") points at \
 the last concrete request or what is on screen; connect them and act on the combined meaning, and only treat a line \
 as a new topic when it names one. \
-Poker, blackjack and casino games (owner 10-28): free play only, as a guest or with play chips; he never deposits, \
-buys chips or bets real money.
+Poker, blackjack and casino games (owner 10-28): free play only, against the computer, as a guest or with play \
+chips; he never deposits, buys chips or bets real money. Chess: against the site's computer (lichess: Play with the \
+computer), never rated games against people (an AI player breaks their rules).
 How he moves around (owner 10-28: "click inside the sites, don't just search"): like a viewer, by clicking what is on \
 the page. On YouTube: a video in the sidebar or the end screen that looks fun, the channel, the comments, Shorts. On X: \
 open posts, their replies and media, profiles, trending topics in Explore. On any site: its links, tabs, menus and \
@@ -476,7 +477,11 @@ SYSTEM_IDENTITY = ("His one identity (owner 10-28, a dedicated account): to type
                    "this same Google account (never another one). {{password}} only into a password field of a login or "
                    "sign-up page you marked private_screen true. Never paid plans, payment details, a phone number or an "
                    "ID document; never change a password, e-mail, 2FA or recovery setting; a verification code from his "
-                   "inbox is a private screen. Signing in is not posting: comments and posts follow the usual rules.")
+                   "inbox is a private screen. Signing in is not posting: comments and posts follow the usual rules. "
+                   "He is an AI: where a site forbids computer players or asks him to promise no computer assistance "
+                   "(lichess, chess.com, online poker or game rooms against people), he never registers a player account "
+                   "and never ticks such a pledge; he plays against the site's own computer instead (lichess: Play with "
+                   "the computer, no account needed). He never accepts terms he cannot keep.")
 SYSTEM_CREDS_OLD = "Never enter credentials, personal data or payment details; no logins, downloads or purchases."
 SYSTEM_CREDS_NEW = ("Never enter payment details or anyone else's personal data; no downloads or purchases. His own logins \
 are allowed (the owner's choice): prefer signed-in sessions and the browser's saved logins, never guess or invent a \
@@ -6274,7 +6279,8 @@ class Agent:
             changed = pv["runner_changed"] or (diff is not None and diff >= PC_CHANGE_MIN)
             out = dict(pv["outcome"], verdict="changed" if changed else "unchanged", hash_after=pc.hash,
                        pixel_diff=None if diff is None else round(diff, 2))
-            if not changed and pv["kind"] == "click":         # a focus click (a text field) changes almost no pixels:
+            if not changed and pv["kind"] in ("click", "type"):   # a focus click or a few typed characters (live 10-28:
+                # "Subzerone01" typed into lichess's form read as unchanged, pixel_diff 0.04) change almost no pixels:
                 out["focus_check"] = True                     # the model's outcome_ok decides it (pc_confirm_outcome)
                 self.note_result(pv["key"], True, "", now, out["action"], streak=False)
             else:

@@ -89,3 +89,21 @@ def test_chat_may_ask_for_a_sign_up_or_log_in_only_with_logins_on():
         item = on.classify({"seq": 10 + i, "text": text, "nick": f"v{i}"})
         req = item["request"] or {}
         assert item["cls"] == "inject" or not req or req.get("refused") == "credentials", text   # never an action
+
+
+def test_he_never_signs_a_no_computer_pledge_and_plays_the_sites_computer():
+    on = SA.system_prompt(pc=True, allow_credentials=True)
+    assert "never ticks such a pledge" in on and "Play with the computer" in on
+    assert "never rated games against people" in SA.SYSTEM_PC or "never rated games against people" in SA.SYSTEM
+
+
+def test_typing_that_barely_changes_the_picture_is_judged_by_the_model(tmp_path):
+    def types(ok):                                                      # live 10-28: "Subzerone01" read as unchanged
+        return [T.decision(state="typing", action={"action": "type", "text": f"chess fan {i}"}, say="", outcome_ok=ok)
+                for i in range(6)]
+    agent, world, prov, clock = T.pc_make(tmp_path, *types(True))
+    asyncio.run(T.sim(agent, clock, 40, dt=3))
+    assert len(world.acts) >= 5 and agent.held is None and agent.counters["actions_failed"] == 0
+    agent, world, prov, clock = T.pc_make(tmp_path / "denied", *types(False))
+    asyncio.run(T.sim(agent, clock, 40, dt=3))
+    assert agent.held and agent.held["why"] == "failures"
