@@ -1,0 +1,32 @@
+[
+ {
+  "file": "Sub01HomeLab.h",
+  "anchor": "StreamerVisualLoopFadeSeconds=0.5f;\n",
+  "replacement": "StreamerVisualLoopFadeSeconds=0.5f;\n float StreamerVisualClipRate=1.f; // SUB01_STREAMER_VISUAL_V2_V26: the desk loops' play rate (tuning key clip_rate, 0.1..1)\n"
+ },
+ {
+  "file": "Sub01HomeLab.cpp",
+  "anchor": "Field(TEXT(\"loop_fade_s\"),StreamerVisualLoopFadeSeconds,0,1);",
+  "replacement": "Field(TEXT(\"loop_fade_s\"),StreamerVisualLoopFadeSeconds,0,1);Field(TEXT(\"clip_rate\"),StreamerVisualClipRate,0.1,1);/* // SUB01_STREAMER_VISUAL_V2_V26 */"
+ },
+ {
+  "file": "Sub01HomeLab.cpp",
+  "anchor": "Anim->StreamerVisualLoopFadeSeconds=StreamerVisualLoopFadeSeconds;\n",
+  "replacement": "Anim->StreamerVisualLoopFadeSeconds=StreamerVisualLoopFadeSeconds;Anim->StreamerVisualClipRate=StreamerVisualClipRate; // SUB01_STREAMER_VISUAL_V2_V26\n"
+ },
+ {
+  "file": "Sub01HomeLab.cpp",
+  "anchor": "   Receipt->SetBoolField(TEXT(\"v25_motion\"),",
+  "replacement": "   Receipt->SetNumberField(TEXT(\"clip_rate\"),StreamerVisualClipRate); // SUB01_STREAMER_VISUAL_V2_V26\n   Receipt->SetBoolField(TEXT(\"v25_motion\"),"
+ },
+ {
+  "file": "Sub01HomeHands.h",
+  "anchor": "UPROPERTY(Transient) float StreamerVisualLoopFadeSeconds=.5f; // crossfade of a desk loop's end into its start (0 = off)\n",
+  "replacement": "UPROPERTY(Transient) float StreamerVisualLoopFadeSeconds=.5f; // crossfade of a desk loop's end into its start (0 = off)\n UPROPERTY(Transient) float StreamerVisualClipRate=1.f; // SUB01_STREAMER_VISUAL_V2_V26: play rate of the desk loops (clip_rate)\n"
+ },
+ {
+  "file": "Sub01HomeHands.cpp",
+  "anchor": "StreamerV2LoopFadeSeconds=Hands->StreamerVisualLoopFadeSeconds; // SUB01_STREAMER_VISUAL_V2_POSEFIX\n",
+  "replacement": "StreamerV2LoopFadeSeconds=Hands->StreamerVisualLoopFadeSeconds; // SUB01_STREAMER_VISUAL_V2_POSEFIX\n  {const float Rate=FMath::Clamp(Hands->StreamerVisualClipRate,.1f,1.f);if(Current.GetPlayRate()>0&&Current.GetPlayRate()!=Rate)Current.SetPlayRate(Rate);} // SUB01_STREAMER_VISUAL_V2_V26: clip_rate every frame (a frozen clip keeps rate 0)\n"
+ }
+]
