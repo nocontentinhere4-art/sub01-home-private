@@ -255,6 +255,15 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   `/home/sub01-review-20261027/feat1-answer.json` (names unverified, coarse topics, code-enforced once-per-visit
   greeting, strict YouTube URL parse, fair round-robin queue with states, no body logging, placeholder thumbnails or
   accepted risk). Needs site + relay + agent changes and a `railway up` by the owner.
+- 21:30-21:52 LIVE FEATURES (owner chose; Kimi feat1-3 + site5 APPROVE): `streamer_live_features.py` (new file, also
+  deployed in runtime-source), agent new39 (910eb8c), relay restarted. Viewer names from the page (unverified), memory
+  (coarse topics, one welcome-back per visit), video queue (`POST /queue`, round robin, 150 s apart, only when chat
+  is quiet), Hype button (`POST /hype`, shout-outs, hype train = line + airhorn + library cartoon, 10 min cooldown),
+  `!airhorn !drumroll !rimshot !sad !boom !applause !crickets !win` (synth wavs in `streamer/sfx/` by
+  `tools/pod/onpod/make_sfx.py`, paplay into sub01_apps). Verified live through the relay 21:47 (named chat, sfx
+  played, hype shout-out, queue video started). Site commit 5957140 on `claude/live-control-20261027`: owner must run
+  `railway up` (names, sound buttons, Hype, queue UI). Preview: `docs/streamer/site-ui-20261028-features-desktop.png`,
+  sounds `docs/streamer/sfx-preview-20261028.mp3`.
 - 19:55 LOOP STOPPED: RunPod balance $15.39 at $1.26/h (below $15 ~20:13; owner rule). Stream delay flat (segment
   59.99 fps, no lag_restart since 18:43). Pending for the owner: top-up decision, run set_sub01_login.py for logins,
   Railway healthcheck logs. Runtime: director = 503c236 + live-layouts file; agent = new30 (git f5530be + the two
