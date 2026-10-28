@@ -93,7 +93,7 @@ def test_cartoon_is_one_more_mjpeg_input_after_cam2_and_before_the_music(tmp_pat
         start = argv.index(FIFO) - 1
         opts = argv[start - 12:start]                             # the options of that input, as cam2's
         assert base.value_after(opts, "-f") == "mjpeg" and base.value_after(opts, "-framerate") == "30"
-        assert base.value_after(opts, "-use_wallclock_as_timestamps") == "1" and base.value_after(opts, "-thread_queue_size") == "512"
+        assert base.value_after(opts, "-use_wallclock_as_timestamps") == "1" and base.value_after(opts, "-thread_queue_size") == sd.CARTOON_QUEUE == "16"
         graph = graph_of(argv)
         assert f"[{index}:v]" in graph and f"[{index + 1}:a]aresample=48000" in graph     # the bgm index moved by one
         assert graph.count("[2:a]apad") == 1                      # the voice/music mix is the one every layout has

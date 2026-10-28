@@ -46,7 +46,7 @@ per wall second) and main.json's `written` per window (`game_fps`).
 Cartoon mode (`--cartoon-fifo PATH`, default off: without it nothing below exists and every argv/graph is byte-identical
 to a run without the feature). One more video input, placed after cam2 and before the music/apps inputs (index 3, or 4
 with cam2; the established 0..3 never move): MJPEG read from PATH like cam2 (`-f mjpeg -framerate 30
--use_wallclock_as_timestamps 1 -thread_queue_size 512`), and one more layout `cartoon` that shows it full frame
+-use_wallclock_as_timestamps 1 -thread_queue_size 16`), and one more layout `cartoon` that shows it full frame
 (aspect-preserving scale + black pad to the output size, full -> limited range, `fps`, `tpad` clone after an EOF). It is
 the LAST streamselect input, so the other layouts keep their indices, and it carries no desktop picture. Audio is the
 same voice/music mix as every layout (the cartoon input has no audio). `cartoon` is a valid layout name, for
@@ -183,6 +183,7 @@ TAP_OVERFLOW = "FIFO queue full"    # ffmpeg's fifo muxer, once per overflow (it
 DEFAULT_LAYOUT = "webcam"
 PRIVATE_LAYOUT = "webcam_only"
 LAYOUT_FOLLOW_FILE = "layout-follow"    # <streamer-dir>/layout-follow present: a --layout given at launch is ignored
+CARTOON_QUEUE = "16"                    # ffmpeg thread_queue_size of the cartoon input (frames): bounds the clip delay
 CARTOON_ON_FILE = "cartoon-on"          # <streamer-dir>/cartoon-on present: --cartoon-fifo defaults to <streamer-dir>/cartoon.mjpeg
 PRIVACY_REASON = "privacy"
 PIP_MARGIN = 24
@@ -625,8 +626,10 @@ def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, la
         assert argv.count("-i") == cartoon_index(cam2), "input order changed: update cartoon_index"
         if cfg.test_sources:
             argv += ["-re", "-f", "lavfi", "-i", f"rgbtestsrc=size={CAM2_SIZE}:rate={CARTOON_RATE}"]
-        else:                           # the feeder's continuous MJPEG; arrival wallclock as timestamps, like cam2
-            argv += ["-thread_queue_size", "512", "-use_wallclock_as_timestamps", "1", "-probesize", "2000000",
+        else:                           # the feeder's continuous MJPEG; arrival wallclock as timestamps, like cam2;
+            # a short queue: at a steady 30 fps any startup backlog stays forever (live: 512 held ~10 s of poster frames
+            # in front of every clip), with 16 the feeder drops instead and a clip shows within about a second
+            argv += ["-thread_queue_size", CARTOON_QUEUE, "-use_wallclock_as_timestamps", "1", "-probesize", "2000000",
                      "-analyzeduration", "1000000", "-f", "mjpeg", "-framerate", str(CARTOON_RATE),
                      "-i", str(cfg.cartoon_fifo)]
     music =cfg.streamer_dir / "music" / "bgm.mp3"
