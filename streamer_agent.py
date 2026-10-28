@@ -1564,10 +1564,24 @@ def strip_filler(text):
     return " ".join(t.split()).strip(" ,.!?;:-")
 
 
+# owner 10-28: "open youtube and find something about elon musk to react to" searched those very words
+QUERY_SITE_LEAD = re.compile(r"^(?:(?:open|go\s+(?:on|to)|on|in|use)\s+)?(?:youtube|yt|google|the\s+browser)\s*(?:,\s*)?"
+                             r"(?:and\s+|then\s+)?(?:(?:find|search(?:\s+for)?|look\s+(?:up|for)|get|pull\s+up|put\s+on|"
+                             r"show(?:\s+(?:us|me))?|watch)\s+)?", re.I)
+QUERY_VAGUE_LEAD = re.compile(r"\b(?:something|anything|stuff|things?|content|a\s+video|some\s+videos?)\s+(?:(\w+)\s+)?"
+                              r"(?:about|on|of|with|from|related\s+to)\s+", re.I)
+QUERY_REACT_TAIL = re.compile(r"\s+(?:(?:for\s+(?:us\s+|me\s+)?)?to\s+(?:react\s+(?:to|on)|watch|look\s+at)(?:\s+(?:it|them|that))?|"
+                              r"and\s+(?:react|watch|look)\b.*|so\s+(?:we|i)\s+can\s+.*|for\s+(?:the\s+)?(?:stream|chat))\W*$", re.I)
+
+
 def request_query(rest):
-    """The search query of a request: the lead-in ("for", "about", "what is") and the tail ("online", "for me") go, the
-    first 6 words stay (trailing stop words dropped), then the eyes rule (query_clean: filters, 60 chars). None: refused."""
-    q = QUERY_TAIL.sub("", QUERY_LEAD.sub("", " ".join(str(rest or "").split()))).strip(" \"'“”‘’.,;:!?-")
+    """The search query of a request: the lead-in ("for", "about", "what is", "open youtube and find something about")
+    and the tail ("online", "for me", "to react to") go, the first 6 words stay (trailing stop words dropped), then the
+    eyes rule (query_clean: filters, 60 chars). None: refused."""
+    q = " ".join(str(rest or "").split())
+    q = re.sub(r"\s+(?:on|in|from)\s+(?:youtube|yt)\b", "", QUERY_SITE_LEAD.sub("", q), flags=re.I)
+    q = QUERY_VAGUE_LEAD.sub(lambda m: (m.group(1) + " ") if m.group(1) else "", q)
+    q = QUERY_TAIL.sub("", QUERY_LEAD.sub("", QUERY_REACT_TAIL.sub("", q))).strip(" \"'“”‘’.,;:!?-")
     w = q.split()[:6]
     while w and w[-1].lower() in STOP_WORDS:
         w.pop()

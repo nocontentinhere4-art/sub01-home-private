@@ -115,3 +115,15 @@ def test_leave_and_another_request_is_that_request_not_the_desk_line():
     assert SA.parse_request("leave this video and search kai cenat", pc=True)["query"] == "kai cenat"
     assert SA.parse_request("leave the desk and play games")["refused"] == "leave_desk"
     assert not SA.leaves_desk("leave") and SA.leaves_desk("leave the room and go outside")
+
+
+@pytest.mark.parametrize("text,query", [
+    ("open youtube and find something about elon musk to react to", "elon musk"),
+    ("find something on youtube about elon musk", "elon musk"),
+    ("search for something funny about dogs", "funny dogs"),
+    ("look up stuff about GTA 6 and react to it", "GTA 6"),
+    ("go on youtube and search kai cenat", "kai cenat"),
+    ("search the GTA 6 trailer", "GTA 6 trailer"),
+    ("search youtube for mrbeast videos", "mrbeast videos")])
+def test_a_request_searches_its_subject_not_the_sentence(text, query):
+    assert SA.parse_request(text, pc=True)["query"] == query
