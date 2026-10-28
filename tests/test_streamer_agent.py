@@ -3963,3 +3963,48 @@ def test_motion_profile_file_picks_the_calm_profile(tmp_path):
     (tmp_path / "b" / "streamer" / "motion-profile").write_text("wild")
     agent, *_ = make(tmp_path / "b")
     assert agent.motion_profile == "default"                                # an unknown name falls back
+
+
+def test_poll_parsing_rates_votes_and_ambiguity():
+    rate, _ = SA.clean_poll({"kind": "rate"})
+    assert rate == {"kind": "rate"}
+    assert [SA.poll_answer(rate, t) for t in ("8", "7/10", "solid 9 honestly", "10", "8 or 9", "0", "lol",
+                                                "this page is a solid nine but I would say 9 for sure")] == \
+        [8, 7, 9, 10, None, None, None, None]
+    vote, _ = SA.clean_poll({"kind": "vote", "options": ["Red team", "blue team", "red team"]})
+    assert vote == {"kind": "vote", "options": ["red team", "blue team"]}
+    assert [SA.poll_answer(vote, t) for t in ("RED TEAM!", "blue team for sure", "red team or blue team", "green")] == \
+        ["red team", "blue team", None, None]
+    for bad in ({"kind": "vote", "options": ["yes"]}, {"kind": "vote", "options": ["red", "red team"]},
+                {"kind": "quiz"}, "rate", {"kind": "vote", "options": ["a very long option here", "b"]}):
+        assert SA.clean_poll(bad)[0] is None, bad
+    d = SA.validate_decision(json.dumps(decision(say="", poll={"kind": "rate"})), {})
+    assert d["poll"] is None and any("asked aloud" in x for x in d["dropped"])
+    d = SA.validate_decision(json.dumps(decision(say="Rate this logo, one to ten.", poll={"kind": "rate"})), {})
+    assert d["poll"] == {"kind": "rate"}
+
+
+def test_poll_counts_real_answers_and_reports_them_once(tmp_path):
+    ask = decision(state="talking", action=None, say="Chat, rate this logo one to ten.", poll={"kind": "rate"})
+    agent, world, prov, clock = make(tmp_path, decision(action=None), ask, decision(action=None))
+    agent.pacing.opened = True
+    agent.pacing.plan = lambda now, busy, **kw: {"open": False, "comment": True, "reading": False, "reaction": False,
+                                           "reaction_speech": False, "say_allowed": True, "voice_busy": False,
+                                           "since_speech_s": 60}
+    asyncio.run(sim(agent, clock, 25, dt=3))
+    assert agent.poll is not None and agent.poll["question"].startswith("Chat, rate")
+    world.chat_msgs = [msg(1, "8", "mika"), msg(2, "7/10", "kei"), msg(3, "9", "mika"), msg(4, "what is this page?", "jo")]
+    asyncio.run(sim(agent, clock, 9, dt=3))
+    assert agent.poll["votes"] == {"mika": 9, "kei": 7}                  # one per viewer, the latest counts
+    rows = {e["seq"]: e.get("cls") for e in events(agent) if e["kind"] == "chat"}
+    assert rows == {1: "poll_vote", 2: "poll_vote", 3: "poll_vote", 4: "ok"}   # a normal message is still chat
+    asyncio.run(sim(agent, clock, 40, dt=3))
+    assert agent.poll is None and agent.poll_result["avg"] == 8.0 and agent.poll_result["votes"] == 2
+    st = prov.calls[-1]["state"]
+    assert st["poll_result"]["avg"] == 8.0 and "poll" not in st
+    closes = [e for e in events(agent) if e["kind"] == "poll_close"]
+    assert len(closes) == 1 and closes[0]["votes"] == 2
+    agent.open_poll({"kind": "rate"}, "again?", clock())                  # the cooldown holds a second poll back
+    assert agent.poll is None and any(e["kind"] == "poll_refused" for e in events(agent))
+    clock.t += SA.POLL_RESULT_S
+    assert "poll_result" not in agent.poll_state(clock())                # a stale result leaves the state

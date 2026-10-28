@@ -162,6 +162,10 @@ SPEECH_GAP_S = 4.0                      # silence between the end of one unsolic
 COMMENT_READING_S = (15.0, 28.0)        # unsolicited remark while reading (was 35-70 s; owner 10-28: high-energy streamer; Kimi GO)
 COMMENT_OTHER_S = (8.0, 16.0)           # ... while browsing, typing, idle (was 12-25 s, before that 30-70 s)
 REACT_COOLDOWN_S = 15.0
+POLL_S = 30.0                           # a chat poll collects answers this long (owner 10-28: real interaction; Kimi poll)
+POLL_COOLDOWN_S = 180.0                 # ... and the next one may open this long after the last one closed
+POLL_RESULT_S = 90.0                    # the result is in the state this long, then it is stale
+POLL_ANSWER_WORDS = 6                   # a rating counts only from a short message ("8", "7/10", "solid 9 honestly")
 BIG_REACT_EVERY_S = 1800.0              # level 3 at most once per 30 min
 CHAT_EVERY_S = (4.0, 8.0)               # a chat batch (owner 10-27, twice: more interactive; was 25-45 s, before that 90-180 s)
 CHAT_EARLY_N = 1                        # ... or as soon as one new message waits (was 2, before that 3)
@@ -310,6 +314,9 @@ says so; if it failed, do something else (see "avoid").
 - say: at most 30 words, no opener from recent_said; by habit a reaction is 1-8 words and a comment 8-20 words in at \
 most two short sentences, and no sentence is long because the limit allows it. chat_replies: only to seqs listed in "chat", at most 4, each at most 40 words (12-28 by habit, not over 30), in his own voice; a group nod ("a few of you \
 said...") is fine.
+- Polls: for a real 1-10 rating or vote from chat, ask it in "say" and add "poll": {"kind":"rate"} or {"kind":"vote", \
+"options":["a","b"]} (2-4 options of 1-3 words). The code counts real answers for 30 s and returns "poll_result": \
+report it honestly, zero votes included. Never invent, round up or repeat an old result.
 - Keep exploring: after a few minutes on one page or stream, move to new content unless something concrete justifies \
 staying. Search, open videos or follow a useful suggestion; one action per reply, or null only for a short read.
 - layout: room (the camera behind him, the house) for a game and for quiet reading stretches, webcam (his face) when \
@@ -323,10 +330,7 @@ headline. I need the original study." Bad action "I am now clicking on the third
 later a comment only if the result deserves one. Bad surprise "Oh my god, chat, that is absolutely insane, I'm \
 screaming!" / good "No way. Chat, I had that completely backwards." / small "Ha, okay, that's fair." Bad uncertainty "This proves the headline was wrong." / good "That's \
 the headline. I haven't found the evidence for it yet." Bad acknowledgement "Certainly! I can help you with that \
-request." / good "Rome weather. I'll check the forecast." Bad outcome "According to my search results, I have found the \
-answer." / good (details visible) "The forecast has rain tomorrow. That's enough; I'm keeping this tab." Bad ending "In \
-summary, we've learned several important things and now it's time to move on." / good "That answers the mechanism, not \
-the headline. Good enough. I'm keeping the diagram." / dead end "This is going nowhere. Back to the map." Bad empty \
+request." / good "Rome weather. I'll check the forecast." Dead end "This is going nowhere. Back to the map." Bad empty \
 chat "Is anyone there? Say something in chat!" / good: an empty say and the current thread continues. Bad refusal "I \
 cannot fulfill this request because it violates my safety policy." / good "Let’s skip that and keep browsing." \
 Good close "That's enough tabs for tonight. Thanks for the pointers. I'm stopping here."
@@ -337,7 +341,7 @@ Reply with one JSON object and nothing else:
 {"action":"type","text":"...","submit":true} | {"action":"navigate","url":"https://..."} | \
 {"action":"search","query":"2 to 6 plain words"} | {"action":"key","key":"PageDown"} | {"action":"back"} | \
 {"action":"wait","seconds":2}, "say": "", "level": 0, "layout": "webcam|room|desktop|split", \
-"chat_replies": [{"seq": 12, "say": "..."}], "request_done": false}"""
+"poll": null, "chat_replies": [{"seq": 12, "say": "..."}], "request_done": false}"""
 
 # appended to SYSTEM when the observation comes from the remote PC (vagon mode): no marks, coordinates and verification
 SYSTEM_PC = """
@@ -696,6 +700,13 @@ class ChatGate:
         self.by_nick = collections.defaultdict(collections.deque)
         self.ignored = collections.Counter()
 
+    @staticmethod
+    def nick_of(msg):
+        nick = " ".join(str(msg.get("nick") or "").split())[:16]
+        if _mind is not None:
+            return _mind.viewer_name(nick)
+        return nick if re.fullmatch(r"\w[\w .'-]{0,15}", nick or "") else ""
+
     def classify(self, msg, page_words=frozenset()):
         now = self.clock()
         try:
@@ -703,11 +714,7 @@ class ChatGate:
         except (TypeError, ValueError, AttributeError):
             return None
         text = " ".join(str(msg.get("text") or "").split())[:280]
-        nick = " ".join(str(msg.get("nick") or "").split())[:16]
-        if _mind is not None:
-            nick = _mind.viewer_name(nick)
-        elif not re.fullmatch(r"\w[\w .'-]{0,15}", nick or ""):
-            nick = ""
+        nick = self.nick_of(msg)
         why = spam_reason(text) if text else "empty"
         if why is None and chat_blocked(text):
             why = "filtered"
@@ -1696,6 +1703,35 @@ def clean_pc_action(a, screen=SCREEN, chat_texts=(), allow_games=True, allowed=N
     return {"action": "launch_game", "name": name}, None
 
 
+def clean_poll(p):
+    """The model's "poll" -> ({"kind": "rate"} | {"kind": "vote", "options": [...]}, None) or (None, why)."""
+    if not isinstance(p, dict) or p.get("kind") not in ("rate", "vote"):
+        return None, "not a rate or vote poll"
+    if p["kind"] == "rate":
+        return {"kind": "rate"}, None
+    opts = []
+    for o in p.get("options") if isinstance(p.get("options"), list) else []:
+        o = " ".join(re.findall(r"[a-z0-9']+", str(o).lower()))
+        if 1 <= len(o.split()) <= 3 and o not in opts:
+            opts.append(o)
+    if not 2 <= len(opts) <= 4 or any(a != b and re.search(rf"\b{re.escape(a)}\b", b) for a in opts for b in opts):
+        return None, "a vote needs 2-4 distinct options of 1-3 words"
+    return {"kind": "vote", "options": opts}, None
+
+
+def poll_answer(poll, text):
+    """A chat message -> the viewer's answer to the open poll (an int 1-10 or an option), or None (normal chat)."""
+    t = " ".join(re.findall(r"[a-z0-9'/]+", str(text).lower()))
+    if poll["kind"] == "rate":
+        if len(t.split()) > POLL_ANSWER_WORDS:
+            return None
+        nums = re.findall(r"(?<![\d/])(10|[0-9])(?:\s*/\s*10)?(?![\d])", t)
+        vals = [int(n) for n in nums if 1 <= int(n) <= 10]
+        return vals[0] if len(vals) == 1 else None          # "8" or "7/10"; "8 or 9" is ambiguous
+    hits = [o for o in poll["options"] if re.search(rf"\b{re.escape(o)}\b", t)]
+    return hits[0] if len(hits) == 1 else None               # several options named: ambiguous, ignored
+
+
 def validate_decision(raw, marks, offered_seqs=(), chat_texts=(), screen=SCREEN, pc=None, allow_credentials=False):
     """The model's text -> a decision with only allowed content. `dropped` lists everything removed and why.
     Raises DecisionError when there is no JSON object at all. `pc` (the remote PC: {"allow_games", "allowed", "game",
@@ -1745,7 +1781,15 @@ def validate_decision(raw, marks, offered_seqs=(), chat_texts=(), screen=SCREEN,
     out = {"thought": " ".join(str(d.get("thought") or "").split())[:300], "state": state, "action": action,
            "say": say, "layout": layout, "level": level, "chat_replies": replies, "dropped": dropped,
            "request_done": d.get("request_done") is True,
-           "private_screen": d.get("private_screen") if isinstance(d.get("private_screen"), bool) else None}
+           "private_screen": d.get("private_screen") if isinstance(d.get("private_screen"), bool) else None, "poll": None}
+    if d.get("poll") is not None:
+        poll, why = clean_poll(d["poll"])
+        if poll is None:
+            dropped.append(f"poll: {why}")
+        elif not say:
+            dropped.append("poll: the question must be asked aloud in say")
+        else:
+            out["poll"] = poll
     if pc is not None:
         out["confirm"] = d.get("confirm") if isinstance(d.get("confirm"), bool) else None
         out["outcome_ok"] = d.get("outcome_ok") if isinstance(d.get("outcome_ok"), bool) else None
@@ -2939,6 +2983,7 @@ class Agent:
                                                                 defaults=streamer_motion.PROFILES[profile])
         self.started = clock()
         self.chat_since = self.memory.chat_since
+        self.poll, self.poll_result, self.poll_closed_at = None, None, -1e9   # chat polls (open_poll / poll_tick)
         self.pending = {}                                     # seq -> classified chat item waiting for a batch
         self.recent_chat = collections.deque(maxlen=40)       # (time, text) of what viewers wrote: never copied into actions
         self.answered_nicks = collections.deque(maxlen=30)
@@ -3221,6 +3266,8 @@ class Agent:
         page = self.obs
         page_words = set(words_of((page or {}).get("title", "") + " " + (page or {}).get("text", "")[:1500]))
         for m in messages:
+            if self.poll_vote(m, now):                        # "8" would be "too short" as chat: a poll answer is counted first
+                continue
             item = self.gate.classify(m, page_words)
             if item is None:
                 continue
@@ -4036,7 +4083,7 @@ class Agent:
                          if plan["open"] else "comment" if plan["comment"] else "reaction" if plan["reaction_speech"]
                          else "none", "reading_focus": plan["reading"], "reaction_ok": plan["reaction"],
                          "reaction_speech_needs_level": 2 if plan["reading"] else 1},
-              "memory": self.memory.lines(12), "recent_said": self.memory.said(6), "hints": hints}
+              "memory": self.memory.lines(12), "recent_said": self.memory.said(6), "hints": hints, **self.poll_state(now)}
         if cur:
             st["chat_request"] = {"nick": cur["nick"] or "a viewer", "text": cur["text"][:200], "kind": cur["kind"],
                                   "phase": cur["phase"], "step": cur["steps"], "steps_max": REQUEST_STEPS_MAX,
@@ -4725,6 +4772,7 @@ class Agent:
 
     async def _step(self):
         await self.check_stop()
+        self.poll_tick(self.clock())
         if self.paused:                                       # keep observing; chat sent meanwhile is stale on return
             try:
                 self.obs = self.normalize(await self.services.observe())
@@ -4903,8 +4951,8 @@ class Agent:
             elif cur and not cur["commented"]:                # the answer to the viewer's request: not pacing's business
                 cur["commented"] = True
                 self.enqueue(dec["say"], "request", "normal", (cur["seq"],), cur["nick"], words=REPLY_MAX_WORDS, ttl=60.0)
-            else:
-                self.queue_comment(dec["say"], plan, reacted, level)
+            elif self.queue_comment(dec["say"], plan, reacted, level) and dec.get("poll"):
+                self.open_poll(dec["poll"], dec["say"], now)
         if cur:
             if dec["request_done"] or (cur["commented"] and not action) or (cur.get("quick") and cur["steps"] and not action):
                 cur["done"] = True                            # a scroll/key/back request ends with the model's one look
@@ -4974,7 +5022,62 @@ class Agent:
         else:
             why = "reading focus" if plan["reading"] else "pacing"
             return self.drop_say(text, f"{why}: {plan['since_speech_s']} s since the last line, voice busy={plan['voice_busy']}")
-        self.enqueue(text, kind, "normal")
+        return self.enqueue(text, kind, "normal")
+
+    # ---- chat polls (owner 10-28: real interaction; Kimi poll): the code counts real answers, the model reports them ----
+    def open_poll(self, poll, question, now):
+        if self.poll is not None or now - self.poll_closed_at < POLL_COOLDOWN_S:
+            self.log("poll_refused", why="open" if self.poll is not None else "cooldown", poll=poll["kind"])
+            return
+        self.poll = dict(poll, question=question[:160], opened=now, until=now + POLL_S, votes={})
+        self.counters["polls"] += 1
+        self.log("poll_open", poll=poll["kind"], options=poll.get("options"), question=question[:160])
+
+    def poll_vote(self, m, now):
+        """A chat message that answers the open poll: counted (each viewer's latest answer once) and not queued as chat.
+        The content filter still applies; anything else goes through the normal chat gate."""
+        if self.poll is None or now >= self.poll["until"]:
+            return False
+        try:
+            seq = int(m.get("seq"))
+        except (TypeError, ValueError, AttributeError):
+            return False
+        text = " ".join(str(m.get("text") or "").split())[:280]
+        vote = poll_answer(self.poll, text) if text else None
+        if vote is None or chat_blocked(text) or INJECT.search(text) or CREDS.search(text):
+            return False
+        self.chat_since = max(self.chat_since, seq)
+        self.counters["chat_seen"] += 1
+        self.poll["votes"][self.gate.nick_of(m) or f"seq{seq}"] = vote
+        self.counters["poll_votes"] += 1
+        self.log("chat", seq=seq, cls="poll_vote", text=text[:80])
+        return True
+
+    def poll_tick(self, now):
+        p = self.poll
+        if p is None or now < p["until"]:
+            return
+        votes = dict(p["votes"])                              # the final tally: answers gated before the deadline only
+        res = {"kind": p["kind"], "question": p["question"], "votes": len(votes)}
+        if p["kind"] == "rate":
+            res["avg"] = round(sum(votes.values()) / len(votes), 1) if votes else None
+        else:
+            res["counts"] = {o: sum(1 for v in votes.values() if v == o) for o in p["options"]}
+        self.poll, self.poll_closed_at = None, now
+        self.poll_result = dict(res, until=now + POLL_RESULT_S)
+        self.log("poll_close", poll=res["kind"], **{k: v for k, v in res.items() if k != "kind"})
+
+    def poll_state(self, now):
+        out = {}
+        if self.poll is not None:
+            out["poll"] = {"kind": self.poll["kind"], "options": self.poll.get("options"), "votes": len(self.poll["votes"]),
+                           "seconds_left": round(max(0.0, self.poll["until"] - now))}
+        if self.poll_result is not None:
+            if now < self.poll_result["until"]:
+                out["poll_result"] = {k: v for k, v in self.poll_result.items() if k != "until"}
+            else:
+                self.poll_result = None
+        return out
 
     async def apply_chat(self, win, model_replies, now):
         """At most two answers per batch. Fixed answers (identity question, refusals) come from code and take the
@@ -5305,7 +5408,7 @@ class Agent:
                          if plan["open"] else "comment" if plan["comment"] else "reaction" if plan["reaction_speech"]
                          else "none", "reading_focus": plan["reading"], "reaction_ok": plan["reaction"],
                          "reaction_speech_needs_level": 2 if plan["reading"] else 1},
-              "memory": self.memory.lines(12), "recent_said": self.memory.said(6), "hints": hints}
+              "memory": self.memory.lines(12), "recent_said": self.memory.said(6), "hints": hints, **self.poll_state(now)}
         if crop:
             st["zoom"] = {"center": crop["center"], "box": crop["box"], "scale": crop["scale"], "image": 2}
         if r is not None and r.get("ask"):
@@ -5423,8 +5526,8 @@ class Agent:
             if cur and cur.get("routine") and not cur["commented"]:
                 cur["commented"] = True
                 self.enqueue(dec["say"], "request", "normal", (cur["seq"],), cur["nick"], words=REPLY_MAX_WORDS, ttl=60.0)
-            else:
-                self.queue_comment(dec["say"], plan, False, dec["level"])
+            elif self.queue_comment(dec["say"], plan, False, dec["level"]) and dec.get("poll"):
+                self.open_poll(dec["poll"], dec["say"], now)
         await self.apply_chat(win, dec["chat_replies"], now)
         want = dec["layout"] or self.auto_layout(dec["state"], False, bool(dec["chat_replies"]))
         dwell = LAYOUT_FAST_S if want == "webcam" and dec["chat_replies"] else LAYOUT_DWELL_S
