@@ -2931,7 +2931,8 @@ def parse_args(argv=None):
     p.add_argument("--min-free-gb", type=float, default=3.0,
                    help="delete the oldest finished segments while the disk has less free space than this")
     p.add_argument("--crf", type=int, default=23, help="x264 crf, or NVENC -cq")
-    p.add_argument("--preset", default="veryfast", help="x264 preset (NVENC always uses p4)")
+    p.add_argument("--preset", default="superfast", help="x264 preset (NVENC always uses p4); superfast since 10-28: "
+                   "veryfast at 1080p60 on the shared cores ran at 0.97-0.99x real time and the stream fell behind")
     p.add_argument("--encoder", default="libx264", choices=ENCODERS,
                    help="NVENC is probed once at start; libx264 when the probe fails")
     p.add_argument("--audio-bitrate", default="96k")
