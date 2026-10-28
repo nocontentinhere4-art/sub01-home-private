@@ -130,7 +130,19 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
 - Done 04:19: hype persona v1 deployed (prompt Character + viewers + examples, fixed lines; Kimi APPROVE). First live
   lines: "Yo chat! ... Who do you think wins this?", "Bro, even Minecraft countries need a propaganda desk."
 - Measured before: chat -> speech start median 2.6 s (max 15 s) over 28 replies: speed is fine; tone was the problem.
-- Next steps, in order: (1) voice energy: the K07 TTS settings (`integrated-cadence61-20261026/voice.json`; Chatterbox
+- Done 04:26: denser talk (COMMENT_READING_S 15-28 s, COMMENT_OTHER_S 8-16 s, SPEECH_GAP_S 4; Kimi GO). Decisions come
+  every ~12 s (latency 2 s, ~$1.1/h); remaining gaps (30-45 s) come from how often the model chooses to speak.
+- Done 04:33: real chat polls ("poll" in the decision; the code counts 1-10 ratings / votes for 30 s; poll_result for
+  90 s; 1 per 3 min; single digits counted before the spam gate). Live: a vote opened, closed with 0 votes, and he
+  said so honestly ("Zero votes on rich versus poor. Okay, I'm calling poor island on pure vibes.").
+- Done 04:45: regulars (viewers.json: nick -> last visit, visits; 30-day expiry; "forget me" erases; chat items carry
+  viewer new/back/here so he welcomes first-timers, welcomes regulars back and does not re-greet).
+- FOR THE OWNER (morning): (a) the frozen-stream latch fires on static ads/pages and only POST /resume clears it; an
+  auto-clear patch is ready but NOT deployed (refused as weakening a guard): `docs/streamer/proposals/
+  frozen-auto-clear-20261028.md`. Overnight I clear false positives by hand (POST /resume after checking the PC is
+  connected). (b) Voice energy needs a voice-service restart (Chatterbox `exaggeration` 0.45 is fixed at load; e.g.
+  0.6-0.7): not in tonight's agent-only brief.
+- Next steps, in order: (1) voice energy (owner OK needed, see above): the K07 TTS settings (`integrated-cadence61-20261026/voice.json`; Chatterbox
   exaggeration/cfg) for a livelier delivery, judged on HLS audio with Kimi; (2) talk density: comment gaps are ~40 s,
   real streamers rarely leave 20 s of silence: the pacing code; (3) real-reference pass (stream/short transcripts of
   hype streamers: bits, chat handling, segment structure) -> a short list of concrete behaviours to add; (4) chat
