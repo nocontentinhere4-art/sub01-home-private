@@ -247,6 +247,14 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   drop "open youtube and find something about ... to react to"; video searches open YouTube results, long ones are
   written by the model as 2-5 title words (verified: "crazy gameplay moments reaction"). Hood: live key `hide_slot`
   back to -1 (slot 4 hood_lining was hidden since 03:03 and made the hood look see-through); owner to confirm.
+- 21:15-21:25: agent new38 (edbbba0): "AI getting tortured"-type meme searches pass through an allowlist (AI/robot +
+  harm + filler words only); he closes finished tabs and keeps at most 3 (the Vagon PC got slow); "react at a youtube
+  video about X". Vagon stream FPS 30 -> 60 (owner asked): Display Settings > FPS > 60 fps clicked through the operator
+  console (`/operator/input`, agent paused meanwhile); measured 58-59 fps, 0 dropped, pod 9.3 cores, stream lag 8 s.
+- NEXT (owner chose 21:12): viewer memory + video queue from the site. Kimi feat1 design notes in
+  `/home/sub01-review-20261027/feat1-answer.json` (names unverified, coarse topics, code-enforced once-per-visit
+  greeting, strict YouTube URL parse, fair round-robin queue with states, no body logging, placeholder thumbnails or
+  accepted risk). Needs site + relay + agent changes and a `railway up` by the owner.
 - 19:55 LOOP STOPPED: RunPod balance $15.39 at $1.26/h (below $15 ~20:13; owner rule). Stream delay flat (segment
   59.99 fps, no lag_restart since 18:43). Pending for the owner: top-up decision, run set_sub01_login.py for logins,
   Railway healthcheck logs. Runtime: director = 503c236 + live-layouts file; agent = new30 (git f5530be + the two
