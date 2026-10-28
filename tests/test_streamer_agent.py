@@ -321,7 +321,7 @@ def test_refusals_come_from_code_and_the_model_never_opens_a_host_from_chat(tmp_
     assert not [a for a in world.acts if a["action"] == "navigate"]     # the model's own navigation to a chat host: dropped
     assert any("action: " in d for e in events(agent) if e["kind"] == "decision" for d in e["dropped"])
     assert 2 <= len(world.spoken) <= 3                                  # honest answer + the model's pick (+ one refusal line)
-    assert world.spoken[0]["text"] in SA.persona("HONEST_LINES", SA.FALLBACK_HONEST)
+    assert world.spoken[0]["text"] in SA.STREAMER_HONEST
     assert world.spoken[0]["priority"] == "high" and world.spoken[1]["text"].startswith("Thanks")
     rows = [e for e in events(agent) if e["kind"] == "chat_request"]   # the refused attempts are visible, with a reason
     assert [(r["user"], r["decision"], r["reason"]) for r in rows] == [("x", "refused", "admin"), ("y", "refused", "credentials")]
@@ -494,7 +494,7 @@ def test_quiet_mode_still_answers_the_identity_question_honestly(tmp_path):
     world.chat_msgs = [msg(1, "are you a real human?", "z")]
     asyncio.run(sim(agent, clock, 120, dt=4))
     assert len(world.spoken) == 1
-    assert world.spoken[0]["text"] in SA.persona("HONEST_LINES_NOKEY", SA.FALLBACK_HONEST_NOKEY)
+    assert world.spoken[0]["text"] in SA.STREAMER_HONEST_NOKEY
     assert world.said_log and world.said_log[0]["seqs"] == [1]
 
 
