@@ -299,5 +299,27 @@
    ]
   ],
   "seconds": 4.0
+ },
+ {
+  "mp4": "lib-face-punch.mp4",
+  "match": [
+   [
+    "punch",
+    "punches",
+    "punching",
+    "slap",
+    "slaps",
+    "hit",
+    "hits",
+    "box",
+    "boxes"
+   ],
+   [
+    "you",
+    "face",
+    "yourself"
+   ]
+  ],
+  "seconds": 4.0
  }
 ]
