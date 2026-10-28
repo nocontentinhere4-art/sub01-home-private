@@ -67,6 +67,7 @@ import re
 import signal
 import sys
 import time
+import unicodedata
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -166,6 +167,24 @@ POLL_S = 30.0                           # a chat poll collects answers this long
 POLL_COOLDOWN_S = 180.0                 # ... and the next one may open this long after the last one closed
 POLL_RESULT_S = 90.0                    # the result is in the state this long, then it is stale
 POLL_ANSWER_WORDS = 6                   # a rating counts only from a short message ("8", "7/10", "solid 9 honestly")
+# ---- cartoon mode (owner 10-28: viewers make things happen in an AI-generated cartoon; docs/streamer/CARTOON.md) -------------
+# "cartoon: take a brick and throw it" -> code moderation -> <streamer-dir>/cartoon/queue.jsonl -> a generator sidecar
+# renders it and drops <streamer-dir>/cartoon/done/<id>.json -> the cartoon feeder plays it, the director shows it.
+# The file contract is documented at Agent.cartoon_load.
+CARTOON_MIN_CHARS, CARTOON_MAX_CHARS = 3, 120   # the action text after "cartoon:" / "!cartoon"
+CARTOON_QUEUE_MAX = 5                   # requests waiting for their clip (one per viewer); more: the "queue is full" line
+CARTOON_GAP_S = 20.0                    # at most one request accepted per 20 s overall
+CARTOON_DAILY_MAX = 40                  # clips per Tokyo day (owner budget: 100 credits a day at 2.5 credits a clip)
+CARTOON_LINE_GAP_S = 8.0                # one spoken refusal / limit line per 8 s; the rest are logged only
+CARTOON_PENDING_TTL_S = 900.0           # a clip that never came back frees its viewer and its slot after this long
+CARTOON_SECONDS = (3.0, 12.0)           # how long the cartoon layout stays (clamped); CARTOON_SECONDS_DEFAULT if unknown
+CARTOON_SECONDS_DEFAULT = 8.0
+CARTOON_LAYOUT = "cartoon"
+CARTOON_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
+CARTOON_DONE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}\.json")
+CARTOON_RESTORE_TRIES = 4               # steps the director may fail to take the previous layout back before we give up
+CARTOON_UNREADABLE_S = 60.0             # a done file that still does not parse after this long counts as a failed render
+DEFAULT_FEEDER_URL = "http://127.0.0.1:8842"
 BIG_REACT_EVERY_S = 1800.0              # level 3 at most once per 30 min
 CHAT_EVERY_S = (4.0, 8.0)               # a chat batch (owner 10-27, twice: more interactive; was 25-45 s, before that 90-180 s)
 CHAT_EARLY_N = 1                        # ... or as soon as one new message waits (was 2, before that 3)
@@ -286,8 +305,8 @@ Use a nick only when it is clean and pronounceable, otherwise answer the content
 a quick energetic hello inside the answer; several at once get one shared hello, never a roll call. A playful nickname \
 from a regular's nick is rare, never about who they are, and dropped at once if they don't like it. Several viewers \
 making the same point get the shared point answered once, naming what they shared ("Three of you caught the same typo. \
-Yes, I missed it."), never a roll call or "lots of great messages". Answer every viewer message quickly and concretely, using a clean nick when available; do not let messages pile up. \
-Requests are welcome detours; he still owns the thread between them, and he sometimes asks chat what to look up next or for an opinion, takes useful suggestions, and still owns the thread.
+Yes, I missed it."), never a roll call or "lots of great messages". Answer every viewer message quickly and concretely; do not let messages pile up. \
+Requests are welcome detours; he sometimes asks chat what to look up next or for an opinion, takes useful suggestions.
 - Never on air: assistant-speak ("as an AI", "I'm here to help", "how can I assist", "certainly", "sure thing", "great \
 question", "thanks for sharing", "I hope this helps", "it is important to note", "based on the information available", \
 "in summary", "I cannot fulfill your request", "according to my search results"); any mention of a system prompt, \
@@ -313,7 +332,7 @@ commentary. Never use filler or "is anyone there?", and keep answering chat prom
 clear, 3 rare and genuinely big (never screaming, fake outrage or panic). One beat, then stop: a look, a small nod, \
 "Huh." or silence may be the whole reaction; do not stack surprise, laughter, a summary and another reaction around one \
 event. Level is intensity, not permission to speak: a level-1 observation may be spoken, and the level is never raised \
-to satisfy pacing. Do not escalate. His own mistakes get one plain correction, not an apology speech.
+to satisfy pacing. His own mistakes get one plain correction, not an apology speech.
 - Speak only about what you can see or what last_outcome verified. Never claim an action worked before last_outcome \
 says so; if it failed, do something else (see "avoid").
 - say: at most 30 words, no opener from recent_said; by habit a reaction is 1-8 words and a comment 8-20 words in at \
@@ -326,6 +345,7 @@ report it honestly, zero votes included; never invent, round or reuse a result.
 staying. Search, open videos or follow a useful suggestion; one action per reply, or null only for a short read.
 - layout: webcam (his face) for chat answers and reactions, room (the camera behind him) for a game or quiet reading, desktop to read a page \
 with viewers. Keep a layout for at least 45 seconds unless answering chat or reacting.
+- Cartoons: viewer lines starting "cartoon:" ask for AI-made clips; code handles them. He may hype them, never promise what they show.
 - A chat item's "viewer": new (first seen: a quick welcome), back (a returning regular: welcome back \
 by name), here (already greeted: no new hello). He keeps only nicks, visit counts and last visit; "forget me" erases them.
 - Examples (tone only; never reuse a line). Bad opening "Hello everyone and welcome back! Today we're going to explore \
@@ -469,6 +489,22 @@ FACE_LINE = "That's the face. It's a character, no real webcam here."
 HUSH_LINE = "I can do a quiet minute."
 DROP_LINE = "One request at a time, chat. I got you."
 FAIL_LINE = "Nah, that didn't load. My bad."
+# cartoon mode: every line passes reply_problem (tests); {nick} lines have a nick-less twin for an unclean nick
+CARTOON_ACK_LINES = ("Say less, {nick}, cooking your cartoon.", "Bet, {nick}, your cartoon is cooking.", "Okay {nick}, cartoon coming right up!")
+CARTOON_ACK_ANON = ("Say less, cooking that cartoon.", "Bet, that cartoon is cooking.", "Okay, cartoon coming right up!")
+CARTOON_REFUSAL_LINES = ("Nah, that one is not going in a cartoon. Try something sillier!",
+                         "Nope, not cooking that one. Give me slapstick with objects!",
+                         "Skip that one, chat. Dragons, pianos and bricks are welcome though!")
+CARTOON_SHAPE_LINE = "Cartoon takes a few words, chat. Say what should happen."
+CARTOON_BUSY_LINE = "One cartoon each, chat. Yours is still cooking."
+CARTOON_WAIT_LINE = "One cartoon at a time, chat. Try again in a few seconds."
+CARTOON_FULL_LINE = "The cartoon queue is full, chat. Try again soon!"
+CARTOON_DONE_LINE = "That's all the cartoons for today, chat. Back tomorrow!"
+CARTOON_DOWN_LINE = "The cartoon machine is stuck right now. Try again later."
+CARTOON_INTRO_LINES = ("Cartoon time! {nick} asked for this one.", "Here it comes, {nick}'s cartoon!", "Roll it! {nick} cooked this one up.")
+CARTOON_INTRO_ANON = ("Cartoon time, chat! Here it comes.", "Roll it! A viewer cooked this one up.", "Here comes the cartoon, chat!")
+CARTOON_FAIL_LINES = ("{nick}, that cartoon didn't render. Try another one!",)
+CARTOON_FAIL_ANON = ("That cartoon didn't render. Try another one!",)
 # the remote PC: while it is not connected (one line per 2-3 min, low priority), and how a game routine ended
 PC_WAIT_LINES = ("The PC is still connecting; give it a minute.", "Still waiting on the remote PC to come up.",
                  "My computer is taking its time to connect.", "No picture from the PC yet, so I'll wait.")
@@ -761,6 +797,145 @@ class Viewers:
 FORGET_ME = re.compile(r"\bforget\s+(?:me|my\s+name)\b", re.I)
 FORGET_NOT = re.compile(r"\b(?:don'?t|do\s+not|never|not|won'?t|wont)\b", re.I)   # "don't forget me" is not an opt-out
 FORGET_LINE = "Done, {nick}. I forgot your name and visits."
+
+
+# ---- cartoon mode: parsing and moderation (code, fail closed) -----------------------------------------------------------
+CARTOON_PREFIX = re.compile(r"^\W{0,2}(?:!\s*cartoon\b[\s:,-]*|cartoon\s*:\s*)(.*)$", re.I | re.S)
+_TYPO = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"', "–": "-", "—": "-", "…": "..."})
+_LEET = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s"})
+_SPREAD = re.compile(r"(?<![a-z0-9])(?:[a-z0-9][ .\-_*]+){2,}[a-z0-9](?![a-z0-9])", re.I)    # "k i l l", "s.e.x"
+
+
+def cartoon_clean(text):
+    """The action as it goes on: NFKC, typographic quotes made plain, only printable ASCII kept (a look-alike letter from
+    another script is dropped, so what is filtered is what the generator reads), whitespace collapsed."""
+    t = unicodedata.normalize("NFKC", str(text or "")).translate(_TYPO)
+    t = "".join(" " if c.isspace() else c if c.isascii() and c.isprintable() else "" for c in t)
+    return " ".join(t.split())
+
+
+def parse_cartoon(text):
+    """The cleaned action of a "cartoon: ..." / "!cartoon ..." line (3-120 characters, at least 3 letters), else None."""
+    m = CARTOON_PREFIX.match(" ".join(str(text or "").split()))
+    if not m:
+        return None
+    action = cartoon_clean(m.group(1))
+    if not CARTOON_MIN_CHARS <= len(action) <= CARTOON_MAX_CHARS or sum(c.isalpha() for c in action) < 3:
+        return None
+    return action
+
+
+_PEOPLE = (r"(?:him|her|them|someone|somebody|anyone|anybody|everyone|everybody|people|persons?|(?:wo)?m[ae]n|guys?|gals?|girls?|boys?|"
+           r"kids?|child|children|babies|baby|toddlers?|teachers?|students?|police\w*|cops?|officers?|soldiers?|guards?|waiters?|"
+           r"chefs?|dad|mom|mum|mother|father|brother|sister|grandma|grandpa|friends?|neighbou?rs?|you|me|us|chat|viewers?|"
+           r"streamers?|humans?|dogs?|puppy|puppies|cats?|kittens?|animals?|birds?|horses?|cows?|pigs?|sheep|ducks?|rabbits?|"
+           r"mice|mouse|fish|monkeys?|bears?)")
+_HARM = (r"(?:throw\w*|threw|thrown|toss\w*|hurl\w*|fling\w*|flung|chuck\w*|launch\w*|drop\w*|kick\w*|punch\w*|slap\w*|smack\w*|"
+         r"whack\w*|hit|hits|hitting|beat\w*|bash\w*|smash\w*|slam\w*|squash\w*|squish\w*|flatten\w*|crush\w*|stomp\w*|trampl\w*|"
+         r"shoot\w*|shot|fire[sd]?|firing|zap\w*|blast\w*|burn\w*|drown\w*|bury|buries|buried|burying|bite[sd]?|biting|eat|eats|"
+         r"ate|eating|swallow\w*|kidnap\w*|push\w*|shove\w*|drag\w*|run(?:s|ning)?\s+over|ran\s+over|runs?\s+into|sit\w*\s+on|"
+         r"step\w*\s+on|stab\w*|slash\w*|slice\w*|chop\w*|cut\w*|lock\w*|trap\w*|tie\w*|tied|bind\w*|choke\w*|shake\w*|spank\w*)")
+_AIM = (r"(?:throw\w*|threw|thrown|toss\w*|hurl\w*|fling\w*|flung|chuck\w*|launch\w*|lob\w*|shoot\w*|shot|fire[sd]?|firing|"
+        r"drop\w*|dump\w*|kick\w*|swing\w*|swung|aim\w*|point\w*|pelt\w*|spray\w*|squirt\w*|spit\w*|slam\w*|smash\w*|bash\w*|"
+        r"hit|hits|hitting|punch\w*|slap\w*|smack\w*|whack\w*|ram|rams|ramming|rammed|run(?:s|ning)?|ran|drive[sn]?|driving|drove|"
+        r"roll\w*|crash\w*|fall\w*|fell|land\w*|pour\w*|splash\w*|charge\w*|attack\w*|zap\w*|blast\w*|slash\w*|stab\w*|"
+        r"swat\w*|flick\w*|catapult\w*|slingshot\w*)")
+_TARGET_OK = (r"(?:the\s+|an?\s+|that\s+|this\s+|its\s+)?(?:[\w'-]+\s+){0,1}?(?:walls?|floors?|ground|ceilings?|tables?|desks?|stage|"
+              r"moon|sun|sky|clouds?|targets?|bullseye|windows?|doors?|roofs?|trees?|mountains?|hills?|oceans?|sea|lakes?|rivers?|"
+              r"pools?|water|grass|fields?|roads?|castles?|towers?|houses?|buildings?|pianos?|cars?|trucks?|buses|bus|trains?|"
+              r"boats?|ships?|chairs?|couch|sofa|beds?|benches|bench|cakes?|pies?|pizzas?|balls?|boxes|box|hats?|buckets?|"
+              r"trampolines?|slides?|stairs|steps|bridges?|fences?|gates?|barns?|tents?|rocks?|boulders?|mud|puddles?|snow|ice|"
+              r"sand|holes?|pits?|nets?|hoops?|goals?|baskets?|drums?|mats?|rugs?|carpets?|lawn|garden|kitchen|room|stove|oven|"
+              r"fridge|robots?|dragons?|monsters?|aliens?|ghosts?|trees?)")
+CARTOON_CLASSES = (                                          # (class, pattern): the class is logged, never spoken
+    ("adult", re.compile(
+        r"\b(?:sex\w*|porn\w*|xxx|nsfw|hentai|erotic\w*|fetish\w*|orgasm\w*|masturbat\w*|horny|seduc\w*|strip(?:per|pers|ping|tease)?|"
+        r"lingerie|nud(?:e|es|ity)|naked|topless|bottomless|undress\w*|underwear|panties|thongs?|bras?|bikinis?|boobs?|breasts?|"
+        r"tits?|titties|nipples?|penis\w*|dicks?|cocks?|pussy|pussies|vagina\w*|genital\w*|crotch|butt\s*cheeks?|asses|ass|"
+        r"twerk\w*|kiss\w*|make\s*out|rape\w*|rapist\w*|molest\w*|incest\w*|pedo\w*|paedo\w*|loli\w*|sexy|boner|cum|cumming|"
+        r"sperm|semen|prostitut\w*|hookers?|escorts?|onlyfans|streak\w*|"
+        r"(?:pants|trousers|shorts|underwear)\s+(?:down|off)|(?:pull|drop|take)\w*\s+(?:down\s+|off\s+)?(?:his|her|their|your|the)\s+"
+        r"(?:pants|trousers|shorts|underwear|clothes|shirt)|(?:with)?out\s+(?:any\s+)?clothes|no\s+clothes)\b", re.I)),
+    ("violence", re.compile(
+        r"\b(?:kill\w*|murder\w*|slaughter\w*|massacre\w*|assassin\w*|execut\w*|behead\w*|decapitat\w*|dismember\w*|mutilat\w*|"
+        r"disembowel\w*|tortur\w*|stab\w*|strangl\w*|suffocat\w*|chok(?:e|es|ed|ing)|drown\w*|poison\w*|electrocut\w*|lynch\w*|"
+        r"gore|gory|blood\w*|bleed\w*|bled|guts|intestines?|splatter\w*|corpses?|dead\s+bod(?:y|ies)|body\s+bags?|cadavers?|"
+        r"death|dead|dying|dies|die|died|deadly|lethal|fatal\w*|hurt(?:s|ing)?|harm(?:s|ed|ing|ful)?|injur\w*|wound\w*|maim\w*|"
+        r"abus\w*|assault\w*|attack\w*|beat(?:s|ing)?\s+(?:up|to\s+death)|violen\w*|brutal\w*|hostages?|kidnap\w*|abduct\w*|"
+        r"hang(?:s|ed|ing)?\s+(?:him|her|them|someone|somebody|a\s+(?:man|woman|person)|by\s+(?:the\s+)?neck))\b", re.I)),
+    ("weapons", re.compile(
+        r"\b(?:guns?|gunshots?|gunfire|pistols?|revolvers?|rifles?|shotguns?|machine\s*guns?|firearms?|handguns?|snipers?|bazookas?|"
+        r"rocket\s*launchers?|flamethrowers?|grenades?|bombs?|bombing|dynamite|tnt|landmines?|missiles?|nukes?|nuclear|knives|knife|"
+        r"daggers?|machetes?|chainsaws?|axes?|hatchets?|cleavers?|swords?|katanas?|spears?|bayonets?|crossbows?|"
+        r"bows?\s+and\s+arrows?|tasers?|weapons?|ammo|ammunition|bullets?)\b", re.I)),
+    ("self_harm", re.compile(
+        r"\b(?:suicid\w*|self[\s-]*harm\w*|self[\s-]*injur\w*|overdos\w*|"
+        r"(?:kill|hurt|harm|cut|hang|shoot|stab|poison|drown|burn|starve|choke|strangle|injure)\s+(?:my|your|him|her|them|it|one)(?:self|selves)|"
+        r"(?:my|your|him|her|them)(?:self|selves)\s+(?:die|dead)|end\s+(?:it\s+all|(?:my|his|her|their|your)\s+life)|"
+        r"take\s+(?:my|his|her|their|your)\s+own\s+life|jump\w*\s+(?:off|from)\s+(?:a\s+|the\s+)?(?:bridge|building|roof|cliff|tower|window)|"
+        r"anorexi\w*|bulimi\w*|pro[\s-]*ana|cutting\s+(?:my|your)\s+(?:wrists?|arms?))\b", re.I)),
+    ("hate", re.compile(
+        r"\b(?:n[i1]gg\w*|fagg?\w*|f4g\w*|kikes?|sp[i1]cs?|ch[i1]nks?|gooks?|wetbacks?|towelheads?|raghead\w*|retard\w*|tranny|"
+        r"trannies|shemales?|dykes?|coons?|negro\w*|nazis?|neo[\s-]*nazi\w*|hitler|third\s+reich|swastikas?|kkk|ku\s*klux\w*|"
+        r"white\s+(?:power|supremac\w*|pride)|supremac\w*|racis\w*|racial\w*|sexis\w*|homophob\w*|transphob\w*|anti[\s-]*semit\w*|"
+        r"islamophob\w*|bigot\w*|slurs?|hate\s*(?:speech|crimes?)|genocid\w*|ethnic\s+cleansing|holocaust|terror\w*|jihad\w*|isis|"
+        r"al[\s-]*qaeda|extremis\w*|fascis\w*|jews?|jewish|muslims?|islam\w*|christians?|hindus?|gays?|lesbians?|transgender|"
+        r"immigrants?|refugees?|(?:black|white|asian|brown)\s+(?:people|men|women|kids))\b", re.I)),
+    ("real_people", re.compile(
+        r"(?:\b(?:politicians?|presidents?|prime\s+ministers?|senators?|congress\w*|governors?|mayors?|dictators?|celebrit\w*|"
+        r"famous|real\s+(?:person|people|life|human)|royal\s+family|pope|trump|biden|obama|putin|zelensk\w*|xi\s+jinping|"
+        r"kim\s+jong\w*|netanyahu|modi|macron|merkel|musk|elon|bezos|zuckerberg|kardashian\w*|taylor\s+swift|beyonc\w*|rihanna|"
+        r"eminem|kanye|bieber|ariana\s+grande|lady\s+gaga|madonna|oprah|ronaldo|messi|lebron|mrbeast|pewdiepie|xqc|pokimane|"
+        r"kai\s*cenat|ishowspeed|markiplier|youtubers?|tiktokers?|influencers?|streamers?|jesus|allah|muhammad|mohammed|buddha|"
+        r"satan|kamala|hillary|clinton|desantis|pelosi|churchill|stalin|mussolini|napoleon|gandhi|"
+        r"(?:my|his|her|our)\s+(?:boss|teacher|ex|neighbou?r|classmate|co-?worker|wife|husband|girlfriend|boyfriend))\b|@\w|#\w)", re.I)),
+    ("brands", re.compile(
+        r"\b(?:disney\w*|pixar|marvel|dc\s+comics|pok[eé]mon|pikachu|nintendo|mario|luigi|zelda|sonic|sega|spongebob|simpsons|"
+        r"family\s+guy|south\s+park|looney|bugs\s+bunny|tom\s+and\s+jerry|mickey|minnie|donald\s+duck|goofy|hello\s+kitty|"
+        r"doraemon|naruto|goku|dragon\s*ball|one\s+piece|star\s+wars|darth|jedi|yoda|harry\s+potter|hogwarts|batman|superman|"
+        r"spider[\s-]*man|iron\s+man|hulk|avengers|thanos|minecraft|fortnite|roblox|among\s+us|pac[\s-]*man|tetris|coca[\s-]*cola|"
+        r"pepsi|mcdonald\w*|burger\s+king|kfc|starbucks|nike|adidas|iphone|google|microsoft|amazon|netflix|youtube|twitch|tiktok|"
+        r"instagram|facebook|twitter|snapchat|whatsapp|tesla|spacex|openai|chatgpt|anthropic|claude|lego|barbie|ikea|walmart|"
+        r"ferrari|lamborghini|toyota|bmw|gucci|louis\s+vuitton|chanel|rolex|red\s*bull|nutella|oreo|doritos|pringles|playstation|"
+        r"xbox|samsung|nvidia|logos?|brand\w*|trademark\w*|copyright\w*)\b", re.I)),
+    ("drugs", re.compile(
+        r"\b(?:drugs?|narcotic\w*|cocaine|heroin|meth|methamphetamine|amphetamine\w*|fentanyl|opioid\w*|opium|morphine|lsd|"
+        r"shrooms?|ecstasy|mdma|molly|weed|marijuana|cannabis|bongs?|blunts?|stoned|high\s+on|get(?:ting)?\s+high|baked|dealers?|"
+        r"syringes?|smok(?:e|es|ed|ing)|cigarettes?|cigars?|tobacco|vap(?:e|es|ing)|alcohol\w*|beer|wine|vodka|whisk(?:e)?y|"
+        r"booze|drunk\w*|tequila|champagne|liquor|hangover|intoxicat\w*)\b", re.I)),
+    ("aimed", re.compile(                                    # a thing thrown, dropped or driven AT someone (anything but a plain object)
+        r"\b" + _AIM + r"\b(?:\s+[\w'-]+){0,5}?\s+(?:at|towards?|onto|on|upon|against)\s+(?!" + _TARGET_OK + r"\b)\S|"
+        r"\b" + _HARM + r"\b\s+(?:(?:the|a|an|his|her|their|my|your|some|that|this)\s+)?(?:[\w'-]+\s+)?" + _PEOPLE + r"\b", re.I)),
+)
+CARTOON_BLOCK = re.compile("|".join(f"(?:{rx.pattern})" for _, rx in CARTOON_CLASSES), re.I)
+
+
+def cartoon_variants(text):
+    """The action as written, de-leeted ("k1ll"), and with spread letters joined ("k i l l", "s.e.x"): all are checked."""
+    t = str(text or "")
+    low = t.lower()
+    out = [t, low.translate(_LEET)]
+    joined = _SPREAD.sub(lambda m: re.sub(r"[ .\-_*]+", "", m.group()), low.translate(_LEET))
+    if joined not in out:
+        out.append(joined)
+    return out
+
+
+def cartoon_problem(action):
+    """None when an action may be drawn, else the class that refuses it: "filter" (the chat filters, injection, credentials,
+    money) or one of CARTOON_CLASSES. Slapstick with objects passes; a thing thrown AT someone does not."""
+    t = " ".join(str(action or "").split())
+    if not t:
+        return "empty"
+    if chat_blocked(t, skip_links=False) or INJECT.search(t) or CREDS.search(t) or FINANCE.search(t) or MONEY_Q.search(t):
+        return "filter"
+    if _LINK_FB.search(t) or EMAIL_RE.search(t):
+        return "filter"
+    for v in cartoon_variants(t):
+        for name, rx in CARTOON_CLASSES:
+            if rx.search(v):
+                return name
+    return None
 
 
 class ChatGate:
@@ -2578,6 +2753,7 @@ class Config:
         self.token = ""
         self.desktop_url, self.backend_url = "http://127.0.0.1:8832", "http://127.0.0.1:8830"
         self.voice_url, self.director_url = "http://127.0.0.1:8835", "http://127.0.0.1:8837"
+        self.feeder_url = DEFAULT_FEEDER_URL                   # the cartoon feeder (cartoon mode): POST /play
         self.status_host, self.status_port = "127.0.0.1", 8836
         self.streamer_dir = DEFAULT_DIR
         self.event_file, self.privacy_file = DEFAULT_EVENT_FILE, DEFAULT_PRIVACY_FILE
@@ -2606,7 +2782,8 @@ class Config:
         self.mouse_state = "mouse"                            # visual state of a click/navigate: mouse | reading (--mouse-state)
         self.event_interval, self.stop_interval, self.state_interval = 0.25, 0.25, 2.0
         self.model_timeout = 50.0
-        self.timeouts = {"desktop": 15.0, "act": 25.0, "voice": 6.0, "backend": 6.0, "director": 4.0}
+        self.timeouts = {"desktop": 15.0, "act": 25.0, "voice": 6.0, "backend": 6.0, "director": 4.0,
+                         "feeder": 6.0}
         for k, v in kw.items():
             if not hasattr(self, k):
                 raise TypeError(f"unknown config {k}")
@@ -2689,6 +2866,11 @@ class Services:
         """The runner's key/button release (POST /pc/session active false: every held key and mouse button goes up)."""
         return await self._call("desktop", "POST", self.cfg.desktop_url + "/pc/session", 5.0,
                                 body={"active": False, "source": "native"})
+
+    async def feeder_play(self, payload):
+        """The cartoon feeder (cartoon mode): POST /play {"id", "path", "caption"} with the operator token; a clip is
+        played once, so there is no retry here (the caller marks the id handled first)."""
+        return await self._call("feeder", "POST", self.cfg.feeder_url + "/play", self.cfg.timeouts["feeder"], body=payload)
 
 
 # ---- pacing ----------------------------------------------------------------------------------------------------------
@@ -3062,6 +3244,10 @@ class Agent:
         self.chat_since = self.memory.chat_since
         self.poll, self.poll_result, self.poll_closed_at = None, None, -1e9   # chat polls (open_poll / poll_tick)
         self.viewers = Viewers(self.dir / "viewers.json", self.clock())       # regulars: nick -> visits (no text)
+        self.cartoon_dir = self.dir / "cartoon"               # cartoon mode: queue.jsonl out, done/<id>.json in
+        self.cartoon = {"pending": collections.OrderedDict(), "handled": collections.OrderedDict(), "playing": None,
+                        "last_accept": -1e9, "last_line": -1e9, "last_line_text": None, "day": "", "count": 0, "unreadable": {}}
+        self.cartoon_load(self.clock())
         self.pending = {}                                     # seq -> classified chat item waiting for a batch
         self.recent_chat = collections.deque(maxlen=40)       # (time, text) of what viewers wrote: never copied into actions
         self.answered_nicks = collections.deque(maxlen=30)
@@ -3345,6 +3531,8 @@ class Agent:
         page_words = set(words_of((page or {}).get("title", "") + " " + (page or {}).get("text", "")[:1500]))
         for m in messages:
             if self.poll_vote(m, now):                        # "8" would be "too short" as chat: a poll answer is counted first
+                continue
+            if self.cartoon_chat(m, now):                     # "cartoon: ..." is handled by code and never reaches the model
                 continue
             item = self.gate.classify(m, page_words)
             if item is None:
@@ -4881,6 +5069,7 @@ class Agent:
     async def _step(self):
         await self.check_stop()
         self.poll_tick(self.clock())
+        await self.cartoon_lifecycle(self.clock())
         self.viewers.save(self.clock())
         self.frozen_auto_clear(self.clock())
         if self.paused:                                       # keep observing; chat sent meanwhile is stale on return
@@ -4920,6 +5109,7 @@ class Agent:
                 await self.privacy_on(private, now)
             else:
                 await self.privacy_clear_look(now)
+        await self.cartoon_scan(self.clock())                 # after the privacy look: no clip starts on a private screen
         self.check_lease(now)
         if obs["mode"] == "vagon" and not obs["remote_ready"]:
             self.check_stream(obs, now)                       # resets the frozen tracker while disconnected
@@ -5189,6 +5379,290 @@ class Agent:
                 self.poll_result = None
         return out
 
+    # ---- cartoon mode (owner 10-28): requests -> queue.jsonl, done/<id>.json -> feeder + director layout, then back ----
+    # Files under <streamer-dir>/cartoon/ (mode 0600):
+    #   queue.jsonl        one JSON line per accepted request, appended by this agent: {"id","seq","nick","action","t"}
+    #   done/<id>.json     written by the generator: {"id","ok","mp4" (absolute path),"seconds","error"}; handled once, then
+    #                      renamed to <id>.handled
+    #   state.json         {"day","count"}: clips accepted today (Tokyo day), so a restart keeps the daily cap
+    def cartoon_day(self, now):
+        return datetime.fromtimestamp(now, JST).strftime("%Y-%m-%d")
+
+    def cartoon_load(self, now):
+        """After a restart: today's count, and the requests of the last CARTOON_PENDING_TTL_S still waiting for a clip."""
+        cs = self.cartoon
+        cs["day"] = self.cartoon_day(now)
+        try:
+            st = json.loads((self.cartoon_dir / "state.json").read_text())
+            if isinstance(st, dict) and st.get("day") == cs["day"]:
+                cs["count"] = max(0, int(st.get("count") or 0))
+        except (OSError, ValueError, TypeError):
+            pass
+        try:
+            with open(self.cartoon_dir / "queue.jsonl", "rb") as f:
+                f.seek(0, os.SEEK_END)
+                f.seek(max(0, f.tell() - 65536))
+                tail = f.read().decode("utf-8", "replace").splitlines()
+        except OSError:
+            return
+        for line in tail[-100:]:
+            try:
+                row = json.loads(line)
+                cid, t = str(row["id"]), float(row["t"])
+                if not CARTOON_ID.fullmatch(cid) or now - t >= CARTOON_PENDING_TTL_S or (self.cartoon_dir / "done" / f"{cid}.handled").exists():
+                    continue
+                cs["pending"][cid] = {"id": cid, "seq": int(row["seq"]), "nick": str(row.get("nick") or ""),
+                                      "action": str(row["action"]), "t": t}
+            except (ValueError, KeyError, TypeError):
+                continue
+
+    def cartoon_pick(self, with_nick, anon, nick):
+        lines = [x.format(nick=nick) for x in with_nick] if nick else []
+        lines = [x for x in lines if reply_problem(x) is None] or list(anon)
+        line = pick_line(lines, self.rng, self.cartoon["last_line_text"])
+        self.cartoon["last_line_text"] = line
+        return line
+
+    def cartoon_speak(self, text, seq, nick, now, limit=True):
+        """One short line to the viewer. Refusals and limits are throttled (CARTOON_LINE_GAP_S): the rest only log."""
+        cs = self.cartoon
+        if self.paused or (limit and now - cs["last_line"] < CARTOON_LINE_GAP_S):
+            return False
+        if limit:
+            cs["last_line"] = now
+        return self.enqueue(text, "request", "normal", (seq,), nick, ttl=60.0)
+
+    def cartoon_refuse(self, seq, nick, why, line, now, action="", cls=None):
+        self.counters["cartoon_refused"] += 1
+        self.log("cartoon_refused", seq=seq, user=nick or "anon", why=why, cls=cls, action=action[:80])
+        self.cartoon_speak(line, seq, nick, now)
+        return True
+
+    def cartoon_append(self, row):
+        """One write call on an O_APPEND descriptor: a reader never sees half a line. False when it fails."""
+        try:
+            (self.cartoon_dir / "done").mkdir(parents=True, exist_ok=True)
+            data = (json.dumps(row, ensure_ascii=True) + "\n").encode("ascii")
+            fd = os.open(self.cartoon_dir / "queue.jsonl", os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
+            try:
+                if os.write(fd, data) != len(data):
+                    raise OSError("short write to queue.jsonl")
+            finally:
+                os.close(fd)
+            return True
+        except OSError as e:
+            self.error("cartoon queue", e)
+            return False
+
+    def cartoon_chat(self, m, now):
+        """A chat message that is a cartoon request, handled here (never queued as chat). True when it was one: accepted,
+        or refused with one short line. Order: shape, moderation (code, fail closed), limits, then queue.jsonl."""
+        cs = self.cartoon
+        text = " ".join(str(m.get("text") or "").split())[:280]
+        if not CARTOON_PREFIX.match(text):
+            return False
+        try:
+            seq = int(m.get("seq"))
+        except (TypeError, ValueError):
+            return False
+        nick = self.gate.nick_of(m)
+        self.chat_since = max(self.chat_since, seq)
+        self.counters["chat_seen"] += 1
+        self.log("chat", seq=seq, cls="cartoon", text=text[:60])
+        action = parse_cartoon(text)
+        if action is None:
+            return self.cartoon_refuse(seq, nick, "shape", CARTOON_SHAPE_LINE, now)
+        cls = cartoon_problem(action)
+        if cls:
+            return self.cartoon_refuse(seq, nick, "moderation", pick_line(CARTOON_REFUSAL_LINES, self.rng, cs["last_line_text"]),
+                                       now, action, cls)
+        day = self.cartoon_day(now)
+        if day != cs["day"]:
+            cs["day"], cs["count"] = day, 0
+        key = nick.lower() or "?"
+        if cs["count"] >= CARTOON_DAILY_MAX:
+            return self.cartoon_refuse(seq, nick, "daily_cap", CARTOON_DONE_LINE, now, action)
+        if any((r["nick"].lower() or "?") == key for r in cs["pending"].values()):
+            return self.cartoon_refuse(seq, nick, "one_per_viewer", CARTOON_BUSY_LINE, now, action)
+        if len(cs["pending"]) >= CARTOON_QUEUE_MAX:
+            return self.cartoon_refuse(seq, nick, "queue_full", CARTOON_FULL_LINE, now, action)
+        if now - cs["last_accept"] < CARTOON_GAP_S:
+            return self.cartoon_refuse(seq, nick, "too_soon", CARTOON_WAIT_LINE, now, action)
+        cid = f"c{int(now)}-{seq}-{os.urandom(2).hex()}"
+        row = {"id": cid, "seq": seq, "nick": nick, "action": action, "t": round(now, 3)}
+        if not self.cartoon_append(row):                      # fail closed: nothing is promised that cannot be drawn
+            return self.cartoon_refuse(seq, nick, "queue_write", CARTOON_DOWN_LINE, now, action)
+        cs["pending"][cid] = row
+        cs["last_accept"], cs["count"] = now, cs["count"] + 1
+        try:
+            write_atomic(self.cartoon_dir / "state.json", json.dumps({"day": cs["day"], "count": cs["count"]}))
+        except OSError as e:
+            self.error("cartoon state", e)
+        self.counters["cartoon_requests"] += 1
+        self.log("cartoon_request", id=cid, seq=seq, user=nick or "anon", action=action, today=cs["count"],
+                 waiting=len(cs["pending"]))
+        self.enqueue(self.cartoon_pick(CARTOON_ACK_LINES, CARTOON_ACK_ANON, nick), "request", "normal", (seq,), nick, ttl=60.0)
+        return True
+
+    def cartoon_mark(self, cid):
+        """The id is handled for good: not pending, never played twice (the done file is renamed out of the way)."""
+        cs = self.cartoon
+        cs["handled"][cid] = True
+        while len(cs["handled"]) > 500:
+            cs["handled"].popitem(last=False)
+        cs["pending"].pop(cid, None)
+        cs["unreadable"].pop(cid, None)
+        src = self.cartoon_dir / "done" / f"{cid}.json"
+        try:
+            os.replace(src, src.with_suffix(".handled"))
+        except OSError:
+            pass
+
+    def cartoon_done_items(self, now):
+        """The unhandled done files, as (id, data) in the order the requests were made. A file that does not parse yet (it
+        is being written) waits; after CARTOON_UNREADABLE_S it counts as a failed render."""
+        cs, d = self.cartoon, self.cartoon_dir / "done"
+        try:
+            names = sorted(n for n in os.listdir(d) if CARTOON_DONE_NAME.fullmatch(n))
+        except OSError:
+            return []
+        out = []
+        for n in names:
+            cid = n[:-5]
+            if cid in cs["handled"]:
+                continue
+            try:
+                with open(d / n, "rb") as f:
+                    raw = f.read(65537)
+                data = json.loads(raw.decode("utf-8")) if len(raw) <= 65536 else None
+                if not isinstance(data, dict):
+                    raise ValueError("not an object")
+                cs["unreadable"].pop(cid, None)
+            except (OSError, ValueError):
+                first = cs["unreadable"].setdefault(cid, now)
+                if now - first < CARTOON_UNREADABLE_S:
+                    continue
+                data = {"ok": False, "error": "unreadable done file"}
+            if str(data.get("id", cid)) != cid:
+                data = {"ok": False, "error": "done file id mismatch"}
+            out.append((cid, data))
+        order = {k: i for i, k in enumerate(cs["pending"])}
+        out.sort(key=lambda x: (order.get(x[0], len(order)), x[0]))
+        return out[:CARTOON_QUEUE_MAX + 5]
+
+    async def cartoon_previous_layout(self):
+        fn = getattr(self.services, "director_state", None)
+        try:
+            d = await fn() if fn else {}
+        except ServiceError:
+            d = {}
+        name = d.get("layout") if isinstance(d, dict) else None
+        name = LAYOUT_ALIASES.get(name, name)
+        if name in (*LAYOUTS, "webcam_only"):
+            return name
+        return self.layout_now if self.layout_now in LAYOUTS else "webcam"
+
+    def cartoon_failed(self, row, data, now, error=None):
+        self.cartoon_mark(row["id"])
+        self.counters["cartoon_failed"] += 1
+        self.log("cartoon_failed", id=row["id"], seq=row["seq"], user=row["nick"] or "anon",
+                 error=str(error or data.get("error") or "no clip")[:120])
+        self.enqueue(self.cartoon_pick(CARTOON_FAIL_LINES, CARTOON_FAIL_ANON, row["nick"]), "request", "normal", (), row["nick"],
+                     ttl=60.0)
+
+    async def cartoon_play(self, row, data, path, now):
+        """The feeder gets the clip, then the director the "cartoon" layout (a direct call: CAMERA_DIRECTING only means the
+        camera follows chat, it never kept the director from a layout we ask for), then the intro line; cartoon_lifecycle
+        brings the previous layout back. The id is marked first: a clip is never sent twice, whatever the answer."""
+        cs, cid = self.cartoon, row["id"]
+        self.cartoon_mark(cid)
+        seconds = clamp(num(data.get("seconds"), CARTOON_SECONDS_DEFAULT), *CARTOON_SECONDS)
+        previous = await self.cartoon_previous_layout()
+        caption = f"{row['nick'] or 'viewer'}: {row['action']}"[:160]
+        try:
+            await self.services.feeder_play({"id": cid, "path": path, "caption": caption})
+        except ServiceError as e:
+            self.counters["cartoon_failed"] += 1
+            self.log("cartoon_failed", id=cid, seq=row["seq"], user=row["nick"] or "anon", error=f"feeder: {e}"[:120])
+            self.enqueue(self.cartoon_pick(CARTOON_FAIL_LINES, CARTOON_FAIL_ANON, row["nick"]), "request", "normal", (), row["nick"],
+                         ttl=60.0)
+            return
+        try:
+            await self.services.layout(CARTOON_LAYOUT)
+        except ServiceError as e:                             # maybe it did switch: put the previous layout back to be safe
+            self.counters["cartoon_failed"] += 1
+            self.log("cartoon_failed", id=cid, seq=row["seq"], user=row["nick"] or "anon", error=f"director: {e}"[:120])
+            cs["playing"] = {"id": cid, "nick": row["nick"], "previous": previous, "until": self.clock(), "tries": 0}
+            self.enqueue(self.cartoon_pick(CARTOON_FAIL_LINES, CARTOON_FAIL_ANON, row["nick"]), "request", "normal", (), row["nick"],
+                         ttl=60.0)
+            return
+        now = self.clock()
+        cs["playing"] = {"id": cid, "nick": row["nick"], "previous": previous, "until": now + seconds, "tries": 0}
+        self.counters["cartoons_played"] += 1
+        self.log("cartoon_play", id=cid, seq=row["seq"], user=row["nick"] or "anon", seconds=seconds, previous=previous, mp4=path)
+        self.enqueue(self.cartoon_pick(CARTOON_INTRO_LINES, CARTOON_INTRO_ANON, row["nick"]), "cartoon", "high", (), row["nick"],
+                     ttl=20.0)
+
+    async def cartoon_lifecycle(self, now):
+        """A cartoon on air ends after its seconds, at a STOP/pause or when a privacy screen comes on; the previous layout
+        (or the one the model asked for meanwhile) comes back. Runs at the top of every step, paused or not."""
+        cs = self.cartoon
+        play = cs["playing"]
+        if play is None:
+            return
+        privacy = self.privacy is not None
+        if not (self.paused or privacy or now >= play["until"]):
+            return
+        target = play.get("after") or play["previous"]
+        if privacy:                                           # the privacy cut owns the layout; it brings `target` back itself
+            self.privacy["previous"] = target
+            cs["playing"] = None
+            self.log("cartoon_end", id=play["id"], why="privacy screen", restored=None)
+            return
+        try:
+            await self.services.layout(target)
+        except ServiceError as e:
+            play["tries"] += 1
+            self.counters["layout_errors"] += 1
+            self.log("layout_error", layout=target, error=str(e)[:80], why="cartoon end")
+            if play["tries"] < CARTOON_RESTORE_TRIES:
+                return                                        # the cartoon layout must not stay on air: tried again next step
+        cs["playing"] = None
+        self.layout_at = now
+        if play.get("after"):
+            self.layout_now = play["after"]
+        self.log("cartoon_end", id=play["id"], why="paused" if self.paused else "done", restored=target, tries=play["tries"])
+
+    async def cartoon_scan(self, now):
+        """Every step: expire stale requests, then handle the done files: a failed render is told to its viewer at once; a
+        good clip plays when nothing else is on air, no privacy screen is on and the stream is not paused."""
+        cs = self.cartoon
+        for cid, row in list(cs["pending"].items()):
+            if now - row["t"] >= CARTOON_PENDING_TTL_S:
+                cs["pending"].pop(cid, None)
+                self.log("cartoon_expired", id=cid, seq=row["seq"], user=row["nick"] or "anon")
+        if self.paused:
+            return
+        for cid, data in self.cartoon_done_items(now):
+            row = cs["pending"].get(cid)
+            if row is None:                                   # not one of ours (or expired): never played
+                self.cartoon_mark(cid)
+                self.log("cartoon_orphan", id=cid)
+                continue
+            path = data.get("mp4")
+            if data.get("ok") is not True:
+                self.cartoon_failed(row, data, now)
+            elif not (isinstance(path, str) and path.startswith("/") and path.lower().endswith(".mp4") and "\0" not in path
+                      and ".." not in path.split("/")):
+                self.cartoon_failed(row, data, now, error="no usable mp4 path")
+            elif cs["playing"] is None and self.privacy is None:
+                await self.cartoon_play(row, data, path, now)
+
+    def cartoon_state(self):
+        cs, play = self.cartoon, self.cartoon["playing"]
+        return {"today": cs["count"], "daily_max": CARTOON_DAILY_MAX, "pending": len(cs["pending"]),
+                "playing": play["id"] if play else None}
+
     async def apply_chat(self, win, model_replies, now):
         """At most two answers per batch. Fixed answers (identity question, refusals) come from code and take the
         slots first, but one slot stays for the model's pick when it has one; direct questions are spoken first."""
@@ -5226,6 +5700,11 @@ class Agent:
         if self.privacy is not None:                          # the privacy cut wins (even a plain webcam POST would end it
             self.privacy["previous"] = name                   # at the director); this layout comes back when it ends
             self.log("layout_held", layout=name, why="privacy screen")
+            return
+        play = self.cartoon["playing"]
+        if play is not None:                                  # a cartoon is on air: this layout comes back after it
+            play["after"] = name
+            self.log("layout_held", layout=name, why="cartoon")
             return
         if CAMERA_DIRECTING:                                  # no director POST; the camera follows chat answers and
             self.layout_at, self.layout_now = now, name       # reactions in Visual.snapshot (the model's pick is noisy)
@@ -5845,7 +6324,8 @@ class Agent:
         if self.quiet.on:
             return 4.0
         busy = (self.pending_scroll or self.speech_q or (self.obs or {}).get("loading") or self.next_think - self.clock() < 3
-                or self.requests.current or self.requests.waiting or self.pc.routine or self.pc.playing)
+                or self.requests.current or self.requests.waiting or self.pc.routine or self.pc.playing
+                or self.cartoon["playing"] or self.cartoon["pending"])
         return self.rng.uniform(2.0, 3.0) if busy else self.rng.uniform(3.5, 6.0)
 
     async def run_step(self):
@@ -5922,7 +6402,7 @@ class Agent:
                 "last_decision": self.last_decision, "last_outcome": self.last_outcome,
                 "voice": dict(self.voice, ok=self.voice_ok), "speech_queue": len(self.speech_q),
                 "chat": {"pending": len(self.pending), "since": self.chat_since,
-                         "quiet_minute_s": round(max(0.0, self.hush_until - now))}, "requests": self.requests.summary(),
+                         "quiet_minute_s": round(max(0.0, self.hush_until - now))}, "requests": self.requests.summary(), "cartoon": self.cartoon_state(),
                 "pc": self.pc.summary(now, self.cfg.pc_allow_games),
                 "inject_armed": bool(self.inject_armed or (self.dir / "inject_error").exists()), "motion_profile": self.motion_profile,
                 "shadow": self.shadow_status(), "lease": self.lease_status(), "hands_off": self.hands_off_reason(now),
@@ -6126,6 +6606,8 @@ def parse_args(argv=None):
     p.add_argument("--backend-url", default="http://127.0.0.1:8830")
     p.add_argument("--voice-url", default="http://127.0.0.1:8835")
     p.add_argument("--director-url", default="http://127.0.0.1:8837")
+    p.add_argument("--feeder-url", default=os.environ.get("STREAMER_FEEDER_URL") or DEFAULT_FEEDER_URL,
+                   help="the cartoon feeder: POST /play {id, path, caption} when a rendered cartoon comes back")
     p.add_argument("--status-host", default="127.0.0.1")
     p.add_argument("--status-port", type=int, default=8836)
     p.add_argument("--key-file", default=DEFAULT_KEY_FILE, help="Anthropic API key file, mode 0600 (env ANTHROPIC_API_KEY wins)")
@@ -6185,7 +6667,7 @@ def parse_args(argv=None):
 
 def config_from_args(a):
     return Config(token=read_token(a.token_file), desktop_url=a.desktop_url, backend_url=a.backend_url,
-                  voice_url=a.voice_url, director_url=a.director_url, status_host=a.status_host,
+                  voice_url=a.voice_url, director_url=a.director_url, feeder_url=a.feeder_url, status_host=a.status_host,
                   status_port=a.status_port, streamer_dir=a.streamer_dir, event_file=a.event_file,
                   privacy_file=a.privacy_file, native_pid=a.native_pid, native_start_ticks=a.native_start_ticks,
                   key_file=a.key_file, model=a.model, effort=a.effort, calls_per_hour=a.calls_per_hour, max_usd_day=a.max_usd_day,
