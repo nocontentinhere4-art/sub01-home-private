@@ -190,6 +190,16 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   PDT lag steady ~5 s (was 161-165 s and growing), 89 segments in 180 s, 0 voice drops.
 - Site player patch pushed to `claude/live-control-20261027` (4ce0c46); Railway did NOT auto-deploy it: Codex runs
   `railway up` from that branch (no Railway access from here).
+- 15:40-15:55 (owner live): NO CHAT FILTER (owner, twice). The public relay (`live-preview/relay.py`, copy
+  `tools/pod/onpod/live_relay.py`) posts every site line to the agent: `POST 127.0.0.1:8836/chat` (cartoon lines to
+  `/cartoon`), operator token; the backend's filtered chat path (8830 ws) is only the fallback. Direct lines use seqs
+  from 1e9 (never the backend cursor or its answered reports). The agent's gate keeps spam/duplicates, injection and
+  credential answers, the honest are-you-human line, PC purchase/download refusals; his own speech filter stays.
+  Cartoon moderation ignores money/crypto/tickers (weapons, adult, slurs, links, wallet addresses still refuse).
+  "what are you" -> SUB-01, your streamer; "bro/bruh/dude" are filler in requests; a vague search takes the chat's
+  subject ("search youtube for the trailer" after GTA 6 talk). Director file (live: cartoon input added once the
+  feeder is attached) is installed and applies at the next director start (a grey clip came from a relaunch at clip start).
+- Balance 20.43 at 15:57 UTC, 1.26/h: the 15-dollar stop line is ~20:15 UTC.
 
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
