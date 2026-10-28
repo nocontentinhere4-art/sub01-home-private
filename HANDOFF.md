@@ -235,6 +235,11 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   the privacy cut; {{password}} only on a page marked private_screen. Not created yet at 19:15.
 - Chat context across viewers (0df4382, agent new29 19:15): vague follow-ups continue the last viewer search.
 - Railway: the 2nd `railway up` (site UI rebuild 3678126) was stuck in "Performing healthchecks"; logs requested.
+- 19:37 agent new30 (f5530be): a click is judged by its target region (sidebar clicks while a video plays).
+- 19:55 LOOP STOPPED: RunPod balance $15.39 at $1.26/h (below $15 ~20:13; owner rule). Stream delay flat (segment
+  59.99 fps, no lag_restart since 18:43). Pending for the owner: top-up decision, run set_sub01_login.py for logins,
+  Railway healthcheck logs. Runtime: director = 503c236 + live-layouts file; agent = new30 (git f5530be + the two
+  runtime edits: sequence from the clock; allow_credentials default True since 18:54 on the owner's request).
 
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
