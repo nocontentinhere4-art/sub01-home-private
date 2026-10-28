@@ -97,6 +97,22 @@ code that runs; the pod's runtime copy is `/home/sub01-recovery-stage-20261026/r
   01:52 director restart), fps_game median 59.6 (p05 53.9), fps_cam2 ~29.5 (cam2_fps 30), fps_monitor_feed 0,
   fps_director 57-58. 1-hour stability watch running from 02:19 (`stability-20261028T0230.jsonl`).
 
+### Session 2026-10-28 03:00-03:35 UTC: "10x slower and natural" (owner, live)
+- Owner: "Si muove troppo veloce, deve essere 10 volte piu lento e naturale"; "chiudi tutto oggi".
+- Live native keys: `elbow_min_deg` 0 (the guard re-slid the left wrist 15 -> 5 -> 15 cm every ~5 s: a visible pump;
+  now slides 0, hands still on the keys; elbows L 67-93 / R 51-63 deg, not visible from behind), `hand_move_s` 1,
+  `hide_slot` 4 (collar edge smoother from behind, Kimi KEEP_4; the face shot still has to confirm it),
+  `hand_back_cm` 5. `elbow_pole_out` 1 tried and reverted.
+- Calm motion profile deployed 03:14 (`streamer_motion.CALM`, file `streamer/motion-profile` = `calm`; delete the file
+  and restart the agent to go back): head yaw max 0.19 deg per 0.25 s, no nods in 40 s, slides 0.
+- Remaining speed is the native desk loop clips themselves (head 5 cm/s median, 17 cm/s p90). v26 adds a live
+  `clip_rate` key (0.1..1): Kimi APPROVE; building in `<private>/v26-build` (the first build reused v25's copied
+  Intermediate and rebuilt v25 into v25-build: Intermediate deleted, clean build). Swap with
+  `tools/pod/onpod/swap_game.sh <private>/v26-build v26` (argv/env/cwd saved in `<private>/relaunch-v26`; ~2.5 min
+  placeholder on air; automatic rollback), then `tune_set.py clip_rate=0.5` and judge on frames.
+- 1-hour stability watch 02:19-03:19: no service restarts except my 2 agent deploys, game unchanged, fps median 59.6
+  (min 52.3), RSS 6041 -> 6223 MB (+182 MB/h: watch it), HLS age max 2.2 s, relay always 200.
+
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
    - In the shot from behind the wrists still cross towards the keyboard centre. The IK elbow guard slides them 8-12
