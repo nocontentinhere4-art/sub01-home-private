@@ -172,6 +172,19 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   - Live tests OK: the owner's "throw the PC out the window" clip and a brick clip aired with captions.
 - RunPod balance 23.05 at 13:50 UTC, 1.26/h: the 15-dollar stop line is ~20:15 UTC.
 
+### 14:37-15:05 UTC: talk density, cartoon speed (owner live: "everything is super slow, nobody waits minutes")
+- Chat replies measured 2-9 s on the pod (events.jsonl chat -> speech). Talk density: a line per ~33 s while watching ->
+  ~23 s after density2 (e5bfa69) + pacing lookahead / say before a wait (56d63e3); fps 59. All Kimi APPROVE, deployed.
+- Cartoon: a rendered request took ~4.5 min (seedance mini ~3.5 min). Now (ccfa2a0, Kimi cartlib2 APPROVE, deployed):
+  - `streamer/cartoon/library.json` (copy: `tools/pod/onpod/cartoon_library.json`) + 11 ready clips `clips/lib-*.mp4`
+    (pc-window, pc-smash, keyboard/rage, brick, pie, jetpack/fly, pizza, backflip, chair-fall, dance, sleep): a hit plays
+    in ~1 s, free, outside the daily cap; the agent re-reads library.json when it changes (no restart to add clips).
+  - nameless viewers (the site sends "viewer") are no longer one viewer; gap 5 s, queue 8.
+  - live renders: Grok Imagine Video 1.5 Lite (`grok_video_v15_lite`, 480p 4 s, start image bf9625ac...) ~50 s, 4 credits
+    (seedance mini 2.5 credits but ~3.5 min). Several requests are rendered in parallel (generate_video_batch).
+  - Budget: 100 credits/day -> at 4 credits about 15 renders after the library build (~35 credits used 10-28).
+    CARTOON_DAILY_MAX is still 40 (it was sized for 2.5): lower it to 25 with the next agent change.
+
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
    - In the shot from behind the wrists still cross towards the keyboard centre. The IK elbow guard slides them 8-12
