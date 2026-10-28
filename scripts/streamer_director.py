@@ -183,6 +183,7 @@ TAP_OVERFLOW = "FIFO queue full"    # ffmpeg's fifo muxer, once per overflow (it
 DEFAULT_LAYOUT = "webcam"
 PRIVATE_LAYOUT = "webcam_only"
 LAYOUT_FOLLOW_FILE = "layout-follow"    # <streamer-dir>/layout-follow present: a --layout given at launch is ignored
+CARTOON_ON_FILE = "cartoon-on"          # <streamer-dir>/cartoon-on present: --cartoon-fifo defaults to <streamer-dir>/cartoon.mjpeg
 PRIVACY_REASON = "privacy"
 PIP_MARGIN = 24
 # `desktop`: the layout shows a picture of the desktop somewhere (room too: cam 2 sees the in-game monitor, which shows it)
@@ -2951,6 +2952,10 @@ def parse_args(argv=None):
     if layout and follow.exists():          # operator flag: drop a launch-time --layout without restarting the supervisor
         print(f"streamer director: --layout {layout} ignored: {follow} exists (following layout.jsonl)", file=sys.stderr)
         layout = None
+    cartoon_fifo = args.cartoon_fifo
+    if cartoon_fifo is None and (Path(args.streamer_dir) / CARTOON_ON_FILE).exists():   # operator flag, like layout-follow:
+        cartoon_fifo = str(Path(args.streamer_dir) / "cartoon.mjpeg")                    # no supervisor restart for the flag
+        print(f"streamer director: cartoon mode on ({CARTOON_ON_FILE}), --cartoon-fifo {cartoon_fifo}", file=sys.stderr)
     try:
         width, height = (int(v) for v in args.size.lower().split("x"))
         pip_width, pip_height = (int(v) for v in args.pip_size.lower().split("x"))
@@ -2970,7 +2975,7 @@ def parse_args(argv=None):
             test_sources=args.test_sources, test_seconds=args.test_seconds, game_source=args.game_source,
             main_fifo=args.main_fifo, main_json=args.main_json, main_stale=args.main_stale,
             main_fresh=args.main_fresh, main_interval=args.main_interval, main_tap=not args.no_main_tap,
-            cartoon_fifo=args.cartoon_fifo)
+            cartoon_fifo=cartoon_fifo)
     except ValueError as exc:
         p.error(str(exc))
     return args, cfg

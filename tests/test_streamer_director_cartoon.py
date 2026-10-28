@@ -317,3 +317,12 @@ def test_smoke_live_graph_with_the_cartoon_input_encodes_on_test_sources(tmp_pat
     done = subprocess.run(argv, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=90)
     assert done.returncode == 0, done.stderr[-1500:]
     assert (cfg.recordings_dir / "sub01-20261023-210000-000.mp4").stat().st_size > 2_000
+
+
+def test_cartoon_on_file_turns_the_cartoon_fifo_on_without_a_supervisor_restart(tmp_path):
+    base = ["--streamer-dir", str(tmp_path)]
+    assert sd.parse_args(base)[1].cartoon_fifo is None                  # off by default
+    (tmp_path / sd.CARTOON_ON_FILE).write_text("")
+    assert str(sd.parse_args(base)[1].cartoon_fifo) == str(tmp_path / "cartoon.mjpeg")
+    explicit = str(tmp_path / "other.mjpeg")
+    assert str(sd.parse_args(base + ["--cartoon-fifo", explicit])[1].cartoon_fifo) == explicit   # the flag wins
