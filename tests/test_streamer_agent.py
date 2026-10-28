@@ -4668,3 +4668,11 @@ def test_with_camera_directing_a_privacy_end_restores_the_directors_layout_and_a
     agent.visual.camera_at = -1e9
     agent.visual.snapshot()
     assert agent.visual.camera == "face"
+
+
+def test_he_may_talk_memecoins_but_never_gives_buy_advice():
+    """Owner 10-28 (no replies to "what do you think about this memecoin?"): money words no longer silence him."""
+    assert SA.reply_problem("SUB-01 coin got my name on it, chat. That chart is going crazy.") is None
+    assert SA.reply_problem("You should buy SUB-01 now.") == "coins or finance"
+    assert SA.reply_problem("Visit pump.fun for more.") == "chat filter"
+    assert SA.ACTION_CLAIM.search("Nah, I'm clicking the bike guy") and not SA.ACTION_CLAIM.search("That pile is winning.")

@@ -292,6 +292,9 @@ NO_INPUT = ("wait", "zoom")             # kinds that send no input: no freshness
 PC_DISPATCH = ("click", "type", "key", "scroll", "navigate", "search", "back", "wait")   # what may reach the PC's runner
 EVENTS_ROTATE_BYTES = 20_000_000        # events.jsonl is rotated to a new, unique name past this size (never overwritten)
 REFUSED_VERDICTS = ("stale_refused", "cap_refused", "action_refused")   # the broker sent nothing
+# a line that announces the action itself ("clicking that", "opening it") is dropped when the action did not run
+ACTION_CLAIM = re.compile(r"\b(click(?:ing|ed)?|open(?:ing|ed)?|going\s+(?:to|in)|search(?:ing|ed)?|pull(?:ing|ed)?\s+up|"
+                          r"load(?:ing|ed)?|skip(?:ping|ped)?|switch(?:ing|ed)?|let'?s\s+(?:see|watch|go|check))\b", re.I)
 HANDS_OFF_LINES = {"held": "A few things in a row didn't work, so I'm keeping my hands off until someone checks.",
                    "lease": "My time at the controls is up. I'll keep watching until it's renewed.",
                    "frozen": "The picture from my PC stopped moving, so I'm not touching anything."}
@@ -675,7 +678,10 @@ def reply_problem(text):
     if shingles(t) & SYSTEM_SHINGLES:
         return "talks about its instructions"
     if _mind is not None:
-        return _mind.reply_problem(t)
+        why = _mind.reply_problem(t)
+        if why in ("chat filter", "coins or finance"):        # owner 10-28: he talks crypto and memecoins freely; buy/sell
+            return money_talk_problem(t)                      # advice and the non-money filters (slurs, adult) still refuse
+        return why
     if len(t.split()) > REPLY_MAX_WORDS:
         return "too long"
     if _LINK_FB.search(t):
@@ -684,6 +690,26 @@ def reply_problem(text):
         return "claims to be human"
     if _LEAK_FB.search(t):
         return "talks about its instructions"
+    return None
+
+
+def money_talk_problem(t):
+    """mind.reply_problem refused a line for money words: it passes unless it is buy/sell advice, another chat filter
+    reason (links, addresses, slurs, adult words, personal data), a human claim or an instruction leak (display_ok is not
+    asked again: its other rules are the chat filter's, the rest is finance talk)."""
+    m = _mind
+    why = chat_blocked(t, skip_links=False)
+    if why and why not in CARTOON_MONEY_OK:
+        return "chat filter"
+    try:
+        if m.ADVICE.search(t) or MONEY_Q.search(t):
+            return "coins or finance"
+        if m.CLAIM.search(t):
+            return "claims to be human, to feel or to understand"
+        if m.LEAK.search(t):
+            return "talks about its instructions"
+    except Exception:                                   # an older mind module: its refusal stands
+        return "coins or finance"
     return None
 
 
@@ -5402,7 +5428,9 @@ class Agent:
                 failed = True
         cur = self.requests.current
         if not early:
-            self.apply_say(dec, plan, reacted, level, failed, now)
+            if failed and out["verdict"] in REFUSED_VERDICTS and dec["say"] and not ACTION_CLAIM.search(dec["say"]):
+                failed = False                                # owner 10-28 (silent stream): the action never ran (a changed
+            self.apply_say(dec, plan, reacted, level, failed, now)   # screen); a line about what he saw still goes out
         if cur:
             if dec["request_done"] or (cur["commented"] and not action) or (cur.get("quick") and cur["steps"] and not action):
                 cur["done"] = True                            # a scroll/key/back request ends with the model's one look
