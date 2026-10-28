@@ -1,4 +1,4 @@
-# Proposal (NOT deployed): frozen latch clears itself (needs the owner's OK)
+# Proposal: frozen latch clears itself (DEPLOYED 2026-10-28 ~13:45 UTC with the owner's OK: "deve funzionare in continuo")
 
 Live 2026-10-28 04:30-04:34 UTC the frozen-stream guard latched twice in 4 minutes on a static YouTube ad / still page
 ("an ad's still in the way"). Only a human POST /resume clears it, and the lease renewer stops while it is up, so an

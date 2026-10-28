@@ -233,6 +233,9 @@ MAX_ACTIONS_PER_MINUTE = 20
 MAX_CONSECUTIVE_FAILURES = 3
 LEASE_MAX_MIN = 60                      # unattended operation needs a lease of at most this many minutes (POST /lease)
 FROZEN_S = 60.0                         # remote PC: the same picture this long while connected = a frozen stream
+FROZEN_RETRY_S = 120.0                  # a "frozen" latch (not "black") clears itself this long after it latched, through the
+FROZEN_AUTO_MAX = 3                     # probation, at most this many times per rolling hour; then a human POST /resume
+                                        # (owner asleep 10-28: static ads/pages latched it twice in 4 min; Kimi frozen2 GO)
 BLACK_LUMA = 0.03                       # remote PC: mean luminance below this = a black stream
 NO_INPUT = ("wait", "zoom")             # kinds that send no input: no freshness test, not in the rate cap or the streak
 PC_DISPATCH = ("click", "type", "key", "scroll", "navigate", "search", "back", "wait")   # what may reach the PC's runner
@@ -3007,6 +3010,7 @@ class Agent:
         self.lease_until = self.lease_armed_at = None         # monotonic seconds (self.mono)
         self.lease_lapsed = False
         self.frozen = None                                    # {"why", "since"}: a frozen or black stream -> POST /resume
+        self.frozen_auto = collections.deque()                # times of frozen_auto_clear in the last hour
         self.freeze = {"sig": None, "since": None, "black_since": None}
         self.probation = None                                 # after /resume: {"good", "last"} usable looks before acting
         self.timed_out = None                                 # {"key", "t", "sensitive"}: never retried blindly
@@ -4386,6 +4390,29 @@ class Agent:
                 self.log("probation_end")
                 self.say("probation over: actions allowed again")
 
+    def frozen_auto_clear(self, now):
+        """A "frozen" latch (a still picture, usually a static page or ad, not a dead stream) clears itself after
+        FROZEN_RETRY_S through the normal probation, at most FROZEN_AUTO_MAX times per rolling hour; "black", held and
+        the audit latch keep needing a human POST /resume. A dead stream then gets a few short, pixel-verified retry
+        windows an hour, and the failure hold stops it after 3 unanswered inputs."""
+        fz = self.frozen
+        if fz is None or fz["why"] != "frozen" or self.held or self.audit_degraded or now - fz["since"] < FROZEN_RETRY_S:
+            return
+        while self.frozen_auto and now - self.frozen_auto[0] > 3600:
+            self.frozen_auto.popleft()
+        if len(self.frozen_auto) >= FROZEN_AUTO_MAX:
+            if not fz.get("auto_capped"):
+                fz["auto_capped"] = True
+                self.log("frozen_auto_capped", per_hour=FROZEN_AUTO_MAX)
+            return
+        self.frozen_auto.append(now)
+        self.frozen = None
+        self.freeze.update(sig=None, since=None, black_since=None)
+        self.probation = {"good": 0, "last": None}
+        self.hands_off_said.discard("frozen")
+        self.counters["frozen_auto_clear"] += 1
+        self.log("frozen_auto_clear", after_s=round(now - fz["since"], 1), this_hour=len(self.frozen_auto))
+
     def resume_latches(self):
         """POST /resume: clears held, frozen and audit_degraded (never the lease) and starts the probation; None when the
         audit still cannot be written (it stays latched: HTTP 503)."""
@@ -4845,6 +4872,7 @@ class Agent:
         await self.check_stop()
         self.poll_tick(self.clock())
         self.viewers.save(self.clock())
+        self.frozen_auto_clear(self.clock())
         if self.paused:                                       # keep observing; chat sent meanwhile is stale on return
             try:
                 self.obs = self.normalize(await self.services.observe())

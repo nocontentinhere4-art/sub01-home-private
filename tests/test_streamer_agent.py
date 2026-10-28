@@ -4033,3 +4033,25 @@ def test_viewers_new_here_back_expiry_and_forget_me(tmp_path):
     assert "kei" not in agent.viewers.v and any(e["kind"] == "viewer_forget" for e in events(agent))
     assert SA.FORGET_LINE.format(nick="kei") in [s["text"] for s in world.spoken]
     assert SA.reply_problem(SA.FORGET_LINE.format(nick="kei")) is None
+def test_frozen_latch_clears_itself_three_times_an_hour_black_never(tmp_path):
+    agent, world, prov, clock = make(tmp_path)
+    obs = {"frame": {"hash": "h", "luma": 0.5}}
+    for i in range(4):
+        agent.latch_frozen("frozen", 61, obs)
+        agent.frozen_auto_clear(clock())
+        assert agent.frozen is not None                                    # not before FROZEN_RETRY_S
+        clock.t += SA.FROZEN_RETRY_S
+        agent.frozen_auto_clear(clock())
+        if i < SA.FROZEN_AUTO_MAX:
+            assert agent.frozen is None and agent.probation == {"good": 0, "last": None}, i
+        else:
+            assert agent.frozen is not None                                # the 4th in the hour waits for a human
+    assert [e["kind"] for e in events(agent)].count("frozen_auto_clear") == 3
+    assert any(e["kind"] == "frozen_auto_capped" for e in events(agent))
+    clock.t += 3600                                                        # an hour later the window has room again
+    agent.frozen_auto_clear(clock())
+    assert agent.frozen is None
+    agent.latch_frozen("black", 61, obs)
+    clock.t += 10 * SA.FROZEN_RETRY_S
+    agent.frozen_auto_clear(clock())
+    assert agent.frozen["why"] == "black"                                  # a black stream always needs POST /resume
