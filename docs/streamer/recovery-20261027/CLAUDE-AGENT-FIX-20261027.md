@@ -349,3 +349,8 @@ pre-existing ones (no API keys locally).
 - 01:05 UTC: owner "avvicinalo alla tastiera di più": `seat_back_cm` 36 -> 26 (tuning, live; backup `face-tuning.bak-20261028T0058.json`).
   The wrist slide of the elbow guard dropped from 15 to 10-11 cm; the hands sit on the keyboard in the spectator shot.
   58.9 fps.
+- 01:30 UTC: owner "ancora un po' più vicino": `seat_back_cm` 26 -> 19.
+  - The fingertips are now at key level (+1.9 / -0.03 cm).
+  - The wrist slide is 12 / 8 cm.
+  - In the spectator shot he sits at the desk with his hands on the keys and the microphone at his face.
+  - 59.4 fps.
