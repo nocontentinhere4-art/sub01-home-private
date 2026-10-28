@@ -160,8 +160,8 @@ DEFAULT_GAME = "Detroit: Become Human"
 
 # ---- pacing numbers (DIRECTION.md section 3/4 and the brief; jittered where a range is given) ------------------------
 SPEECH_GAP_S = 4.0                      # silence between the end of one unsolicited line and the start of the next (was 8; owner 10-28: a real hype streamer)
-COMMENT_READING_S = (15.0, 28.0)        # unsolicited remark while reading (was 35-70 s; owner 10-28: high-energy streamer; Kimi GO)
-COMMENT_OTHER_S = (8.0, 16.0)           # ... while browsing, typing, idle (was 12-25 s, before that 30-70 s)
+COMMENT_READING_S = (7.0, 13.0)         # unsolicited remark while reading (was 15-28 s, then 35-70 s; owner 10-28: he talks ~30% of a video, a hype streamer far more; Kimi GO)
+COMMENT_OTHER_S = (5.0, 10.0)           # ... while browsing, typing, idle (was 8-16 s, 12-25 s, before that 30-70 s)
 REACT_COOLDOWN_S = 15.0
 POLL_S = 30.0                           # a chat poll collects answers this long (owner 10-28: real interaction; Kimi poll)
 POLL_COOLDOWN_S = 180.0                 # ... and the next one may open this long after the last one closed

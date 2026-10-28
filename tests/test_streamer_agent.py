@@ -212,15 +212,15 @@ def test_no_speech_while_reading_and_cadence(tmp_path):
     asyncio.run(sim(agent, clock, 900))
     times = [s["t"] for s in world.spoken]
     assert len(prov.calls) >= 50                                        # the model wanted to talk all the time ...
-    assert 8 <= len(times) <= 900 / SA.COMMENT_READING_S[0] + 2         # ... the pacing lets about one a minute through
+    assert 8 <= len(times) <= 900 / SA.COMMENT_READING_S[0] + 2         # ... the pacing caps the rate
     assert times[0] - 1_800_000_000 < 15                                # the greeting comes first
     focus = [t for t in times if t - times[0] < SA.FOCUS_CAP_S]       # past the focus cap he is nudged on: other pacing
-    assert all(b - a >= SA.COMMENT_READING_S[0] for a, b in zip(focus, focus[1:]))   # reading: a remark a minute at most
+    assert all(b - a >= SA.COMMENT_READING_S[0] for a, b in zip(focus, focus[1:]))   # reading: never faster than the wait
     assert all(b - a >= max(SA.SPEECH_GAP_S, SA.COMMENT_OTHER_S[0]) for a, b in zip(times, times[1:]))
     assert agent.counters["say_dropped"] >= 15
     assert world.overlaps == 0
     told = [c["state"]["pacing"] for c in prov.calls if c["state"]["pacing"]["reading_focus"]]
-    assert told and sum(not p["say_allowed"] for p in told) >= len(told) / 2   # mostly told to keep reading quietly
+    assert told and sum(not p["say_allowed"] for p in told) >= len(told) / 5   # still often told to hold (owner 10-28: a hype streamer talks a lot)
 
 
 def test_a_gap_between_unsolicited_lines_when_not_reading(tmp_path):
