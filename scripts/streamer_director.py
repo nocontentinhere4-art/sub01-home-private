@@ -216,6 +216,9 @@ CARTOON_SPEC = {"main": CARTOON, "pip": None, "needs_cam2": False, "needs_cartoo
                 "summary": "the cartoon feeder's MJPEG FIFO full frame (--cartoon-fifo), no picture-in-picture, no desktop"}
 CARTOON_RATE = 30           # -framerate of the cartoon input (metadata only: timestamps are the arrival wallclock)
 CARTOON_DROP = "cartoon stopped delivering"
+# owner 10-28: the graph (6 live layouts at 60 fps) ran at 0.99x real time on one thread, so the stream fell ~0.6 s
+# behind per minute; slice threads for scale/overlay give it headroom
+FILTER_THREADS = "4"
 CARTOON_LAUNCH_WAIT_S = 3.0  # a launch waits this long for the cartoon feeder to reattach (it does within ~1 s)
 CARTOON_MIN_UPTIME = 30.0   # a run is at least this old before it is relaunched to add the cartoon input
 SWITCH_MODES = ("live", "restart")
@@ -614,7 +617,7 @@ def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, la
     main = main if main in ("fifo", PLACEHOLDER) else None
     argv = [cfg.ffmpeg, "-hide_banner", "-stdin" if live else "-nostdin", "-loglevel", "warning",
             # key=value blocks on stdout (frame, fps, out_time_us, dup/drop, speed): the measured output rate
-            "-progress", "pipe:1", "-stats_period", f"{cfg.stats_period:g}"]
+            "-progress", "pipe:1", "-stats_period", f"{cfg.stats_period:g}", "-filter_complex_threads", FILTER_THREADS]
     if cfg.test_sources:
         voice = True                         # the desktop is solid red: any desktop pixel is recognisable in a test recording
         argv += main_input_args(cfg, main) if main else ["-re", "-f", "lavfi", "-i", f"testsrc2=size={size}:rate={cfg.fps}"]

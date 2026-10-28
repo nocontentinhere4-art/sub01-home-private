@@ -94,8 +94,8 @@ def test_fifo_input_follows_the_spec_plus_follow_and_the_tap_output(tmp_path):
     cfg = make_cfg(tmp_path, fps=60, desktop_fps=60, encoder="h264_nvenc", hls_dir=tmp_path / "hls", game_source="fifo")
     argv = sd.build_ffmpeg_argv(cfg, prefix="sub01-20261024-210000", voice=True, cam2=True, layout="room", live=True,
                                 encoder="h264_nvenc", cam2_fps=60, main="fifo", tap_fd=7)
-    assert argv[:argv.index("-i")][:10] == ["ffmpeg", "-hide_banner", "-stdin", "-loglevel", "warning", "-progress",
-                                            "pipe:1", "-stats_period", "5", "-thread_queue_size"]
+    assert argv[:argv.index("-i")][:12] == ["ffmpeg", "-hide_banner", "-stdin", "-loglevel", "warning", "-progress",
+                                            "pipe:1", "-stats_period", "5", "-filter_complex_threads", sd.FILTER_THREADS, "-thread_queue_size"]
     (game, gi), (desk, di), (voice, vi), (cam, ci) = inputs_of(argv)
     assert gi == str(tmp_path / "streamer" / "main.mjpeg")
     assert game[game.index("-thread_queue_size"):] == [
@@ -124,7 +124,7 @@ def test_the_placeholder_is_a_visible_card_through_the_same_graph(tmp_path):
                                 main="placeholder", tap_fd=7)
     (game, gi), (desk, di), (silence, si) = inputs_of(argv)
     assert game == ["ffmpeg", "-hide_banner", "-stdin", "-loglevel", "warning", "-progress", "pipe:1", "-stats_period",
-                    "5", "-re", "-f", "lavfi"] and gi == "smptehdbars=size=1920x1080:rate=60"
+                    "5", "-filter_complex_threads", sd.FILTER_THREADS, "-re", "-f", "lavfi"] and gi == "smptehdbars=size=1920x1080:rate=60"
     graph = value_after(argv, "-filter_complex")
     assert graph.startswith("[0:v]fps=60,scale=1920:1080,setsar=1,format=yuv420p,split=4")   # no range change, no tpad
     assert "mpjpeg" not in argv and "main.mjpeg" not in " ".join(argv)                         # never a tap, never the FIFO
