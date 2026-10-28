@@ -206,6 +206,12 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   (never buy advice). Layout: the model's pick switches the director between webcam_only (him alone) and desktop (PC big,
   his FACE as the PiP: from behind the monitor doubled the PC); a privacy end restores the director's real layout.
   16:20 Anthropic API credits ran out (Kimi fallback ~40 s/decision); the owner topped up at ~16:33, Sonnet answers again.
+- 17:08 CARTOON FIX: clips froze on the poster in every director run that added the cartoon input with a later relaunch
+  (the feeder reattaches ~1 s after a director restart). The director launch now waits up to 3 s for the feeder (157f86d);
+  verified on HLS: the backflip clip plays with its caption. After ANY director restart check that ffmpeg_started says
+  "cartoon": true; if not, restart the director once more. Desktop PiP sits bottom left (the site's PC SCREEN box is
+  bottom right). Site (branch claude/live-control-20261027, NOT deployed: needs `railway up` by Codex/owner): player
+  latency 4ce0c46, PC SCREEN auto-hide 4873318, Hide/Show PC 958eea2.
 
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
