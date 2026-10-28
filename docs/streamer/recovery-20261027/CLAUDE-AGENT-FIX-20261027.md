@@ -354,3 +354,9 @@ pre-existing ones (no API keys locally).
   - The wrist slide is 12 / 8 cm.
   - In the spectator shot he sits at the desk with his hands on the keys and the microphone at his face.
   - 59.4 fps.
+- 01:31 UTC: owner "sposta la sedia più indietro (non gli entri nella schiena) e rendi il movimento delle mani più lento".
+  - `chair_back_extra_cm` 2 -> 8: the backrest now stands visibly behind his back.
+  - `hand_move_s` 0.25 -> 0.6 s (the wrist glide between keyboard and mouse) and `hand_arc_cm` 4 -> 3.
+  - Backup: `face-tuning.bak-20261028T0135.json`.
+  - The fingers' typing loop plays at its clip rate. That rate is not a live key; `desk_base 0` would put the calmer
+    sitting loop on idle and talking.
