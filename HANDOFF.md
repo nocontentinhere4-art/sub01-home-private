@@ -86,8 +86,9 @@ code that runs; the pod's runtime copy is `/home/sub01-recovery-stage-20261026/r
   file (27 s of talking) showed zero. Cause in `scripts/streamer_motion.py`: for a page comment `start_speech` set the
   next gesture 14-26 s ahead at EVERY utterance, and comments last ~7 s, so it never fired (chat answers were fine;
   there was no chat). Fixed (speaking time is counted across utterances; test: 11 gestures in 30 min, old code 0;
-  Kimi APPROVE). NOT DEPLOYED: the live deploy (copy + agent restart) was refused by this session's permission
-  classifier; it needs the owner's explicit OK. Head tilt is by design only in laugh/think reactions.
+  Kimi APPROVE). DEPLOYED 02:50 with the owner's explicit OK (backup `streamer_motion.py.bak-*`, agent restarted,
+  lease re-armed to 03:50). Check right after: in 100 s (~19 s of talking) the agent sent a gesture and the game's
+  receipt applied it (before: zero in 15 min). Head tilt is by design only in laugh/think reactions.
 - Item 7 (collar): owner OK to try `hide_slot` 4/5 live. Needs a face-camera frame; the face shot only comes with chat
   answers/reactions and is short. `facegrab.sh collar2` waits up to 30 min from 02:38.
 - Item 8: acceptance on 01:49-02:19 (`/home/sub01-review-20261027/accept-20261028/`, run as root: the game log is
