@@ -95,3 +95,15 @@ def test_a_vague_request_from_another_viewer_continues_the_last_one():
     assert SA.contextual_query("minecraft speedruns", [], 150.0, q) == "minecraft speedruns"            # a new topic
     assert SA.topic_words("React to some kai cenat videos") == [] and "react" in SA.TOPIC_SKIP
     assert "Read chat as one conversation" in SA.SYSTEM_PC or "Read chat as one conversation" in SA.SYSTEM
+
+
+def test_a_click_beside_a_playing_video_goes_through(tmp_path):
+    base = T.big_frame(box=(1000, 0, 1280, 720))                          # the sidebar on the right stays put
+    playing = T.big_frame((240, 240, 240), stripes=False, box=(1000, 0, 1280, 720))   # the video area changed entirely
+    assert SA.frame_diff(SA.frame_signature(base), SA.frame_signature(playing)) > SA.STALE_DIFF
+    click = {"action": "click", "point": [1150, 400]}
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    world.frame = base
+    prov.script, prov.n = [T.slow_decision(clock, lambda: setattr(world, "frame", playing), click, state="mouse", say="")], 0
+    asyncio.run(T.decide_once(agent, clock, dt=3))
+    assert world.acts == [click], agent.last_outcome

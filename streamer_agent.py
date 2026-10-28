@@ -5278,13 +5278,15 @@ class Agent:
         elif kind == "click":
             point = action.get("point")
         if kind in PICTURE_BOUND:                             # keys, scroll, back: the page (URL) test above is enough
-            d = frame_diff(frame.get("sig"), now_frame.get("sig"))
+            # a click is judged by its target region (live 10-28: a playing video refused every sidebar click); the whole
+            # frame only for typing, or when the region cannot be compared
+            rd = None if point is None else region_diff(frame.get("jpeg"), now_frame.get("jpeg"), point,
+                                                        frame.get("screen") or SCREEN)
+            if rd is not None and rd > cfg.stale_diff:
+                return ("stale_refused", f"the click target changed since the decision (diff {rd:.1f})"), now_frame
+            d = frame_diff(frame.get("sig"), now_frame.get("sig")) if rd is None else None
             if d is not None and d > cfg.stale_diff:
                 return ("stale_refused", f"the screen changed since the decision (diff {d:.1f})"), now_frame
-            if point is not None:
-                rd = region_diff(frame.get("jpeg"), now_frame.get("jpeg"), point, frame.get("screen") or SCREEN)
-                if rd is not None and rd > cfg.stale_diff:
-                    return ("stale_refused", f"the click target changed since the decision (diff {rd:.1f})"), now_frame
         return None, now_frame
 
     async def dispatch(self, action, obs, source, bind, frame_now):
