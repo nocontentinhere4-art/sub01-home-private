@@ -151,3 +151,19 @@ def test_the_model_writes_the_youtube_search_for_a_long_request(tmp_path):
     asyncio.run(T.decide_once(agent, clock, dt=3))
     asyncio.run(T.decide_once(agent, clock, dt=3))
     assert any(SA.SEARCH_HINT in h for c in prov.calls for h in c["state"].get("hints", [])), prov.calls[-1]["state"]["hints"]
+
+
+def test_ai_getting_tortured_is_a_meme_search_and_real_harm_is_not():
+    assert SA.parse_request("Bro search for ai getting tortured", pc=True)["query"] == "ai getting tortured"
+    assert SA.parse_request("search robots getting kicked", pc=True)["query"] == "robots getting kicked"
+    assert SA.parse_request("search people getting tortured", pc=True)["refused"] == "query_filter"
+    for q in ("AI and people getting tortured", "robot torturing people", "robot kills dog", "robot kills puppy",
+              "robot torturing my mom"):
+        assert not SA.ai_meme_query(q), q                  # the exception never applies with any other subject (Kimi)
+    assert SA.ai_meme_query("chatgpt getting tortured by prompts") and SA.ai_meme_query("ai getting tortured")
+    assert SA.parse_request("search AI and people getting tortured", pc=True)["refused"] == "query_filter"
+    assert "keep at most 3 open" in SA.SYSTEM_PC + SA.SYSTEM
+
+
+def test_react_at_a_youtube_video_about_something_searches_the_something():
+    assert SA.parse_request("React at a youtube video about AI getting tortured", pc=True)["query"] == "AI getting tortured"

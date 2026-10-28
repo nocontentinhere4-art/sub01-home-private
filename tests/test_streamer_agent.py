@@ -1172,7 +1172,7 @@ def test_observation_screen_size_is_the_marks_coordinate_space():
     ("google the tallest building in japan right now please", "search", "tallest building in japan"),
     ("search for how to bake sourdough bread at home and then tell me", "search", "how to bake sourdough bread"),
     ("hey SUB-01 can you look up what time it is in Tokyo vs Rome?", "search", "what time it is in Tokyo"),
-    ("show me cat videos", "search", "cat videos"), ("watch a video about octopuses", "search", "video about octopuses"),
+    ("show me cat videos", "search", "cat videos"), ("watch a video about octopuses", "search", "octopuses"),
     ("open youtube.com", "navigate", "https://youtube.com"),
     ("go to https://en.wikipedia.org/wiki/Octopus", "navigate", "https://en.wikipedia.org/wiki/Octopus"),
     ("check out example.com/page", "navigate", "https://example.com/page"),

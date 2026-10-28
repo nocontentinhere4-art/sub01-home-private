@@ -444,6 +444,9 @@ search YouTube itself, not the browser's engine: navigate to https://www.youtube
 short sharp query of 2 to 5 words, the way a video is titled ("crazy gameplay moments reaction", not the viewer's \
 sentence); a request handed to you as intent "search" means exactly that. "Exit/leave full screen" is the \
 key Escape, never a refusal. The only no's are the limits above and below (adult, purchases, downloads, logins). \
+Videos of AIs, robots or chatbots being "tortured", trolled, stress-tested or kicked are a meme genre: react to them \
+(owner 10-28); real people or animals being hurt and gore stay off. Tabs (owner 10-28: the PC got slow): close a tab \
+he is done with (key Control+w) and keep at most 3 open. \
 Read chat as one conversation (owner 10-28): lines from different viewers a minute or two apart often continue the \
 same request, so a vague one ("look at some of them", "more", "for kai cenat", "the other one", "that one") points at \
 the last concrete request or what is on screen; connect them and act on the combined meaning, and only treat a line \
@@ -1247,7 +1250,7 @@ PLAY_ONLINE = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|le
                          r"blackjack|checkers|solitaire|uno|sudoku|minesweeper|tetris|wordle|geoguessr|connect\s+four)\b", re.I)
 EXIT_FULLSCREEN = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?)[\s,]+)*(?:exit|leave|close|quit|escape|"
                              r"get\s+out\s+of|come\s+out\s+of|out\s+of)\s+(?:the\s+)?full\s*-?\s*scr[a-z]{0,2}n\b", re.I)
-REACT_TO = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go)[\s,]+)*react\s+(?:to|on)\s+"
+REACT_TO = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go)[\s,]+)*react\s+(?:to|on|at)\s+"
                       r"(?:some\s+|a\s+|an\s+|the\s+)?(?!(?:this|that|it|me|us|chat|my|what)\b)(.{3,60})$", re.I)
 ENTER_FULLSCREEN = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?)[\s,]+)*(?:open|go|put\s+it|make\s+it|"
                               r"switch\s+to|enter|watch\s+(?:it|this)\s+in|do)?\s*(?:in\s+|to\s+)?full\s*-?\s*scr[a-z]{0,2}n\b", re.I)
@@ -1572,7 +1575,7 @@ def strip_filler(text):
 QUERY_SITE_LEAD = re.compile(r"^(?:(?:open|go\s+(?:on|to)|on|in|use)\s+)?(?:youtube|yt|google|the\s+browser)\s*(?:,\s*)?"
                              r"(?:and\s+|then\s+)?(?:(?:find|search(?:\s+for)?|look\s+(?:up|for)|get|pull\s+up|put\s+on|"
                              r"show(?:\s+(?:us|me))?|watch)\s+)?", re.I)
-QUERY_VAGUE_LEAD = re.compile(r"\b(?:something|anything|stuff|things?|content|a\s+video|some\s+videos?)\s+(?:(\w+)\s+)?"
+QUERY_VAGUE_LEAD = re.compile(r"\b(?:something|anything|stuff|things?|content|(?:(?:a|some|any)\s+)?(?:youtube\s+|yt\s+)?(?:videos?|clips?))\s+(?:(\w+)\s+)?"
                               r"(?:about|on|of|with|from|related\s+to)\s+", re.I)
 QUERY_REACT_TAIL = re.compile(r"\s+(?:(?:for\s+(?:us\s+|me\s+)?)?to\s+(?:react\s+(?:to|on)|watch|look\s+at)(?:\s+(?:it|them|that))?|"
                               r"and\s+(?:react|watch|look)\b.*|so\s+(?:we|i)\s+can\s+.*|for\s+(?:the\s+)?(?:stream|chat))\W*$", re.I)
@@ -2128,6 +2131,23 @@ def url_problem(url, chat_texts=(), files_ok=False):
     return None
 
 
+AI_TARGET = re.compile(r"\b(?:ai|a\.i\.|robots?|bots?|chat\s*gpt|gpt|chatbots?|npcs?|androids?|cyborgs?|terminators?|"
+                       r"claude|gemini|siri|alexa|sub-?01|computers?|machines?)\b", re.I)
+AI_HARM = re.compile(r"\b(?:tortur\w*|abus\w*|bully\w*|kick\w*|destroy\w*|break\w*|hurt\w*|roast\w*|troll\w*|"
+                     r"punish\w*|suffer\w*|kill\w*|beat\w*)\b", re.I)
+AI_MEME_FILLER = frozenset("getting gets got get being is are was by with until when while it its they them their the a an "
+                           "of to and in on for video videos clip clips compilation compilations funny meme memes reaction "
+                           "reactions react test tests testing tested prompt prompts experiment experiments challenge "
+                           "edition moments part 1 2 3 2025 2026 new viral best".split())
+
+
+def ai_meme_query(q):
+    """Only AI/robot words, harm words and neutral filler (Kimi: an allowlist, so no living victim can ride along)."""
+    words = re.findall(r"[a-z0-9.\-]+", q.lower())
+    return bool(words) and any(AI_TARGET.fullmatch(w) for w in words) and any(AI_HARM.fullmatch(w) for w in words) and \
+        all(AI_TARGET.fullmatch(w) or AI_HARM.fullmatch(w) or w in AI_MEME_FILLER for w in words)
+
+
 CARD_GAMES = re.compile(r"\b(?:poker|texas\s+hold\s*'?em|hold\s*'?em|blackjack|casino|roulette|slots?)\b", re.I)
 
 
@@ -2137,6 +2157,8 @@ def query_clean(q):
         ok = _mind.E.query_ok(q)
         if ok is None and CARD_GAMES.search(q) and _mind.E.query_ok(CARD_GAMES.sub("cards", q)):
             return q                    # owner 10-28 "play poker online": free-play card games pass (the rest still checked)
+        if ok is None and ai_meme_query(q) and _mind.E.query_ok(AI_HARM.sub("testing", q)):
+            return q                    # owner 10-28 "ai getting tortured": the meme genre about AIs and robots passes
         return ok
     return q if 2 <= len(q) <= 60 and len(q.split()) <= 6 and not chat_blocked(q) else None
 
