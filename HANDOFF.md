@@ -184,6 +184,12 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
     (seedance mini 2.5 credits but ~3.5 min). Several requests are rendered in parallel (generate_video_batch).
   - Budget: 100 credits/day -> at 4 credits about 15 renders after the library build (~35 credits used 10-28).
     CARTOON_DAILY_MAX is still 40 (it was sized for 2.5): lower it to 25 with the next agent change.
+- 15:25 ROOT CAUSE of the "1-2 min" delay: the MJPEG demuxer stamps FIFO frames by -framerate, so the 56 fps main view
+  read as 60 ran the stream clock at 94% (players stalled every segment, +4 s/min; voice FIFO read too slowly, chopped).
+  Director af03db7 (setpts RTCTIME on main/cam2/cartoon FIFO inputs, Kimi wallpts APPROVE, owner OK) deployed 15:27:
+  PDT lag steady ~5 s (was 161-165 s and growing), 89 segments in 180 s, 0 voice drops.
+- Site player patch pushed to `claude/live-control-20261027` (4ce0c46); Railway did NOT auto-deploy it: Codex runs
+  `railway up` from that branch (no Railway access from here).
 
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
