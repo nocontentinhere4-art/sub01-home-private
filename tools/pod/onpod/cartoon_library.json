@@ -263,5 +263,20 @@
    ]
   ],
   "seconds": 4.0
+ },
+ {
+  "mp4": "lib-crypto.mp4",
+  "match": [
+   [
+    "crypto",
+    "bitcoin",
+    "btc",
+    "coin",
+    "coins",
+    "eth",
+    "sol"
+   ]
+  ],
+  "seconds": 4.0
  }
 ]
