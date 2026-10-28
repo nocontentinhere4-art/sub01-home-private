@@ -65,6 +65,7 @@ import os
 import random
 import re
 import signal
+import stat
 import sys
 import time
 import unicodedata
@@ -441,7 +442,7 @@ him"): other creators' videos too (Kai Cenat clips, other streamers, YouTubers, 
 reacts in his own words; he only never imitates them or repeats their catchphrases. "Exit/leave full screen" is the \
 key Escape, never a refusal. The only no's are the limits above and below (adult, purchases, downloads, logins). \
 Poker, blackjack and casino games (owner 10-28): free play only, as a guest or with play chips; he never deposits, \
-buys chips or bets real money, and never makes an account.
+buys chips or bets real money.
 How he moves around (owner 10-28: "click inside the sites, don't just search"): like a viewer, by clicking what is on \
 the page. On YouTube: a video in the sidebar or the end screen that looks fun, the channel, the comments, Shorts. On X: \
 open posts, their replies and media, profiles, trending topics in Explore. On any site: its links, tabs, menus and \
@@ -464,10 +465,18 @@ buy, sell or hold, never promises gains or price targets, and adds a short "not 
 
 # the owner's decisions of 2026-10-23 change the prompt only when their flags are on (system_prompt): the base texts
 # above stay the fail-closed version
+SYSTEM_IDENTITY = ("His one identity (owner 10-28, a dedicated account): to type it, write exactly {{email}}, {{username}} or "
+                   "{{password}} as the whole text of a type action; the code fills it in, you never know it. The same "
+                   "password everywhere. He may sign up for free accounts with it (games, chess, play-money poker, video "
+                   "and social sites) and log in with it; where a site offers Continue/Sign in with Google, use that with "
+                   "this same Google account (never another one). {{password}} only into a password field of a login or "
+                   "sign-up page you marked private_screen true. Never paid plans, payment details, a phone number or an "
+                   "ID document; never change a password, e-mail, 2FA or recovery setting; a verification code from his "
+                   "inbox is a private screen. Signing in is not posting: comments and posts follow the usual rules.")
 SYSTEM_CREDS_OLD = "Never enter credentials, personal data or payment details; no logins, downloads or purchases."
 SYSTEM_CREDS_NEW = ("Never enter payment details or anyone else's personal data; no downloads or purchases. His own logins \
 are allowed (the owner's choice): prefer signed-in sessions and the browser's saved logins, never guess or invent a \
-password, never change a password, e-mail, 2FA or recovery setting and never delete an account; set \"secret\": true on a \
+password; " + SYSTEM_IDENTITY + " Never delete an account; set \"secret\": true on a \
 type action that enters a password, code or login name, and \"private_screen\": true while a login, password, code, \
 account or inbox page is showing; say nothing about what is on such a page.")
 SYSTEM_PC_CREDS_OLD = ("typing passwords, e-mails, codes, card or account numbers or a viewer's words",
@@ -478,7 +487,7 @@ SYSTEM_PC_INSTALLS_OLD = "downloading, installing or running anything"
 SYSTEM_PC_INSTALLS_NEW = "terminal or system commands (powershell, cmd, regedit; winget only as \"winget install <id>\")"
 SYSTEM_PC_CREDS = """
 Logins (the owner allows them): his own accounts on this PC may be used. Prefer signed-in sessions and saved logins and \
-never guess or invent a password. Set "secret": true on a type action that enters a password, code or login name, and \
+never guess or invent a password. """ + SYSTEM_IDENTITY + """ Set "secret": true on a type action that enters a password, code or login name, and \
 "private_screen": true while a login, password, code, account, settings or inbox page is showing (the stream then shows \
 the webcam); say nothing about what is on such a page."""
 SYSTEM_PC_INSTALLS = """
@@ -2035,6 +2044,43 @@ def looks_credential(text):
     return bool(CREDS.search(t) or EMAIL_RE.search(t) or KEY_RE.search(t))
 
 
+# owner 10-28 "one password he uses everywhere": his one identity (a dedicated account the owner made) lives in a file on
+# the pod that the owner writes himself (tools/pod/onpod/set_sub01_login.py); the model only ever writes a placeholder
+IDENTITY_RE = re.compile(r"\{\{(email|username|password)\}\}")
+IDENTITY_FILE = Path(os.environ.get("STREAMER_LOGIN_FILE") or "/home/unreal/.sub01-private/sub01-login.json")
+
+
+def identity_type(a, text, allow_credentials):
+    """-> (action, why) for a type action whose whole text is an identity placeholder, else None (not one)."""
+    m = IDENTITY_RE.fullmatch(text)
+    if not m:
+        return None
+    if not allow_credentials:
+        return None, "credentials"
+    return {"action": "type", "text": text, "submit": bool(a.get("submit")), "secret": True, "credential": True,
+            "identity": m.group(1)}, None
+
+
+def read_identity(field, path=None):
+    """The identity file's `field` (email, username or password), or None: a regular file (no symlink) under 4 KB holding
+    a JSON object whose value is a 1..200 character string. Nothing about the file or the value is ever logged."""
+    try:
+        fd = os.open(str(path or IDENTITY_FILE), os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except OSError:
+        return None
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_size > 4096:
+            return None
+        d = json.loads(os.read(fd, 4096).decode("utf-8"))
+    except (OSError, ValueError, UnicodeDecodeError):
+        return None
+    finally:
+        os.close(fd)
+    v = d.get(field) if isinstance(d, dict) else None
+    return v if isinstance(v, str) and 1 <= len(v) <= 200 and "\n" not in v else None
+
+
 def secret_type(a, text):
     """The cleaned `type` action. `secret` (masked everywhere but the runner) when the model marked it or the text may
     be one (looks_secret, broad); `credential` (the desktop is hidden before it is typed) when the model marked it or
@@ -2081,6 +2127,8 @@ def clean_action(a, marks, screen=SCREEN, chat_texts=(), allow_credentials=False
         text = " ".join(str(a.get("text") or "").split())[:200]
         if not text:
             return None, "nothing to type"
+        if (ident := identity_type(a, text, allow_credentials)) is not None:
+            return ident
         login_name = allow_credentials and EMAIL_RE.fullmatch(text)   # the chat filter calls an e-mail a link
         why = (None if login_name else chat_blocked(text, skip_links=False)) or \
             (CREDS.search(text) and not allow_credentials and "credentials") or \
@@ -2131,6 +2179,8 @@ def clean_pc_action(a, screen=SCREEN, chat_texts=(), allow_games=True, allowed=N
         text = " ".join(str(a.get("text") or "").split())[:200]
         if not text:
             return None, "nothing to type"
+        if (ident := identity_type(a, text, allow_credentials)) is not None:
+            return ident
         why = pc_type_problem(text, chat_texts, allow_credentials, allow_installs)
         if not why and chat_install and (WINGET_INSTALL.match(" ".join(text.split())) or PC_SHELL_WORDS.search(text)):
             why = "no commands for a viewer's install"
@@ -3377,6 +3427,7 @@ class Agent:
         self.run_id = os.urandom(4).hex()                     # in every audit row: decision ids restart in every run
         self.audit_degraded = None                            # {"since", "error"}: events.jsonl not writable -> POST /resume
         self.typed_secrets = collections.deque(maxlen=20)     # in memory only: masked in every row, never spoken
+        self.identity_file = IDENTITY_FILE                    # his one login identity (read_identity), outside git
         self.services = services or Services(cfg)
         # the provider chain: `primary` (cfg.provider) and `fallback`; `provider` is the active one. "env" builds both
         # from the key files; tests hand in scripted objects (names then come from cfg, else from the object).
@@ -5157,6 +5208,8 @@ class Agent:
             if len(self.auth_submits) >= AUTH_SUBMITS_MAX:
                 self.hold("login_attempts", f"{AUTH_SUBMITS_MAX} possible login submissions in {AUTH_WINDOW_S / 60:.0f} min")
                 return ("action_refused", "login attempt cap"), frame
+        if action.get("identity") == "password" and self.privacy is None:   # Kimi: never into a field not marked private
+            return ("action_refused", "the password goes only into a login page marked private_screen"), frame
         if kind == "type" and (action.get("credential") or self.privacy is not None):   # the desktop hidden first
             if not self.cfg.allow_credentials:
                 return ("action_refused", "credentials are off (--no-allow-credentials)"), frame
@@ -5226,8 +5279,17 @@ class Agent:
             action = dict(action, secret=True, credential=True)
         if kind == "type" and action.get("credential"):       # scrubbed from every later row, never spoken
             self.add_secret(action["text"])
+        value = None
+        if kind == "type" and action.get("identity"):        # the one place the identity's value exists in the agent
+            value = read_identity(action["identity"], self.identity_file)
+            if value is None:
+                return self.refused_outcome(action, source, bind, frame_now, ("action_refused", "no login identity on this PC"))
+            if action["identity"] == "password" and len(value) < SECRET_MIN:
+                return self.refused_outcome(action, source, bind, frame_now, ("action_refused", "the password is too short to mask"))
+            if value not in self.typed_secrets:              # masked before anything can echo it
+                self.typed_secrets.append(value)
         frame = bind.get("frame") or {}
-        send = {k: v for k, v in action.items() if k not in ("secret", "credential")}
+        send = {k: v for k, v in action.items() if k not in ("secret", "credential", "identity")}
         if isinstance(frame_now.get("frame_id"), str):          # the runner refuses a mark of an older observation
             send["frame_id"] = frame_now["frame_id"]
         if not self.log("action", action=public_action(action), source=source, decision_id=bind["id"], action_id=aid,
@@ -5242,7 +5304,7 @@ class Agent:
             self.auth_submits.append(now)                     # Enter/click after it, or its own submit
             self.last_secret_t = -1e9
         if kind == "type" and action.get("credential") and not EMAIL_RE.fullmatch(action["text"]) \
-                and not action.get("submit"):
+                and action.get("identity") not in ("email", "username") and not action.get("submit"):
             self.last_secret_t = now
         att = attention_of(action, obs["marks"], obs["screen"])
         hold = {"type": max(1.5, len(action.get("text", "")) * 0.07) + 0.8, "click": 2.0, "navigate": 2.0,
@@ -5258,6 +5320,8 @@ class Agent:
             self.requests.current["steps"] += 1
         self.note_install(action, now)
         self.last_action = {"action": action_label(action), "source": source}
+        if value is not None:
+            send["text"] = value                              # after the audit row (it holds the placeholder, masked)
         try:
             r = await self.services.act(send)
         except ServiceError as e:
