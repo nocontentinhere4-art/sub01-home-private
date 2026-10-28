@@ -6,6 +6,7 @@ from aiohttp import web
 from PIL import Image
 ORIGIN = 'https://subzerone.live'
 LIVE_KEEP, START_OFFSET = 4, 4.0      # public playlist: newest 4 segments (8 s), start 4 s from the live edge (owner 10-28)
+CARTOON = re.compile(r'^\W{0,2}(?:!\s*cartoon\b|cartoon\s*:)', re.I)   # the agent's CARTOON_PREFIX: sent straight to it
 SEGMENT = re.compile(r'^sub01-[0-9]{8}-[0-9]{6}-[0-9]+\.ts$')
 HEADERS = {'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}
 
@@ -184,6 +185,16 @@ def create_app(root, stop_file, token_file=None):
         text = (await request.text()).strip()
         if not 1 <= len(text) <= 280 or any(ord(c)<32 and c not in '\n\t' for c in text): raise web.HTTPBadRequest()
         global_chat.append(now)
+        if token_file and CARTOON.match(text):   # owner 10-28 "no filters": the agent moderates cartoon lines itself
+            try:
+                async with asyncio.timeout(8):
+                    async with aiohttp.ClientSession() as client:
+                        async with client.post('http://127.0.0.1:8836/cartoon', json={'text':text,'nick':'viewer'},
+                                               headers={'X-Admin-Token':Path(token_file).read_text().strip()}) as r:
+                            if r.status == 200 and (await r.json()).get('ok') is True:
+                                messages.append({'text':text,'at':int(time.time())})
+                                return chat_ack_response({'ok':True})
+            except (TimeoutError, aiohttp.ClientError, ValueError, OSError): pass   # the agent is away: the chat path
         try:
             async with asyncio.timeout(12):
                 async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(local_addr=('127.0.0.2',0))) as client:

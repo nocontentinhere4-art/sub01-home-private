@@ -185,6 +185,20 @@ CARTOON_PENDING_TTL_S = 900.0           # a clip that never came back frees its 
 CARTOON_SECONDS = (3.0, 12.0)           # how long the cartoon layout stays (clamped); CARTOON_SECONDS_DEFAULT if unknown
 CARTOON_SECONDS_DEFAULT = 8.0
 CARTOON_LAYOUT = "cartoon"
+# POST /cartoon (owner 10-28: "no filters" - the site chat's money/insult filter refused "a guy gives you some crypto"):
+# the public relay hands cartoon lines straight to this agent; cartoon_problem() still moderates them (fail closed).
+# They carry negative sequence numbers: never the chat cursor, never reported to the backend as answered chat.
+CARTOON_DIRECT_MAX = 280
+
+
+# Money is no reason to refuse a drawing (owner 10-28: "a guy gives you some crypto" must work): the chat filter's money,
+# trading and ticker reasons are ignored here. Links, wallet addresses, personal data, slurs and adult words still refuse.
+CARTOON_MONEY_OK = ("no requests for money", "no trading or get-rich talk", "tickers are not allowed")
+
+
+def cartoon_seqs(seq):
+    return (seq,) if seq >= 0 else ()
+
 CARTOON_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
 CARTOON_DONE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}\.json")
 CARTOON_RESTORE_TRIES = 4               # steps the director may fail to take the previous layout back before we give up
@@ -919,7 +933,7 @@ CARTOON_BLOCK = re.compile("|".join(f"(?:{rx.pattern})" for _, rx in CARTOON_CLA
 _HARM_OK = re.compile(r"(?:it|pcs?|computers?|monitors?|screens?|keyboards?|laptops?|phones?|tvs?|televisions?|consoles?|"
                       r"controllers?|headsets?|headphones?|speakers?|lamps?|bricks?|pillows?|cushions?|cups?|mugs?|plates?|"
                       r"bottles?|books?|papers?|plants?|pots?|bananas?|apples?|eggs?|tomato(?:es)?|shoes?|socks?|cans?|"
-                      r"stuff|things?|trash|garbage|" + _TARGET_OK[_TARGET_OK.index("(?:walls?"):] + r")$", re.I)
+                      r"stuff|things?|trash|garbage|coins?|bitcoins?|crypto|money|cash|dollars?|bills?|gold|confetti|" + _TARGET_OK[_TARGET_OK.index("(?:walls?"):] + r")$", re.I)
 _HARM_SKIP = {"the", "a", "an", "his", "her", "their", "my", "your", "some", "that", "this", "its", "our", "big", "little",
               "small", "giant", "huge", "tiny", "old", "new", "whole", "entire", "red", "blue", "green", "yellow", "black",
               "white", "gaming", "wooden", "fat", "heavy", "on", "onto", "into", "in", "at", "to", "through", "with", "from"}
@@ -956,7 +970,8 @@ def cartoon_problem(action):
     t = " ".join(str(action or "").split())
     if not t:
         return "empty"
-    if chat_blocked(t, skip_links=False) or INJECT.search(t) or CREDS.search(t) or FINANCE.search(t) or MONEY_Q.search(t):
+    why = chat_blocked(t, skip_links=False)
+    if (why and why not in CARTOON_MONEY_OK) or INJECT.search(t) or CREDS.search(t):
         return "filter"
     if _LINK_FB.search(t) or EMAIL_RE.search(t):
         return "filter"
@@ -3279,6 +3294,7 @@ class Agent:
         self.cartoon = {"pending": collections.OrderedDict(), "handled": collections.OrderedDict(), "playing": None,
                         "last_accept": -1e9, "last_line": -1e9, "last_line_text": None, "day": "", "count": 0, "unreadable": {},
                         "library": [], "library_mtime": None}
+        self.cartoon_direct = 0                               # the last negative seq given to a POST /cartoon line
         self.cartoon_load(self.clock())
         self.pending = {}                                     # seq -> classified chat item waiting for a batch
         self.recent_chat = collections.deque(maxlen=40)       # (time, text) of what viewers wrote: never copied into actions
@@ -5512,7 +5528,7 @@ class Agent:
             return False
         if limit:
             cs["last_line"] = now
-        return self.enqueue(text, "request", "normal", (seq,), nick, ttl=60.0)
+        return self.enqueue(text, "request", "normal", cartoon_seqs(seq), nick, ttl=60.0)
 
     def cartoon_refuse(self, seq, nick, why, line, now, action="", cls=None):
         self.counters["cartoon_refused"] += 1
@@ -5595,7 +5611,8 @@ class Agent:
         self.log("cartoon_request", id=cid, seq=seq, user=nick or "anon", action=action, today=cs["count"],
                  waiting=len(cs["pending"]), library=hit["mp4"] if hit else None)
         if not hit:                                           # a ready clip needs no "cooking" line: its intro comes at once
-            self.enqueue(self.cartoon_pick(CARTOON_ACK_LINES, CARTOON_ACK_ANON, nick), "request", "normal", (seq,), nick, ttl=60.0)
+            self.enqueue(self.cartoon_pick(CARTOON_ACK_LINES, CARTOON_ACK_ANON, nick), "request", "normal", cartoon_seqs(seq),
+                         nick, ttl=60.0)
         return True
 
     def cartoon_mark(self, cid):
@@ -6591,6 +6608,21 @@ class Agent:
             return web.json_response({"ok": True, "lease": self.lease_status(), "hands_off": self.hands_off_reason(),
                                       "note": "held/frozen are cleared by POST /resume, not by a lease"})
 
+        async def cartoon(request):
+            try:
+                body = await request.json()
+            except ValueError:
+                body = None
+            text = body.get("text") if isinstance(body, dict) else None
+            if not isinstance(text, str) or not 1 <= len(text) <= CARTOON_DIRECT_MAX:
+                return web.json_response({"ok": False, "error": 'body must be {"text": "cartoon: ...", "nick": "..."}'},
+                                         status=400)
+            self.cartoon_direct -= 1
+            m = {"seq": self.cartoon_direct, "text": text, "nick": str(body.get("nick") or "")[:32]}
+            if not self.cartoon_chat(m, self.clock()):
+                return web.json_response({"ok": False, "error": "not a cartoon request"}, status=400)
+            return web.json_response({"ok": True})
+
         async def inject(request):
             try:
                 body = await request.json()
@@ -6609,6 +6641,7 @@ class Agent:
         app.router.add_post("/pause", guarded(pause))
         app.router.add_post("/resume", guarded(resume))
         app.router.add_post("/inject", guarded(inject))
+        app.router.add_post("/cartoon", guarded(cartoon))
         app.router.add_post("/lease", guarded(lease))
         app.router.add_delete("/lease", guarded(lease))
         return app
