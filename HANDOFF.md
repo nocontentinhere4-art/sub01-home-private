@@ -124,6 +124,19 @@ code that runs; the pod's runtime copy is `/home/sub01-recovery-stage-20261026/r
 - Build note: copying a build dir copies absolute paths in Intermediate; delete Intermediate in the copy. UBA stalled
   with memory over-committed: build with `-NoUBA -MaxParallelActions=4`.
 
+### Overnight loop (owner 04:15 UTC, asleep): "make SUB-01 a real streamer A to Z, reference Kai Cenat"
+Goal (owner's words): funny, interactive, fast replies, a real streamer; real references (streams, shorts, videos);
+body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a self-paced /loop in this session.
+- Done 04:19: hype persona v1 deployed (prompt Character + viewers + examples, fixed lines; Kimi APPROVE). First live
+  lines: "Yo chat! ... Who do you think wins this?", "Bro, even Minecraft countries need a propaganda desk."
+- Measured before: chat -> speech start median 2.6 s (max 15 s) over 28 replies: speed is fine; tone was the problem.
+- Next steps, in order: (1) voice energy: the K07 TTS settings (`integrated-cadence61-20261026/voice.json`; Chatterbox
+  exaggeration/cfg) for a livelier delivery, judged on HLS audio with Kimi; (2) talk density: comment gaps are ~40 s,
+  real streamers rarely leave 20 s of silence: the pacing code; (3) real-reference pass (stream/short transcripts of
+  hype streamers: bits, chat handling, segment structure) -> a short list of concrete behaviours to add; (4) chat
+  games as code (a 1-10 rating or vote the code tallies from chat, so it is real, not invented); (5) memory of
+  regulars' names.
+
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
    - In the shot from behind the wrists still cross towards the keyboard centre. The IK elbow guard slides them 8-12
