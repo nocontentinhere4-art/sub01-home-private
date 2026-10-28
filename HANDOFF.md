@@ -75,7 +75,23 @@ code that runs; the pod's runtime copy is `/home/sub01-recovery-stage-20261026/r
 - Tools: `tools/pod/onpod/tune_set.py` (live keys, keeps the file's owner: the game reads it as unreal),
   `snap.sh TAG` (4x2 HLS contact sheet), `facegrab.sh TAG` (waits for the face camera). On the pod in
   `/home/sub01-review-20261027/tools-20261028/` (run as root).
-- Item 7 (collar): owner OK to try `hide_slot` 4/5 live; in progress.
+- Item 1 (hands), live with Kimi, 02:25-02:35: the elbow guard was saturated (left slide 12-15 of max 15 cm, right
+  target declined as behind the shoulder, right elbow 50-56 deg): the wrist targets sat too close to his body.
+  Kimi's steps `elbow_min_deg` 90 and `hand_span_cm` 28 were tried and reverted (no gain / flatter, overlapping hands).
+  `hand_back_cm` 12 -> 5 KEPT (Kimi APPROVE + KEEP on frames, `docs/streamer/photos/20261028-hands-back12-vs-5.jpg`):
+  left slide 3-9 cm, right never declined, right elbow 74-88 deg. Still open: the right slide stays at 15 (saturated);
+  the next fix is offline (the right target / keyboard placement after the seat moves), not more live keys.
+  Helper: `handstep.sh TAG key=value` (applies, measures, crops the hands).
+- Item 3 (v25): in ~4.5 h of 10-s V25 log lines only 3 show a gesture and 4 a head roll: by design gestures are
+  0.9-1.4 s every 14-26 s of speech, so 10-s samples miss most. `v25watch.py` (0.2 s polling + frames) is running
+  for 15 min from 02:21; results in `/home/sub01-review-20261027/frames/v25watch.out`.
+- Item 7 (collar): owner OK to try `hide_slot` 4/5 live. Needs a face-camera frame; the face shot only comes with chat
+  answers/reactions and is short. `facegrab.sh collar2` waits up to 30 min from 02:38.
+- Item 8: acceptance on 01:49-02:19 (`/home/sub01-review-20261027/accept-20261028/`, run as root: the game log is
+  root 600): pass voice_k07, voice_recorded, head_motion, pc_control; fail mostly by design or for no chat in the window
+  (activity_change, chat_executed, chat_refused, two_cameras with the owner's fixed webcam_only), error_recovered (the
+  01:52 director restart), fps_game median 59.6 (p05 53.9), fps_cam2 ~29.5 (cam2_fps 30), fps_monitor_feed 0,
+  fps_director 57-58. 1-hour stability watch running from 02:19 (`stability-20261028T0230.jsonl`).
 
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
