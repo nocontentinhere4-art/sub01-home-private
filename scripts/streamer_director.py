@@ -425,8 +425,9 @@ def cartoon_chain(cfg):
     last frame after an EOF (so a feeder that closes the FIFO cannot stall the graph)."""
     w, h = cfg.width, cfg.height
     rng = "" if cfg.test_sources else ":in_range=full:out_range=limited"
-    wall = "" if cfg.test_sources else WALL_PTS + ","
-    return (f"{wall}scale={w}:{h}:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=bilinear{rng},"
+    # no WALL_PTS here (owner 10-28: clips froze on their first frame with it): the feeder writes exactly CARTOON_RATE fps,
+    # so the -framerate stamps are already real time
+    return (f"scale={w}:{h}:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=bilinear{rng},"
             f"format=yuv420p,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps={cfg.fps},tpad=stop=-1:stop_mode=clone")
 
 
