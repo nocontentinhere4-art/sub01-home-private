@@ -91,10 +91,9 @@ def test_chat_may_ask_for_a_sign_up_or_log_in_only_with_logins_on():
         assert item["cls"] == "inject" or not req or req.get("refused") == "credentials", text   # never an action
 
 
-def test_he_never_signs_a_no_computer_pledge_and_plays_the_sites_computer():
+def test_signing_up_anywhere_is_in_the_prompt():
     on = SA.system_prompt(pc=True, allow_credentials=True)
-    assert "never ticks such a pledge" in on and "Play with the computer" in on
-    assert "never rated games against people" in SA.SYSTEM_PC or "never rated games against people" in SA.SYSTEM
+    assert "Signing up is how he gets in anywhere" in on and "plays whoever he likes" in on
 
 
 def test_typing_that_barely_changes_the_picture_is_judged_by_the_model(tmp_path):
@@ -107,3 +106,7 @@ def test_typing_that_barely_changes_the_picture_is_judged_by_the_model(tmp_path)
     agent, world, prov, clock = T.pc_make(tmp_path / "denied", *types(False))
     asyncio.run(T.sim(agent, clock, 40, dt=3))
     assert agent.held and agent.held["why"] == "failures"
+
+
+def test_the_prompt_explains_a_chess_move_is_two_clicks():
+    assert "never click the same piece twice" in SA.SYSTEM_PC or "never click the same piece twice" in SA.SYSTEM
