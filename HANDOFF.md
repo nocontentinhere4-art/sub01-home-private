@@ -213,6 +213,24 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   bottom right). Site (branch claude/live-control-20261027, NOT deployed: needs `railway up` by Codex/owner): player
   latency 4ce0c46, PC SCREEN auto-hide 4873318, Hide/Show PC 958eea2.
 
+### 17:00-19:00 UTC: stream delay, chat requests during videos, logins (owner live)
+- Stream delay at 60 fps (owner declined 30 fps, decoder threads measured useless: MJPEG decode 3 ms/frame): cause =
+  the container CPU quota (13.6 cores, throttled ~6%) and a live graph composing all 6 layouts at 1080p60 (59.62 fps
+  out, +0.5 s/min). Fix b1591bb/503c236: `--live-layouts` (pod: file `streamer/live-layouts` = `webcam_only,desktop`;
+  the cartoon, webcam_only and the launch layout always render, others relaunch), cam2 read only when room renders;
+  `LAG_LIMIT` 10 s relaunch (once per 10 min). Deployed 18:43 (owner OK): delay 3-4 s, flat after 15 min.
+  The 30 fps cap commit 6979e89 is reverted (b4e9e50). x264 superfast + filter threads 4 stay.
+- Agent new27 (c31ccd2, deployed 18:54): stale_refused only for click/type (a playing video made every key/search
+  stale), "exit/leave full screen" = Escape, "full screen" = click for the model, "react to X" searches X, chess ->
+  lichess.org, poker/card games -> free-play search (never real money, no account), off-desk refusals only for
+  explicit off-desk phrases. Prompt: chat requests at once, other creators' clips OK (never imitated).
+- Logins: owner 18:50 "he must log in, I made a dedicated account not linked to mine": pod runtime edit
+  `allow_credentials` default now True (was False). He uses saved logins / signed-in sessions only (never guesses a
+  password). The owner signs the account in himself at the operator console
+  `https://505jw5ph3dt7ed-8888.proxy.runpod.net/proxy/8838/operator` (operator token); the password never goes through
+  chat or git. Ask for a privacy cut (webcam_only) while he types it on stream.
+- Railway: the 2nd `railway up` (site UI rebuild 3678126) was stuck in "Performing healthchecks"; logs requested.
+
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
    - In the shot from behind the wrists still cross towards the keyboard centre. The IK elbow guard slides them 8-12
