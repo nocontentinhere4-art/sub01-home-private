@@ -833,8 +833,8 @@ _PEOPLE = (r"(?:him|her|them|someone|somebody|anyone|anybody|everyone|everybody|
 _HARM = (r"(?:throw\w*|threw|thrown|toss\w*|hurl\w*|fling\w*|flung|chuck\w*|launch\w*|drop\w*|kick\w*|punch\w*|slap\w*|smack\w*|"
          r"whack\w*|hit|hits|hitting|beat\w*|bash\w*|smash\w*|slam\w*|squash\w*|squish\w*|flatten\w*|crush\w*|stomp\w*|trampl\w*|"
          r"shoot\w*|shot|fire[sd]?|firing|zap\w*|blast\w*|burn\w*|drown\w*|bury|buries|buried|burying|bite[sd]?|biting|eat|eats|"
-         r"ate|eating|swallow\w*|kidnap\w*|push\w*|shove\w*|drag\w*|run(?:s|ning)?\s+over|ran\s+over|runs?\s+into|sit\w*\s+on|"
-         r"step\w*\s+on|stab\w*|slash\w*|slice\w*|chop\w*|cut\w*|lock\w*|trap\w*|tie\w*|tied|bind\w*|choke\w*|shake\w*|spank\w*)")
+         r"ate|eating|swallow\w*|kidnap\w*|push\w*|shove\w*|drag(?:s|ged|ging)?|run(?:s|ning)?\s+over|ran\s+over|runs?\s+into|sit\w*\s+on|"
+         r"step\w*\s+on|stab\w*|slash\w*|slice[sd]?|slicing|chop(?:s|ped|ping)?|cut(?:s|ting)?|lock\w*|trap(?:s|ped|ping)?|tie|ties|tying|tied|bind\w*|choke\w*|shake\w*|spank\w*)")
 _AIM = (r"(?:throw\w*|threw|thrown|toss\w*|hurl\w*|fling\w*|flung|chuck\w*|launch\w*|lob\w*|shoot\w*|shot|fire[sd]?|firing|"
         r"drop\w*|dump\w*|kick\w*|swing\w*|swung|aim\w*|point\w*|pelt\w*|spray\w*|squirt\w*|spit\w*|slam\w*|smash\w*|bash\w*|"
         r"hit|hits|hitting|punch\w*|slap\w*|smack\w*|whack\w*|ram|rams|ramming|rammed|run(?:s|ning)?|ran|drive[sn]?|driving|drove|"
@@ -907,7 +907,31 @@ CARTOON_CLASSES = (                                          # (class, pattern):
         r"\b" + _AIM + r"\b(?:\s+[\w'-]+){0,5}?\s+(?:at|towards?|onto|on|upon|against)\s+(?!" + _TARGET_OK + r"\b)\S|"
         r"\b" + _HARM + r"\b\s+(?:(?:the|a|an|his|her|their|my|your|some|that|this)\s+)?(?:[\w'-]+\s+)?" + _PEOPLE + r"\b", re.I)),
 )
+CARTOON_CLASSES += (("fire", re.compile(r"\b(?:on\s+fire|ablaze|set\s+fire|fire\s+to|burn\w*|incinerat\w*|flames?|flaming|"
+                                         r"torch\w*|arson\w*|explod\w*|explosions?|blow\w*\s+up)\b", re.I)),)
 CARTOON_BLOCK = re.compile("|".join(f"(?:{rx.pattern})" for _, rx in CARTOON_CLASSES), re.I)
+# a harm verb's target must be a known OBJECT (Kimi cartagent: "punch a clown" passed a people list): fail-closed allowlist
+_HARM_OK = re.compile(r"(?:it|pcs?|computers?|monitors?|screens?|keyboards?|laptops?|phones?|tvs?|televisions?|consoles?|"
+                      r"controllers?|headsets?|headphones?|speakers?|lamps?|bricks?|pillows?|cushions?|cups?|mugs?|plates?|"
+                      r"bottles?|books?|papers?|plants?|pots?|bananas?|apples?|eggs?|tomato(?:es)?|shoes?|socks?|cans?|"
+                      r"stuff|things?|trash|garbage|" + _TARGET_OK[_TARGET_OK.index("(?:walls?"):] + r")$", re.I)
+_HARM_SKIP = {"the", "a", "an", "his", "her", "their", "my", "your", "some", "that", "this", "its", "our", "big", "little",
+              "small", "giant", "huge", "tiny", "old", "new", "whole", "entire", "red", "blue", "green", "yellow", "black",
+              "white", "gaming", "wooden", "fat", "heavy", "on", "onto", "into", "in", "at", "to", "through", "with", "from"}
+_HARM_PARTICLES = {"out", "away", "up", "down", "over", "around", "back", "off", "across", "about", "high", "far", "hard",
+                   "really", "very", "so", "just", "gently", "softly", "quickly", "then", "again"}
+_HARM_RX = re.compile(r"\b" + _HARM + r"\b", re.I)
+
+
+def harm_target_problem(text):
+    """True when a harm verb (punch, kick, throw...) hits anything but an allowlisted object or "it"."""
+    low = str(text).lower()
+    for m in _HARM_RX.finditer(low):                    # fail-closed (Kimi cartagent2): the first real word after the verb,
+        words = [w for w in re.findall(r"[a-z']+", low[m.end():])[:8]   # past determiners, adjectives, prepositions and
+                 if w not in _HARM_SKIP and w not in _HARM_PARTICLES]   # particles, must be an allowlisted object
+        if not words or not _HARM_OK.match(words[0]):
+            return True
+    return False
 
 
 def cartoon_variants(text):
@@ -935,6 +959,8 @@ def cartoon_problem(action):
         for name, rx in CARTOON_CLASSES:
             if rx.search(v):
                 return name
+        if harm_target_problem(v):
+            return "aimed"
     return None
 
 
@@ -5625,8 +5651,9 @@ class Agent:
             play["tries"] += 1
             self.counters["layout_errors"] += 1
             self.log("layout_error", layout=target, error=str(e)[:80], why="cartoon end")
-            if play["tries"] < CARTOON_RESTORE_TRIES:
-                return                                        # the cartoon layout must not stay on air: tried again next step
+            if play["tries"] % CARTOON_RESTORE_TRIES == 0:
+                self.say(f"cartoon restore to {target} still failing after {play['tries']} tries")
+            return                                            # never give up (Kimi): the cartoon layout must not stay on air
         cs["playing"] = None
         self.layout_at = now
         if play.get("after"):

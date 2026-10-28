@@ -4068,7 +4068,7 @@ def test_frozen_latch_clears_itself_three_times_an_hour_black_never(tmp_path):
 # --- cartoon mode: "cartoon: <action>" -> moderation -> queue.jsonl -> done/<id>.json -> feeder + director "cartoon" -> back ---
 CARTOON_OK = ["take a brick and throw it", "drop a piano", "spin the chair", "summon a dragon", "a cat plays the drums",
               "a banana peel makes a robot slip", "throw a brick at the wall", "make the chair dance", "a duck rides a skateboard",
-              "a dragon breathes fire on the castle", "an anvil drops on a piano", "a frog jumps on a trampoline"]
+               "an anvil drops on a piano", "a frog jumps on a trampoline"]
 CARTOON_REFUSED = {"throw a brick at kei": "aimed", "throw a brick at chat": "aimed", "drop a piano on my boss": "real_people",
                    "slap him": "aimed", "hit the dog with a bat": "aimed", "shoot the dog": "aimed",
                    "kill the cat": "violence", "k1ll the cat": "violence", "a bloody fight": "violence", "hurt a person": "violence",
@@ -4373,7 +4373,8 @@ def test_a_feeder_or_director_failure_is_one_failed_cartoon_never_a_second_try(t
     for _ in range(SA.CARTOON_RESTORE_TRIES + 2):
         clock2.t += 1
         asyncio.run(agent2.step())
-    assert len(world2.feeds) == 1 and world2.layouts == [] and agent2.cartoon["playing"] is None   # gave up after a few tries
+    play = agent2.cartoon["playing"]                                     # never gives up (Kimi): still trying to restore
+    assert len(world2.feeds) == 1 and world2.layouts == [] and play is not None and play["tries"] >= SA.CARTOON_RESTORE_TRIES
     assert any(e["kind"] == "cartoon_failed" and e["error"].startswith("director") for e in events(agent2))
 
 
@@ -4454,3 +4455,14 @@ def test_the_feeder_call_carries_the_operator_token_and_the_config_has_the_defau
         return r
     assert asyncio.run(go()) == {"ok": True}
     assert seen == [("tok", {"id": "c1", "path": "/x/y.mp4", "caption": "mika: spin the chair"})]
+
+
+def test_cartoon_harm_targets_are_an_allowlist_and_fire_is_refused():
+    for ok in ("take a brick and throw it", "take the pc and throw it out the window", "drop a piano", "spin the chair",
+               "summon a dragon", "throw a brick at the wall", "kick the giant red ball", "smash the pc", "punch the wall",
+               "throw the keyboard out the window"):
+        assert SA.cartoon_problem(ok) is None, ok
+    for bad in ("punch a clown", "set a puppy on fire", "kick the old man", "hit the guy with a pillow", "burn the house",
+                "punch a ninja", "eat the cat", "throw the baby", "p u n c h a clown", "throw out the baby",
+                "kick over the old man", "punch the giant red old man", "throw", "tie up the old man"):
+        assert SA.cartoon_problem(bad) is not None, bad
