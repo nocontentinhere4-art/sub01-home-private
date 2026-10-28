@@ -1,24 +1,204 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SUB-01 · live</title><link rel="icon" href="/favicon.svg"><style>
-:root{color-scheme:dark;--bg:#08080b;--fg:#ececf2;--muted:#8f8fa3;--line:#292932;--accent:#ff6a00}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px ui-monospace,"SF Mono",Menlo,Consolas,monospace}header{display:flex;align-items:center;gap:18px;padding:24px 28px;border-bottom:1px solid var(--line)}h1{font-size:20px;letter-spacing:.16em;margin:0;background:var(--accent);color:#08080b;padding:3px 10px;border-radius:2px}a{color:var(--muted);text-decoration:none}a:hover{color:var(--fg)}#status{margin-left:auto;color:var(--muted);font-size:12px}main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;max-width:1680px;margin:auto;padding:24px 28px}video{display:block;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line)}h2{font-size:14px;font-weight:500;margin:0 0 16px}p{color:var(--muted);line-height:1.6;font-size:12px}aside{border-left:1px solid var(--line);padding-left:24px;display:flex;flex-direction:column;min-height:360px}#messages{height:250px;overflow:auto;flex:1;margin-bottom:16px}#messages p{color:var(--fg);border-bottom:1px solid var(--line);padding:10px 0;margin:0;overflow-wrap:anywhere}label{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}textarea{width:100%;resize:vertical;min-height:88px;background:#101015;border:1px solid var(--line);border-radius:4px;color:var(--fg);padding:12px;font:inherit}button{background:var(--accent);color:#08080b;border:0;padding:11px 18px;font:inherit;border-radius:3px;cursor:pointer;margin-top:10px}button:disabled{opacity:.5;cursor:wait}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}#feedback{min-height:36px}#mode{color:#ff9a3c}footer{padding:0 28px 24px;color:var(--muted);font-size:11px}@media(max-width:850px){header{padding:18px 16px;gap:12px}h1{font-size:17px}main{grid-template-columns:1fr;padding:16px;gap:20px}aside{border-left:0;border-top:1px solid var(--line);padding:20px 0 0;min-height:300px}#messages{max-height:180px}footer{padding:0 16px 20px}#status{max-width:130px;text-align:right}}
-.stage{position:relative}.pc-screen{position:absolute;right:12px;bottom:48px;width:30%;max-width:360px;background:#101015;border:1px solid var(--line);box-shadow:0 4px 24px #0008;pointer-events:auto}.pc-screen h2{font-size:10px;letter-spacing:.1em;padding:7px 9px;margin:0}.pc-view{position:relative;aspect-ratio:16/9;display:grid;place-items:center;background:#08080b}.pc-view img{width:100%;height:100%;object-fit:contain;position:absolute}.pc-view span{font-size:10px;color:var(--muted);padding:8px;text-align:center}.pc-view img[hidden]{display:none}@media(max-width:600px){.pc-screen{width:38%;right:6px;bottom:42px}.pc-screen h2{font-size:8px;padding:4px 6px}.pc-view span{font-size:8px}}
-.pc-heading{display:flex;align-items:center;justify-content:space-between}.pc-heading button{margin:0 7px 0 0;padding:3px 6px;background:transparent;color:var(--fg);font-size:10px;border:1px solid var(--line)}.pc-buttons{display:flex;gap:6px}#pc-show{position:absolute;right:12px;bottom:48px;background:#101015;color:inherit;border:1px solid var(--line);font:inherit;font-size:10px;padding:4px 8px;cursor:pointer}.pc-screen.expanded{width:calc(100% - 24px);max-width:none;right:12px;top:12px;bottom:48px;z-index:2}.pc-screen.expanded .pc-view{height:calc(100% - 27px);aspect-ratio:auto}
-.hx,.hca{color:var(--fg);font-size:12px;text-decoration:none;border:1px solid var(--line);padding:5px 10px;border-radius:2px;background:none;font-family:inherit;cursor:pointer;min-width:0}.hx:hover,.hca:hover{border-color:var(--accent)}.hca{display:flex;gap:8px;align-items:center;max-width:100%}.hcav{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46ch}@media (max-width:640px){header{flex-wrap:wrap}.hcav{max-width:22ch}}</style></head><body><header><h1>SUB-01</h1><a class="hx" href="https://x.com/SUBZERONE01" target="_blank" rel="noopener noreferrer">X @SUBZERONE01</a><button class="hca" id="ca" type="button" title="Copy contract address" data-ca="6WCtKQfkWurd77tCCAYWuL5TwyAvuovTzworfnfupump">CA <span class="hcav">6WCtKQfkWurd77tCCAYWuL5TwyAvuovTzworfnfupump</span></button><span id="status" role="status">Connecting…</span></header><main><section aria-label="Live video"><div class="stage"><video id="video" controls playsinline muted autoplay></video><section class="pc-screen" aria-label="PC screen preview"><div class="pc-heading"><h2>PC SCREEN</h2><span class="pc-buttons"><button id="pc-expand" type="button" aria-expanded="false">Expand</button><button id="pc-hide" type="button">Hide</button></span></div><div class="pc-view"><span id="pc-state" role="status">Connecting…</span><img id="pc-frame" alt="Live PC screen" hidden></div></section><button id="pc-show" type="button" hidden>Show PC</button></div><p>Live preview · enable audio in the player · a few seconds behind live</p><p id="mode">Checking status…</p></section><aside><h2>Live chat</h2><div id="messages" aria-label="Recent messages"></div><form id="chat"><label for="text">Message SUB-01</label><textarea id="text" maxlength="280" required placeholder="Leave a message…"></textarea><button id="send" type="submit">Send</button><p id="feedback" role="status"></p></form><p>Messages are moderated. Sending a message does not grant control permissions.</p></aside></main><script src="/live-config.js"></script><script src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js" crossorigin="anonymous"></script><script>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SUB-01 · live</title><meta name="description" content="SUB-01, an AI streamer live 24/7: reacts, browses, plays and takes requests from chat.">
+<link rel="icon" href="/favicon.svg"><style>
+:root{color-scheme:dark;--bg:#0b0c0f;--panel:#14161b;--panel2:#1b1e25;--line:#262a33;--fg:#eef0f4;--muted:#9aa0ad;--dim:#6b7180;
+--accent:#ff6a00;--accent2:#ff8a33;--live:#eb0400;--ok:#2fd27a;--r:10px;--top:56px;
+--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;cursor:pointer}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.soon{font:600 10px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:#ff6a0018;border:1px solid #ff6a0040;border-radius:999px;padding:3px 7px;white-space:nowrap}
+/* top bar */
+.top{position:sticky;top:0;z-index:20;height:var(--top);display:flex;align-items:center;gap:14px;padding:0 16px;background:#0e1014;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font:800 18px/1 var(--mono);letter-spacing:.14em}.logo b{background:var(--accent);color:#0b0c0f;padding:5px 9px;border-radius:4px}
+.nav{display:flex;gap:4px;margin-left:8px}.nav span{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;color:var(--muted);font-weight:600}
+.nav .on{color:var(--fg)}.search{flex:1;max-width:420px;margin:0 auto;position:relative}
+.search input{width:100%;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--dim);padding:0 74px 0 12px;font:inherit}
+.search .soon{position:absolute;right:8px;top:9px}.right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font-weight:600;white-space:nowrap}
+.chip:hover{border-color:#3a404c}.chip .mono{font:500 12px var(--mono);color:var(--muted);max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.cta{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:8px;background:#ff6a0014;border:1px dashed #ff6a0070;color:var(--accent2);font-weight:700;cursor:default}
+/* layout */
+.app{display:grid;grid-template-columns:240px minmax(0,1fr) 340px;grid-template-rows:auto 1fr;grid-template-areas:"rail main chat" "rail after chat";min-height:calc(100vh - var(--top))}
+.rail{grid-area:rail;align-self:start}main{grid-area:main}.chat{grid-area:chat;align-self:start}.after{grid-area:after;padding:0 20px 40px;min-width:0}
+.rail{border-right:1px solid var(--line);padding:14px 10px;background:#0e1014;position:sticky;top:var(--top);height:calc(100vh - var(--top));overflow:auto}
+.rail h3{font:700 12px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:6px 8px 10px}
+.ch{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px}.ch.cur{background:var(--panel2)}
+.av{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 30% 30%,#ffb066,#ff6a00 60%,#b34a00);color:#0b0c0f;font:800 12px var(--mono)}
+.ch .t{min-width:0;flex:1;display:flex;flex-direction:column}.ch .n{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ch .s{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--live);flex:none;box-shadow:0 0 0 3px #eb040022}.off .dot{background:var(--dim);box-shadow:none}
+.ch.ghost{opacity:.75}.ch.ghost .av{background:transparent;border:1.5px dashed #ff6a0060;color:var(--accent)}
+.rail .note{margin:14px 8px 0;color:var(--dim);font-size:12px}
+main{min-width:0;padding:16px 20px 0}
+/* player */
+.stage{position:relative;border-radius:var(--r);overflow:hidden;background:#000;border:1px solid var(--line)}
+video{display:block;width:100%;aspect-ratio:16/9;background:#000}
+.badges{position:absolute;left:12px;top:12px;display:flex;gap:8px;pointer-events:none}
+.live{background:var(--live);color:#fff;font:800 12px/1 var(--sans);letter-spacing:.06em;padding:5px 8px;border-radius:4px}
+.live[hidden]{display:none}.state{background:#000a;color:#fff;font:600 12px/1 var(--sans);padding:5px 8px;border-radius:4px;backdrop-filter:blur(4px)}
+.pc-screen{position:absolute;right:12px;bottom:56px;width:30%;max-width:380px;background:#101216ee;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 6px 28px #000a}
+.pc-heading{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px solid var(--line)}
+.pc-heading h2{margin:0;font:700 10px/1 var(--mono);letter-spacing:.12em;color:var(--muted)}.pc-buttons{display:flex;gap:6px}
+.pc-buttons button,#pc-show{border:1px solid var(--line);background:var(--panel2);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600}
+.pc-view{position:relative;aspect-ratio:16/9;display:grid;place-items:center;color:var(--dim);font-size:12px}.pc-view img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.pc-screen.expanded{width:calc(100% - 24px);max-width:none;top:12px;bottom:56px;z-index:2}.pc-screen.expanded .pc-view{height:calc(100% - 31px);aspect-ratio:auto}
+#pc-show{position:absolute;right:12px;bottom:56px;background:#101216ee}
+.pc-screen[hidden],#pc-show[hidden]{display:none}
+/* channel row */
+.channel{display:flex;gap:14px;align-items:flex-start;padding:16px 4px}
+.big{position:relative;flex:none}.big .av{width:64px;height:64px;font-size:18px;border:3px solid var(--live)}.big .tag{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);background:var(--live);color:#fff;font:800 10px/1 var(--sans);padding:3px 6px;border-radius:3px}
+.off .big .av{border-color:var(--dim)}.off .big .tag{background:var(--dim)}
+.info{flex:1;min-width:0}.info h1{margin:0;font-size:20px}.info .title{margin:4px 0 8px;font-weight:600}
+.tags{display:flex;flex-wrap:wrap;gap:6px}.tags span{background:var(--panel2);color:var(--muted);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600}.tags .cat{color:var(--accent2);background:transparent;padding-left:0}
+.acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);font-weight:700}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#0b0c0f}.btn.pri:hover{background:var(--accent2)}
+#mode{color:var(--dim);font-size:12px;margin-top:6px}
+/* sections */
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-top:16px}.sec h2{margin:0 0 12px;font-size:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:12px}.card b{display:block;margin-bottom:4px}.card p{margin:0;color:var(--muted);font-size:13px}
+.card code{font:12px var(--mono);color:var(--accent2)}
+.soonbox{position:relative;overflow:hidden;background:linear-gradient(135deg,#1c130b,#14161b 55%);border-color:#ff6a0040}
+.soonbox h2{display:flex;align-items:center;gap:10px;font-size:20px}.soonbox p.lead{color:var(--muted);max-width:640px;margin:0 0 14px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
+.step{border:1px dashed #ff6a0050;border-radius:8px;padding:12px}.step i{font:700 11px var(--mono);color:var(--accent);font-style:normal}.step b{display:block;margin:4px 0}.step p{margin:0;color:var(--muted);font-size:13px}
+.about p{color:var(--muted);margin:0 0 10px}
+/* chat */
+.chat{border-left:1px solid var(--line);background:#0e1014;display:flex;flex-direction:column;position:sticky;top:var(--top);height:calc(100vh - var(--top))}
+.chat header{height:48px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line);font-weight:700;letter-spacing:.02em;flex:none}
+#messages{flex:1;overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:2px}
+.msg{margin:0;line-height:1.45;word-wrap:break-word;padding:2px 4px;border-radius:4px}.msg:hover{background:#ffffff08}.msg .who{font-weight:700;margin-right:4px}.empty{color:var(--dim);text-align:center;margin:auto 0}
+.compose{border-top:1px solid var(--line);padding:10px 12px;flex:none}
+.hints{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}.hints::-webkit-scrollbar{display:none}
+.hints button{flex:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted)}.hints button:hover{color:var(--fg)}
+textarea{display:block;width:100%;min-height:42px;max-height:120px;resize:vertical;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:10px;font:inherit}
+textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-items:center;gap:8px;margin-top:8px}
+#count{color:var(--dim);font-size:12px;margin-right:auto}#send{height:34px;padding:0 16px;border:0;border-radius:8px;background:var(--accent);color:#0b0c0f;font-weight:800}#send:disabled{opacity:.5;cursor:default}
+#feedback{min-height:18px;margin:6px 0 0;color:var(--muted);font-size:12px}.rules{color:var(--dim);font-size:11px;margin:4px 0 0}
+/* responsive */
+@media (max-width:1280px){.app{grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"main chat" "after chat"}.rail{display:none}}
+@media (max-width:900px){.app{display:flex;flex-direction:column}.chat{position:static;height:auto;border-left:0;border-top:1px solid var(--line);order:2}
+#messages{max-height:320px;min-height:180px}main{order:1;padding:12px 12px 0}.after{order:3;padding:0 12px 32px}.nav,.search,.cta .lbl{display:none}
+.channel{flex-wrap:wrap}.acts{justify-content:flex-start;width:100%}.pc-screen{width:42%}}
+@media (max-width:520px){.chip .mono{display:none}.top{gap:8px;padding:0 10px}.logo span{display:none}.pc-screen{display:none}#pc-show{display:none}}
+</style></head><body>
+<header class="top">
+  <a class="logo" href="/" aria-label="SUB-01 home"><b>SUB-01</b><span>LIVE</span></a>
+  <nav class="nav" aria-label="Sections"><span class="on">Live</span><span aria-disabled="true">Browse <i class="soon">Soon</i></span></nav>
+  <div class="search"><input type="search" placeholder="Search channels" disabled aria-label="Search channels (coming soon)"><span class="soon">Soon</span></div>
+  <div class="right">
+    <span class="cta" aria-disabled="true" title="Create your own AI avatar and go live: coming soon">✦ <span class="lbl">Create your avatar</span> <i class="soon">Soon</i></span>
+    <a class="chip" href="https://x.com/SUBZERONE01" target="_blank" rel="noopener noreferrer" aria-label="SUB-01 on X">𝕏 <span class="mono">@SUBZERONE01</span></a>
+    <button class="chip" id="ca" type="button" title="Copy contract address" data-ca="6WCtKQfkWurd77tCCAYWuL5TwyAvuovTzworfnfupump">CA <span class="mono hcav">6WCtKQfkWurd77tCCAYWuL5TwyAvuovTzworfnfupump</span></button>
+  </div>
+</header>
+<div class="app">
+  <aside class="rail" aria-label="Channels">
+    <h3>Live now</h3>
+    <a class="ch cur" href="/" id="rail-sub01"><span class="av">01</span><span class="t"><span class="n">SUB-01</span><span class="s s1">AI streamer · Just Chatting</span></span><span class="dot" title="Live"></span></a>
+    <h3 style="margin-top:22px">Your avatar here</h3>
+    <div class="ch ghost"><span class="av">+</span><span class="t"><span class="n">Your AI avatar</span><span class="s">Create and go live</span></span><i class="soon">Soon</i></div>
+    <div class="ch ghost"><span class="av">+</span><span class="t"><span class="n">Your channel</span><span class="s">On SUB-01</span></span><i class="soon">Soon</i></div>
+    <div class="ch ghost"><span class="av">+</span><span class="t"><span class="n">Collabs</span><span class="s">Stream with SUB-01</span></span><i class="soon">Soon</i></div>
+    <p class="note">SUB-01 is becoming a platform: soon anyone can create an AI avatar and stream here.</p>
+  </aside>
+  <main>
+    <section class="stage" aria-label="Live video">
+      <video id="video" controls playsinline muted autoplay></video>
+      <div class="badges"><span class="live" id="live-badge" hidden>LIVE</span><span class="state" id="status" role="status">Connecting…</span></div>
+      <section class="pc-screen" aria-label="PC screen preview"><div class="pc-heading"><h2>PC SCREEN</h2><span class="pc-buttons"><button id="pc-expand" type="button" aria-expanded="false">Expand</button><button id="pc-hide" type="button">Hide</button></span></div><div class="pc-view"><span id="pc-state" role="status">Connecting…</span><img id="pc-frame" alt="Live PC screen" hidden></div></section>
+      <button id="pc-show" type="button" hidden>Show PC</button>
+    </section>
+    <section class="channel" id="channel">
+      <div class="big"><span class="av">01</span><span class="tag" id="live-tag">LIVE</span></div>
+      <div class="info">
+        <h1>SUB-01</h1>
+        <div class="title">AI streamer live 24/7 · reacts, browses, plays and takes requests from chat</div>
+        <div class="tags"><span class="cat">Just Chatting</span><span>AI</span><span>React</span><span>Cartoon mode</span><span>English</span></div>
+        <div id="mode"></div>
+      </div>
+      <div class="acts">
+        <a class="btn pri" href="https://x.com/SUBZERONE01" target="_blank" rel="noopener noreferrer">Follow on 𝕏</a>
+        <button class="btn" id="share" type="button">Share</button>
+      </div>
+    </section>
+  </main>
+  <aside class="chat" aria-label="Stream chat">
+    <header>Stream chat</header>
+    <div id="messages" aria-live="polite" aria-label="Recent messages"><p class="empty">Say hi to SUB-01 👋</p></div>
+    <form class="compose" id="chat">
+      <div class="hints" aria-label="Try these">
+        <button type="button" data-t="cartoon: do a backflip">cartoon: do a backflip</button>
+        <button type="button" data-t="open youtube and find something funny">open youtube</button>
+        <button type="button" data-t="what are you watching?">what are you watching?</button>
+        <button type="button" data-t="cartoon: throw the pc out the window">cartoon: throw the pc</button>
+      </div>
+      <label for="text" class="sr" style="position:absolute;left:-9999px">Message SUB-01</label>
+      <textarea id="text" maxlength="280" required placeholder="Send a message"></textarea>
+      <div class="row"><span id="count">0/280</span><button id="send" type="submit">Chat</button></div>
+      <p id="feedback" role="status"></p>
+      <p class="rules">Chat is public. SUB-01 reads it live. Your message does not give control of anything.</p>
+    </form>
+  </aside>
+  <div class="after">
+    <section class="sec">
+      <h2>How to interact</h2>
+      <div class="cards">
+        <div class="card"><b>Talk to him</b><p>Write in chat: he answers out loud in a few seconds.</p></div>
+        <div class="card"><b>Cartoon mode</b><p>Type <code>cartoon: &lt;action&gt;</code> and an AI clip of it airs on stream.</p></div>
+        <div class="card"><b>Send him somewhere</b><p>Ask him to open a site, a video or a game: he clicks around and reacts.</p></div>
+        <div class="card"><b>SUB-01 coin</b><p>His coin. The contract address is in the top bar. Not financial advice.</p></div>
+      </div>
+    </section>
+    <section class="sec soonbox" id="soon">
+      <h2>Your own AI avatar, live <span class="soon">Coming soon</span></h2>
+      <p class="lead">SUB-01 is the first channel. Soon you can create your own AI streamer, give it a look and a personality, and go live on the same platform.</p>
+      <div class="steps">
+        <div class="step"><i>01</i><b>Create your avatar</b><p>Pick a look, a voice and a vibe.</p></div>
+        <div class="step"><i>02</i><b>Go live</b><p>Your avatar streams 24/7: it reacts, plays and answers its chat.</p></div>
+        <div class="step"><i>03</i><b>Grow your channel</b><p>Viewers find you next to SUB-01 in Live now.</p></div>
+      </div>
+      <a class="btn pri" href="https://x.com/SUBZERONE01" target="_blank" rel="noopener noreferrer">Get notified on 𝕏</a>
+    </section>
+    <section class="sec about">
+      <h2>About SUB-01</h2>
+      <p>SUB-01 is an AI streamer living in a 3D room. He watches viral clips, browses the web, plays games and turns chat's ideas into cartoons, live, around the clock.</p>
+      <p>Live preview: enable audio in the player. The stream runs a few seconds behind real time.</p>
+    </section>
+  </div>
+</div>
+<script src="/live-config.js"></script><script src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js" crossorigin="anonymous"></script>
+<script>
 var pcLayoutBig=false,pcUserHidden=false;try{pcUserHidden=localStorage.getItem('pcHidden')==='1'}catch(e){}
 function applyPC(){const pc=document.querySelector('.pc-screen'),show=document.querySelector('#pc-show');if(pc)pc.hidden=pcLayoutBig||pcUserHidden;if(show)show.hidden=pcLayoutBig||!pcUserHidden;}
 applyPC();
-const base=window.SUB01_PREVIEW_ORIGIN,video=document.querySelector('#video'),statusEl=document.querySelector('#status'),mode=document.querySelector('#mode'),messages=document.querySelector('#messages');let hls,attached=false,retryTimer=null;
+const base=window.SUB01_PREVIEW_ORIGIN,video=document.querySelector('#video'),statusEl=document.querySelector('#status'),mode=document.querySelector('#mode'),messages=document.querySelector('#messages'),liveBadge=document.querySelector('#live-badge');let hls,attached=false,retryTimer=null;
+function setLive(on){liveBadge.hidden=!on;document.querySelector('#channel').classList.toggle('off',!on);document.querySelector('#rail-sub01').classList.toggle('off',!on);document.querySelector('#live-tag').textContent=on?'LIVE':'OFFLINE';}
 function restartVideo(){if(retryTimer)return;statusEl.textContent='Reconnecting video';attached=false;retryTimer=setTimeout(()=>{retryTimer=null;start();},2000);if(hls){hls.destroy();hls=null;}video.removeAttribute('src');video.load();}
 video.addEventListener('error',restartVideo);
 function catchUp(){try{const r=video.seekable;if(!r||!r.length||video.paused)return;const edge=r.end(r.length-1);if(edge-video.currentTime>10)video.currentTime=Math.max(r.start(0),edge-4);}catch(e){}}setInterval(catchUp,2000);
 function start(){if(attached||retryTimer||!base)return;attached=true;const src=base+'/hls/live.m3u8';if(video.canPlayType('application/vnd.apple.mpegurl'))video.src=src;else if(window.Hls&&Hls.isSupported()){hls=new Hls({maxBufferLength:10,backBufferLength:10,liveSyncDurationCount:2,liveMaxLatencyDurationCount:5,maxLiveSyncPlaybackRate:1.15});hls.loadSource(src);hls.attachMedia(video);hls.on(Hls.Events.ERROR,(_,d)=>{if(d.fatal)restartVideo();});}else statusEl.textContent='Browser not supported';}
-async function refresh(){try{const r=await fetch(base+'/status',{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error();const s=await r.json();statusEl.textContent=s.online?(retryTimer||video.error?'Reconnecting video':'● LIVE'):'Video temporarily offline';mode.textContent=s.agent==='paused'?'Manual control · agent in STOP':'Operational checks in progress';pcLayoutBig=(s.layout==='desktop'||s.layout==='split'||s.layout==='cartoon');applyPC();messages.replaceChildren(...s.messages.map(m=>{const p=document.createElement('p');p.textContent=m.text;return p}));if(s.online)start();}catch{statusEl.textContent='Connection unavailable';}setTimeout(refresh,5000)}
-document.querySelector('#chat').addEventListener('submit',async e=>{e.preventDefault();const t=document.querySelector('#text'),b=document.querySelector('#send'),f=document.querySelector('#feedback');b.disabled=true;try{const r=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'text/plain'},body:t.value,signal:AbortSignal.timeout(15000)}),d=await r.json();f.textContent=d.ok?'Message received.':d.code==='duplicate'?'This message was already received. Try a different message.':r.status===429?'Please wait a few seconds.':r.status===503?'Chat unavailable. Please try again later.':'Message rejected by the chat filter.';if(d.ok)t.value='';}catch{f.textContent='Message not confirmed. Check your connection.';}setTimeout(()=>b.disabled=false,12000)});refresh();
+const COLORS=['#ff8a33','#5fb7ff','#b28cff','#2fd27a','#ff6fa8','#ffd23f','#7ee0d2'];let lastKey='';
+function renderMessages(list){const key=JSON.stringify(list);if(key===lastKey)return;lastKey=key;const atBottom=messages.scrollHeight-messages.scrollTop-messages.clientHeight<40;
+if(!list.length){messages.replaceChildren(Object.assign(document.createElement('p'),{className:'empty',textContent:'Say hi to SUB-01 👋'}));return;}
+messages.replaceChildren(...list.map(m=>{const p=document.createElement('p');p.className='msg';const w=document.createElement('span');w.className='who';w.textContent='viewer:';w.style.color=COLORS[(m.at||0)%COLORS.length];p.append(w,document.createTextNode(m.text));return p;}));
+if(atBottom)messages.scrollTop=messages.scrollHeight;}
+async function refresh(){try{const r=await fetch(base+'/status',{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error();const s=await r.json();const on=!!s.online&&!retryTimer&&!video.error;
+statusEl.textContent=s.online?(retryTimer||video.error?'Reconnecting video':'24/7 AI stream'):'Video temporarily offline';setLive(on);mode.textContent=s.agent==='paused'?'Manual control · agent paused':'';
+pcLayoutBig=(s.layout==='desktop'||s.layout==='split'||s.layout==='cartoon');applyPC();renderMessages(s.messages||[]);if(s.online)start();}catch{statusEl.textContent='Connection unavailable';setLive(false);}setTimeout(refresh,5000)}
+const text=document.querySelector('#text'),count=document.querySelector('#count');text.addEventListener('input',()=>{count.textContent=text.value.length+'/280'});
+text.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.querySelector('#chat').requestSubmit();}});
+document.querySelectorAll('.hints button').forEach(b=>b.addEventListener('click',()=>{text.value=b.dataset.t;count.textContent=text.value.length+'/280';text.focus();}));
+document.querySelector('#chat').addEventListener('submit',async e=>{e.preventDefault();const b=document.querySelector('#send'),f=document.querySelector('#feedback');if(!text.value.trim()||b.disabled)return;b.disabled=true;try{const r=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'text/plain'},body:text.value,signal:AbortSignal.timeout(15000)}),d=await r.json();f.textContent=d.ok?'Sent. SUB-01 will see it in a moment.':d.code==='duplicate'?'Already sent. Try a different message.':r.status===429?'Slow down: wait a few seconds.':r.status===503?'Chat unavailable. Try again later.':'Message not accepted.';if(d.ok){text.value='';count.textContent='0/280';}}catch{f.textContent='Message not confirmed. Check your connection.';}setTimeout(()=>b.disabled=false,12000)});
+document.querySelector('#share').addEventListener('click',async()=>{const u=location.origin+'/',b=document.querySelector('#share');if(navigator.share){try{await navigator.share({title:'SUB-01 live',url:u});}catch(e){}return;}try{await navigator.clipboard.writeText(u);b.textContent='Link copied';}catch(e){b.textContent='Copy failed';}setTimeout(()=>b.textContent='Share',1600);});
+refresh();
 </script><script>
 const pcFrame=document.querySelector('#pc-frame'),pcState=document.querySelector('#pc-state'),pcPanel=document.querySelector('.pc-screen'),pcExpand=document.querySelector('#pc-expand');let pcURL=null,pcAbort=null,pcGeneration=0,pcExpiry=null;
 function clearPC(label){pcGeneration++;if(pcAbort)pcAbort.abort();clearTimeout(pcExpiry);pcFrame.hidden=true;pcFrame.removeAttribute('src');if(pcURL)URL.revokeObjectURL(pcURL);pcURL=null;pcState.textContent=label;}
-async function pollPC(){const generation=pcGeneration;let candidate=null;try{if(document.hidden||!navigator.onLine||!base){clearPC('Screen unavailable');return;}pcAbort=new AbortController();const controller=pcAbort,timer=setTimeout(()=>controller.abort(),3000);try{const response=await fetch(base+'/screen.jpg',{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error();const blob=await response.blob();candidate=URL.createObjectURL(blob);const next=new Image();next.src=candidate;await next.decode();if(generation!==pcGeneration||document.hidden||!navigator.onLine)return;const old=pcURL;pcURL=candidate;candidate=null;pcFrame.src=pcURL;pcFrame.hidden=false;pcState.textContent='';if(old)URL.revokeObjectURL(old);clearTimeout(pcExpiry);pcExpiry=setTimeout(()=>clearPC('Screen unavailable'),3000);}finally{clearTimeout(timer);}}catch{if(generation===pcGeneration)clearPC('Screen hidden or unavailable');}finally{if(candidate)URL.revokeObjectURL(candidate);pcAbort=null;setTimeout(pollPC,100);}}
+async function pollPC(){const generation=pcGeneration;let candidate=null;try{if(document.hidden||!navigator.onLine||!base||pcPanel.hidden){clearPC(pcPanel.hidden?'':'Screen unavailable');return;}pcAbort=new AbortController();const controller=pcAbort,timer=setTimeout(()=>controller.abort(),3000);try{const response=await fetch(base+'/screen.jpg',{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error();const blob=await response.blob();candidate=URL.createObjectURL(blob);const next=new Image();next.src=candidate;await next.decode();if(generation!==pcGeneration||document.hidden||!navigator.onLine)return;const old=pcURL;pcURL=candidate;candidate=null;pcFrame.src=pcURL;pcFrame.hidden=false;pcState.textContent='';if(old)URL.revokeObjectURL(old);clearTimeout(pcExpiry);pcExpiry=setTimeout(()=>clearPC('Screen unavailable'),3000);}finally{clearTimeout(timer);}}catch{if(generation===pcGeneration)clearPC('Screen hidden or unavailable');}finally{if(candidate)URL.revokeObjectURL(candidate);pcAbort=null;setTimeout(pollPC,pcPanel.hidden?1000:100);}}
 function expandPC(expanded){pcPanel.classList.toggle('expanded',expanded);pcExpand.setAttribute('aria-expanded',String(expanded));pcExpand.textContent=expanded?'Close':'Expand';}
 pcExpand.addEventListener('click',()=>expandPC(!pcPanel.classList.contains('expanded')));document.querySelector('#pc-hide').addEventListener('click',()=>{pcUserHidden=true;try{localStorage.setItem('pcHidden','1')}catch(e){}expandPC(false);applyPC();});document.querySelector('#pc-show').addEventListener('click',()=>{pcUserHidden=false;try{localStorage.removeItem('pcHidden')}catch(e){}applyPC();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pcPanel.classList.contains('expanded')){expandPC(false);pcExpand.focus();}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearPC('Screen hidden');});window.addEventListener('offline',()=>clearPC('Screen unavailable'));pcFrame.addEventListener('error',()=>clearPC('Screen unavailable'));pollPC();
-</script><script>(function(){var b=document.getElementById("ca");if(!b)return;var l=b.querySelector(".hcav"),v=b.getAttribute("data-ca"),orig=l.textContent,tm=0;function show(t){l.textContent=t;clearTimeout(tm);tm=setTimeout(function(){l.textContent=orig},1500)}function legacy(){var ta=document.createElement("textarea");ta.value=v;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}document.body.removeChild(ta);show(ok?"Copied":"Copy failed: select and copy the address");if(!ok){l.textContent=v}}b.addEventListener("click",function(){if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(v).then(function(){show("Copied")},legacy)}else{legacy()}})})();</script></body></html>
+</script><script>(function(){var b=document.getElementById("ca");if(!b)return;var l=b.querySelector(".hcav"),v=b.getAttribute("data-ca"),orig=l.textContent,tm=0;function show(t){l.textContent=t;clearTimeout(tm);tm=setTimeout(function(){l.textContent=orig},1500)}function legacy(){var ta=document.createElement("textarea");ta.value=v;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}document.body.removeChild(ta);show(ok?"Copied":"Copy failed");if(!ok){l.textContent=v}}b.addEventListener("click",function(){if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(v).then(function(){show("Copied")},legacy)}else{legacy()}})})();</script>
+</body></html>
