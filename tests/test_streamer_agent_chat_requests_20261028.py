@@ -127,3 +127,27 @@ def test_leave_and_another_request_is_that_request_not_the_desk_line():
     ("search youtube for mrbeast videos", "mrbeast videos")])
 def test_a_request_searches_its_subject_not_the_sentence(text, query):
     assert SA.parse_request(text, pc=True)["query"] == query
+
+
+@pytest.mark.parametrize("text,kind,url", [
+    ("search for reaction to people do something crazy in gameplays", "look", None),     # long: the model writes it
+    ("search kai cenat videos", "search", SA.YT_RESULTS + "kai+cenat+videos"),
+    ("open youtube and find something about elon musk to react to", "search", SA.YT_RESULTS + "elon+musk"),
+    ("search best ramen in Shinjuku", "search", None),                                   # not about videos: the web
+    ("search who won the champions league", "search", None)])
+def test_video_searches_open_youtube_and_long_ones_go_to_the_model(text, kind, url):
+    req = SA.parse_request(text, pc=True)
+    out = SA.search_target(dict(req, text=text))
+    assert out["kind"] == kind and (out.get("action") or {}).get("url") == url
+    if kind == "look":
+        assert out["intent"] == "search" and SA.ACK_LOOK_LINES["search"]
+
+
+def test_the_model_writes_the_youtube_search_for_a_long_request(tmp_path):
+    step = T.decision(state="mouse", action={"action": "navigate",
+                                             "url": SA.YT_RESULTS + "crazy+gameplay+moments+reaction"}, say="")
+    agent, world, prov, clock = T.pc_make(tmp_path, step)
+    world.chat_msgs = [T.msg(1, "search for reaction to people do something crazy in gameplays", "v")]
+    asyncio.run(T.decide_once(agent, clock, dt=3))
+    asyncio.run(T.decide_once(agent, clock, dt=3))
+    assert any(SA.SEARCH_HINT in h for c in prov.calls for h in c["state"].get("hints", [])), prov.calls[-1]["state"]["hints"]
