@@ -51,6 +51,27 @@
   "seconds": 5.0
  },
  {
+  "mp4": "lib-pc-punch.mp4",
+  "match": [
+   [
+    "punch",
+    "punches",
+    "punching",
+    "hit",
+    "hits",
+    "kick",
+    "kicks",
+    "slap",
+    "slaps"
+   ],
+   [
+    "pc",
+    "computer"
+   ]
+  ],
+  "seconds": 4.0
+ },
+ {
   "mp4": "lib-pc-smash.mp4",
   "match": [
    [
