@@ -269,7 +269,7 @@ On air (how he talks; the rules and the JSON contract below stay as they are):
 something new, not to sit silent. Do not narrate mouse moves, clicks, scrolling, typing, tab changes or the fact that he is \
 reading. Before commenting on a page-changing action, use a fresh observation. Never infer an article from its headline.
 - Opening (phase "open"): greet once and establish one concrete thread, at most two short utterances and 35 words in \
-all, built from a real memory or a visible page detail, then act. No generic welcome, no agenda, no invented tea, weather, previous streams or viewer counts, a concrete question to chat is welcome when it helps choose what to explore next.
+all, built from a real memory or a visible page detail, then act. No generic welcome, no agenda, no invented tea, weather, previous streams or viewer counts; a concrete question to chat helps.
 - Reading aloud without presenting. Read silently first; say the part that matters to him: a concrete noun, number, \
 comparison or contradiction. Never read paragraphs, URLs, addresses, menus, cookie notices, timestamps, tickers or \
 result lists aloud; pick one point, never enumerate. Keep headline and evidence apart: without support for a claim, say \
@@ -316,12 +316,13 @@ most two short sentences, and no sentence is long because the limit allows it. c
 said...") is fine.
 - Polls: for a real 1-10 rating or vote from chat, ask it in "say" and add "poll": {"kind":"rate"} or {"kind":"vote", \
 "options":["a","b"]} (2-4 options of 1-3 words). The code counts real answers for 30 s and returns "poll_result": \
-report it honestly, zero votes included. Never invent, round up or repeat an old result.
+report it honestly, zero votes included; never invent, round or reuse a result.
 - Keep exploring: after a few minutes on one page or stream, move to new content unless something concrete justifies \
 staying. Search, open videos or follow a useful suggestion; one action per reply, or null only for a short read.
-- layout: room (the camera behind him, the house) for a game and for quiet reading stretches, webcam (his face) when \
-answering chat or reacting, desktop when viewers should read the page with him, split rarely. Keep a layout for at least 45 seconds unless answering chat or reacting, when webcam may \
-come at once.
+- layout: webcam (his face) for chat answers and reactions, room (the camera behind him) for a game or quiet reading, desktop to read a page \
+with viewers. Keep a layout for at least 45 seconds unless answering chat or reacting.
+- A chat item's "viewer": new (first seen: a quick welcome), back (a returning regular: welcome back \
+by name), here (already greeted: no new hello). He keeps only nicks, visit counts and last visit; "forget me" erases them.
 - Examples (tone only; never reuse a line). Bad opening "Hello everyone and welcome back! Today we're going to explore \
 some fascinating topics." / good "Yo chat! I left the octopus tabs open at the weird part. We start there." Bad greeting \
 reply "Hey. Odd turn on screen, the video changed." / good "Yooo Marco, you're just in time. This page is wild." Bad \
@@ -685,6 +686,67 @@ def spam_reason(text):
     if len(w) >= 6 and len(set(w)) / len(w) < 0.34:
         return "repeated words"
     return None
+
+
+class Viewers:
+    """Who has chatted before (owner 10-28: a real streamer remembers his regulars; Kimi regulars): only the public nick
+    -> last seen and visits (a new visit after VISIT_GAP_S of silence). No message text, no other data.
+    Inactive nicks expire after VIEWER_KEEP_S; at most VIEWERS_MAX are kept; "forget me" in chat erases a nick at once.
+    Saved atomically, at most every VIEWERS_SAVE_S."""
+    VISIT_GAP_S, VIEWER_KEEP_S, VIEWERS_MAX, VIEWERS_SAVE_S = 7200.0, 30 * 86400.0, 2000, 30.0
+
+    def __init__(self, path, now):
+        self.path, self.dirty, self.saved = Path(path), False, -1e9
+        try:
+            data = json.loads(self.path.read_text())
+        except (OSError, ValueError):
+            data = {}
+        self.v = {}
+        for k, e in (data.get("viewers") if isinstance(data, dict) and isinstance(data.get("viewers"), dict) else {}).items():
+            try:                                              # a malformed entry is dropped, never fatal at startup
+                last, visits = float(e["last"]), int(e["visits"])
+            except (TypeError, ValueError, KeyError):
+                continue
+            if now - last < self.VIEWER_KEEP_S and isinstance(k, str):
+                self.v[k] = {"last": last, "visits": max(1, visits)}
+
+    def note(self, nick, now):
+        """-> ("new" | "back" | "here", visits) for a chat line from this nick; ("", 0) for an anonymous one."""
+        key = nick.strip().lower()
+        if not key:
+            return "", 0
+        e = self.v.get(key)
+        if e is None:
+            e = self.v[key] = {"last": now, "visits": 1}
+            status = "new"
+        elif now - e["last"] > self.VISIT_GAP_S:
+            e["visits"] += 1
+            status = "back"
+        else:
+            status = "here"
+        e["last"] = now
+        if len(self.v) > self.VIEWERS_MAX:
+            for k in sorted(self.v, key=lambda k: self.v[k]["last"])[:len(self.v) - self.VIEWERS_MAX]:
+                del self.v[k]
+        self.dirty = True
+        return status, e["visits"]
+
+    def forget(self, nick):
+        self.dirty = self.v.pop(nick.strip().lower(), None) is not None or self.dirty
+
+    def save(self, now, force=False):
+        if not self.dirty or (now - self.saved < self.VIEWERS_SAVE_S and not force):
+            return
+        try:
+            write_atomic(self.path, json.dumps({"schema": "sub01.streamer-viewers.v1", "viewers": self.v}))
+            self.dirty, self.saved = False, now
+        except OSError:
+            pass
+
+
+FORGET_ME = re.compile(r"\bforget\s+(?:me|my\s+name)\b", re.I)
+FORGET_NOT = re.compile(r"\b(?:don'?t|do\s+not|never|not|won'?t|wont)\b", re.I)   # "don't forget me" is not an opt-out
+FORGET_LINE = "Done, {nick}. I forgot your name and visits."
 
 
 class ChatGate:
@@ -2984,6 +3046,7 @@ class Agent:
         self.started = clock()
         self.chat_since = self.memory.chat_since
         self.poll, self.poll_result, self.poll_closed_at = None, None, -1e9   # chat polls (open_poll / poll_tick)
+        self.viewers = Viewers(self.dir / "viewers.json", self.clock())       # regulars: nick -> visits (no text)
         self.pending = {}                                     # seq -> classified chat item waiting for a batch
         self.recent_chat = collections.deque(maxlen=40)       # (time, text) of what viewers wrote: never copied into actions
         self.answered_nicks = collections.deque(maxlen=30)
@@ -3278,6 +3341,13 @@ class Agent:
                 self.log("chat", seq=item["seq"], ignored=item["ignored"])
                 continue
             self.recent_chat.append((now, item["text"]))
+            if item["nick"] and FORGET_ME.search(item["text"]) and not FORGET_NOT.search(item["text"]):   # the viewer's opt-out: erased at once, said once
+                self.viewers.forget(item["nick"])
+                self.viewers.save(now, force=True)
+                self.log("viewer_forget", seq=item["seq"])
+                self.enqueue(FORGET_LINE.format(nick=item["nick"]), "request", "normal", (item["seq"],), item["nick"], ttl=30.0)
+                continue
+            item["viewer"], item["visits"] = self.viewers.note(item["nick"] or "", now)
             req = item["request"]
             if item["cls"] == "ok" and req:                   # a request: carried out, queued, dropped or refused by code
                 self.log("chat", seq=item["seq"], cls="request", direct=item["direct"], text=item["text"][:80])
@@ -4093,7 +4163,8 @@ class Agent:
             st["requests_waiting"] = len(self.requests.waiting)
         if win and win["ok"]:
             st["chat"] = [{"seq": i["seq"], "nick": i["nick"] or "a viewer", "text": i["text"][:200],
-                           "question": i["question"], "direct": i["direct"], "asks_action": i["asks_action"]}
+                           "question": i["question"], "direct": i["direct"], "asks_action": i["asks_action"],
+                           "viewer": i.get("viewer") or None, "visits": i.get("visits") or None}
                           for i in win["ok"]]
         refused = sum(1 for i in self.pending.values() if i["cls"] != "ok")
         if refused:
@@ -4773,6 +4844,7 @@ class Agent:
     async def _step(self):
         await self.check_stop()
         self.poll_tick(self.clock())
+        self.viewers.save(self.clock())
         if self.paused:                                       # keep observing; chat sent meanwhile is stale on return
             try:
                 self.obs = self.normalize(await self.services.observe())
@@ -5426,7 +5498,8 @@ class Agent:
             st["requests_waiting"] = len(self.requests.waiting)
         if win and win["ok"]:
             st["chat"] = [{"seq": i["seq"], "nick": i["nick"] or "a viewer", "text": i["text"][:200],
-                           "question": i["question"], "direct": i["direct"], "asks_action": i["asks_action"]}
+                           "question": i["question"], "direct": i["direct"], "asks_action": i["asks_action"],
+                           "viewer": i.get("viewer") or None, "visits": i.get("visits") or None}
                           for i in win["ok"]]
         refused = sum(1 for i in self.pending.values() if i["cls"] != "ok")
         if refused:

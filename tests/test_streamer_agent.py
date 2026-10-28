@@ -4008,3 +4008,28 @@ def test_poll_counts_real_answers_and_reports_them_once(tmp_path):
     assert agent.poll is None and any(e["kind"] == "poll_refused" for e in events(agent))
     clock.t += SA.POLL_RESULT_S
     assert "poll_result" not in agent.poll_state(clock())                # a stale result leaves the state
+
+
+def test_viewers_new_here_back_expiry_and_forget_me(tmp_path):
+    v = SA.Viewers(tmp_path / "viewers.json", 1000.0)
+    assert v.note("Marco", 1000.0) == ("new", 1) and v.note("marco", 1010.0) == ("here", 1)
+    assert v.note("Marco", 1010.0 + SA.Viewers.VISIT_GAP_S + 1) == ("back", 2) and v.note("", 1.0) == ("", 0)
+    v.save(9000.0)
+    data = json.loads((tmp_path / "viewers.json").read_text())
+    assert data["viewers"] == {"marco": {"last": 1010.0 + SA.Viewers.VISIT_GAP_S + 1, "visits": 2}}   # nick, last, visits
+    (tmp_path / "bad.json").write_text(json.dumps({"viewers": {"x": {"last": "soon"}, "y": [], "z": {"last": 9000, "visits": 3}}}))
+    assert SA.Viewers(tmp_path / "bad.json", 9000.0).v == {"z": {"last": 9000.0, "visits": 3}}   # malformed: dropped
+    assert SA.Viewers(tmp_path / "viewers.json", 9000.0 + SA.Viewers.VIEWER_KEEP_S + 1e4).v == {}   # expired on load
+    agent, world, prov, clock = make(tmp_path / "a", decision(action=None))
+    world.chat_msgs = [msg(1, "hey what's this page about?", "kei")]
+    asyncio.run(sim(agent, clock, 9, dt=3))
+    st = [c["state"] for c in prov.calls if c["state"].get("chat")]
+    assert st and st[0]["chat"][0]["viewer"] == "new" and st[0]["chat"][0]["visits"] == 1
+    world.chat_msgs.append(msg(2, "don't forget me lol", "kei"))
+    asyncio.run(sim(agent, clock, 9, dt=3))
+    assert "kei" in agent.viewers.v                                        # a negation is not an opt-out
+    world.chat_msgs.append(msg(3, "forget me please", "kei"))
+    asyncio.run(sim(agent, clock, 9, dt=3))
+    assert "kei" not in agent.viewers.v and any(e["kind"] == "viewer_forget" for e in events(agent))
+    assert SA.FORGET_LINE.format(nick="kei") in [s["text"] for s in world.spoken]
+    assert SA.reply_problem(SA.FORGET_LINE.format(nick="kei")) is None
