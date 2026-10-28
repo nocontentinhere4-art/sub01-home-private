@@ -1,0 +1,33 @@
+Review (<= 5 lines, first word APPROVE or BLOCK). Owner: chat replies are far too slow on air. Measured: viewer message -> his speech queued 1-10 s, TTS start ~2 s later, then the HLS delay (4 s segments, hls.js keeps ~3 segments) ~12-16 s. Change: HLS segments 4 -> 2 s (the GOP is already 2 s), playlist 6 -> 8 entries; chat batch every 4-8 s (was 8-15), minimum gap 2 s (was 4). Director and agent restart; the relay limits allow ~1 req/s per viewer.
+
+diff --git a/scripts/streamer_director.py b/scripts/streamer_director.py
+index 95f8097..507edfb 100644
+--- a/scripts/streamer_director.py
++++ b/scripts/streamer_director.py
+@@ -189,8 +189,8 @@ X264_PRESETS = ("ultrafast", "superfast", "veryfast", "faster", "fast", "medium"
+ SEGMENT_RE = re.compile(r"^(sub01-\d{8}-\d{6})-(\d{3})\.mp4$")
+ HLS_SEGMENT_RE = re.compile(r"^(sub01-\d{8}-\d{6})-\d+\.ts(\.tmp)?$")
+ HLS_PLAYLIST = "live.m3u8"
+-HLS_TIME = 4
+-HLS_LIST_SIZE = 6
++HLS_TIME = 2   # owner 10-28: replies too slow on air; was 4
++HLS_LIST_SIZE = 8
+ REPLY_RE = re.compile(r"Command reply for (?:stream|graph) \d+: ret:<?(-?\d+)>?")
+ TEE_UNSAFE = re.compile(r"[\s|\[\]:'\"\\]")          # tee muxer syntax: slave separator, option brackets, escapes
+ RTMP_RE = re.compile(r"rtmps?://[^\s|\[\]'\"\\]+")
+diff --git a/streamer_agent.py b/streamer_agent.py
+index c77ddcb..fc2f002 100644
+--- a/streamer_agent.py
++++ b/streamer_agent.py
+@@ -163,9 +163,9 @@ COMMENT_READING_S = (35.0, 70.0)        # unsolicited remark while reading: abou
+ COMMENT_OTHER_S = (12.0, 25.0)          # ... while browsing, typing, idle (was 30-70 s)
+ REACT_COOLDOWN_S = 15.0
+ BIG_REACT_EVERY_S = 1800.0              # level 3 at most once per 30 min
+-CHAT_EVERY_S = (8.0, 15.0)              # a chat batch (owner 10-27, twice: more interactive; was 25-45 s, before that 90-180 s)
++CHAT_EVERY_S = (4.0, 8.0)               # a chat batch (owner 10-27, twice: more interactive; was 25-45 s, before that 90-180 s)
+ CHAT_EARLY_N = 1                        # ... or as soon as one new message waits (was 2, before that 3)
+-CHAT_MIN_GAP_S = 4.0                    # was 12 s, before that 30 s (owner: more reactive)
++CHAT_MIN_GAP_S = 2.0                    # was 4 s, then 12 s, before that 30 s (owner: more reactive)
+ DIRECT_WAIT_S = 0.75                    # a direct question is answered after it has waited this long (was 10 s:
+                                         # the 2026-10-27 live test took ~14 s from send to voice; owner: more reactive)
+ DIRECT_MIN_GAP_S = 1.5                  # was 3 s, before that 8 s

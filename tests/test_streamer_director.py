@@ -723,7 +723,7 @@ def test_v2_argv_60fps_nvenc_cam2_and_hls_tee(tmp_path):
     assert rec_branch.startswith("[f=segment:segment_time=600:reset_timestamps=1:segment_format=mp4:")
     assert "frag_keyframe" in rec_branch and "fflags=+flush_packets" in rec_branch
     assert rec_branch.endswith("]" + str(tmp_path / "streamer" / "recordings" / "sub01-20261023-210000-%03d.mp4"))
-    assert hls_branch.startswith("[f=hls:onfail=ignore:hls_time=4:hls_list_size=6:hls_flags=delete_segments+")
+    assert hls_branch.startswith("[f=hls:onfail=ignore:hls_time=2:hls_list_size=8:hls_flags=delete_segments+")
     assert "omit_endlist" in hls_branch and "hls_start_number_source=epoch" in hls_branch
     assert f"hls_segment_filename={hls}/sub01-20261023-210000-%d.ts]{hls}/live.m3u8" in hls_branch
     # the third branch: RTMP behind a dropping fifo; ':' inside fifo_options escaped for both tee levels

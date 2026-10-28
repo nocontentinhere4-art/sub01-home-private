@@ -24,3 +24,17 @@
 - **Fix:** `_vagon_type` sends shifted US-layout characters and capitals as explicit `Shift+<Code>` chords.
 - **Deploy:** runner restart; Vagon reconnected in about 20 s; `POST /resume` cleared `held`.
 - **Live result:** the type outcome was "changed" (8.0) and the next click was "changed" (192).
+
+**01:52 UTC: faster replies on air** (director + agent; Kimi APPROVE)
+- **Owner:** "deve essere più reattivo alla chat, è stra lento".
+- **Measured delays:**
+  - viewer message -> the speech queued: 1-10 s;
+  - -> TTS start: about 2 s;
+  - -> what viewers see: plus the HLS delay (4 s segments, hls.js keeps about 3 of them) of about 12-16 s.
+- **Change:**
+  - HLS segments 4 -> 2 s (the GOP is already 2 s), playlist 6 -> 8 entries;
+  - chat batch every 4-8 s (was 8-15), minimum gap 2 s.
+- **Deploy:**
+  - Director restart: back on the FIFO in about 10 s.
+  - Agent restart; lease re-armed until 02:53.
+  - The live playlist shows 2.0 s segments.

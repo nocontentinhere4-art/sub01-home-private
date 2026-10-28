@@ -163,9 +163,9 @@ COMMENT_READING_S = (35.0, 70.0)        # unsolicited remark while reading: abou
 COMMENT_OTHER_S = (12.0, 25.0)          # ... while browsing, typing, idle (was 30-70 s)
 REACT_COOLDOWN_S = 15.0
 BIG_REACT_EVERY_S = 1800.0              # level 3 at most once per 30 min
-CHAT_EVERY_S = (8.0, 15.0)              # a chat batch (owner 10-27, twice: more interactive; was 25-45 s, before that 90-180 s)
+CHAT_EVERY_S = (4.0, 8.0)               # a chat batch (owner 10-27, twice: more interactive; was 25-45 s, before that 90-180 s)
 CHAT_EARLY_N = 1                        # ... or as soon as one new message waits (was 2, before that 3)
-CHAT_MIN_GAP_S = 4.0                    # was 12 s, before that 30 s (owner: more reactive)
+CHAT_MIN_GAP_S = 2.0                    # was 4 s, then 12 s, before that 30 s (owner: more reactive)
 DIRECT_WAIT_S = 0.75                    # a direct question is answered after it has waited this long (was 10 s:
                                         # the 2026-10-27 live test took ~14 s from send to voice; owner: more reactive)
 DIRECT_MIN_GAP_S = 1.5                  # was 3 s, before that 8 s
