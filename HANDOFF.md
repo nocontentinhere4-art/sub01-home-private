@@ -82,9 +82,12 @@ code that runs; the pod's runtime copy is `/home/sub01-recovery-stage-20261026/r
   left slide 3-9 cm, right never declined, right elbow 74-88 deg. Still open: the right slide stays at 15 (saturated);
   the next fix is offline (the right target / keyboard placement after the seat moves), not more live keys.
   Helper: `handstep.sh TAG key=value` (applies, measures, crops the hands).
-- Item 3 (v25): in ~4.5 h of 10-s V25 log lines only 3 show a gesture and 4 a head roll: by design gestures are
-  0.9-1.4 s every 14-26 s of speech, so 10-s samples miss most. `v25watch.py` (0.2 s polling + frames) is running
-  for 15 min from 02:21; results in `/home/sub01-review-20261027/frames/v25watch.out`.
+- Item 3 (v25): the native side works, but the agent never sent a gesture: 15 min of v25watch and 90 s of the event
+  file (27 s of talking) showed zero. Cause in `scripts/streamer_motion.py`: for a page comment `start_speech` set the
+  next gesture 14-26 s ahead at EVERY utterance, and comments last ~7 s, so it never fired (chat answers were fine;
+  there was no chat). Fixed (speaking time is counted across utterances; test: 11 gestures in 30 min, old code 0;
+  Kimi APPROVE). NOT DEPLOYED: the live deploy (copy + agent restart) was refused by this session's permission
+  classifier; it needs the owner's explicit OK. Head tilt is by design only in laugh/think reactions.
 - Item 7 (collar): owner OK to try `hide_slot` 4/5 live. Needs a face-camera frame; the face shot only comes with chat
   answers/reactions and is short. `facegrab.sh collar2` waits up to 30 min from 02:38.
 - Item 8: acceptance on 01:49-02:19 (`/home/sub01-review-20261027/accept-20261028/`, run as root: the game log is

@@ -225,6 +225,9 @@ class MotionDirector:
         self.nod_t0, self.nod_peak, self.pending_nod = -1e9, 0.0, None
         # hands
         self.gesture_until, self.gesture_hand, self.gesture_amp, self.next_gesture = -1e9, "left", 0.0, 1e18
+        # page comments: the 14-26 s between gestures is counted in speaking time across utterances (a comment is ~7 s,
+        # so a wall-clock timer restarted at every utterance never fired; live 2026-10-28)
+        self.talk_credit, self.talk_need = 0.0, None
         self.fidget_kind, self.fidget_until, self.fidget_hand, self.next_fidget = "none", -1e9, "left", None
         # posture
         self.posture_back_until, self.next_posture_shift = -1e9, None
@@ -334,7 +337,9 @@ class MotionDirector:
             self.next_gesture = now + max(d["gesture_after_speech_start_s"], 0.4 * self.u("gesture_every_chat_s"))
         else:                                                          # a dry page comment: onset nod, rare gesture
             self.pending_nod = (now + d["speech_start_nod_delay_s"], d["speech_start_nod"])
-            self.next_gesture = now + max(d["gesture_after_speech_start_s"], self.u("gesture_every_talk_s"))
+            if self.talk_need is None:
+                self.talk_credit, self.talk_need = 0.0, self.u("gesture_every_talk_s")
+            self.next_gesture = now + max(d["gesture_after_speech_start_s"], self.talk_need - self.talk_credit)
 
     def end_speech(self, now, chat_addressed):
         self.pending_nod = None
@@ -376,6 +381,8 @@ class MotionDirector:
         elif self.speak_prev and not speaking:
             self.end_speech(now, chat_addressed)
         self.speak_prev = speaking
+        if speaking and not chat_addressed:
+            self.talk_credit += dt
 
         # -- action holds (A3, A4, A5)
         if action in ("type", "search") and not paused:
@@ -523,7 +530,11 @@ class MotionDirector:
             self.gesture_amp = self.u("gesture_strength")
             take_right = chat_addressed and now >= self.mouse_until and self.rng.random() < d["gesture_right_hand_p"]
             self.gesture_hand = "right" if take_right else "left"
-            self.next_gesture = self.gesture_until + self.u("gesture_every_chat_s" if chat_addressed else "gesture_every_talk_s")
+            if chat_addressed:
+                self.next_gesture = self.gesture_until + self.u("gesture_every_chat_s")
+            else:
+                self.talk_credit, self.talk_need = -(self.gesture_until - now), self.u("gesture_every_talk_s")
+                self.next_gesture = self.gesture_until + self.talk_need
         gesturing = now < self.gesture_until and not hands_on_keys and not reacting and not paused
         # fidgets with the free hand (A19): desk/finger only; not in the first seconds of an answer, not on a fresh state
         fidget_ok = (free is not None and not reacting and not gesturing and now - self.settle_t >= d["fidget_min_state_s"]

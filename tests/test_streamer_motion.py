@@ -422,6 +422,15 @@ def test_gestures_while_answering_chat_more_than_while_commenting_and_small():
     assert all(o["motion"]["gesture_strength"] == 0 for o in first)
 
 
+def test_comment_gestures_count_speaking_time_across_short_utterances():
+    # live 2026-10-28: ~7 s page comments every ~50 s; a timer restarted at every utterance never reached 14-26 s
+    rows = simulate(30 * 60, lambda t: {"action": "read", "speaking": (t - 1000.0) % 50 < 7}, seed=21)
+    n, runs = onsets(rows, lambda o: o["motion"]["gesture_strength"] > 0 and o["motion"]["fidget"] == "none")
+    assert 8 <= n <= 20, n                                 # 36 x 7 s = 252 s of speech, one gesture per 14-26 s of it
+    assert all(o["motion"]["hand_right"] != "gesture" for _, o in rows)
+    assert all(o["motion"]["hand_left"] != "gesture" for t, o in rows if (t - 1000.0) % 50 >= 8.5)   # only while he talks
+
+
 # ---- reactions and posture -------------------------------------------------------------------------------------------
 def react_rows(kind, seed=16):
     md = SM.MotionDirector(random.Random(seed))
