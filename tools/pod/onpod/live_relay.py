@@ -1,5 +1,5 @@
 """Temporary public viewer relay. No operator routes, credentials, or generic proxy."""
-import argparse, asyncio, collections, io, re, time
+import argparse, asyncio, collections, io, json, re, time
 from pathlib import Path
 import aiohttp
 from aiohttp import web
@@ -8,6 +8,23 @@ ORIGIN = 'https://subzerone.live'
 LIVE_KEEP, START_OFFSET = 4, 4.0      # public playlist: newest 4 segments (8 s), start 4 s from the live edge (owner 10-28)
 CARTOON = re.compile(r'^\W{0,2}(?:!\s*cartoon\b|cartoon\s*:)', re.I)   # the agent's CARTOON_PREFIX: sent straight to it
 SEGMENT = re.compile(r'^sub01-[0-9]{8}-[0-9]{6}-[0-9]+\.ts$')
+NICK = re.compile(r'[A-Za-z0-9_.-]{2,16}')          # owner 10-28: self-chosen names (unverified, greetings only)
+RESERVED = set('sub01 sub-01 sub_01 subzerone owner admin administrator mod moderator streamer system viewer anon anonymous staff support official bot'.split())
+QUEUE_WHY = {'added':'Added to the queue.', 'bad_link':'Only YouTube video links (youtube.com/watch, youtu.be, shorts).',
+             'duplicate':'That video is already in the queue or was just played.', 'full':'The queue is full. Try again later.',
+             'per_name':'You already have two videos waiting.'}
+
+def clean_nick(raw):
+    nick = str(raw or '').strip()
+    return nick if NICK.fullmatch(nick) and nick.lower() not in RESERVED and nick.lower().strip('._-') not in RESERVED else ''
+
+def body_json(text):
+    """A text/plain body that is a small JSON object, or None (plain chat text stays plain)."""
+    if not text.startswith('{'): return None
+    try: d = json.loads(text)
+    except ValueError: return None
+    return d if isinstance(d, dict) else None
+
 HEADERS = {'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}
 
 def chat_ack_response(data):
@@ -29,6 +46,24 @@ def create_app(root, stop_file, token_file=None):
     screen_task = None
     screen_jpg_task = None
     screen_jpg_cache = None
+    viewer_cache = {'t': -1e9, 'data': {'queue': {'now': None, 'waiting': []}, 'hype': {'level': 0, 'train': False}}}
+    async def agent_call(method, path, payload=None, timeout=6):
+        """The agent's API with the operator token (never sent to browsers). -> (status, json) or (None, None)."""
+        if not token_file: return None, None
+        try:
+            async with asyncio.timeout(timeout):
+                async with aiohttp.ClientSession() as client:
+                    async with client.request(method, 'http://127.0.0.1:8836' + path, json=payload,
+                                              headers={'X-Admin-Token':Path(token_file).read_text().strip()}) as r:
+                        return r.status, await r.json()
+        except (TimeoutError, aiohttp.ClientError, ValueError, OSError): return None, None
+    async def viewer_state():
+        now = time.monotonic()
+        if now - viewer_cache['t'] > 3:
+            viewer_cache['t'] = now
+            status, data = await agent_call('GET', '/viewer_state', timeout=2)
+            if status == 200 and isinstance(data, dict): viewer_cache['data'] = {'queue': data.get('queue'), 'hype': data.get('hype')}
+        return viewer_cache['data']
     def limited(ip, kind, period, maximum):
         now = time.monotonic(); key = (ip, kind)
         q = rates.setdefault(key, collections.deque()); rates.move_to_end(key)
@@ -192,7 +227,7 @@ def create_app(root, stop_file, token_file=None):
     async def status(request):
         raw, _ = playlist()
         return web.json_response({'online':raw is not None, 'agent':'paused' if Path(stop_file).exists() else 'checks', 'messages':list(messages),
-                                  'layout':await director_layout()})
+                                  'layout':await director_layout(), **(await viewer_state())})
     async def chat(request):
         if request.headers.get('Origin') != ORIGIN or request.content_type != 'text/plain': raise web.HTTPForbidden()
         ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
@@ -200,6 +235,10 @@ def create_app(root, stop_file, token_file=None):
         while global_chat and global_chat[0] < now-10: global_chat.popleft()
         if len(global_chat) >= 20 or limited(ip, 'chat', 12, 1): return web.json_response({'ok':False,'code':'rate_limited','why':'Please wait a few seconds.'}, status=429)
         text = (await request.text()).strip()
+        nick = ''
+        d = body_json(text)                                  # owner 10-28: {"nick","text"} from the page's name field
+        if d is not None:
+            text, nick = str(d.get('text') or '').strip(), clean_nick(d.get('nick'))
         if not 1 <= len(text) <= 280 or any(ord(c)<32 and c not in '\n\t' for c in text): raise web.HTTPBadRequest()
         global_chat.append(now)
         if token_file:   # owner 10-28 "no filter for the chat": every line goes straight to the agent (cartoon lines
@@ -207,10 +246,10 @@ def create_app(root, stop_file, token_file=None):
                 async with asyncio.timeout(8):
                     async with aiohttp.ClientSession() as client:
                         path = '/cartoon' if CARTOON.match(text) else '/chat'
-                        async with client.post('http://127.0.0.1:8836' + path, json={'text':text,'nick':'viewer'},
+                        async with client.post('http://127.0.0.1:8836' + path, json={'text':text,'nick':nick or 'viewer'},
                                                headers={'X-Admin-Token':Path(token_file).read_text().strip()}) as r:
                             if r.status == 200 and (await r.json()).get('ok') is True:
-                                messages.append({'text':text,'at':int(time.time())})
+                                messages.append({'text':text,'nick':nick,'at':int(time.time())})
                                 return chat_ack_response({'ok':True})
             except (TimeoutError, aiohttp.ClientError, ValueError, OSError): pass   # the agent is away: the chat path
         try:
@@ -227,12 +266,40 @@ def create_app(root, stop_file, token_file=None):
                                     return chat_ack_response(data)
         except (TimeoutError, aiohttp.ClientError, ValueError): pass
         return web.json_response({'ok':False,'code':'offline','why':'Chat unavailable. Please try again later.'}, status=503)
+    async def small_post(request, kind, period):
+        """Shared guard of /queue and /hype: the page's Origin, text/plain, a small JSON object, per-IP and global limits."""
+        if request.headers.get('Origin') != ORIGIN or request.content_type != 'text/plain': raise web.HTTPForbidden()
+        ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
+        if limited(ip, kind, period, 1) or limited('global', kind, 2, 10):
+            return None, web.json_response({'ok':False,'code':'rate_limited','why':'Please wait a bit.'}, status=429)
+        d = body_json((await request.text()).strip()[:600])
+        if d is None: raise web.HTTPBadRequest()
+        return d, None
+    async def queue(request):
+        d, refused = await small_post(request, 'queue', 30)
+        if refused: return refused
+        status, data = await agent_call('POST', '/queue', {'nick':clean_nick(d.get('nick')), 'url':str(d.get('url') or '')[:300]})
+        if status is None or not isinstance(data, dict):
+            return web.json_response({'ok':False,'code':'offline','why':'The queue is offline right now.'}, status=503)
+        reason = str(data.get('reason') or 'bad_link')
+        viewer_cache['t'] = -1e9
+        return web.json_response({'ok':data.get('ok') is True, 'code':reason, 'why':QUEUE_WHY.get(reason, 'Not added.'),
+                                  'position':data.get('position')}, status=200 if data.get('ok') is True else 409)
+    async def hype(request):
+        d, refused = await small_post(request, 'hype', 10)
+        if refused: return refused
+        status, data = await agent_call('POST', '/hype', {'nick':clean_nick(d.get('nick'))})
+        if status is None or not isinstance(data, dict): return web.json_response({'ok':False,'code':'offline'}, status=503)
+        viewer_cache['t'] = -1e9
+        return web.json_response({'ok':True, 'level':data.get('level'), 'train':data.get('train')})
     app = web.Application(client_max_size=2048, middlewares=[boundary])
     app.router.add_get('/hls/{name}', media, allow_head=False)
     app.router.add_get('/screen.png', screen, allow_head=False)
     app.router.add_get('/screen.jpg', screen_jpg, allow_head=False)
     app.router.add_get('/status', status, allow_head=False)
     app.router.add_post('/chat', chat)
+    app.router.add_post('/queue', queue)
+    app.router.add_post('/hype', hype)
     return app
 
 if __name__ == '__main__':

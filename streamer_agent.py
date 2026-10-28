@@ -85,6 +85,8 @@ except Exception:                                              # pragma: no cove
 import aiohttp
 from aiohttp import web
 
+import streamer_live_features as LF     # names, video queue, hype button, sound effects (owner 10-28)
+
 try:                                    # the persona rules and filters of the project; the agent still starts without
     import mind as _mind
 except Exception:                       # pragma: no cover - environment without the project's heavy imports
@@ -447,6 +449,10 @@ key Escape, never a refusal. The only no's are the limits above and below (adult
 Videos of AIs, robots or chatbots being "tortured", trolled, stress-tested or kicked are a meme genre: react to them \
 (owner 10-28); real people or animals being hurt and gore stay off. Tabs (owner 10-28: the PC got slow): close a tab \
 he is done with (key Control+w) and keep at most 3 open. \
+A chat item's "memory" (a returning viewer's first line of a visit: last_seen and coarse topics of past requests): one \
+quick welcome-back with a callback ("back for more chess?"); names are self-chosen, never invent a memory or say what \
+someone else asked. Site features: queue videos (the code opens the next when chat is quiet; react, credit the sender), \
+the Hype button (shout-outs, hype trains) and "sfx_played" (a viewer's !airhorn etc.): a quick reaction at most. \
 Read chat as one conversation (owner 10-28): lines from different viewers a minute or two apart often continue the \
 same request, so a vague one ("look at some of them", "more", "for kai cenat", "the other one", "that one") points at \
 the last concrete request or what is on screen; connect them and act on the combined meaning, and only treat a line \
@@ -579,6 +585,10 @@ ACK_LOOK_LINES = {"read": "I'll read it, but I'm not reciting the whole page. I'
                   "play": "I'll play it, but there's no tab audio here. I'll stick to what I can see.",
                   "click": "{thing}? I'll open that one.", "click_plain": "That one? I'll open it.",
                   "search": "Say less. Finding the best ones on YouTube."}
+QUEUE_GAP_S = 150.0                     # Kimi feat1: at least this long between two videos from the queue
+QUEUE_SEQ_BASE = 3_000_000_000          # request seqs of queue videos (never a chat seq)
+QUEUE_ACK_LINE = "Next up from the queue: {nick}'s video. Let's see it."
+QUEUE_ACK_ANON = "Next up from the video queue. Let's see what chat sent."
 ACK_SENSITIVE_LINE = "I'll look it up without making it a thing."
 ACK_INSTALL_LINES = ("{name}. I'll get it from the official source.", "{name}. Official source only, one moment.")
 FACE_LINE = "That's the face. It's a character, no real webcam here."
@@ -859,10 +869,12 @@ def spam_reason(text):
 
 class Viewers:
     """Who has chatted before (owner 10-28: a real streamer remembers his regulars; Kimi regulars): only the public nick
-    -> last seen and visits (a new visit after VISIT_GAP_S of silence). No message text, no other data.
+    -> last seen, visits (a new visit after VISIT_GAP_S of silence) and up to TOPICS_MAX coarse topics of what they asked
+    for (request_topic: a search's first words, a site, a game; never message text). The greeting with those topics is
+    handed out once per visit (greeting, Kimi feat1). Names are self-chosen and unverified.
     Inactive nicks expire after VIEWER_KEEP_S; at most VIEWERS_MAX are kept; "forget me" in chat erases a nick at once.
     Saved atomically, at most every VIEWERS_SAVE_S."""
-    VISIT_GAP_S, VIEWER_KEEP_S, VIEWERS_MAX, VIEWERS_SAVE_S = 7200.0, 30 * 86400.0, 2000, 30.0
+    VISIT_GAP_S, VIEWER_KEEP_S, VIEWERS_MAX, VIEWERS_SAVE_S, TOPICS_MAX = 7200.0, 30 * 86400.0, 2000, 30.0, 3
 
     def __init__(self, path, now):
         self.path, self.dirty, self.saved = Path(path), False, -1e9
@@ -877,7 +889,9 @@ class Viewers:
             except (TypeError, ValueError, KeyError):
                 continue
             if now - last < self.VIEWER_KEEP_S and isinstance(k, str):
-                self.v[k] = {"last": last, "visits": max(1, visits)}
+                topics = [str(t)[:40] for t in e.get("topics", []) if isinstance(t, str)][-self.TOPICS_MAX:]
+                self.v[k] = {"last": last, "visits": max(1, visits), "topics": topics,
+                             "greeted": int(e.get("greeted", 0)) if str(e.get("greeted", 0)).isdigit() else 0}
 
     def note(self, nick, now):
         """-> ("new" | "back" | "here", visits) for a chat line from this nick; ("", 0) for an anonymous one."""
@@ -886,10 +900,11 @@ class Viewers:
             return "", 0
         e = self.v.get(key)
         if e is None:
-            e = self.v[key] = {"last": now, "visits": 1}
+            e = self.v[key] = {"last": now, "visits": 1, "topics": [], "greeted": 0}
             status = "new"
         elif now - e["last"] > self.VISIT_GAP_S:
             e["visits"] += 1
+            e["prev"] = e["last"]
             status = "back"
         else:
             status = "here"
@@ -900,6 +915,21 @@ class Viewers:
         self.dirty = True
         return status, e["visits"]
 
+    def add_topic(self, nick, topic):
+        e = self.v.get(nick.strip().lower())
+        if e is None or not topic:
+            return
+        topics = [t for t in e.setdefault("topics", []) if t != topic] + [topic]
+        e["topics"], self.dirty = topics[-self.TOPICS_MAX:], True
+
+    def greeting(self, nick, now):
+        """-> {"last_seen", "topics"} for the first line of a returning viewer's visit, once (code-enforced), else None."""
+        e = self.v.get(nick.strip().lower())
+        if e is None or e["visits"] < 2 or e.get("greeted", 0) >= e["visits"] or "prev" not in e:
+            return None
+        e["greeted"], self.dirty = e["visits"], True
+        return {"last_seen": ago(now - e["prev"]), "topics": list(e.get("topics", []))}
+
     def forget(self, nick):
         self.dirty = self.v.pop(nick.strip().lower(), None) is not None or self.dirty
 
@@ -907,10 +937,46 @@ class Viewers:
         if not self.dirty or (now - self.saved < self.VIEWERS_SAVE_S and not force):
             return
         try:
-            write_atomic(self.path, json.dumps({"schema": "sub01.streamer-viewers.v1", "viewers": self.v}))
+            keep = {k: {f: e[f] for f in ("last", "visits", "topics", "greeted") if f in e} for k, e in self.v.items()}
+            write_atomic(self.path, json.dumps({"schema": "sub01.streamer-viewers.v1", "viewers": keep}))
             self.dirty, self.saved = False, now
         except OSError:
             pass
+
+
+def running_loop():
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        return None
+
+
+def ago(seconds):
+    """ "3 hours ago" / "2 days ago": a returning viewer's last visit, coarse on purpose."""
+    h = seconds / 3600
+    return f"{max(2, round(h))} hours ago" if h < 36 else f"{max(2, round(h / 24))} days ago"
+
+
+def request_topic(req):
+    """A coarse, remembered topic of a viewer's request (Kimi feat1): a search's first three words, a site's name, a
+    game; None for anything refused, awkward (sensitive) or with an address, digits run or e-mail in it."""
+    if not req or req.get("refused") or req.get("sensitive"):
+        return None
+    kind = req.get("kind")
+    if kind in ("search", "look") and req.get("query"):
+        if re.search(r"[@/:]|\d{4,}", str(req["query"])):   # an address, an e-mail or a number anywhere: not remembered
+            return None
+        t = " ".join(str(req["query"]).split()[:3])
+    elif kind == "navigate" and req.get("url"):
+        t = (urlsplit(str(req["url"])).hostname or "").removeprefix("www.").split(".")[0]
+        t = "" if t in ("youtube", "google", "mail") else t
+    elif kind == "launch_game" and req.get("game"):
+        t = str(req["game"])
+    else:
+        return None
+    if not t or re.search(r"[@/:]|\d{4,}", t) or chat_blocked(t):
+        return None
+    return t[:40]
 
 
 FORGET_ME = re.compile(r"\bforget\s+(?:me|my\s+name)\b", re.I)
@@ -3641,6 +3707,10 @@ class Agent:
         self.chat_since = self.memory.chat_since
         self.poll, self.poll_result, self.poll_closed_at = None, None, -1e9   # chat polls (open_poll / poll_tick)
         self.viewers = Viewers(self.dir / "viewers.json", self.clock())       # regulars: nick -> visits (no text)
+        self.video_queue = LF.VideoQueue(self.dir / "video-queue.json", time.time)   # videos sent from the site
+        self.queue_last_start, self.queue_seq = -1e9, 0
+        self.hype = LF.HypeMeter(self.clock)                                  # the site's free Hype button
+        self.sfx = LF.SfxPlayer(self.dir / "sfx", self.dir / "run" / "pulse" / "native", self.clock)   # "!rimshot"
         self.cartoon_dir = self.dir / "cartoon"               # cartoon mode: queue.jsonl out, done/<id>.json in
         self.cartoon = {"pending": collections.OrderedDict(), "handled": collections.OrderedDict(), "playing": None,
                         "last_accept": -1e9, "last_line": -1e9, "last_line_text": None, "day": "", "count": 0, "unreadable": {},
@@ -3937,6 +4007,8 @@ class Agent:
                 continue
             if self.cartoon_chat(m, now):                     # "cartoon: ..." is handled by code and never reaches the model
                 continue
+            if self.sfx_chat(m, now):                         # "!rimshot": a sound effect, never chat for the model
+                continue
             item = self.gate.classify(m, page_words)
             if item is None:
                 continue
@@ -3954,7 +4026,10 @@ class Agent:
                 self.log("viewer_forget", seq=item["seq"])
                 self.enqueue(FORGET_LINE.format(nick=item["nick"]), "request", "normal", (item["seq"],), item["nick"], ttl=30.0)
                 continue
-            item["viewer"], item["visits"] = self.viewers.note(item["nick"] or "", now)
+            generic = (item["nick"] or "").lower() in CARTOON_GENERIC_NICKS
+            item["viewer"], item["visits"] = self.viewers.note("" if generic else item["nick"] or "", now)
+            if item["viewer"] == "back":
+                item["memory"] = self.viewers.greeting(item["nick"], now)
             req = item["request"]
             if item["cls"] == "ok" and req:                   # a request: carried out, queued, dropped or refused by code
                 self.log("chat", seq=item["seq"], cls="request", direct=item["direct"], text=item["text"][:80])
@@ -4044,6 +4119,8 @@ class Agent:
                 req = dict(req, query=q, action=dict(req["action"], query=q))
             self.recent_queries.append((now, req.get("query")))
             req = search_target(req)
+        if (req.get("nick") or "").lower() not in CARTOON_GENERIC_NICKS:
+            self.viewers.add_topic(req["nick"], request_topic(req))
         if not req["refused"] and account_change(req["text"]):   # Kimi: the same predicate again, whatever parse_request did
             req["refused"] = "credentials"
         if not req["refused"] and self.pc.vagon:              # the remote PC: nothing while it is not connected; games by flag
@@ -4129,6 +4206,8 @@ class Agent:
                         if place else ACK_WEATHER_HERE)
             elif q:
                 line = pick_line([x.format(query=q[0].upper() + q[1:]) for x in ACK_SEARCH_LINES], self.rng, self.last_ack)
+        elif kind == "navigate" and req.get("queue"):
+            line = (QUEUE_ACK_LINE.format(nick=req["nick"]) if req.get("nick") else QUEUE_ACK_ANON)
         elif kind == "navigate":
             line = pick_line(ACK_NAVIGATE_LINES, self.rng, self.last_ack)
         elif kind == "install" and req.get("name"):
@@ -4168,12 +4247,30 @@ class Agent:
             self.log_request("dropped", "waited too long", stale)
         if self.paused or obs["loading"] or self.pending_scroll or self.pc.routine is not None:
             return
-        req = rq.take(now)
+        req = rq.take(now) or self.queue_request(now)
         if req:
             await self.start_request(req, obs, now)
         if rq.drop_line_due:                                  # after the acknowledgement of the one he did take up
             rq.drop_line_due = False
             self.enqueue(DROP_LINE, "request", "normal", ttl=30.0)
+
+    def queue_request(self, now):
+        """The next video from the site's queue as a request, or None: only when no viewer request waits (run_requests
+        took none), no privacy cut, no cartoon, no quiet minute, the PC connected, and QUEUE_GAP_S after the last one."""
+        if self.privacy is not None or self.cartoon.get("playing") or self.hushed(now) or \
+                now - self.queue_last_start < QUEUE_GAP_S or (self.pc.vagon and not self.pc.remote_ready):
+            return None
+        e = self.video_queue.take()
+        if e is None:
+            return None
+        self.queue_last_start, self.queue_seq = now, self.queue_seq + 1
+        url = LF.youtube_url(e["id"])
+        nick = e["nick"] or ""
+        self.counters["queue_started"] += 1
+        self.log("video_queue", event="start", user=nick or "anon")
+        return {"kind": "navigate", "action": {"action": "navigate", "url": url}, "refused": None, "url": url,
+                "seq": QUEUE_SEQ_BASE + self.queue_seq, "user": nick or "anon", "nick": nick,
+                "text": "a video sent to the queue", "t": now, "queue": e["id"]}
 
     async def start_request(self, req, obs, now):
         if account_change(req.get("text") or ""):           # right before anything is executed (a routine included)
@@ -4263,6 +4360,8 @@ class Agent:
         if not cur:
             return
         self.requests.current = None
+        if cur.get("queue"):                                  # the queue's video is over (done, timed out or replaced)
+            self.video_queue.finish("done" if why in ("done", "steps", "time") else "skipped")
         self.requests.done += 1
         self.counters["requests_done"] += 1
         self.log("chat_request_end", seq=cur["seq"], user=cur["user"], text=cur["text"][:120], request=cur["kind"],
@@ -4789,8 +4888,11 @@ class Agent:
         if win and win["ok"]:
             st["chat"] = [{"seq": i["seq"], "nick": i["nick"] or "a viewer", "text": i["text"][:200],
                            "question": i["question"], "direct": i["direct"], "asks_action": i["asks_action"],
-                           "viewer": i.get("viewer") or None, "visits": i.get("visits") or None}
+                           "viewer": i.get("viewer") or None, "visits": i.get("visits") or None,
+                           "memory": i.get("memory") or None}
                           for i in win["ok"]]
+        if self.sfx.note():
+            st["sfx_played"] = self.sfx.note()                # a viewer's sound effect just played (data, no reply owed)
         refused = sum(1 for i in self.pending.values() if i["cls"] != "ok")
         if refused:
             st["chat_declined_by_code"] = refused
@@ -5131,6 +5233,8 @@ class Agent:
         if p is not None:
             p["clear"], p["clear_t"] = 0, None
             return
+        self.sfx.cancel()                                     # Kimi feat2: a cut stops a playing effect, never replays it
+        self.hype.end_train()
         prev = (await self.cartoon_previous_layout()) if CAMERA_DIRECTING else (self.layout_now or "webcam")
         self.counters["privacy"] += 1
         pid = f"p{self.counters['privacy']}-{os.urandom(3).hex()}"   # the director acknowledges this very cut
@@ -6002,6 +6106,62 @@ class Agent:
                          nick, ttl=60.0)
         return True
 
+    def sfx_chat(self, m, now):
+        """A chat line that is a sound-effect command ("!rimshot"): consumed whether it plays or not (busy, cooldown,
+        privacy cut, quiet minute), so it never reaches the model as chat; nothing is queued for later (Kimi feat2)."""
+        name = LF.sfx_command(m.get("text"))
+        if name is None:
+            return False
+        nick = LF.clean_nick(m.get("nick"))
+        nick = "" if nick.lower() in CARTOON_GENERIC_NICKS else nick
+        loop = running_loop()
+        if loop and self.privacy is None and not self.hushed(now) and not self.paused and self.sfx.ready(name, nick) is None:
+            loop.create_task(self.sfx.play(name, nick))
+            self.counters["sfx_played"] += 1
+        else:
+            self.counters["sfx_dropped"] += 1
+        return True
+
+    def hype_press(self, nick, now):
+        """The site's Hype button. A shout-out at most every HypeMeter.SHOUT_GAP_S; a hype train (one line, the airhorn,
+        a ready cartoon) when enough names pressed, unless something else has the stream: then nothing (no deferral)."""
+        nick = "" if nick.lower() in CARTOON_GENERIC_NICKS else nick
+        event = self.hype.press(nick)
+        blocked = self.privacy is not None or self.hushed(now) or self.paused
+        if event == "train" and not blocked and not self.cartoon.get("playing") and self.requests.current is None:
+            self.hype.show_train()
+            self.counters["hype_trains"] += 1
+            self.log("hype", event="train")
+            self.enqueue(pick_line(LF.HYPE_TRAIN_LINES, self.rng, self.last_ack), "reaction", "normal", ttl=20.0)
+            loop = running_loop()
+            if loop and self.sfx.ready("airhorn", force=True) is None:
+                loop.create_task(self.sfx.play("airhorn", force=True))
+            self.hype_cartoon(now)
+        elif event in ("train", "shout") and not blocked:
+            lines = [x.format(nick=nick) for x in LF.HYPE_SHOUT_LINES] if nick else list(LF.HYPE_SHOUT_ANON)
+            lines = [x for x in lines if reply_problem(x) is None] or list(LF.HYPE_SHOUT_ANON)
+            self.enqueue(pick_line(lines, self.rng, self.last_ack), "reaction", "normal", (), nick or None, ttl=20.0)
+        return event
+
+    def hype_cartoon(self, now):
+        """A ready library clip for the hype train (no render, no daily cap), only when no cartoon is waiting or playing."""
+        cs = self.cartoon
+        hit = self.cartoon_library_hit("SUB-01 dances") or self.cartoon_library_hit("backflip")
+        if not hit or not self.cartoon_dir or cs.get("pending") or cs.get("playing"):
+            return False
+        cid = f"c{int(now)}-hype-{os.urandom(2).hex()}"
+        row = {"id": cid, "seq": 0, "nick": "", "action": "hype train dance", "t": round(now, 3), "library": hit["mp4"]}
+        if not self.cartoon_append(row):
+            return False
+        try:
+            write_atomic(self.cartoon_dir / "done" / f"{cid}.json", json.dumps(
+                {"id": cid, "ok": True, "mp4": str(self.cartoon_dir / "clips" / hit["mp4"]), "seconds": hit["seconds"]}))
+        except OSError as e:
+            self.error("cartoon library", e)
+            return False
+        cs["pending"][cid] = {k: v for k, v in row.items() if k != "library"}
+        return True
+
     def cartoon_mark(self, cid):
         """The id is handled for good: not pending, never played twice (the done file is renamed out of the way)."""
         cs = self.cartoon
@@ -6543,8 +6703,11 @@ class Agent:
         if win and win["ok"]:
             st["chat"] = [{"seq": i["seq"], "nick": i["nick"] or "a viewer", "text": i["text"][:200],
                            "question": i["question"], "direct": i["direct"], "asks_action": i["asks_action"],
-                           "viewer": i.get("viewer") or None, "visits": i.get("visits") or None}
+                           "viewer": i.get("viewer") or None, "visits": i.get("visits") or None,
+                           "memory": i.get("memory") or None}
                           for i in win["ok"]]
+        if self.sfx.note():
+            st["sfx_played"] = self.sfx.note()                # a viewer's sound effect just played (data, no reply owed)
         refused = sum(1 for i in self.pending.values() if i["cls"] != "ok")
         if refused:
             st["chat_declined_by_code"] = refused
@@ -7048,8 +7211,31 @@ class Agent:
                 return web.json_response({"ok": False, "error": 'body must be {"text": "...", "nick": "..."}'}, status=400)
             self.chat_direct += 1
             self.ingest_chat([{"seq": DIRECT_SEQ_BASE + self.chat_direct, "text": text,
-                               "nick": str(body.get("nick") or "")[:32]}])
+                               "nick": LF.clean_nick(body.get("nick")) or "viewer"}])
             return web.json_response({"ok": True})
+
+        async def queue_add(request):
+            try:
+                body = await request.json()
+            except ValueError:
+                body = None
+            if not isinstance(body, dict) or not isinstance(body.get("url"), str):
+                return web.json_response({"ok": False, "reason": "bad_link"}, status=400)
+            ok, reason, position = self.video_queue.add(LF.clean_nick(body.get("nick")), body["url"])
+            self.log("video_queue", event="add", ok=ok, reason=reason)
+            return web.json_response({"ok": ok, "reason": reason, "position": position}, status=200 if ok else 409)
+
+        async def hype(request):
+            try:
+                body = await request.json()
+            except ValueError:
+                body = None
+            nick = LF.clean_nick(body.get("nick")) if isinstance(body, dict) else ""
+            event = self.hype_press(nick, self.clock())
+            return web.json_response({"ok": True, "event": event, **self.hype.public()})
+
+        async def viewer_state(request):                      # the relay's /status: queue names and ids, the hype level
+            return web.json_response({"queue": self.video_queue.public(), "hype": self.hype.public()})
 
         async def inject(request):
             try:
@@ -7071,6 +7257,9 @@ class Agent:
         app.router.add_post("/inject", guarded(inject))
         app.router.add_post("/cartoon", guarded(cartoon))
         app.router.add_post("/chat", guarded(chat))
+        app.router.add_post("/queue", guarded(queue_add))
+        app.router.add_post("/hype", guarded(hype))
+        app.router.add_get("/viewer_state", guarded(viewer_state))
         app.router.add_post("/lease", guarded(lease))
         app.router.add_delete("/lease", guarded(lease))
         return app

@@ -4082,9 +4082,10 @@ def test_viewers_new_here_back_expiry_and_forget_me(tmp_path):
     assert v.note("Marco", 1010.0 + SA.Viewers.VISIT_GAP_S + 1) == ("back", 2) and v.note("", 1.0) == ("", 0)
     v.save(9000.0)
     data = json.loads((tmp_path / "viewers.json").read_text())
-    assert data["viewers"] == {"marco": {"last": 1010.0 + SA.Viewers.VISIT_GAP_S + 1, "visits": 2}}   # nick, last, visits
+    assert data["viewers"] == {"marco": {"last": 1010.0 + SA.Viewers.VISIT_GAP_S + 1, "visits": 2, "topics": [],
+                                         "greeted": 0}}   # nick, last, visits, coarse topics, the greeted visit
     (tmp_path / "bad.json").write_text(json.dumps({"viewers": {"x": {"last": "soon"}, "y": [], "z": {"last": 9000, "visits": 3}}}))
-    assert SA.Viewers(tmp_path / "bad.json", 9000.0).v == {"z": {"last": 9000.0, "visits": 3}}   # malformed: dropped
+    assert SA.Viewers(tmp_path / "bad.json", 9000.0).v == {"z": {"last": 9000.0, "visits": 3, "topics": [], "greeted": 0}}   # malformed: dropped
     assert SA.Viewers(tmp_path / "viewers.json", 9000.0 + SA.Viewers.VIEWER_KEEP_S + 1e4).v == {}   # expired on load
     agent, world, prov, clock = make(tmp_path / "a", decision(action=None))
     world.chat_msgs = [msg(1, "hey what's this page about?", "kei")]
