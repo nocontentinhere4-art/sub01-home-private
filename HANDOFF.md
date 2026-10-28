@@ -1,8 +1,94 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
+
+## LIVE STATE AND TO-DO (2026-10-28 02:00 UTC; written by the Claude session that ran the live fixes; read this first)
+
+SUB-01 is **live** on subzerone.live (publication authorised by the owner). Everything below is running on pod
+`505jw5ph3dt7ed` (RTX 5090, EU-RO-1, volume `dvrlt6yk2k`). Branch `claude/happy-einstein-1x0561` (HEAD `1e8ec65`) is the
+code that runs; the pod's runtime copy is `/home/sub01-recovery-stage-20261026/runtime-source` (= this branch; its
+`scripts/streamer_desktop.py` also has `--operator-console default=True`). The day's detailed log:
+`docs/streamer/recovery-20261027/CLAUDE-AGENT-FIX-20261027.md` and `CLAUDE-AGENT-FIX-20261028.md`.
+
+### How the next session reaches things (no secrets in git)
+- **Pod shell:** the Jupyter terminal websocket. Use `tools/pod/podterm_once.py <pods.json> 505jw5ph3dt7ed <cmdfile>
+  <limit_s>`; the command file is deleted after reading. `pods.json` holds the pod's existing `JUPYTER_PASSWORD` and is
+  NOT in git: the owner must give it to the session as a secret.
+  - Pod shell sessions are not RunPod API calls. Keep them bounded, with no blind retries.
+- **Kimi (owner rule: consult before decisions, review every diff before commit):** on the pod,
+  `python3 /home/sub01-review-20261027/krev.py <name>` reads `<name>-question.txt` and writes `<name>-answer.json` in
+  the same folder.
+  - Settings: kimi-k3.1-pro, reasoning low, non-streaming, 280 s; a copy is in `tools/pod/onpod/kimi_review.py`.
+  - The key stays on the pod (`/home/unreal/.sub01-private/kimi-key`).
+  - Keep questions short: Moonshot sometimes answers 429 `engine_overloaded`.
+- **RunPod API (sole-caller rule, CLAUDE.md):** one GraphQL `myself{clientBalance}` read at a time, with no retries.
+  - Reads on 10-27: 15:18:39 UTC $51.36, 17:14:34 UTC $48.94.
+  - Spend was about $1.2/h then. The current balance is not verified: the estimate is about $37 at 02:00 on 10-28.
+  - The new session becomes the sole caller and starts a new ledger.
+
+### What runs (pod 505)
+- **Game:** UE 5.8 v25 build (pid 18983, started 21:46 on 10-27), offscreen.
+  - Launch command and environment: the old process was read in `CLAUDE-AGENT-FIX-20261027.md` ("native v25 live");
+    roll-back binaries are in `/home/sub01-review-20261027/binaries-v24-backup-20261027T214652`.
+  - Log: `owner-stack-20261026/logs/native-v25.log`. 57-60 fps.
+  - CPU partition: game on 0-7 (taskset) and everything else on 8-15,24-31. Re-run
+    `scripts/streamer_cpu_partition.py --once` as unreal after ANY game restart.
+- **Supervisor** `streamer_up.py` (since 10-26 22:53): xvfb :103, desktop runner 8838 (Vagon workstation), voice 8835,
+  agent 8836, director 8837, monitor 8840, hls 8839.
+  - Restart one service with `runuser -u unreal -- python3 $SRC/scripts/streamer_up.py restart <name> --source $SRC
+    --streamer-dir /home/unreal/.sub01-private/streamer --token-file /home/unreal/.sub01-private/operator-token`.
+- **Backend** 8830/8831 (coordinator `/root/sub01-owner-backend-resume-r7.py`, state r7b with 382 memories).
+- **Public relay** `/home/unreal/.sub01-private/live-preview/relay.py` on 8841, Cloudflare quick tunnel
+  `chemistry-referrals-membrane-prices.trycloudflare.com`. It serves `/hls`, `/status`, `/chat`, `/screen.png` and the
+  new `/screen.jpg`.
+- **PulseAudio** (`scripts/streamer_audio.sh up`, as unreal): the desktop browser audio is mixed in. **Re-run after a pod
+  restart.**
+- **Director:** fixed `--layout webcam_only` (the full game view).
+  - The agent drives the GAME camera (`STREAMER_CAMERA_DIRECTING`): `face` while answering chat or reacting, the
+    `spectator` shot from behind otherwise.
+  - Audio: voice + lo-fi music (`streamer/music/bgm.mp3`) + desktop audio, ducked.
+  - HLS: 2 s segments.
+- **Live tuning file** `/home/unreal/.sub01-private/streamer-visual-face-tuning.json`, owner-approved today:
+  - face camera: `fov_deg` 72, `aim_drop_cm` -16;
+  - seat and chair: `seat_back_cm` 19, `chair_back_extra_cm` 14;
+  - hands: `hand_move_s` 0.9, `hand_arc_cm` 3.
+  - Backups: `/home/sub01-review-20261027/face-tuning.bak-*`.
+- **Agent lease:** 60 min, re-armed by hand (it expires 02:53 UTC on 10-28). When it expires he goes hands-off and says
+  so. The owner has NOT approved an automatic re-arm.
+  - Re-arm: `POST 127.0.0.1:8836/lease {"minutes":60}` with the X-Admin-Token from `operator-token`.
+  - After 3 unchanged actions in a row he is `held`; clear it with `POST /resume`.
+
+### To-do (owner's open items, most visible first)
+1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
+   - In the shot from behind the wrists still cross towards the keyboard centre. The IK elbow guard slides them 8-12
+     cm, and v24/v25 hand contact was never accepted.
+   - Kimi advised NOT to tune the IK live. Plan it properly: `hand_span_cm`, `hand_back_cm`, `elbow_min_deg`,
+     `elbow_pole_*` are live keys, judged on frames of the spectator shot.
+2. **Typing loop everywhere.** `desk_base 1` plays the typing clip in idle and talking too, so the fingers type
+   constantly. Offer `desk_base 0` (live key, calmer sitting loop); not done.
+3. **Not seen on air yet:** v25 head roll and talk gestures have only been checked by unit tests. Gestures lift the
+   free hand while he talks without typing. Verify on frames.
+4. **Site deploy (Codex, Railway, from his Mac):** branch `claude/live-control-20261027` commit `b9f0e86`. It brings the
+   CA + X link in the header and the smoother PC screen (`/screen.jpg`, already live on the relay).
+5. **Lease policy:** ask the owner whether to automate the hourly re-arm (needs his explicit yes, per the rules), or
+   who re-arms it.
+6. **Verifier false failures.** A click into a text field changes almost no pixels and counts as a failure, so three
+   of them hold the agent. Consider treating focus clicks as neutral.
+7. **Hoodie collar.** It has a jagged edge at the neck (material slots 4 `hood_lining`, 5 `hood_patches`; `hide_slot`
+   is a live key). The owner set the hoodie aside on 10-24, so ask first.
+8. **Acceptance and soak.**
+   - Run `scripts/streamer_acceptance.py` on the last 30 min (read-only; game log `native-v25.log`).
+   - A 1-hour stability watch passed on 10-27 (`tools/pod/onpod/stability_watch.py`), before the v25 and seat
+     changes: re-run it.
+   - Game RSS grew about +120 MB/h: watch it.
+9. **Costs to watch.**
+   - Anthropic decisions: up to 450 calls/h, about $2.3/h.
+   - Kimi shadow decisions: 240/h, about $0.7/h; Kimi balance was about $31 on 10-27.
+   - RunPod: about $1.2/h.
+10. **Tests.** Six `tests/test_streamer_agent.py` failures and one chess-module failure are pre-existing (no API keys
+    or `chess` locally); they fail the same with the changes stashed.
 
 ## Main goal
 SUB-01 is a simulated 20-year-old streamer in a native Unreal Engine 5 home on a RunPod GPU pod. Goal: the first
