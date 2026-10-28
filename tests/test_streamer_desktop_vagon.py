@@ -302,6 +302,11 @@ def vagon_desktop(tmp_path, monkeypatch, probes):
     return desk
 
 
+def vagon_typed(text):
+    """The keyboard log of _vagon_type: one entry per character, shifted ones as Shift chords (owner 10-28)."""
+    return [("press", chord) if chord else ("type", ch) for chord, ch in sd.vagon_key_plan(text)]
+
+
 def test_primitives_are_mapped_onto_the_stream(tmp_path, monkeypatch):
     async def body():
         desk = vagon_desktop(tmp_path, monkeypatch, [probe("", [btn("Settings")], VIDEO)])
@@ -310,20 +315,20 @@ def test_primitives_are_mapped_onto_the_stream(tmp_path, monkeypatch):
         assert r["errors"] == [] and mouse == [("move", 960, 540), ("click", 960, 540)] and desk.cursor == [960.0, 540.0]
         mouse.clear()
         r = await desk.do({"action": "navigate", "url": "https://example.com/a?b=1"})
-        assert r["errors"] == [] and kb == [("down", "Control"), ("press", "l"), ("up", "Control"), ("type", "https://example.com/a?b=1"), ("press", "Enter")]
+        assert r["errors"] == [] and kb == [("down", "Control"), ("press", "l"), ("up", "Control"), *vagon_typed("https://example.com/a?b=1"), ("press", "Enter")]
         assert desk.page.focused == 1 and desk.page.goto_calls == []            # the remote browser navigates, not ours
         kb.clear()
         await desk.do({"action": "search", "query": "cats dogs"})
-        assert kb == [("down", "Control"), ("press", "l"), ("up", "Control"), ("type", sd.SEARCH_URL + "cats+dogs"), ("press", "Enter")]
+        assert kb == [("down", "Control"), ("press", "l"), ("up", "Control"), *vagon_typed(sd.SEARCH_URL + "cats+dogs"), ("press", "Enter")]
         kb.clear()
         await desk.do({"action": "back"})
         assert kb == [("down", "Alt"), ("press", "ArrowLeft"), ("up", "Alt")]
         kb.clear()
         await desk.do({"action": "type", "text": "hello", "submit": True})
-        assert kb == [("type", "hello"), ("press", "Enter")]
+        assert kb == [*vagon_typed("hello"), ("press", "Enter")]
         kb.clear()
         await desk.do({"action": "type", "text": "no submit", "submit": False})
-        assert kb == [("type", "no submit")]
+        assert kb == vagon_typed("no submit")
         kb.clear()
         await desk.do({"action": "key", "key": "Control+a"})
         assert kb == [("down", "Control"), ("press", "a"), ("up", "Control")]    # held: Vagon drops a too-fast chord

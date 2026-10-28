@@ -121,6 +121,7 @@ CAMERA = os.environ.get("STREAMER_CAMERA", "face") if os.environ.get("STREAMER_C
 # (spectator = the cinematic shot from behind him at the PC; face = the frontal webcam for chat answers and reactions)
 CAMERA_DIRECTING = os.environ.get("STREAMER_CAMERA_DIRECTING", "1") != "0"
 LAYOUT_CAMERA = {"webcam": "face", "webcam_only": "face", "room": "spectator", "desktop": "spectator", "split": "spectator"}
+CAMERA_MIN_HOLD_S = 4.0                 # a camera shot stays at least this long (no flicker between face and spectator)
 SCHEMA = "sub01.private-streamer-visual-event.v2"
 STATE_SCHEMA = "sub01.streamer-agent-state.v1"
 STATES = ("idle", "reading", "typing", "mouse", "talking", "reacting")
@@ -2680,7 +2681,7 @@ class Visual:
         self.errors = 0
         # motion direction (docs/streamer/ANIMATION-REFERENCES.md): set by the agent when scripts/streamer_motion is present
         self.motion, self.action_kind, self.chat_until, self.reaction, self.base_since = None, "none", 0.0, "none", clock()
-        self.camera = CAMERA                                  # the game camera the agent asks for (CAMERA_DIRECTING)
+        self.camera, self.camera_at = CAMERA, -1e9            # the game camera the agent asks for (CAMERA_DIRECTING)
 
     def poke(self):
         if self.wake is not None:
@@ -2757,6 +2758,12 @@ class Visual:
     def snapshot(self):
         now = self.clock()
         state = self.state(now)
+        if CAMERA_DIRECTING and state != "paused":         # owner 10-28: his face only while he answers chat or reacts,
+            want = "face" if now < self.chat_until or state == "reacting" else "spectator"   # the shot from behind otherwise
+            if want != self.camera and now - self.camera_at >= CAMERA_MIN_HOLD_S:
+                self.camera, self.camera_at = want, now
+                if self.motion is not None:
+                    self.motion.camera = want
         yaw_t, pitch_t = self.desired_gaze(state, now)
         dt = 0.25 if self.last_t is None else clamp(now - self.last_t, 0.0, 5.0)
         self.last_t = now
@@ -4998,14 +5005,10 @@ class Agent:
             self.privacy["previous"] = name                   # at the director); this layout comes back when it ends
             self.log("layout_held", layout=name, why="privacy screen")
             return
-        if CAMERA_DIRECTING:                                  # no director POST: the game camera changes (1 s blend)
-            cam = LAYOUT_CAMERA.get(name, CAMERA)
-            self.visual.camera = cam
-            if self.visual.motion is not None:
-                self.visual.motion.camera = cam
-            self.layout_at, self.layout_now = now, name
+        if CAMERA_DIRECTING:                                  # no director POST; the camera follows chat answers and
+            self.layout_at, self.layout_now = now, name       # reactions in Visual.snapshot (the model's pick is noisy)
             self.counters["layout_changes"] += 1
-            self.log("camera", layout=name, camera=cam)
+            self.log("camera", layout=name, camera=LAYOUT_CAMERA.get(name, CAMERA), applied=False)
             return
         self.layout_at = now
         try:

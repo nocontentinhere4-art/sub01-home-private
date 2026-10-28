@@ -1196,3 +1196,11 @@ def test_browser_audio_only_with_an_answering_pulse_socket(tmp_path):
         assert env == {"PATH": "/bin", "DISPLAY": ":103", "PULSE_SERVER": f"unix:{path}", "PULSE_SINK": "sub01_apps"}
     finally:
         server.close()
+
+
+def test_vagon_typing_sends_shifted_characters_and_capitals_as_shift_chords():
+    plan = sd.vagon_key_plan("https://html.duckduckgo.com/html/?q=Deep+sea")
+    chords = {ch: chord for chord, ch in plan if chord}
+    assert chords == {":": "Shift+Semicolon", "?": "Shift+Slash", "D": "Shift+KeyD", "+": "Shift+Equal"}
+    assert "".join(ch for _, ch in plan) == "https://html.duckduckgo.com/html/?q=Deep+sea"   # nothing dropped
+    assert all(chord is None for chord, ch in plan if ch in "/.=abcxyz0123456789-")       # plain keys stay typed

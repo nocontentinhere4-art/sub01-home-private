@@ -3902,24 +3902,28 @@ def test_scroll_a_little_bit_scrolls_instead_of_refusing_to_leave_the_desk():
     assert A.parse_request("stand up", pc=True)["refused"] == "leave_desk"   # real desk-leaving still refused
 
 
-def test_camera_directing_turns_a_layout_choice_into_the_game_camera(tmp_path, monkeypatch):
+def test_camera_directing_shows_the_face_only_for_chat_answers_and_reactions(tmp_path, monkeypatch):
     agent, world, prov, clock = make(tmp_path, decision())
     monkeypatch.setattr(SA, "CAMERA_DIRECTING", True)
     posted = []
     async def layout(name):
         posted.append(name)
     monkeypatch.setattr(agent.services, "layout", layout)
-    asyncio.run(agent.set_layout("room", clock()))
-    assert agent.visual.camera == "spectator" and agent.layout_now == "room" and posted == []   # no director POST
-    if agent.visual.motion is not None:
-        assert agent.visual.motion.camera == "spectator"
     asyncio.run(agent.set_layout("webcam", clock()))
-    assert agent.visual.camera == "face" and posted == []
-    assert [e["camera"] for e in events(agent) if e["kind"] == "camera"] == ["spectator", "face"]
+    assert posted == [] and agent.layout_now == "webcam"                 # no director POST, the model's pick is logged
+    v = agent.visual
+    assert v.snapshot()["camera"] == "spectator"                        # browsing: the shot from behind
+    v.chat_until = clock() + 6
+    clock.t += 5
+    assert v.snapshot()["camera"] == "face"                             # a chat answer: his face
+    v.chat_until = 0
+    clock.t += 1
+    assert v.snapshot()["camera"] == "face"                             # held at least CAMERA_MIN_HOLD_S
+    clock.t += SA.CAMERA_MIN_HOLD_S
+    assert v.snapshot()["camera"] == "spectator"
     monkeypatch.setattr(SA, "CAMERA_DIRECTING", False)
     asyncio.run(agent.set_layout("room", clock()))
     assert posted == ["room"]                                           # the old director path, unchanged
-
 
 
 @pytest.fixture(autouse=True)

@@ -1299,7 +1299,7 @@ def test_vagon_keys_focus_the_stream_first_and_fail_closed_without_it(tmp_path, 
         assert r["errors"] == [] and page.log == [("focus",), ("press", "Meta")]       # no click, no move
         page.log.clear()
         await desk.do({"action": "type", "text": "sub01 test", "submit": False})
-        assert page.log == [("focus",), ("type", "sub01 test")]
+        assert page.log == [("focus",), *(("type", ch) for ch in "sub01 test")]   # one key at a time (vagon_key_plan)
         page.log.clear()
         await desk.do({"action": "key", "key": "Control+Escape"})                     # a chord: the modifier held first
         assert page.log == [("focus",), ("down", "Control"), ("press", "Escape"), ("up", "Control")]

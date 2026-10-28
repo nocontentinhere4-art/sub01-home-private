@@ -1,0 +1,65 @@
+Review (<= 6 lines, first word APPROVE or BLOCK). Live bug: on the remote PC (Vagon stream client in our Chromium) every search/navigation URL broke: the address bar showed html.duckduckgo.com/html//q=deep+sea... ('?' arrived as '/'). The Vagon client forwards keys by physical code + modifier state and Playwright keyboard.type('?') sends the Slash key without Shift. Fix: _vagon_type types per character and sends US-layout shifted characters and capitals as explicit 'Shift+<Code>' chords via keyboard.press (Playwright holds Shift for the chord). Used for type, navigate and search on Vagon only. Tests updated (148 pass).
+
+diff --git a/scripts/streamer_desktop.py b/scripts/streamer_desktop.py
+index 6143d1a..283dd0b 100644
+--- a/scripts/streamer_desktop.py
++++ b/scripts/streamer_desktop.py
+@@ -146,6 +146,22 @@ VAGON_RELOAD_BACKOFF = (15.0, 30.0, 60.0, 120.0, 300.0)   # seconds before the s
+ VAGON_BLANK_RELOAD_S = 60.0   # a stream page with neither a button nor a stream for this long is opened again
+ VAGON_MISSES = 3              # consecutive probes without the stream before "connected" is dropped
+ VAGON_TYPE_DELAY_MS = 12      # per character: the stream client needs real key events, not inserted text
++# The Vagon client forwards each key by its physical code plus the modifier state, and Playwright's keyboard.type() sends
++# "?" as the Slash key WITHOUT Shift: the remote PC got "/" for "?", ";" for ":" and lower case for capitals, so every
++# search URL (".../html/?q=") broke (owner 10-28: "stuck on the search"). These characters go as explicit Shift chords.
++VAGON_SHIFTED = {"?": "Slash", ":": "Semicolon", "!": "Digit1", "@": "Digit2", "#": "Digit3", "$": "Digit4",
++                 "%": "Digit5", "^": "Digit6", "&": "Digit7", "*": "Digit8", "(": "Digit9", ")": "Digit0",
++                 "_": "Minus", "+": "Equal", "{": "BracketLeft", "}": "BracketRight", "|": "Backslash",
++                 '"': "Quote", "<": "Comma", ">": "Period", "~": "Backquote"}
++
++
++def vagon_key_plan(text):
++    """[(chord or None, char)]: a Shift chord for a shifted US-layout character or a capital, else None (typed as is)."""
++    out = []
++    for ch in text:
++        code = VAGON_SHIFTED.get(ch) or (f"Key{ch}" if "A" <= ch <= "Z" else None)
++        out.append((f"Shift+{code}" if code else None, ch))
++    return out
+ VAGON_SETTLE_S = 0.8          # pixels need a round trip to the remote machine before they can be compared
+ # Vagon's keyboard layer (its client bundle, 2026-10-23: keyDownHandler/startPendingCtrl) holds a Left-Control keydown for
+ # 15 ms to tell it from AltGr and DROPS a key that arrives inside that window, the pending Control with it. Playwright's
+@@ -3238,6 +3254,17 @@ class Desktop:
+             for mod in reversed(held):
+                 await keyboard.up(mod)
+ 
++    async def _vagon_type(self, text, delay_ms):
++        """Type through the stream client: shifted characters and capitals as explicit Shift chords (VAGON_SHIFTED)."""
++        keyboard = self.page.keyboard
++        for chord, ch in vagon_key_plan(text):
++            if chord:
++                await keyboard.press(chord)
++            else:
++                await keyboard.type(ch)
++            if delay_ms:
++                await asyncio.sleep(delay_ms / 1000)
++
+     async def _vagon_input(self, a, box):
+         page, kind, settle = self.page, a["action"], VAGON_SETTLE_S
+         if kind == "click":
+@@ -3255,7 +3282,7 @@ class Desktop:
+                 await asyncio.sleep(0.05)
+         elif kind == "type":
+             await self._vagon_keys_ready()
+-            await page.keyboard.type(a["text"], delay=VAGON_TYPE_DELAY_MS)
++            await self._vagon_type(a["text"], VAGON_TYPE_DELAY_MS)
+             if a.get("submit"):
+                 await page.keyboard.press("Enter")
+         elif kind == "key":
+@@ -3266,7 +3293,7 @@ class Desktop:
+             await self._vagon_keys_ready()
+             await self._vagon_chord("Control+l")         # the remote browser's address bar (Chrome, Edge, Firefox)
+             await asyncio.sleep(0.3)
+-            await page.keyboard.type(url, delay=8)
++            await self._vagon_type(url, 8)
+             await asyncio.sleep(0.1)
+             await page.keyboard.press("Enter")
+             settle = VAGON_NAV_SETTLE_S

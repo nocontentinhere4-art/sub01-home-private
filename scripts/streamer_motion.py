@@ -68,10 +68,10 @@ DEFAULTS = {
     "idle_gaze_gain": 0.28,              # idle attention wanders farther than reading (K 10-27)
     "reading_gaze_max_yaw_deg": 3.0,     # hard bound on screen-following yaw while reading, far below a chat glance (K 10-27)
     "reading_gaze_max_pitch_deg": 2.0,   # no vertical line tracking turning into a reading nod (K 10-27)
-    "reading_gaze_smooth_s": 0.65,       # 4 Hz target changes filtered into calm head motion (K 10-27)
+    "reading_gaze_smooth_s": 1.1,       # 4 Hz target changes filtered into calm head motion (K 10-27)
     "reading_head_wander_deg": 0.9,      # independent slow head drift: alive, not busy (K 10-27)
-    "reading_head_wander_hz": 0.055,     # about an 18 s drift scale, two incommensurate sines, not a visible loop (K 10-27)
-    "gaze_tau_s": 0.22,                  # voluntary head aims (lens, chat, click target, think) settle in ~0.22 s (K)
+    "reading_head_wander_hz": 0.035,     # about an 18 s drift scale, two incommensurate sines, not a visible loop (K 10-27)
+    "gaze_tau_s": 0.45,                  # voluntary head aims (lens, chat, click target, think) settle in ~0.22 s (K)
     "camera_pitch_deg": 4.2,             # head-to-lens pitch of the framing recipe: atan(0.07 / 0.95); native computes the real one (K)
     # chat and camera (event-driven: no camera timer, no camera quota; DIRECTION rule 10)
     "chat_glance_every_s": (35.0, 80.0),     # silent reading/idle: a glance at the chat, a little more viewer awareness (K 10-27)
@@ -90,12 +90,12 @@ DEFAULTS = {
     "wait_glance_s": (0.8, 1.2),
     "lens_check_every_s": (150.0, 300.0),    # silent idle/reading: a rare brief look at the viewers, eligibility-gated (K 10-27)
     "lens_check_s": (0.6, 1.1),
-    # talk beats: phrase-scale head accents while speaking; the native build reads only head aim and nods (K 10-27)
-    "talk_beat_every_s": (1.1, 2.1),         # irregular holds, not per-tick noise
-    "talk_beat_yaw_deg": 3.2,                # off-lens accents (Kimi 2.6; owner: livelier)
-    "talk_beat_pitch_deg": 1.5,              # (Kimi 1.2)
+    # talk beats: phrase-scale head accents while speaking (K 10-27); owner 10-28 "si muove troppo velocemente": slower, smaller, rarer
+    "talk_beat_every_s": (2.4, 4.2),         # irregular holds, not per-tick noise
+    "talk_beat_yaw_deg": 2.2,                # off-lens accents (Kimi 2.6; owner: livelier)
+    "talk_beat_pitch_deg": 1.0,              # (Kimi 1.2)
     "talk_beat_look_cam_scale": 0.55,        # smaller at the lens: he keeps addressing the viewers
-    "talk_beat_nod_p": 0.35,                 # most beats carry no nod (Kimi 0.30)
+    "talk_beat_nod_p": 0.2,                 # most beats carry no nod (Kimi 0.30)
     "talk_beat_nod_strength": (0.14, 0.28),  # about 0.8-1.7 deg before intensity scaling (Kimi 0.12-0.24)
     # nods (native: 0.75 s envelope, strength 1.0 = 6 deg down; rearm at <= 0.02)
     "nod_decay_s": 1.0,
@@ -107,8 +107,8 @@ DEFAULTS = {
     "talk_back_amount": 0.12,                # a dry page comment releases the body about 1 deg back (K, A9 inverted)
     "chat_read_lean": 0.24,                  # reading a viewer's message relaxes the forward lean slightly (K)
     "chat_talk_back_amount": 0.18,           # answering: about 1.4 deg back; engagement is lens aim + nod, not a lunge (K)
-    "lean_rise_s": 0.55,                     # a 0.30 posture change towards a pose takes this long (K)
-    "lean_fall_s": 1.10,                     # ... and relaxing the same amount takes this long (K)
+    "lean_rise_s": 0.9,                     # a 0.30 posture change towards a pose takes this long (K)
+    "lean_fall_s": 1.6,                     # ... and relaxing the same amount takes this long (K)
     "posture_shift_every_s": (240.0, 420.0), # a visible chair shift 9-15 times an hour (K, A7, R4)
     "posture_back_s": (15.0, 35.0),          # how long the leaned-back hold lasts (K)
     "posture_back_amount": 0.28,             # about 2.2 deg back: visible at webcam scale, not lounging (K)

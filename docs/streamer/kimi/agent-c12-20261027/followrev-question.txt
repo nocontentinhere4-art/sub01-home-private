@@ -1,0 +1,35 @@
+Review this small director diff (answer <= 6 lines, first word APPROVE or BLOCK). Context: the live director was launched by the supervisor with --layout webcam_only (a privacy stop-gap while the Vagon page showed its login on 10-26; the handoff says restore normal layouts once the PC is connected; it is connected now). The supervisor's child argv cannot change without restarting every service (voice model reload, Vagon reconnect), so this adds an operator flag file <streamer-dir>/layout-follow that makes a restarted director ignore a launch-time --layout and follow layout.jsonl again (privacy lines in layout.jsonl still force webcam_only, as before). Owner asked to get the layout switching and the view from behind back.
+
+diff --git a/scripts/streamer_director.py b/scripts/streamer_director.py
+index 7e593a5..95f8097 100644
+--- a/scripts/streamer_director.py
++++ b/scripts/streamer_director.py
+@@ -163,6 +163,7 @@ TAP_OVERFLOW = "FIFO queue full"    # ffmpeg's fifo muxer, once per overflow (it
+ 
+ DEFAULT_LAYOUT = "webcam"
+ PRIVATE_LAYOUT = "webcam_only"
++LAYOUT_FOLLOW_FILE = "layout-follow"    # <streamer-dir>/layout-follow present: a --layout given at launch is ignored
+ PRIVACY_REASON = "privacy"
+ PIP_MARGIN = 24
+ # `desktop`: the layout shows a picture of the desktop somewhere (room too: cam 2 sees the in-game monitor, which shows it)
+@@ -2797,6 +2798,11 @@ def parse_args(argv=None):
+             rtmp_url = Path(args.rtmp_url_file).read_text().strip()
+         except OSError as exc:
+             p.error(f"cannot read --rtmp-url-file: {exc.strerror}")
++    layout = args.layout
++    follow = Path(args.streamer_dir) / LAYOUT_FOLLOW_FILE
++    if layout and follow.exists():          # operator flag: drop a launch-time --layout without restarting the supervisor
++        print(f"streamer director: --layout {layout} ignored: {follow} exists (following layout.jsonl)", file=sys.stderr)
++        layout = None
+     try:
+         width, height = (int(v) for v in args.size.lower().split("x"))
+         pip_width, pip_height = (int(v) for v in args.pip_size.lower().split("x"))
+@@ -2809,7 +2815,7 @@ def parse_args(argv=None):
+             desktop_fps=args.desktop_fps, segment_seconds=args.segment_seconds, keep_segments=args.keep_segments,
+             min_free_gb=args.min_free_gb, crf=args.crf, preset=args.preset,
+             audio_bitrate=args.audio_bitrate, watchdog_interval=args.watchdog_interval,
+-            voice_interval=args.voice_interval, encoder=args.encoder, layout=args.layout,
++            voice_interval=args.voice_interval, encoder=args.encoder, layout=layout,
+             layout_switch=args.layout_switch, switch_timeout=args.switch_timeout, cam2_fifo=args.cam2_fifo,
+             cam2_json=args.cam2_json, cam2_stale=args.cam2_stale, cam2_interval=args.cam2_interval,
+             layout_interval=args.layout_interval, hls_dir=args.hls_dir, rtmp_url=rtmp_url or None,
