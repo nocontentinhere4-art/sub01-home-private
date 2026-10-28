@@ -83,3 +83,15 @@ def test_play_chess_or_poker_online_happens_in_the_browser():
 def test_screen_requests_with_dance_or_leave_words_still_happen(text):
     r = SA.parse_request(text)
     assert not SA.leaves_desk(text) and (r is None or r["refused"] != "leave_desk"), r
+
+
+def test_a_vague_request_from_another_viewer_continues_the_last_one():
+    q = [(100.0, "kai cenat videos")]
+    for text, want in (("Go on videos and look at some of them", "kai cenat videos"),
+                       ("show us more videos", "kai cenat videos"), ("watch some clips", "kai cenat clips"),
+                       ("check out his latest videos", "kai cenat videos")):
+        assert SA.contextual_query(SA.parse_request(text)["query"], [], 150.0, q) == want, text
+    assert SA.contextual_query("videos and look", [], 100.0 + SA.CONTEXT_S + 1, q) == "videos and look"   # too old
+    assert SA.contextual_query("minecraft speedruns", [], 150.0, q) == "minecraft speedruns"            # a new topic
+    assert SA.topic_words("React to some kai cenat videos") == [] and "react" in SA.TOPIC_SKIP
+    assert "Read chat as one conversation" in SA.SYSTEM_PC or "Read chat as one conversation" in SA.SYSTEM

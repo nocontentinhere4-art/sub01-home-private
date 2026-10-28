@@ -441,6 +441,10 @@ Chat asking for something to watch or do on screen gets it, right away (owner 10
 him"): other creators' videos too (Kai Cenat clips, other streamers, YouTubers, reaction videos): he puts them on and \
 reacts in his own words; he only never imitates them or repeats their catchphrases. "Exit/leave full screen" is the \
 key Escape, never a refusal. The only no's are the limits above and below (adult, purchases, downloads, logins). \
+Read chat as one conversation (owner 10-28): lines from different viewers a minute or two apart often continue the \
+same request, so a vague one ("look at some of them", "more", "for kai cenat", "the other one", "that one") points at \
+the last concrete request or what is on screen; connect them and act on the combined meaning, and only treat a line \
+as a new topic when it names one. \
 Poker, blackjack and casino games (owner 10-28): free play only, as a guest or with play chips; he never deposits, \
 buys chips or bets real money.
 How he moves around (owner 10-28: "click inside the sites, don't just search"): like a viewer, by clicking what is on \
@@ -1680,10 +1684,14 @@ def doable(kind, action=None, **extra):
 # A vague search ("search youtube for the trailer") takes its subject from the chat just before it (owner 10-28: "Let's
 # watch the GTA 6 trailer" ... "Just search on youtube for the trailer" searched "the trailer").
 VAGUE_Q = {"the", "a", "an", "it", "that", "this", "one", "video", "videos", "trailer", "trailers", "clip", "clips", "song",
-           "songs", "music", "official", "new", "full", "on", "youtube", "for", "of", "please", "pls", "gameplay", "reaction"}
+           "songs", "music", "official", "new", "full", "on", "youtube", "for", "of", "please", "pls", "gameplay", "reaction",
+           # owner 10-28: "Go on videos and look at some of them" right after "React to some kai cenat videos"
+           "and", "look", "at", "some", "them", "those", "these", "more", "other", "others", "few", "couple", "watch", "see",
+           "check", "out", "react", "to", "his", "her", "their", "stuff", "content", "ones", "best", "top", "latest"}
 TOPIC_SKIP = {"let's", "lets", "let", "what", "whats", "what's", "just", "i", "i'm", "you", "your", "can", "could", "please",
               "yo", "bro", "hey", "search", "watch", "play", "open", "go", "put", "sub", "sub-01", "how", "why", "do", "does",
-              "is", "are", "the", "a", "an", "and", "ok", "okay", "lol", "chat", "we", "my", "it", "that", "this", "youtube"}
+              "is", "are", "the", "a", "an", "and", "ok", "okay", "lol", "chat", "we", "my", "it", "that", "this", "youtube",
+              "react", "look", "check", "show", "find", "see", "give", "make", "get", "try", "bro's"}
 CONTEXT_S = 180.0
 
 
@@ -1698,11 +1706,20 @@ def topic_words(text):
     return out[:5]
 
 
-def contextual_query(q, recent, now):
-    """q itself, or, when every word of it is vague, the newest earlier chat subject (within CONTEXT_S) plus its words."""
+def contextual_query(q, recent, now, queries=()):
+    """q itself, or, when every word of it is vague, the subject of the newest earlier request (`queries`: (t, query) of
+    the searches viewers asked for, whatever their capitals) or chat line (within CONTEXT_S) plus its words."""
     words = str(q or "").split()
     if not words or any(w.lower() not in VAGUE_Q for w in words):
         return q
+    rest = [w for w in words if w.lower() in ("video", "videos", "clip", "clips", "trailer", "trailers", "song", "songs",
+                                              "music", "gameplay", "reaction", "shorts")]
+    for t, prev in reversed(list(queries)):
+        if now - t > CONTEXT_S:
+            break
+        topic = [w for w in str(prev).split() if w.lower() not in VAGUE_Q]
+        if topic:                                             # "kai cenat videos" + "videos" -> "kai cenat videos"
+            return " ".join(dict.fromkeys(topic + rest + [w for w in str(prev).split() if w.lower() in rest]))[:60]
     for t, text in reversed(recent):
         if now - t > CONTEXT_S:
             break
@@ -3525,6 +3542,7 @@ class Agent:
         self.chat_direct = 0                                  # POST /chat lines: DIRECT_SEQ_BASE + this
         self.cartoon_load(self.clock())
         self.pending = {}                                     # seq -> classified chat item waiting for a batch
+        self.recent_queries = collections.deque(maxlen=10)    # (time, query) of viewers' searches: the context of a vague one
         self.recent_chat = collections.deque(maxlen=40)       # (time, text) of what viewers wrote: never copied into actions
         self.answered_nicks = collections.deque(maxlen=30)
         self.speech_q = collections.deque()
@@ -3911,10 +3929,11 @@ class Agent:
         req = dict(req, seq=item["seq"], user=item["nick"] or "anon", nick=item["nick"], text=item["text"], t=now)
         if req["kind"] == "search" and not req["refused"]:
             earlier = list(self.recent_chat)[:-1]             # the lines before this one (it was just appended)
-            q = contextual_query(req.get("query"), earlier, now)
+            q = contextual_query(req.get("query"), earlier, now, self.recent_queries)
             if q != req.get("query") and not SENSITIVE_Q.search(q):
                 self.log("request_context", seq=item["seq"], query=str(req.get("query"))[:60], resolved=q)
                 req = dict(req, query=q, action=dict(req["action"], query=q))
+            self.recent_queries.append((now, req.get("query")))
         if not req["refused"] and account_change(req["text"]):   # Kimi: the same predicate again, whatever parse_request did
             req["refused"] = "credentials"
         if not req["refused"] and self.pc.vagon:              # the remote PC: nothing while it is not connected; games by flag
