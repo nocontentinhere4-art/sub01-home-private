@@ -173,9 +173,26 @@ def create_app(root, stop_file, token_file=None):
         task = screen_jpg_task
         data = await asyncio.shield(task)
         return web.Response(body=data, content_type='image/jpeg')
+    director_cache = {'t': -1e9, 'layout': None}
+    async def director_layout():   # owner 10-28: the page hides its PC SCREEN box while the stream shows the PC big
+        now = time.monotonic()
+        if now - director_cache['t'] >= 2 and token_file:
+            director_cache['t'] = now
+            try:
+                async with asyncio.timeout(2):
+                    async with aiohttp.ClientSession() as client:
+                        async with client.get('http://127.0.0.1:8837/director/state',
+                                              headers={'X-Admin-Token':Path(token_file).read_text().strip()}) as r:
+                            d = await r.json() if r.status == 200 else {}
+                            name = d.get('layout') if isinstance(d, dict) else None
+                            director_cache['layout'] = name if name in ('webcam', 'webcam_only', 'desktop', 'split', 'room', 'cartoon') else None
+            except (TimeoutError, aiohttp.ClientError, ValueError, OSError):
+                director_cache['layout'] = None
+        return director_cache['layout']
     async def status(request):
         raw, _ = playlist()
-        return web.json_response({'online':raw is not None, 'agent':'paused' if Path(stop_file).exists() else 'checks', 'messages':list(messages)})
+        return web.json_response({'online':raw is not None, 'agent':'paused' if Path(stop_file).exists() else 'checks', 'messages':list(messages),
+                                  'layout':await director_layout()})
     async def chat(request):
         if request.headers.get('Origin') != ORIGIN or request.content_type != 'text/plain': raise web.HTTPForbidden()
         ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
