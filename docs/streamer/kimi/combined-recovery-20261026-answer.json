@@ -1,0 +1,21 @@
+{
+  "question_sha256": "5ba2d5f02fa1c021b46a19725178930db7f214989d8e98df93758ee5b3a6e951",
+  "scope": "exact-frozen-private-commit-snapshot",
+  "attempts": 1,
+  "http_status": 200,
+  "answer": "## Private-branch commit review: **APPROVE**\n\nI reviewed the **complete supplied payload**: all four packs, every complete untracked record/question/answer, and the separate integrated-plan consultation. Subsequent tuning or recovery milestones were not reviewed.\n\nThe exact snapshot is suitable for the requested **private branch commit only**, subject to normal verification that the committed content matches the supplied snapshot/manifests.\n\n### Findings\n\n- **No commit-blocking factual contradiction or accidental credential found.** Token/key values are absent; only paths, hashes, request IDs, pod/volume identifiers and private operational balances are recorded. No secret values appear in the supplied native candidate or receipts.\n- **Original-state handling remains correctly blocked.** `HANDOFF.md` additions, `",
+  "finish_reason": "length",
+  "usage": {
+    "prompt_tokens": 26182,
+    "completion_tokens": 4500,
+    "total_tokens": 30682,
+    "completion_tokens_details": {
+      "reasoning_tokens": 4343
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 26112
+    }
+  },
+  "seconds": 191.78,
+  "review_complete_candidate": false
+}

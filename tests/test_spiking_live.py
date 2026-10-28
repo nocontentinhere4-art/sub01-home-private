@@ -9,6 +9,8 @@ absent.
 import asyncio
 import json
 import os
+import select
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -217,6 +219,26 @@ def test_child_keeps_runtime_loader_path_without_parent_credentials(tmp_path, mo
     run(go())
 
 
+def test_the_child_gets_the_cpu_budget_its_server_is_configured_with(tmp_path, monkeypatch):
+    monkeypatch.setenv("SUB01_SPIKING_CPU_BUDGET", "0.07")
+    create_process = asyncio.create_subprocess_exec
+
+    async def probe_child(*args, **kwargs):
+        code = "import json,os; print(json.dumps({'type':'ready','budget':os.environ.get('SUB01_SPIKING_CPU_BUDGET')}),flush=True)"
+        return await create_process(sys.executable, "-c", code, **kwargs)
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", probe_child)
+
+    async def go():
+        client = L.LiveClient(tmp_path)
+        await client.start()
+        await asyncio.wait_for(client.proc.wait(), 5)
+        await asyncio.wait_for(client._reader_task, 5)
+        assert client.info["budget"] == "0.07"
+
+    run(go())
+
+
 def test_child_process_protocol_frames_learning_and_restart(tmp_path):
     async def go():
         cl = L.LiveClient(tmp_path, n_neurons=SMALL)
@@ -394,6 +416,115 @@ def test_card_view_off_and_on(tmp_path):
     v = L.view(b)
     assert v["state"] == "offline" and v["decisions_today"] == 0 and v["by_net_today"] == {"gpu": 0, "cpu": 0, "rate": 0}
     assert "takes part in his choices and learns from simulated reward" in v["card"] and "5,000 neurons" in v["card"]
+
+
+# --- the CPU budget of the background pulses (CpuBudget, SUB01_SPIKING_CPU_BUDGET) ----------------------------------------
+def test_cpu_budget_paces_the_pulses_to_its_share_of_a_core():
+    """A pulse of the 100,000-neuron network costs 138 ms of CPU (measured): over 1000 s the pulses use the share plus the
+    burst banked at the start, so one pulse every cost / share = 2.8 s, not every 2 s."""
+    clock = {"t": 0.0}
+    b = L.CpuBudget(0.05, clock=lambda: clock["t"])
+    cost, pulses = 0.138, 0
+    while clock["t"] < 1000.0:
+        clock["t"] += b.wait_for(cost)                # sleep until the bank holds the pulse's cost
+        b.charge(cost)                                # the pulse ran and used its CPU
+        pulses += 1
+    assert pulses * cost <= 0.05 * clock["t"] + L.BUDGET_BURST_S + 1e-9
+    assert 2.5 < clock["t"] / pulses < 2.9
+
+
+def test_a_decision_is_charged_and_pauses_the_pulses_without_being_refused():
+    clock = {"t": 0.0}
+    b = L.CpuBudget(0.05, clock=lambda: clock["t"])
+    b.charge(2.4)                                     # a decision at 100,000 neurons (measured: 2.4 s of CPU)
+    assert b.bank == pytest.approx(-0.4)
+    assert b.wait_for(0.138) == pytest.approx((0.138 + 0.4) / 0.05)    # the next pulse waits for the bank to refill
+    clock["t"] += 60
+    assert b.wait_for(0.138) == 0.0 and b.bank == pytest.approx(L.BUDGET_BURST_S)
+
+
+def test_zero_budget_allows_no_background_pulse():
+    b = L.CpuBudget(0)
+    assert b.wait_for(0.001) == float("inf")
+    b.charge(1.0)
+    assert b.wait_for(0.001) == float("inf")
+
+
+class Child:
+    """A spiking/live.py child process (5,000 neurons, no twin), read as JSON lines with select."""
+
+    def __init__(self, tmp_path, budget=None):
+        env = {k: v for k, v in os.environ.items() if k != "SUB01_SPIKING_CPU_BUDGET"}
+        if budget is not None:
+            env["SUB01_SPIKING_CPU_BUDGET"] = budget
+        self.proc = subprocess.Popen([sys.executable, "-m", "spiking.live", "--data-dir", str(tmp_path),
+                                      "--neurons", str(SMALL), "--no-twin"],
+                                     cwd=ROOT, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        self.buf = b""
+
+    def send(self, msg):
+        self.proc.stdin.write((json.dumps(msg) + "\n").encode())
+        self.proc.stdin.flush()
+
+    def read(self, seconds, until=lambda m: False):
+        """The messages for up to `seconds`; returns early at the first one for which `until` is true."""
+        end, fd, got = time.monotonic() + seconds, self.proc.stdout.fileno(), []
+        while True:
+            while b"\n" in self.buf:
+                line, self.buf = self.buf.split(b"\n", 1)
+                if line.strip():
+                    msg = json.loads(line)
+                    got.append(msg)
+                    if until(msg):
+                        return got
+            left = end - time.monotonic()
+            if left <= 0:
+                return got
+            ready, _, _ = select.select([fd], [], [], left)
+            if ready:
+                chunk = os.read(fd, 1 << 16)
+                if not chunk:
+                    return got
+                self.buf += chunk
+
+    def close(self):
+        try:
+            self.proc.stdin.close()
+            self.proc.wait(20)
+        except (OSError, subprocess.TimeoutExpired):
+            self.proc.kill()
+            self.proc.wait()
+
+
+@pytest.mark.skipif(os.name != "posix", reason="select() on the child's pipe")
+def test_a_zero_budget_child_pulses_nothing_and_still_decides(tmp_path):
+    c = Child(tmp_path, budget="0")
+    try:
+        ready = c.read(90, until=lambda m: m.get("type") == "ready")[-1]
+        assert ready["type"] == "ready" and ready["cpu_budget"] == 0.0 and ready["pulse_cpu_ms"] > 0
+        c.send({"type": "decide", "id": "d-1", "options": ["read about bread", "tokyo parks"]})
+        msgs = c.read(30, until=lambda m: m.get("type") == "decision")
+        assert msgs[-1].get("type") == "decision" and msgs[-1]["id"] == "d-1"   # a decision is never refused
+        quiet = c.read(4.5)                           # the default budget's idle pulse would come 2 s after the decision
+        assert not [m for m in quiet if m.get("type") == "spiking"]
+    finally:
+        c.close()
+
+
+@pytest.mark.skipif(os.name != "posix", reason="select() on the child's pipe")
+def test_the_default_budget_keeps_the_idle_pulse(tmp_path):
+    c = Child(tmp_path)
+    try:
+        ready = c.read(90, until=lambda m: m.get("type") == "ready")[-1]
+        assert ready["cpu_budget"] == 0.05
+        frames = c.read(6, until=lambda m: m.get("type") == "spiking")
+        assert frames and frames[-1]["net"] == "cpu"
+    finally:
+        c.close()
+
+
+def test_the_frozen_twin_takes_the_learners_plastic_synapses(small):
+    assert small.tw.pidx is small.ch.pidx and small.tw.pre is small.ch.pre and small.tw.post is small.ch.post
 
 
 # --- with torch: the same synapses as net.py, and the night's replay ------------------------------------------------

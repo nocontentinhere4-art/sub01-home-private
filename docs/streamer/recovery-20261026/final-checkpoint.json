@@ -1,0 +1,16 @@
+{
+  "preservation": {
+    "path": "/workspace/sub01-recovery-20261026/continuation-checkpoint-20261026-1437.tar.gz",
+    "bytes": 551427,
+    "sha256": "220a461ec4a5a8aef66e5aae377772f58970737152ac91305b28f493f635eca9"
+  },
+  "final_observation": {
+    "stop": true,
+    "measuring": false,
+    "import_attempt_exists": false,
+    "import_launcher_exists": false,
+    "runtime_jobs": [],
+    "uid1002": null,
+    "module_sha256": "1c78b83cd2afd44436c281a40bb62d4f452077b2b6be7bf8ef5e1d0c7e769b0b"
+  }
+}

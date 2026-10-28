@@ -1,0 +1,9 @@
+{
+  "index": 0,
+  "arm": "A",
+  "elapsed": 900.0206531444564,
+  "nominal_opportunities": 54000,
+  "actual_opportunities": 54001.23918866739,
+  "from_mono": 542979.6090724135,
+  "to_mono": 543879.629725558
+}

@@ -1,0 +1,30 @@
+ bool WriteWhole(const FSub01MainFrame& Frame){
+  const uint8* Data=Frame.Jpeg.GetData();const int64 Size=Frame.Jpeg.Num();int64 Sent=0;int32 Why=0; // 1 no reader, 2 error, 3 deadline, 4 stop
+  const double Deadline=FPlatformTime::Seconds()+0.5;
+  while(Sent<Size){
+   if(Stop.load()){Why=4;break;}
+   const ssize_t N=::write(Fd,Data+Sent,size_t(Size-Sent));
+   if(N>0){Sent+=int64(N);continue;}
+   if(N<0&&errno==EINTR)continue;
+   if(N<0&&(errno==EAGAIN||errno==EWOULDBLOCK)){
+    const double Left=Deadline-FPlatformTime::Seconds();if(Left<=0){Why=3;break;}
+    struct pollfd P;P.fd=Fd;P.events=POLLOUT;P.revents=0;
+    const int Ready=::poll(&P,1,int(FMath::Clamp(Left*1000.,1.,double(20))));
+    if(Ready<0&&errno!=EINTR){Why=2;break;}
+    if(Ready>0&&(P.revents&(POLLERR|POLLHUP|POLLNVAL))){Why=1;break;}
+    continue;
+   }
+   Why=N<0&&errno==EPIPE?1:2;break;
+  }
+  if(Sent>=Size){++Written;Bytes+=Size;LastSeq.store(Frame.Seq);const FDateTime Utc=FDateTime::UtcNow();LastWriteMs.store(Utc.ToUnixTimestamp()*1000+Utc.GetMillisecond());return true;}
+  // the WHOLE frame is discarded and the descriptor closed: its tail is never resumed on a new fd; the reader resyncs on the next SOI
+  if(Sent>0)++DiscardedMidwrite;else if(Why==3)++DroppedStalled;else ++DroppedNoReader;
+  ++Cuts;CloseFifo();Sub01MainTap::ConsumeSigpipe();
+  const double Now=FPlatformTime::Seconds();
+  if(Now>=CutLogAt){CutLogAt=Now+5.0;
+   UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_MAIN_TAP_CUT why=%s seq=%llu sent=%lld of=%lld cuts=%lld suppressed=%lld"),Why==1?TEXT("no reader"):Why==3?TEXT("deadline"):Why==4?TEXT("stop"):TEXT("write error"),
+    static_cast<unsigned long long>(Frame.Seq),static_cast<long long>(Sent),static_cast<long long>(Size),static_cast<long long>(Cuts.load()),static_cast<long long>(CutsSuppressed));CutsSuppressed=0;}
+  else ++CutsSuppressed;
+  return false;
+ }
+};

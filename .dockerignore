@@ -12,6 +12,7 @@ out/*.webm
 out/brand
 out/eye
 docs
+!docs/design/daily-life/day_template.json
 tests
 
 # Guest system binaries are fetched from pinned upstream during the image build.

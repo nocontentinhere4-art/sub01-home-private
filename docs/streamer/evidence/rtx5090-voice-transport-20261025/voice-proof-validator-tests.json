@@ -1,0 +1,31 @@
+{
+  "pure_tests_only": true,
+  "valid_roles": 2,
+  "rejections": [
+    "native:stale",
+    "native:future",
+    "native:wrong_ticks",
+    "native:wrong_mode",
+    "native:wrong_fifo",
+    "native:zombie",
+    "native:errors",
+    "native:malformed_errors",
+    "native:bool_timestamp",
+    "native:missing",
+    "native:duplicate",
+    "native:wrong_pid_type",
+    "voice:stale",
+    "voice:future",
+    "voice:wrong_ticks",
+    "voice:wrong_mode",
+    "voice:wrong_fifo",
+    "voice:zombie",
+    "voice:errors",
+    "voice:malformed_errors",
+    "voice:bool_timestamp",
+    "voice:missing",
+    "voice:duplicate",
+    "voice:wrong_pid_type"
+  ],
+  "all_pass": true
+}

@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "# BLOCK \u2014 DO NOT ACTIVATE OR RUN ATTEMPT06\n\nTwo stale internal hash pins make this exact bundle fail deterministically before native launch:\n\n1. **Access-barrier pin mismatch \u2014 first failure**\n   - `admission.json[\"access_barrier_sha256\"]` is  \n     `028a1af6ec3ec99d1c69d99a86467cdd03fd13fc2fdf97fdfc6cead2270e080d`\n   - The reviewed `access_barrier.py` is pinned and supplied as  \n     `82d82b23a5746a4e1386526010ee6355401a637f83f3bdfbf50c05696ae9d0f6`\n   - `Supervisor.prepare()` requires equality:\n     ```python\n     require(sha(Path(__file__).with_name('access_barrier.py')) ==\n             a['access_barrier_sha256'],\n             'prerequisite', 'barrier source differs')\n     ```\n   - Therefore the run stops with **`barrier source differs`**.\n\n2. **Observer-adapter pin mismatch \u2014 subsequent independent failure**\n   - `admission.json[\"observer_adapter_sha256\"]` remains the attempt05 value  \n     `e9ac3f9095437753c760d8aab20e8d6ce2e80a0c60cef486c4b68da6b6418049`\n   - The reviewed attempt06 `fifo_observer_collector.py` hash is  \n     `0ba8ee861eb7bc653f07df04245d2ad14b75c3282c477604ddda533133067329`\n   - `prepare()` would subsequently reject it as **`observer bytes unbound`**.\n\nThe staging helper validates the outer seven-file manifest but copies `admission.json` unchanged, so it does not repair either mismatch. The post-run verifier cannot cure a run that fails these prerequisites.\n\n**No foreground run, activation, retry, or verifier-based acceptance is authorized by this review.** Correcting these fields changes `admission.json` and requires a newly pinned candidate and fresh exact review; the sole attempt06 run must not be consumed on this bundle.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 90292,
+    "completion_tokens": 4519,
+    "total_tokens": 94811,
+    "completion_tokens_details": {
+      "reasoning_tokens": 4054
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 90112
+    }
+  },
+  "seconds": 149.24
+}

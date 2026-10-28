@@ -1,20 +1,69 @@
-# Private local home
+# SUB-01 (private): rules for every agent (Codex, Claude, any other)
+
+## Highest priority: RunPod request discipline (owner, 2026-10-26)
+
+Avoiding another RunPod API rate-limit block takes precedence over speed and parallel work.
+Use one designated provider caller and an explicit bounded request plan. No automatic provider
+polling, retries, fallback endpoints, or duplicate calls by other agents. On a rate-limit response,
+record Retry-After and stop provider requests; do not test the block repeatedly. A timeout or
+ambiguous mutation is not permission to retry. Prefer the already working direct pod shell for
+application work, using bounded sessions and no blind retries. Keep a request ledger.
+Do not install or restart any automatic pod-stop guard. Historical guard/deadline instructions
+below are obsolete and must not be used. No top-ups or credential changes. Preserve original
+resume20/21 state; missing state does not authorize a historical or empty replacement.
+
+
+Same rules as `CLAUDE.md`; this file exists so that Codex (and other agents that read `AGENTS.md`) get them too.
+
+**Read `HANDOFF.md` first.** It holds the main goal, the ordered plan, the last-observed pod state and the exact resume
+point ("Takeover" section). Update it at every milestone and before ending a session.
+
+- **Work together with Kimi** (owner's rule, 2026-10-23, applies to every agent with no exception): consult Kimi
+  (`kimi-k3.1-pro`, `tools/ask_kimi.py` run ON THE POD, see `tools/pod/README.md`) before every design decision, and
+  have Kimi review the diff or the frames before EVERY commit. Save each consultation (question + answer verbatim) in
+  `docs/streamer/kimi/`; reports carry a "Kimi review" section. Kimi often answers HTTP 429: retry every 60-120 s; use
+  `--max-tokens 24000 --timeout 600`. Only exception ever granted: the owner once told the coordinator to publish the
+  public status page without waiting for Kimi.
+- **Never without the owner's explicit request:** a public stream, a deploy to Railway or a merge/push to `main`
+  (Railway publishes the site from `main`; draft PR #4 stays unmerged), buying services, changing credentials or
+  passwords/2FA, arming/starting the Vagon PC ($0.99/h from his balance), growing disks or volumes, touching his
+  infrastructure consoles. "Deploy" in this project means copying files to the pod only.
+- **Secrets** (API keys, tokens, the pod's Jupyter password, the operator token) stay out of git, logs and chat; Kimi
+  never receives them. On the pod they live in `/home/unreal/.sub01-private/{anthropic-key,kimi-key,operator-token}`
+  (mode 600). Mask anything printed with `[A-Za-z0-9_]*`-style patterns (digits occur in variable names).
+- **Git:** branch `claude/happy-einstein-1x0561` of `nocontentinhere4-art/sub01-home-private`; commit as user.name
+  `nicolaeatwork`, user.email `nicolaeatwork@gmail.com`; commit and push each verified, Kimi-reviewed deliverable.
+  No model names in commits, code or docs. Ignore rules drop `*.log` and `logs/`: force-add test fixtures that need them.
+- **Language:** the owner writes Italian; answer him in Italian. Everything in the repository is English.
+- **The pod is shared and live:** one owner of the game runtime at a time; `/tmp/sub01-share/MEASURING` = measurement
+  lease (no builds, deploys, restarts or heavy jobs while it exists); log every build/deploy/restart/runtime change in
+  `/tmp/sub01-share/pod-changes.log` and `docs/streamer/POD-CHANGES.md`; disk preflight before builds (keep > 3 GB free
+  on `/`); the agent stays held by the STOP file until its live checks pass with the owner.
+- Heavy work runs on the GPU pod. Owner decisions are recorded in `HANDOFF.md` ("Owner decisions").
+
+---
+
+# Historical owner instructions (2026-10-13 .. 2026-10-16, home pod phase)
+
+Kept verbatim for the record. They describe earlier pods, budgets and deadlines that are over; where they differ from
+`HANDOFF.md` and the rules above, the current ones win. Still valid in spirit: everything private, no public deploy,
+no spending or provider changes without the owner, heavy work on RunPod, never claim a visual result without looking.
 
 ## Latest owner continuation — six hours from 15 October 17:29 UTC
 
 The owner explicitly instructed six continuous hours without further input, asked that everything remain operational, and requested caffeinate on the Mac. Record exact work-until epoch in out/coordination/owner-six-hour-continuation-20261015.json. Continue real implementation and verification with the already authorized parallel agents; all changes remain private, heavy work on Runpod. This does not extend the GPU deadline 2026-10-16 02:19:35 UTC, the $100 TOTAL cap or $10 reserve. Do not publish or alter the public sites/brain pod. A separate local caffeinate process prevents Mac sleep for six hours; it does not authorize local rendering or inference.
 
-## Latest human continuation — work until the owner returns
+### Latest human continuation — work until the owner returns
 
 The owner subsequently explicitly instructed continuous autonomous work until they return to this chat, with Claude and parallel agents. The six-hour work time below is now a progress milestone, not a mandatory work shutdown. Continue meaningful private implementation and verification beyond it if needed. The separately authorized GPU deadline **2026-10-16 02:19:35 UTC**, unchanged $100 total cap and $10 balance/data reserve still apply. This does not authorize extending GPU duration or spending, publishing changes, or modifying the public sites or brain server. Keep the current GPU and persistent Editor running through ordinary edits; monitor agent failures and resume interrupted assigned work rather than assuming background work continues after an error.
 
-## Latest human GPU duration — 15 October, 24 hours continuous
+### Latest human GPU duration — 15 October, 24 hours continuous
 
 The owner subsequently explicitly authorized keeping the GPU running for **24 hours**, then deciding whether to continue. GPU deadline is now **2026-10-16 02:19:35 UTC (04:19:35 Europe/Rome), epoch 1792117175**. This supersedes GPU shutdown at the six-hour work target; the work target itself remains 2026-10-15 08:14:32 UTC. Authenticate replacement guards before retiring the previous ones and update services from the trusted root-owned runtime window without restarting the pod. Preserve the $10 balance/data reserve and other-account-spend monitoring. Do not extend beyond the 24 hours yourself.
 
 Actual replacement allocated at 02:17:45 UTC: **dgtgepkz7h1zy5**, Secure Cloud EU-RO-1, RTX4090/24GB, 16 vCPU, 61GB RAM, $0.89/hour, 20GB container disk; 150GB Standard persistent network volume **dvrlt6yk2k** attached at creation at /workspace. Provider/transfer/Unreal operations remain the renderer owner's responsibility. Never modify the separate brain server or public sites. Ordinary changes are hot-applied within the persistent private working environment, not by stopping/restarting the GPU.
 
-## Latest human continuation — 15 October, continuous six-hour work
+### Latest human continuation — 15 October, continuous six-hour work
 
 The owner explicitly instructed use of the available Runpod balance, an available GPU, and no repeated stop/start for code or scene changes. They then fixed six hours of work on 15 October at 02:14:32 UTC: the absolute stop deadline is **2026-10-15 08:14:32 UTC (10:14:32 Europe/Rome), epoch 1792052072**. This supersedes the older two-hour/four-hour implementation windows below. Keep the working GPU and Editor alive across changes; stop for completion, the fixed deadline, a verified budget cutoff, or an actual unrecoverable failure. Do not extend the six-hour deadline yourself.
 
@@ -24,7 +73,7 @@ The owner now authorizes selecting an actually available GPU, not only A40. Rend
 
 All work remains private. "More deploys" means integrations on the private working home, not publication: the public SUB-01 sites, Railway and brain server must remain unchanged. The primary target remains the actual first-person home matching the SimbasJungles reference, with real furniture/materials, light, natural movements and working devices. Pinterest is an additional reference source; do not wait for the account to continue, copy account credentials, or treat reference photos as licensed production assets. Source/geometry tests never substitute for native visual and physical-input verification.
 
-## Latest human continuation — 14 October, after the first fixed stop
+### Latest human continuation — 14 October, after the first fixed stop
 
 The owner explicitly resumed work after the earlier stop: “Muovi il culo, e c'e' proprio bisogno di spegnere e riaccendere ogni volta runpod”. Continue privately within the existing $100 TOTAL cap. A bounded four-hour continuation ends at 2026-10-14 22:40:55 UTC (2026-10-15 00:40:55 Europe/Rome), epoch 1792017655; this duration is an implementation bound, not a newly purchased budget. Two independent local exact-identity stop guards were authenticated before the same-pod resume attempt. The conservative prior bound $70 plus this window's $6 reserve is $76; this is not an actual invoice.
 
@@ -42,20 +91,20 @@ Browser work follows the owner's latest supplied preference: configured playwrig
 
 The owner requires this work to stay private and on localhost. Do not deploy, connect this repository to Railway, modify the live SUB-01 site or its configuration, create public PRs, or publish these home changes without a separate explicit owner instruction. Keep credentials and local runtime data out of Git. Continue improving the real functioning home against the SimbasJungles visual reference; a video or standalone mockup is not completion.
 
-## Reference priority
+### Reference priority
 
 The primary visual reference, reaffirmed by the owner on 2026-10-13, is https://x.com/SimbasJungles/status/2109095401273938072. Use it as the acceptance reference for the home's visual direction and first-person experience. Ainthropos, Yokohara, Hmlet and other references are supporting references for individual details and techniques; they must not replace this direction. Inspect the actual reference before making visual comparisons, and never claim that a result matches it without viewing the result.
 
 The owner explicitly authorized $100 TOTAL on 2026-10-14, conservatively including all prior use and storage. The owner explicitly fixed a six-hour work limit from 2026-10-14 12:18:23 UTC. The current fixed window is ONLY on the same target `5ldnm4vax9kelh` (`sub01-home-private-migration-20261014`). Its authenticated live rootfs guard and independent local exact-identity watchdog enforce **2026-10-14 18:18:23 UTC** (20:18:23 Europe/Rome), epoch **1792001903**. The former active-window guards were retired only after new guard authentication succeeded. The conservative prior-use/storage bound is $64; the fixed six hours add at most $6.00 with a storage allowance in addition to the bounded $0.65/hour current-pod rate. Do not create or migrate another pod or touch the brain pod. Original `713u6mnmxu4y1a` and transfer source `80lf8giw6ft61v` remain stopped. Heavy Unreal/Blender/rendering work belongs on this server, not the owner's Mac. This authorization does not permit public deployment.
 
-## Authorized same-target window — 14 October 2026
+### Authorized same-target window — 14 October 2026
 
 Preserve the warming sole native Unreal instance, private X server, fully transferred engine, actual home project, GUI guest snapshot and existing Minecraft world. Do not recopy the engine or treat a plain count marker as independent byte verification. Verified old GNU timeout wrappers may be paused while their children continue, but only after the new authoritative guards are armed; rearm every service, native and display timer and save/shutdown watchdog for the fixed deadline above. The root-owned nonsecret `/run/sub01-home-private/runtime-window.json` may publish the new deadline only after both replacement stop guards are armed and the exact pod identity is authenticated. No provider restart is authorized merely to update a startup recipe. The legacy provider stopAfter argument has no verified persisted schedule and is not relied on. Live rootfs and local guards enforce the current deadline; preserve the refreshed startup recipe privately and apply it before any future authorized resume. Credentials remain protected rootfs-only; use clean nonroot environments and `HOME_NATIVE_REQUIRED=1` before claiming activity readiness.
 
-## Browser access
+### Browser access
 
 On 2026-10-14 the owner explicitly authorized research with both the personal browser and the isolated browser for this home task. This supersedes the earlier Playwright-only restriction for this task. Use supported browser tools; never copy personal Chrome cookies or credentials into the isolated browser. The personal Chrome session may read the owner's linked X references. Native Claude coordination, filesystem work, Runpod APIs and native Unreal captures remain available within the private scope.
 
-## Overnight continuation
+### Overnight continuation
 
 The owner explicitly instructed continued work without further questions while they sleep, delegated work with Claude, and requested the complete functioning home with realistic graphics, movement, devices and English UI. Continue within the existing $100 TOTAL budget, on the same private pod, with this fixed six-hour automatic-stop limit and conservative cost monitoring. The fixed 18:18:23 UTC deadline supersedes earlier rolling two-hour windows. Do not extend it or create another tranche without a new explicit human instruction. Keep heavy work off the Mac and leave public sites unchanged. A functioning capture or passing source tests alone do not complete the goal: verify the actual persistent native home, physical interactions, private browser input, brain activity, device use and every required room.

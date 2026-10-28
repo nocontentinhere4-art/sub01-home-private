@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "**Blocker — `podterm.py` can return a truncated exit status when the marker is fragmented.**\n\nBoth terminal-marker regexes use `$`, which also matches at the end of the accumulated buffer. If a websocket chunk ends after the `4` in `END<tag> 42`, the detection loop treats `END<tag> 4` as complete, breaks before receiving `2\\n`, and the final parser exits **4 instead of 42**. The duplicate-marker and range checks do not prevent this.\n\nThe fake transport’s fixed midpoint split does not force this case, and the live one-digit 0/7 probes cannot expose it.\n\nRequire the complete marker line—including its line terminator, e.g. `\\r?\\n` as appropriate—before breaking or parsing, preferably using one shared full-line regex. Add a regression that splits a multi-digit status between digits and asserts the original status. Do not commit as-is.",
+ "finish_reason": "stop",
+ "prompt_tokens": 4996,
+ "completion_tokens": 18478,
+ "reasoning_tokens": 18275,
+ "seconds": 385.2
+}

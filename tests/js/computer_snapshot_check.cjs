@@ -24,6 +24,7 @@ function fixture() {
       : name === './guest_keyboard.cjs' ? {guestKeyboard:()=>({cancel(){},enqueue:async()=>true})}
       : name === './guest_mouse.cjs' ? require('../../computer/guest_mouse.cjs')
       : name === './vga_framebuffer.cjs' ? require('../../computer/vga_framebuffer.cjs')
+      : name === './input_receipts.cjs' ? require('../../computer/input_receipts.cjs')
       : name === 'fs' ? filesystem : name === 'readline' ? {createInterface: () => ({on: (name, fn) => onLine = fn})} : require(name)};
   vm.runInNewContext(source, context);
   for (const byte of Buffer.from('~# ')) listeners['serial0-output-byte'](byte);

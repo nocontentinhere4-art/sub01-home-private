@@ -97,7 +97,7 @@ async function pollMinecraftPad(){
 setInterval(pollMinecraftPad,50);window.addEventListener('gamepaddisconnected',releaseMinecraftPad);document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseMinecraftPad();});window.addEventListener('blur',releaseMinecraftPad);
 '''
 def gamepad_html(html):
- marker='async function ready(){try{const h=await readHealth();'
+ marker='async function ready(){readyAt=performance.now();try{const h=await readHealth();'
  if html.count(marker)!=1 or html.count('</script>')!=1:raise ValueError('Actualnative viewer hooks required')
  html=html.replace(marker,marker+"nativeMinecraftFocus=h.minecraftFocus===true;",1)
  return html.replace('</script>',GAMEPAD_JS+'\n</script>',1)

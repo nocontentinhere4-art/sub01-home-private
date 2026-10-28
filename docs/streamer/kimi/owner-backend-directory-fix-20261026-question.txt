@@ -1,0 +1,61 @@
+Narrow correction to pending step1 commit review. Runtime r2 failed PermissionDenied because root umask077 changed target.mkdir(mode751) into root0700. Only change: create NEW run directory with explicit UID/GID1001 ownership and0700 mode, verify immediately. No original path metadata changed. Added real filesystem test underumask077;11 tests PASS. Please APPROVE COMMIT for this delta together with prior reviewed files, or BLOCK with concrete correction. No runtime success claimed.
+
+tools/private_backend_coordinator.py
+BEFORE SHA256 7e155232085917a8fe39637cb2dffdbb1d12f56f3c18ea38cee0c165266e126d
+AFTER SHA256 16a9bb7ef6194f1fdeb5a70e5e49430a1a89739087b61ce8d3d2b3267ec2322c
+--- reviewed/tools/private_backend_coordinator.py
++++ tools/private_backend_coordinator.py
+@@ -507,6 +507,16 @@
+         except subprocess.TimeoutExpired:pass  # Never escalate to killing a reused or unrelated PID.
+ 
+ 
++def create_private_run(target,uid,gid):
++    target=Path(target)
++    target.mkdir(mode=0o700)
++    os.chown(target,uid,gid)
++    target.chmod(0o700)
++    info=target.lstat()
++    if not stat.S_ISDIR(info.st_mode) or (info.st_uid,info.st_gid,stat.S_IMODE(info.st_mode))!=(uid,gid,0o700):
++        raise Refusal('New private run directory ownership/permissions differ')
++
++
+ def run(args):
+     if os.name!='posix' or os.getuid()!=0:raise Refusal('Launch coordinator requires root on the reviewed Linux host')
+     import pwd
+@@ -540,7 +550,7 @@
+     interpreter=Path(args.python).absolute()
+     if not interpreter.is_file():raise Refusal('Restored candidate Python runtime is missing')
+     roots={'candidate-source':target/'source','candidate-run':target,'offline-state':snapshot,'baseline-source':baseline,'latest-source':latest,'model-source':models,'candidate-state':data}
+-    with filesystem_step('create-candidate-volume-run',roots):target.mkdir(mode=0o751)
++    with filesystem_step('create-candidate-private-run',roots):create_private_run(target,user.pw_uid,user.pw_gid)
+     source=target/'source';logs=data/'logs'
+     expected_models=None if not args.model_source else {'twin/data/slow_layer.npz':args.slow_layer_sha256,'twin/data/receptors_214.csv':args.receptors_sha256}
+     with filesystem_step('prepare-volume-source-and-model-links',roots):
+
+tests/test_private_backend_coordinator.py
+BEFORE SHA256 521cb73f4efcd300d4316b3feacbde1c08a39a2982c989318996579240594af9
+AFTER SHA256 0dadd49b5ea5bfd12434ce557177614b4a55fab8476a9d5e887aa750dc013007
+--- reviewed/tests/test_private_backend_coordinator.py
++++ tests/test_private_backend_coordinator.py
+@@ -1,4 +1,4 @@
+-import importlib.util,json,tempfile,unittest
++import importlib.util,json,tempfile,unittest,os,stat
+ from pathlib import Path
+ from unittest.mock import Mock,patch
+ P=Path(__file__).resolve().parents[1]/'tools/private_backend_coordinator.py'
+@@ -50,6 +50,15 @@
+     (root/'tools'/name).mkdir(parents=True);(root/'tools'/name/'secret.py').write_text('not an input')
+    (root/'.env').write_text('do not hash');(root/'old-state').mkdir();(root/'old-state'/'large').write_bytes(b'unused')
+    result=c.source_manifest(root,'latest');self.assertEqual(set(result),{'used.py','music_curated.json'})
++ def test_new_run_permissions_with_restrictive_umask(self):
++  with tempfile.TemporaryDirectory()as d:
++   target=Path(d)/'new';mask=os.umask(0o077)
++   try:c.create_private_run(target,os.getuid(),os.getgid())
++   finally:os.umask(mask)
++   info=target.stat();self.assertEqual((info.st_uid,info.st_gid,stat.S_IMODE(info.st_mode)),(os.getuid(),os.getgid(),0o700))
++   source=target/'source';source.mkdir();script=source/'live_server.py';script.write_text('actual filesystem traversal')
++   self.assertEqual(script.read_text(),'actual filesystem traversal')
++   with self.assertRaises(FileExistsError):c.create_private_run(target,os.getuid(),os.getgid())
+  def test_occupied_port_refuses_without_signalling(self):
+   with patch.object(c.socket.socket,'bind',side_effect=OSError('occupied')):
+    with self.assertRaises(c.Refusal):c.require_free_ports(False)

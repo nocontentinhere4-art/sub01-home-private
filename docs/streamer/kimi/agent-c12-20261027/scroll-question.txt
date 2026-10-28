@@ -1,0 +1,34 @@
+Commit review, APPROVE / BLOCK in <= 100 words. Live check: 'scroll up a little bit' was refused as leave_desk because strip_filler turns it into 'scroll up bit', which SCROLL did not match, so it fell through to leaves_desk (impulse reads 'scroll' as the phone). Fix: SCROLL also accepts 'a little/tiny (bit)' and a bare 'bit'. SCROLL is anchored (^...$) and only allows these modifier words after 'scroll', so no new free text matches. 'stand up' stays refused (tested). 19 targeted tests pass; full agent suite unchanged (6 pre-existing env failures). Diff:
+
+diff --git a/streamer_agent.py b/streamer_agent.py
+index fec896c..82e0568 100644
+--- a/streamer_agent.py
++++ b/streamer_agent.py
+@@ -817,7 +817,8 @@ R_TYPE = re.compile(r"^\W*(?:type|write|post|comment|tweet|send|reply\s+to|paste
+ LEAVE_WORDS = re.compile(r"\b(?:leave|stand\s+up|get\s+up|get\s+out|take\s+a\s+(?:break|walk|nap)|go\s+(?:out|outside|"
+                          r"away|home)|step\s+(?:out|away)|lie\s+down|dance|sing|stretch|turn\s+around|wave)\b", re.I)
+ # doable kinds, in the order they are tried (scroll and back before the activity words: impulse reads "scroll" as the phone)
+-SCROLL = re.compile(r"^\W*(?:keep\s+scrolling|scroll(?:\s+(?:on|further|more|down|up|a\s+bit|a\s+little|some\s+more|"
++# ("bit": strip_filler turns "scroll up a little bit" into "scroll up bit"; live check 2026-10-27)
++SCROLL = re.compile(r"^\W*(?:keep\s+scrolling|scroll(?:\s+(?:on|further|more|down|up|a\s+bit|a\s+(?:little|tiny)(?:\s+bit)?|bit|some\s+more|"
+                     r"the\s+page|it))*)\W*$", re.I)
+ SCROLL_UP = re.compile(r"\bup\b", re.I)
+ TOP_BOTTOM = re.compile(r"^\W*(?:(?:go|scroll|jump|take\s+(?:me|us))\s+)?(?:back\s+)?(?:to\s+)?(?:the\s+)?(top|bottom)"
+diff --git a/tests/test_streamer_agent.py b/tests/test_streamer_agent.py
+index 9fb7799..0038385 100644
+--- a/tests/test_streamer_agent.py
++++ b/tests/test_streamer_agent.py
+@@ -3887,3 +3887,13 @@ def test_jump_to_top_or_bottom_is_a_key_request():
+     for chat in ("i jumped in the pool lol", "don't jump to conclusions", "jump to conclusions much?"):
+         req = A.parse_request(chat, pc=True)
+         assert req is None, (chat, req)              # plain chat: no action and no refusal line
++
++
++def test_scroll_a_little_bit_scrolls_instead_of_refusing_to_leave_the_desk():
++    """Live check 2026-10-27: 'scroll up a little bit' fell through SCROLL and was refused as leaving the desk."""
++    import streamer_agent as A
++    for text, direction in (("scroll up a little bit", "up"), ("scroll down a little bit", "down"),
++                            ("scroll a tiny bit up", "up"), ("scroll a little bit more", "down")):
++        req = A.parse_request(text, pc=True)
++        assert req and req["kind"] == "scroll" and req["action"]["direction"] == direction, (text, req)
++    assert A.parse_request("stand up", pc=True)["refused"] == "leave_desk"   # real desk-leaving still refused

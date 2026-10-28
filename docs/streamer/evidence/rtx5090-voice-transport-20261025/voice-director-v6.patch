@@ -1,0 +1,23 @@
+--- v5-reviewed.py
++++ v6-candidate.py
+@@ -6,7 +6,7 @@
+  raise SystemExit("Refusing optimized interpreter mode")
+ import urllib.request
+ P=Path('/home/unreal/.sub01-private');SHARE=Path('/tmp/sub01-share')
+-BASE=P/'voice-director-diagnostic-v5-20261025';SOURCE=P/'latest-source-20261023/scripts'
++BASE=P/'voice-director-diagnostic-v6-20261025';SOURCE=P/'latest-source-20261023/scripts'
+ MAIN=P/'streamer/main.mjpeg';MAINJSON=P/'streamer/main.json';STOP=P/'streamer/STOP'
+ LEASE=SHARE/'MEASURING';OWNER='codex-voice-director-'+uuid.uuid4().hex
+ WRAPPER=SHARE/'restrict-diagnostic-child-v2.py';NATIVE=(29950,53274039)
+@@ -143,7 +143,10 @@
+  for port,inode in rows.items():
+   role='voice'if port==8855 else'director';p=children.get(role)
+   assert p and p.poll()is None,'unexpected listener'
+-  assert inode in user_observation(p.pid)['sockets'],'listener not owned'
++  sockets=user_observation(p.pid)['sockets']
++  if inode not in sockets:
++   observe(force=True);sockets=user_observation(p.pid)['sockets']
++  assert inode in sockets,'listener not owned after fresh UID1001 observation'
+  return rows
+ 
+ def guard():

@@ -1,0 +1,52 @@
+--- v3-reviewed.py
++++ v4-candidate.py
+@@ -6,10 +6,10 @@
+  raise SystemExit("Refusing optimized interpreter mode")
+ import urllib.request
+ P=Path('/home/unreal/.sub01-private');SHARE=Path('/tmp/sub01-share')
+-BASE=P/'voice-director-diagnostic-20261025';SOURCE=P/'latest-source-20261023/scripts'
++BASE=P/'voice-director-diagnostic-v4-20261025';SOURCE=P/'latest-source-20261023/scripts'
+ MAIN=P/'streamer/main.mjpeg';MAINJSON=P/'streamer/main.json';STOP=P/'streamer/STOP'
+ LEASE=SHARE/'MEASURING';OWNER='codex-voice-director-'+uuid.uuid4().hex
+-WRAPPER=SHARE/'restrict-diagnostic-child.py';NATIVE=(29950,53274039)
++WRAPPER=SHARE/'restrict-diagnostic-child-v2.py';NATIVE=(29950,53274039)
+ started=time.monotonic();hard_deadline=started+300;deadline=started+280;children={};identities={};errors=[];fault=[];last_guard=-10;controller_pid=os.getpid()
+ HTTP=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+ TOKEN=None;lease_owned=False;voice_inode=None
+@@ -218,11 +218,21 @@
+  if libc.prctl(36,1,0,0,0)!=0:raise OSError(ctypes.get_errno(),'child subreaper')
+  signal.setitimer(signal.ITIMER_REAL,max(.001,deadline-time.monotonic()))
+  native();assert not LEASE.exists() and not BASE.exists()
++ assert not listeners(),'occupied diagnostic port'
+  for port in (8855,8856):
+-  with socket.socket()as s:s.bind(('127.0.0.1',port))
+- assert read(SHARE/'confinement-selftest-result.json').get('status')=='selftest-passed'
++  with socket.socket()as s:
++   s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1);s.bind(('127.0.0.1',port))
++ proof_path=SHARE/'cuda-driver-fixed-result.json'
++ assert sha(proof_path)=='726476b35ee495a209c5b1f8232a236a3c8172acd60c68cbcbe63b31c9271612','CUDA evidence changed'
++ proof=read(proof_path);assert proof.get('cleanup_verified') is True
++ assert len(proof.get('runs',[]))==1
++ run=proof['runs'][0];assert run['returncode']==0
++ cuda=run['probe'];assert cuda['cuInit']==0 and cuda['cuDeviceGetCount']==0 and cuda['count']==1
++ fixture=cuda['fixture'];assert fixture['all_pass'] is True
++ residual=fixture['results']['residual-own-task-subtree-write'];assert residual['acknowledged'] is True and residual['comm_only'] is False
++ for pid in proof['owned']:assert not Path('/proc/'+pid).exists(),'prior CUDA process remains'
+  assert sha(OBSERVER)=='acbf714e8a0466aafb858544bd16e0dd1d7e22cd469984bbbe48afa028bf18ae'
+- assert sha(WRAPPER)=='5dd87124b900a017774a3835d92767ed568d360dd27185da1f25716ce9b492f8'
++ assert sha(WRAPPER)=='68710e0196159a242afdc82377a152f9dea7659dd3da38f7bee49248fb9bdf17'
+  assert sha(SOURCE/'voice_server.py')=='95758eb8fd0a4341d6e6fe1a684c1511ca0c98fc8c6f89a753f226a4f5eefce5'
+  assert sha(SOURCE/'streamer_director.py')=='d7ff873b40ac390c2004c248e5aa825255bcefd49e44684a077b78d91c799b8c'
+  cfgpath=P/'streamer/voice/voice.json';cfg=read(cfgpath);assert cfg['chosen']=='K07'and cfg['engine']=='chatterbox'
+@@ -304,8 +314,10 @@
+   native();assert sha(P/'streamer-visual-face-tuning.json')==tuning_before,'tuning changed'
+   assert sha(cfgpath)==result['inputs']['config_sha256'] and sha(cfg['voice_prompt'])==result['inputs']['reference_sha256'],'voice inputs changed'
+   assert not {p for p,m in fifo_users(main_inode).items()if m&{0,2}},'main reader remains'
++  assert not listeners(),'listener remains after cleanup'
+   for port in (8855,8856):
+-   with socket.socket()as s:s.bind(('127.0.0.1',port))
++   with socket.socket()as s:
++    s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1);s.bind(('127.0.0.1',port))
+  except BaseException as e:errors.append('postcondition: '+str(e))
+  result.update(cleanup_complete=not errors,cleanup_errors=errors,finished_utc=time.time(),watchdog_fault=fault)
+  if BASE.exists():save(BASE/'result.json',result)

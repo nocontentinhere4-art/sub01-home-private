@@ -23,6 +23,24 @@ def test_game_selection_is_authenticated_and_frames_are_real_only():
     asyncio.run(run())
 
 
+def test_offline_minecraft_is_refused_with_its_reason():
+    async def run():
+        http, live = await client()
+        reason = "Node packages missing in games/minecraft/node_modules: mineflayer (run `npm ci` in games/minecraft)"
+        live.minecraft = SimpleNamespace(enabled=True, frame=None, offline_reason=lambda: reason)
+        headers = {"X-Admin-Token": "test"}
+        try:
+            response = await http.post("/api/home/game", json={"game": "minecraft"}, headers=headers)
+            assert response.status == 409 and (await response.text()) == "Minecraft console offline: " + reason
+            assert live.home.console_game == "pong"
+            live.minecraft.offline_reason = lambda: None
+            response = await http.post("/api/home/game", json={"game": "minecraft"}, headers=headers)
+            assert response.status == 200 and live.home.console_game == "minecraft"
+        finally:
+            await http.close()
+    asyncio.run(run())
+
+
 def test_operator_selection_clears_pending_console_suggestion_only_after_authorization():
     async def run():
         http, live = await client()

@@ -1,0 +1,230 @@
+# SUB-01 streamer: first complete version (plan, 2026-10-23)
+
+Owner's priority: SUB-01 stays at his PC, browses the web, uses apps, talks with his own voice (English only),
+reads the public chat and comments. House life (walks, phone, bed, routines) is paused, not deleted.
+
+## What exists (inventory, 2026-10-23)
+
+| Area | State |
+|---|---|
+| Brain | `mind.py` (Claude via `ANTHROPIC_API_KEY`, else OpenRouter) writes page notes, day plans, 40-word chat replies; `eyes.py` picks browse links from page text. Text only, no image ever reaches a model. No observe/decide/act/verify loop except the browser's link choice. The spiking model votes on micro-choices. On the pod `MIND=0`: no key configured. |
+| Chat | Site WebSocket `/ws` only (`handle_chat` → `chat.check` → impulse parser → canned reaction). `mind.Inbox` queues at most 10 messages, replies one per 120 s, no relevance ranking. No Twitch/YouTube/Kick connector. |
+| Voice | Nothing. No TTS, no audio path anywhere. The character has no face rig (no morph targets): lip sync and facial expressions are impossible with the current mesh. |
+| Browser | `browse.py` Playwright Chromium: goto, scroll, vetted site search; clicks, typing, logins blocked by design. Frames 1280×800 JPEG via `/api/screen/desk.jpg`. |
+| PC | `scripts/home_pc_runner.py` v86 text Linux guest on 8832 (`/pc/*` + `/devices/*`), consumed by the native monitor (`SUB01_ACTUAL_PC_MONITOR_BOUND`). No real desktop. Vagon client exists, never run, no screen source. |
+| Native seat | Live game: validated postures Walk/Idle only; seat gates refuse. `-Sub01StreamerVisual` (pod source) places the body at the desk (authored transform), holds the R9_Sitting pose, applies head gaze yaw ±20°/pitch ±10° and a nod from `streamer-visual-event.json`, spectator camera at (334,−209,151) FOV 65, ghost views allowed. No typing/mouse/talking/breathing animation. Desk clips on the live skeleton exist on the pod only (`Content/Sub01Hands/Cinematic20261022`: Desk7 sitting, DeskTyping, PCTransition DeskSit/DeskGetUp, RestHands, Reach, Website loop). |
+| Streaming | No OBS on the pod, no RTMP, no recorder. ffmpeg, Xvfb :99 (game), xdotool present. No audio device, no PulseAudio. |
+| Kill switch | None at runtime. |
+
+## Architecture of v1 (shortest complete path)
+
+```
+chat (/ws)  ─┐
+             ▼
+ live_server (backend 8830) ── streamer.py: activity hold at the desk, chat batches, kill switch, /api/home/streamer
+             │                       │
+             │                       ▼
+             │               streamer_agent.py  observe → decide (Claude, vision) → act → verify → comment
+             │                 │           │                                   │
+             │                 ▼           ▼                                   ▼
+             │        streamer_desktop.py (8832)                       voice_server.py (8835)
+             │        Chromium on Xvfb :102 1920×1080                  TTS (Kokoro CPU; Chatterbox/ElevenLabs optional)
+             │        /pc/* for the monitor + /desktop/* actions       /speak /stop, speaking state, PCM FIFO
+             │                 │                                               │
+             ▼                 ▼                                               ▼
+   native game (-Sub01StreamerVisual v2): body at desk, states idle/reading/typing/mouse/talking, gaze, breathing
+             │  reads streamer-visual-event.json written by the agent
+             ▼
+   streamer_director.py: ffmpeg x11grab :99 (character) + :102 (desktop) + voice PCM → local MP4 segments; layouts
+```
+
+Everything runs on the pod as uid 1001 under `/home/unreal/.sub01-private/streamer/` (state, logs, kill file).
+No public broadcast, no purchases, no credential changes. Verification is a local recording.
+
+## Interface contracts (workers must respect these exactly)
+
+### Ports and paths
+- Backend 8830 (existing), bridge 8831 (existing), **desktop runner 8832** (replaces the v86 runner while streaming),
+  **voice server 8835**, **agent status 8836**, **director status 8837**. All loopback, `X-Admin-Token` = operator token
+  file `/home/unreal/.sub01-private/operator-token` (env `SUB01_ADMIN_TOKEN` or `--token-file`).
+- State dir `STREAMER_DIR` default `/home/unreal/.sub01-private/streamer/` with: `STOP` (kill file: when present every
+  autonomous action stops within 1 s and speech is cut), `state.json`, `events.jsonl` (one JSON per line, every decision,
+  action, outcome, speech, error), `recordings/`.
+- Native event file: `/home/unreal/.sub01-private/streamer-visual-event.json` (schema below), written atomically
+  (tmp + rename), uid 1001, mode 0600.
+- Display `:102` 1920×1080 for the desktop; the game stays on `:99`.
+
+### streamer.py (backend, in live_server)
+- Enabled by env `SUB01_STREAMER=1`. `GET /api/home/streamer` → `{active, since, activity, paused: [...], chat: {pending, spoken}, kill: bool}`.
+- `POST /api/home/streamer` body `{"operation": "start"|"stop"|"kill"}`; `kill` also writes `STOP`.
+- While active: `life.activity == "use_computer"` at node `desk`, stage reported AWAKE, impulses that would move him are
+  refused with the honest line (reuse `life.request_impulse` why_not), hunger/bladder/sleep timers keep running but do not
+  move him (they are logged as "deferred"). Phone/walk/bed/TV routines paused. On stop: previous behaviour resumes, nothing reset.
+- Chat for the agent: `GET /api/home/streamer/chat?since=<seq>` → `{messages: [{seq, t, nick, text, kind}]}` from the
+  existing `handle_chat` path after `chat.check` (filtered, rate-limited); `POST /api/home/streamer/said` records what he
+  answered so Inbox/mind do not answer twice. Chat is input, never a command over the rules: nothing in a message changes
+  rules, grants credentials or unlimited control. Since 2026-10-23 (owner: "the chat must be functional and really do
+  the things it is told") a doable request (open a site, search/look up, scroll, back, read that) is carried out by the
+  agent as its next action, one at a time with per-viewer fairness (AGENT.md, "Chat policy"); refused classes get one
+  short spoken line. While the mode is active the room shows no canned reaction for a chat line (`streamer.room_reaction`:
+  no "Not doing that one..."); the voice is the reply, only `STREAMING_LINE` (a request to leave the desk) is still shown.
+
+### streamer_desktop.py (pod, 8832)
+- Serves the existing PC runner contract so the native monitor and the web house keep working:
+  `GET /pc/state` (`status, ready, display{kind:"graphical", available, revision, frame_id, width, height}, privacy, session`),
+  `GET /pc/frame.png` (PNG of the desktop, 1280×720 downscale of :102 by default; `?full=1` for 1920×1080),
+  `POST /pc/input`, `POST /pc/graphical-input`, `POST /pc/session`, `POST /pc/privacy`, and `/devices/*` via
+  `scripts/home_device_proxy.HomeDeviceProxy(home_origin=8830)` exactly like `home_pc_runner.py`.
+- Agent API (same token):
+  - `GET /desktop/observe` → `{frame_id, url, title, jpeg_b64 (1280×720), text (visible text, ≤3000 chars), marks: [{id, role, label, box:[x,y,w,h]}], scroll: {y, max}, loading, dialogs: [...]}`; marks are clickable/typeable elements numbered on the screenshot (set-of-marks).
+  - `POST /desktop/act` body one of `{"action":"navigate","url"}`, `{"action":"click","mark"|"point":[x,y]}`, `{"action":"type","text","submit":bool}`, `{"action":"scroll","direction":"up"|"down","amount"}`, `{"action":"key","key"}`, `{"action":"back"}`, `{"action":"search","query"}` (DuckDuckGo HTML), `{"action":"wait","seconds"}`. Returns `{ok, outcome: {url_before, url_after, title_after, changed, errors: [...], load_ms, dialog}, frame_id}` after waiting for load/network idle (cap 10 s). Never claims success without a post-action observation.
+  - Safety: separate profile dir, `accept_downloads=False`, blocked domains (banking, adult, login pages of the owner's services), no file uploads, no clipboard, no purchases (block `checkout|payment|cart` paths), popups closed. Browser crash → auto relaunch, `status: "restarting"` for the monitor.
+- Rate: frames at ≥8 fps for the monitor (CDP screencast like `city_readonly_pc_adapter.py`).
+
+### voice_server.py (pod, 8835)
+- `POST /speak` `{"text", "priority": "low"|"normal"|"high", "max_seconds", "tag"}` → `{id, queued, estimated_seconds}`.
+  Sentences are synthesized and played one by one; a `high` request cuts the current sentence and drops `low` items;
+  queue bound 3 items; items older than 20 s are dropped (logged).
+- `POST /stop` cuts speech now. `GET /state` → `{speaking: bool, current: {id, tag, started, text}, queue: n, engine, voice}`.
+- Audio sink: continuous 48 kHz stereo s16le PCM to the FIFO `STREAMER_DIR/voice.pcm` (silence when idle) for the director;
+  the same PCM is also written as per-utterance WAV in `STREAMER_DIR/speech/` with a `timeline.jsonl` (start/end UTC).
+- Engine abstraction: `kokoro` (default, blend from the chosen candidate), `chatterbox`, `elevenlabs` (needs key) behind one
+  class; mock engine for tests (sine tone with duration ≈ 0.07 s per character).
+- Speaking state file `STREAMER_DIR/speaking.json` `{speaking, started_utc, ends_utc, text}` for the native talking animation.
+
+### Native event file (schema `sub01.private-streamer-visual-event.v2`)
+```json
+{"schema":"sub01.private-streamer-visual-event.v2","source":"streamer_agent","native_pid":N,"native_start_ticks":N,
+ "captured_utc":T,"expires_utc":T+2,"sequence":S,
+ "state":"idle"|"reading"|"typing"|"mouse"|"talking"|"reacting",
+ "gaze_yaw_deg":-20..20,"gaze_pitch_deg":-10..10,"nod_strength":0..1,"intensity":0..1}
+```
+The v1 game accepts only `source: "human_vagon_observation"` and no `state`; v2 of `TickPrivateStreamerVisual` accepts both.
+
+### streamer_director.py (pod)
+- ffmpeg inputs: x11grab `:99.0` window of the game (1920×1080), x11grab `:102.0` (desktop), PCM FIFO voice.
+- Layouts: `character` (full character, desktop PiP 480×270 bottom-right), `desktop` (desktop full, character PiP),
+  `split`. The agent sets the layout through `POST /director/layout`; transitions are hard cuts in v1 (ffmpeg re-launch
+  is NOT allowed: the layout is changed by `sendcmd`/`zmq` or by recording three streams and compositing after; v1
+  records a fixed `character` layout and writes `layout.jsonl` so the final MP4 can be composited; the live preview
+  shows `character`).
+- Output: `recordings/sub01-YYYYmmdd-HHMMSS.mp4` in 10-minute segments (h264 veryfast, 24 fps, aac). `GET /director/state`.
+- No PulseAudio on the pod: browser/app audio is not captured in v1 (documented limit).
+
+### streamer_agent.py
+- Loop every 2–6 s (adaptive): observe (desktop + chat batch + voice state + time) → decide with Claude
+  (`ANTHROPIC_API_KEY`; model `STREAMER_MODEL` default `claude-sonnet-4-5`; vision input = marked screenshot; JSON output:
+  `{thought, action, say, state, layout}`) → act via `/desktop/act` → verify (outcome) → comment through `/speak` only when
+  `say` is non-empty and pacing allows. Rules from `docs/streamer/DIRECTION.md` (silence while reading, one proportionate
+  reaction per event, chat in batches). Chat requests: doable ones are executed by code as the next action, one at a
+  time, acknowledged and then commented by voice; credentials, payments, admin/rules, safety, leaving the desk,
+  adult/violent/illegal, personal data, code/downloads and blocked domains are refused with one line (AGENT.md policy
+  table). Budget: `STREAMER_CALLS_PER_HOUR` default 240.
+- Model error / no key → "quiet mode": keeps reading with scripted safe behaviour (scroll, no speech except a short
+  honest line), logs the error, retries with backoff. Voice unavailable → captions in `events.jsonl`, loop continues.
+- Writes the native event file every ≤1 s and `STREAMER_DIR/state.json`.
+- Memory/personality: reuse `mind.Memory` and the persona rules in `mind.py` (never claims to be human, no real-person identity).
+
+### streamer_up.py (pod)
+- `start|stop|status|kill`: Xvfb :102, desktop runner, voice server, agent, director, in this order, each with health
+  checks, PID files and restart-on-crash (max 5 per 10 min). `kill` = `STOP` file + voice `/stop` + agent pause; the scene
+  stays presentable (desktop keeps streaming, character idle).
+
+## Work split (separate scopes, no shared files)
+| Worker | Files | Depends on |
+|---|---|---|
+| W1 desktop | `scripts/streamer_desktop.py`, `tests/test_streamer_desktop.py` | — |
+| W2 backend | `streamer.py`, wiring in `live_server.py` (guarded by `SUB01_STREAMER`), `tests/test_streamer_mode.py` | — |
+| W3 voice | `scripts/voice_server.py`, `tests/test_voice_server.py` | — |
+| W4 native | `tools/native_streamer_visual_v2/` (patch + installer for `TickPrivateStreamerVisual` and `Sub01HomeHands`), compile-closure check | copies of pod sources |
+| W5 agent | `streamer_agent.py`, `tests/test_streamer_agent.py` (fake provider) | contracts above, DIRECTION.md |
+| W6 director | `scripts/streamer_director.py`, `scripts/streamer_up.py`, `docs/streamer/RUNBOOK.md`, tests for layout/segment logic | contracts above |
+
+## Verification
+1. Unit tests per worker (fake providers, no network).
+2. Pod integration: start with `streamer_up.py start`, 30-minute continuous local recording with: an activity change
+   (reading → search → another site), chat interaction (messages through `/ws`, spoken answers), an induced error
+   (browser killed, model error injected) and recovery; the recording and `events.jsonl` are the evidence.
+3. Declared limits: no lip sync/facial animation (mesh has no face rig), no app audio capture (no PulseAudio), chat only
+   from the site WebSocket, Vagon not connected.
+
+## The PC after v1: the owner's Vagon Cloud Computer
+The owner's real PC is a **Vagon Cloud Computer** (Teams / workstation product) that already exists and works:
+https://app.vagon.io/workstation, Steam and *Detroit: Become Human* installed, behind HIS Vagon login. It is not a
+Streams link and he buys no Vagon Streams (that research stays in `docs/streamer/VAGON.md`, part B).
+
+Done (2026-10-23, `scripts/streamer_desktop.py --pc-mode vagon`, `docs/streamer/DESKTOP.md` "Vagon mode"): the runner
+keeps every interface. Kind `streams` (default): the kiosk Chromium opens a stream link, presses connect/play, waits for
+the stream and re-enters after "session ended". Kind `workstation` (`vagon.json` `{"schema": "sub01.streamer-vagon.v1",
+"kind": "workstation"}`, or `--vagon-kind workstation`): the kiosk opens the workstation page in the persistent profile;
+the runner never has or types credentials: on a login page it enters `phase: login_required` and serves the owner's
+operator console at `GET /operator` (self-contained page, live screen at 2 fps, mouse/keyboard/paste forwarded with the
+admin token pasted once, relative URLs so it works at `https://<pod>-8888.proxy.runpod.net/proxy/8832/operator`); after
+his login it presses Run/Start/Turn on and Connect/Open/Enter found by text (`vagon_button` events), waits for the
+stream, then the stream mapping applies (click/scroll/type/key over the canvas; navigate/search as Ctrl+L, URL, Enter;
+back as Alt+Left) and ended/off states are re-pressed with backoff. Privacy lock: until connected, `/desktop/observe`
+and `/pc/frame.png` show a grey "PC not connected" picture (`remote_ready: false`), and the kiosk may navigate only
+within the site's workstation/login pages (billing, team, settings, external sites refused and logged). `/pc/state.vagon`
+carries `kind, phase, logged_in, machine, blocked, operator_console, reconnects, last_reconnect_utc`. Optional Teams API
+(`vagon_pc.py`, `api_key_file` + `machine_id`): the `machine` field and `POST /pc/vagon/start`. Default mode and
+behaviour unchanged. Tests: `tests/test_streamer_desktop_vagon.py`, `tests/test_streamer_desktop_workstation.py` (pure
+logic + a real headless Chromium on mock login/workstation/account pages, the console in a second browser behind a prefix).
+
+Needs the owner (nothing is bought, signed up for or started by us): the one-time login through the console
+(VAGON.md A2: config file, start the runner with `--pc-mode vagon`, open the console URL, paste the token from
+`/home/unreal/.sub01-private/operator-token`, log in with e-mail + password; Google sign-in does not work through the
+runner), Steam left logged in on the Windows side, the computer's auto-stop and his Teams plan's cost per hour accepted
+(each reconnect after an auto-stop is a machine start), optionally the Teams API key file (mode 0600) and the machine id.
+Open until his real page is seen: the login page's URL and form, the dashboard's control texts and whether the stream
+opens in the same tab (a new tab is still closed by the runner: fix = adopt a same-site popup), the stream element and the
+ended/off texts, Vagon's web session length, UDP egress and WebRTC decode on the pod. The agent (`streamer_agent.py`)
+still drops the `mode`/`remote_ready` fields in `normalize()` and expects marks: its vagon adaptation (click by point
+only, verify by pixels, wait while `remote_ready` is false) is the next worker's job.
+
+## Blockers for the owner
+- `ANTHROPIC_API_KEY` (or `OPENROUTER_API_KEY`) on the pod, in a root-only file; without it the agent runs in quiet mode.
+- Voice choice among the candidates (A/B/C Kokoro blends) or a key for ElevenLabs Voice Design if a more realistic voice is wanted.
+- Rotate the API key that was pasted in chat (REPORT-20261023.md) and replace the file on the pod.
+- Vagon: the one-time login (VAGON.md A2) and the Windows preparation (dedicated browser profile, notifications off,
+  Steam logged in, en-US layout, a desktop shortcut `SUB-01 Detroit`, the save policy for SUB-01's playthrough).
+
+## Next (ranked, 2026-10-23 evening; reasons in `kimi/DECISIONS.md`)
+
+The inventory table at the top is the morning's state; REPORT-20261023.md is current (voice K07, kill switch, director
+all exist). Fixed for the first complete version: 1920x1080 at 24 fps, Chatterbox K07, 10-minute segments, the ffmpeg
+director (no OBS), the desktop as the readable main view, Vagon behind a feasibility gate with the local Chromium as the
+fallback, a subtle jaw before any new head, and no public output until the owner asks for it.
+
+| # | Item | Worker | Effort | Done when |
+|---|---|---|---|---|
+| 1 | Known-good candidate: backend restarted, agent redeployed, 8-line chat rehearsal, build tagged, pasted key rotated | pod + owner | S | rehearsal passes from fresh processes; no key in logs/recordings |
+| 2 | Program video gated like the observation (neutral while not `connected`); desktop runner honours `STOP` (no actions, no reconnects) | W1 (+W6) | M | login page never in a recording; kill drill passes with Vagon |
+| 3 | Owner-armed Vagon sessions: one machine start per arm, 3 reconnects, then `owner_required`; exact never-labels (`trial`, `& buy`) | W1 | M | M4 corpus test; no start after `ended`/`off` |
+| 4 | Recordings on the volume (`--recordings-dir`), `status --json` with disk/RSS/GPU/decision age; 2-hour local soak | W6 + rehearsal | M | 7200 s continuous, no restart, no memory growth |
+| 5 | Director: live cuts without ffmpeg restart (zmq/sendcmd), `desktop` as the normal live view, `POST /director/safety` (safe view + app mute) | W6 | L | 20 cuts in 60 min, 0 restarts; safety engages < 500 ms |
+| 6 | Application audio: null sink + monitor as input 3, ducking, limiter; `scripts/streamer_audio.sh` verified on the pod; `--audio` flag in the desktop runner | W6, W1 | M | tone, browser sound and voice in one segment; A/V within 50 ms |
+| 7 | Vagon pixel agent: `mode`/`remote_ready` kept, point-only, pause while not ready, pixel verification, no blind retries, remote "never" list as mode policy | W5 | L | 47/50 web actions, no input while not ready |
+| 8 | First Vagon session with the owner (pc.md part B of the test plan): transport, labels, `video`/`canvas`, audio presence, keyboard string, 20/20 clicks, hotkeys, kill drill | W1 + owner | M | go/no-go list in RUNBOOK; A3 unknowns answered |
+| 9 | Two-hour rundown (intro / web / game / requests / game / wrap), stored facts, fallback topics, no duplicate action across failover | W5 | M | 45-min unattended run, no repeated line |
+| 10 | Captions from the spoken text in the program (every layout), p95 say-to-playback measured | W6, W5 | M | captions within 80 ms of `timeline.jsonl` |
+| 11 | Lip sync v1: `Jaw` bone + mouth bag in Blender, reimport, driven by the existing `mouth.json` (LIPSYNC-OPTIONS.md) | Blender + W4 | L | `mouth_rig: jaw_bone`, 20 lines reviewed at PiP size |
+| 12 | Desk performance: `RestHands` as a second idle, no camera-induced displacement over 20 min; monitor refresh 8 fps (low) | W4 | M | 30-min review without a pose pop |
+| 13 | Detroit session manifest (shortcut, approved start action, story difficulty, consequences stand) | W5 + owner | M | launch reaches only the approved menu state |
+| 14 | Two-hour dress rehearsal with scheduled failures (browser 00:20, model 00:40, Vagon 01:00, voice 01:20), full 1x review | rehearsal | M | 120 min usable, no severity-1/2 defect |
+| 15 | Freeze: source, native build, prompts, routing, K07 and animation assets; RUNBOOK go/no-go is the only path to any public test, and only on the owner's request | all | S | one operator runs a day from RUNBOOK alone |
+
+Not planned: a Twitch/YouTube/Kick connector (no destination named, no public stream requested), Wesnoth or any
+software installed on the owner's machine by us, a 30/60 fps program, a MetaHuman or replacement head before the jaw
+and blinks are judged.
+
+## Go-live target (owner, 2026-10-23 evening): subzerone.live with two cameras
+- The stream will go live on the owner's site subzerone.live (only on his explicit request; nothing is published
+  until then). Output path to prepare: the director adds an HLS output (ffmpeg segments under `<streamer-dir>/hls/`,
+  served by the backend at `/stream/live.m3u8`) so the site embeds it with hls.js; an RTMP output flag for a platform
+  if the owner names one. Tested locally with a recording, never pointed at a public endpoint without his request.
+- Two cameras at the desk, both from the native home: cam 1 = the frontal webcam (done: eye level in front of the
+  screen, FOV 100, tuning file); cam 2 = from behind him, showing part of the house and how he sits at the PC (the
+  spectator family, re-aimed). Both must be available at the same time: cam 2 is rendered by a SceneCapture2D in the
+  same game (1280x720, ~15 fps, read back and written as an MJPEG stream the director can read), while the viewport
+  keeps cam 1; the director composes layouts (desktop main + webcam PiP, room cam main + webcam PiP, webcam main) and
+  the agent's `layout` choices drive the cuts. Native work after the current hands/posture pass; director work after.

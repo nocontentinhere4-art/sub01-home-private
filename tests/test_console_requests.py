@@ -83,3 +83,32 @@ def test_pending_request_survives_state_serialization():
 @pytest.mark.parametrize('value',[None,[],[{},1],['minecraft',float('nan')],['pong',True],['unknown',1]])
 def test_malformed_saved_choices_are_ignored(value):
     assert valid_choice(value) is None
+
+
+def test_latest_named_game_wins_and_switches_the_tv_within_ttl():
+    """"play minecraft" then "switch to pong": the TV shows Pong when he next starts the console, up to TTL later."""
+    life = home_life(); home = HomeWorld({'console_game': 'minecraft'})
+    life.hear('play minecraft', 100)
+    life.hear('switch to pong', 160)
+    assert life.console_wish == ('pong', 160)
+    life.start('play_console', 160 + TTL, 'test: the latest wish at the edge of its life')
+    assert life.console_choice == ('pong', 160)
+    home.update(.05, .05, life.snapshot(), {})
+    assert home.console_game == 'pong'
+    life.hear('play Minecraft', 5000)
+    life.start('play_console', 5000 + TTL + 1, 'test: expired wish')
+    assert life.console_choice is None
+    home.update(.05, .05, life.snapshot(), {})
+    assert home.console_game == 'pong', 'an expired wish does not switch the TV'
+
+
+@pytest.mark.parametrize('text,game', [
+    ('switch to pong', 'pong'), ('put on minecraft', 'minecraft'), ('launch Pong!', 'pong'),
+    ('metti su minecraft', 'minecraft'), ("let's play a bit of pong", 'pong'), ('Minecraft', 'minecraft'),
+    ('can you play some minecraft on the TV?', 'minecraft'),
+    ('play the minecraft theme', None), ('I like pong', None), ('pong music please', None)])
+def test_game_request_verbs_and_the_matching_chat_impulse(text, game):
+    from impulse import parse
+    assert game_request(text) == game
+    if game:
+        assert parse(text).activity == 'play_console', 'the named game also carries the console impulse'

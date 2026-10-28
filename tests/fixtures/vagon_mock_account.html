@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- Mock of a Vagon account page (billing, settings, sign-up) for tests/test_streamer_desktop_workstation.py.
+     Served at /app/team/billing, /app/settings and /app/register. The runner's navigation lock must keep the kiosk
+     page away from it, and its pixels and text must never reach /desktop/observe or /pc/frame.png. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mock Vagon - Billing</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #fff3c4; color: #222; font-family: sans-serif; }
+  main { padding: 60px; font-size: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Billing - Mock Team</h1>
+  <p>MOCK-ACCOUNT-PAGE: card ending 0000, invoices, plan. Nothing here is real.</p>
+  <a href="workstation">Back to the workstation</a>
+</main>
+</body>
+</html>

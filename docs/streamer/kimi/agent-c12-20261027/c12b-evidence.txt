@@ -1,0 +1,24 @@
+FILES: agent_costs.jsonl, agent_memory.json, agent_shadow_costs.jsonl, cam2.json, desktop-vagon/events.jsonl, desktop-vagon/profile/Default/Extension Rules/000003.log, desktop-vagon/profile/Default/Extension Scripts/000003.log, desktop-vagon/profile/Default/Extension State/000003.log, desktop-vagon/profile/Default/Local Storage/leveldb/000010.log, desktop-vagon/profile/Default/Session Storage/000003.log, desktop-vagon/profile/Default/Site Characteristics Database/000003.log, desktop-vagon/profile/Default/Sync Data/LevelDB/000003.log, desktop-vagon/profile/Default/shared_proto_db/000003.log, desktop-vagon/profile/Default/shared_proto_db/metadata/000003.log, desktop-vagon/profile/component_crx_cache/metadata.json, desktop-vagon/profile/extensions_crx_cache/metadata.json, events.jsonl, layout.jsonl, logs/agent.log, logs/desktop.log, logs/director.log, logs/hls.log, logs/monitor.log, logs/voice.log, logs/xvfb.log, main.json, mouth.json, speaking.json, speech/timeline.jsonl, state.json, supervisor.json, vagon.json, watchdog.jsonl, watchdog.state.json
+
+=== events.jsonl (17 matching lines, last 40)
+{"t": 1793060897.077, "utc": "2026-10-27T00:28:17.076Z", "kind": "lease_armed", "run": "de7c2f61", "minutes": 15.0, "expires_utc": "2026-10-27T00:43:17.076Z"}
+{"t": 1793061082.475, "utc": "2026-10-27T00:31:22.475Z", "kind": "lease_armed", "run": "10368471", "minutes": 15.0, "expires_utc": "2026-10-27T00:46:22.475Z"}
+{"t": 1793061811.822, "utc": "2026-10-27T00:43:31.822Z", "kind": "hands_off", "run": "851402e9", "why": "lease", "detail": "", "lease": {"required": true, "active": false, "remaining_s": 0, "expires_utc": null, "armed_utc": null, "max_minutes": 60}}
+{"t": 1793061811.823, "utc": "2026-10-27T00:43:31.823Z", "kind": "release_inputs", "run": "851402e9", "why": "hands off: lease", "ok": true}
+{"t": 1793062007.291, "utc": "2026-10-27T00:46:47.291Z", "kind": "lease_armed", "run": "851402e9", "minutes": 15.0, "expires_utc": "2026-10-27T01:01:47.291Z"}
+{"t": 1793062015.035, "utc": "2026-10-27T00:46:55.035Z", "kind": "chat_request", "run": "851402e9", "seq": 1057, "user": "ck_scroll", "text": "scroll a bit some more down", "decision": "executed", "reason": "scroll", "action": "scroll down"}
+{"t": 1793062019.324, "utc": "2026-10-27T00:46:59.323Z", "kind": "chat_request_end", "run": "851402e9", "seq": 1057, "user": "ck_scroll", "text": "scroll a bit some more down", "request": "scroll", "steps": 1, "why": "done", "commented": false, "seconds": 4.3}
+{"t": 1793062027.905, "utc": "2026-10-27T00:47:07.904Z", "kind": "chat", "run": "851402e9", "seq": 1058, "cls": "ok", "direct": false, "text": "jump to the bottom of the page"}
+{"t": 1793062042.518, "utc": "2026-10-27T00:47:22.517Z", "kind": "lease_revoked", "run": "851402e9", "why": "STOP"}
+{"t": 1793062042.518, "utc": "2026-10-27T00:47:22.518Z", "kind": "pause", "run": "851402e9", "why": "STOP file"}
+{"t":"2026-10-27T00:47:24Z","source":"streamer_up","kind":"service_stopped","service":"agent","code":0,"then":"held","reason":"STOP file present"}
+{"t": 1793062323.932, "utc": "2026-10-27T00:52:03.931Z", "kind": "pause", "run": "d51f0c36", "why": "STOP file"}
+{"t":"2026-10-27T00:52:05Z","source":"streamer_up","kind":"service_stopped","service":"agent","code":0,"then":"held","reason":"STOP file present"}
+{"t": 1793062418.208, "utc": "2026-10-27T00:53:38.208Z", "kind": "hands_off", "run": "f1342a97", "why": "lease", "detail": "", "lease": {"required": true, "active": false, "remaining_s": 0, "expires_utc": null, "armed_utc": null, "max_minutes": 60}}
+{"t": 1793062418.209, "utc": "2026-10-27T00:53:38.209Z", "kind": "release_inputs", "run": "f1342a97", "why": "hands off: lease", "ok": true}
+{"t": 1793062465.838, "utc": "2026-10-27T00:54:25.837Z", "kind": "lease_revoked", "run": "f1342a97"}
+{"t":"2026-10-27T00:54:27Z","source":"streamer_up","kind":"service_stopped","service":"agent","code":0,"then":"held","reason":"STOP file present"}
+
+
+=== state.json (1 matching lines, last 40)
+{"schema": "sub01.streamer-agent-state.v1", "t": 1793062466.014, "utc": "2026-10-27T00:54:26.014Z", "phase": "stopped", "rhythm": "open", "paused": false, "stop_file": true, "uptime_s": 48, "model": "claude-sonnet-5-5", "api_key": true, "key_source": "file", "provider": {"primary": "anthropic", "fallback": "kimi", "active": "anthropic", "model": "claude-sonnet-5-5", "switched_utc": null, "reason": null, "window_s": 600.0, "returns_in_s": null, "switches": 0}, "quiet": {"on": false, "kind": null, "reason": "", "since_s": null, "failures": 0, "next_probe_in_s": null}, "page": {"url": "https://ap

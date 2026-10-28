@@ -51,6 +51,13 @@ NIGHT_END = 6               # 00:00-06:00: no computer and no window unless chat
 # a wish heard in the chat for one of these (a desire of at least WISH_MIN) that beats what he is doing at home, or on
 # the park bench, by INTERRUPT_MARGIN ends it early: "let's play chess" leads to a game within minutes, not hours
 WISH_INTERRUPTS, WISH_MIN = ("play_chess", "play_console", "use_computer", "use_bathroom"), 0.5
+# a chat request (impulse.py -> request_impulse) is carried out at once; one that had to wait (a walk ends first, a sleep
+# stage keeps it for the morning) is dropped when it is older than this by the time he could act on it, or impossible then
+IMPULSE_TTL = 3600
+# the honest lines for the chat when a request is not taken as asked (impulse.REACTIONS stay as they are): at most 60
+# characters. The reasons of why_not() are impersonal, so the same words go in the life log when a request is dropped later
+ASLEEP_LINE = "Asleep right now. Maybe when I wake up."
+ALREADY_LINE = "I am already on it."
 # background music (#68): a flag, not an activity; live_server may put a track on during these, or on a walk outside
 MUSIC_BG = ("research", "play_chess", "park")
 
@@ -70,9 +77,9 @@ WORLD = {"places": PLACES, "edges": EDGES,
          "apartment": [0, 0, 8, 6], "bakery": [17, 14, 25, 20], "park": [-19, 13, -7, 23],
          "street": [-22, 8.5, 30, 11.5]}
 
-WALK_SPEED = 1.3            # m / real second (indoors and in the 3D model)
-# outdoor legs run at OUTDOOR_SPEEDUP x the real walking pace (design choice, L3): the real park route is 1.3 km, a
-# quarter of an hour each way at 1.3 m/s, which left the room empty for most of a park trip; at 3x the map marker
+WALK_SPEED = 1.2            # m / real second (indoors and in the 3D model): the owner's pace, the same as the pages' WALK_V
+# outdoor legs run at OUTDOOR_SPEEDUP x the real walking pace (design choice, L3): the real park route is 1.3 km, about
+# eighteen minutes each way at 1.2 m/s, which left the room empty for most of a park trip; at 3x the map marker
 # still follows the real streets and a park walk is ~5 min each way, the bakery ~2 min
 OUTDOOR_SPEEDUP = 3
 
@@ -234,6 +241,22 @@ def at_hour(t, hour):
     return local(t).replace(hour=hour, minute=0, second=0, microsecond=0).timestamp()
 
 
+# the opening hours, checked at arrival time (h: the hour of the Tokyo day as a float); scores() and why_not() share them
+def bakery_open(h):
+    """The bakery (07:00-20:00) is open when he gets there: the walk is added to the hour."""
+    return 7 <= h + WALK_S["home-bakery"] / 3600 < 20
+
+
+def park_open(h, wk):
+    """The park: from 08:00 (07:00 on a weekend), and only when he can get there before PARK_CLOSES."""
+    return (7 if wk else 8) <= h and h + WALK_S["home-park"] / 3600 < PARK_CLOSES
+
+
+def kitchen_open(h):
+    """The delivery kitchens take orders 10:00-23:30."""
+    return 10 <= h < 23.5
+
+
 def trip_of(place, path):
     """The real route a walk is on ('home-park' / 'home-bakery'), from the nodes it starts at and passes; None indoors."""
     nodes = [place, *path]
@@ -241,6 +264,18 @@ def trip_of(place, path):
         if any(n in marks for n in nodes):
             return name
     return None
+
+
+def day_plan_hint(t):
+    """The day plan's activity for this hour of the Tokyo day (daily_plan.hint), or None. Optional: without the module
+    life runs as before. Imported here, not at the top, because daily_plan may import life."""
+    try:
+        import daily_plan
+    except ImportError:
+        return None
+    lt = local(t)
+    name = daily_plan.hint(lt.hour + lt.minute / 60 + lt.second / 3600)
+    return name if name in ACTIVITIES else None
 
 
 class Life:
@@ -253,6 +288,15 @@ class Life:
         self.heading = 0.0
         self.arrival_check = None             # optional inhabited-house arrival, supplied by its owner
         self.path = []                         # remaining waypoints while walking
+        self.stage = "AWAKE"                   # the sleep stage of the last update (request_impulse answers "asleep" from it)
+        # (activity, why, sim time) of the chat request still to carry out (request_impulse); saved, so a restart on the
+        # way home or during a sleep stage does not lose it (update still drops it when it is stale or impossible by then)
+        self.impulse = None
+        imp = s.get("impulse")
+        if isinstance(imp, (list, tuple)) and len(imp) == 3 and isinstance(imp[0], str) and imp[0] in ACTIVITIES \
+                and imp[0] != "sleep" and isinstance(imp[1], str) and isinstance(imp[2], (int, float)) \
+                and not isinstance(imp[2], bool):
+            self.impulse = (imp[0], imp[1], float(imp[2]))
         self.activity = s.get("activity", "window")
         if self.activity not in ACTIVITIES:    # a save from before S1 (the chart is gone): he reads instead
             self.activity = "research"
@@ -282,6 +326,7 @@ class Life:
         self.wish = s.get("wish")              # [dish, sim time] a viewer asked for
         self._t = 0.0
         self.plan_hint = None                  # life activity of the day plan's next step (live_server, mind.py)
+        self.day_hint = None                   # the daily template's activity for this hour (daily_plan), when plan_hint has none
         self.chat_waiting = 0                  # chat messages he may answer at the computer (live_server)
         # (sim t, activity) of the latest starts: read by live_server, and here the repeat penalty, the day's reading
         # sessions and meals (L1, L2); saved, so a restart does not reset the day's counts
@@ -330,6 +375,79 @@ class Life:
                 w = self.desires.get(act, [0, t])[0]
                 self.desires[act] = [min(1.5, w + 0.6), t]
 
+    def request_impulse(self, imp, t):
+        """A chat request for an activity (live_server, from impulse.py). None when it is taken as asked: only the latest is
+        kept, and update carries it out at once when he is awake and not walking (a walk ends first; a sleep stage keeps
+        it for the morning, IMPULSE_TTL). Else one honest line for the chat in place of the canned reaction: the request
+        is impossible now (why_not) and dropped, he is at it already, or he is asleep and it waits. Sleep is not a
+        request: it follows its stage, as a vote does. Never raises."""
+        act = getattr(imp, "activity", None)
+        if getattr(imp, "kind", None) != "activity" or not isinstance(act, str) or act not in ACTIVITIES or act == "sleep":
+            return None
+        if act == self.activity and (self.path or self.place == ACTIVITIES[act][0]):   # doing it, or on the way to it
+            game = self.switch_console(t) if act == "play_console" else None   # a named game: the TV switches now
+            return f"Okay, switching the TV to {game}." if game else ALREADY_LINE
+        why = self.why_not(act, t)
+        if why:
+            return why
+        asked = getattr(imp, "why", None)
+        self.impulse = (act, asked if isinstance(asked, str) else "", t)
+        return ASLEEP_LINE if self.stage != "AWAKE" else None
+
+    def switch_console(self, t):
+        """A named game asked for while he is at the TV, or on his way to it (console_wish, within CONSOLE_WISH_TTL), becomes
+        the choice now, so HomeWorld switches the game without a new console start (start() applies a wish to a new one).
+        Returns the game when the choice changed, else None: no live wish, or the game chosen already. The log says so."""
+        wish = self.console_wish
+        if not (wish and wish[0] in self.console_games and 0 <= t - wish[1] <= CONSOLE_WISH_TTL):
+            return None
+        before, self.console_choice, self.console_wish = self.console_choice, wish, None
+        if before and before[0] == wish[0]:
+            return None
+        self.log = (self.log + [{"t": t, "what": f"asked in chat: the TV switches to {wish[0]}"}])[-30:]
+        return wish[0]
+
+    def why_not(self, act, t):
+        """Why `act` cannot start now, as one impersonal line (<= 60 characters), or None when it can. Only the hard rules
+        of scores(): the opening hours at arrival, nothing at the desk at night, one chess game a day, the order cooldown,
+        a delivery on its way, food in the house, the devices of the inhabited home, a reply he can give. Weights and
+        moods are not reasons: a request may send him to the bakery with bread at home, or to the table when not hungry."""
+        lt = local(t)
+        h, wk = lt.hour + lt.minute / 60, lt.weekday() >= 5
+        night = h < NIGHT_END and not self.chat_waiting
+        if act in ("buy_bread", "buy_konbini", "park") and self.delivery:
+            return "A delivery is on its way; staying in."
+        if act == "buy_bread" and not bakery_open(h):
+            return "The bakery is closed at this hour."
+        if act == "park" and not park_open(h, wk):
+            return "The park is closed at this hour."
+        if act == "eat" and not (self.bread or self.food):
+            return "There is nothing to eat at home."
+        if act == "order_food":
+            if self.delivery:
+                return "An order is already on its way."
+            if self.food:
+                return "There is a meal waiting here already."
+            if not kitchen_open(h):
+                return "The kitchens are closed at this hour."
+            if t - self.last_order < ORDER_EVERY:
+                return "The last order was not long ago."
+        if act in ("play_console", "use_computer", "use_bathroom") and not getattr(self, "home_enabled", False):
+            return {"play_console": "There is no TV in this room.", "use_computer": "The Linux computer is not set up here.",
+                    "use_bathroom": "There is no bathroom in this room."}[act]
+        if act in ("research", "window", "watch_video", "use_computer", "play_console") and night:
+            return "Not in the middle of the night."
+        if act == "watch_video" and not (self.can_watch and t >= self.video_block_until):
+            return "There is nothing to watch right now."
+        if act == "play_chess":
+            if not 8 <= h < 23.5:
+                return "No chess at this hour."
+            if not self.chess_ok(t):
+                return "There was a chess game today already."
+        if act == "chat" and not self.chat_waiting:
+            return "No reply is possible right now."
+        return None
+
     def desire(self, act, t):
         w, t0 = self.desires.get(act, [0.0, t])
         return w * 0.5 ** ((t - t0) / 3600)            # halves every sim hour
@@ -360,9 +478,7 @@ class Life:
         wk = lt.weekday() >= 5
         workday = not wk and 9 <= h < 18                   # the daypart table: errands and the park, less desk
         night = h < NIGHT_END and not self.chat_waiting    # 00:00-06:00 and nothing to answer: no computer, no window
-        open_bakery = 7 <= h + WALK_S["home-bakery"] / 3600 < 20     # open when he gets there
-        park_open = (7 if wk else 8) <= h and h + WALK_S["home-park"] / 3600 < PARK_CLOSES
-        kitchen_open = 10 <= h < 23.5
+        open_bakery, open_park, open_kitchen = bakery_open(h), park_open(h, wk), kitchen_open(h)   # at arrival
         has_food = self.bread or self.food
         hu = self.hunger                                   # from the body: ~0.2 just fed, ~0.6 at meal time
         need = self.need()
@@ -383,7 +499,7 @@ class Life:
             "buy_konbini": (((0.85 * hu + need) * cap if hungry and mealtime else 0.0) + go_eat)
                            if (not has_food and not open_bakery and not self.delivery) else 0.0,
             "order_food": (0.6 * hu + 0.15 + need + self.desire("order_food", t)) * cap
-                          if (not has_food and not self.delivery and kitchen_open and hu >= EAT_AT
+                          if (not has_food and not self.delivery and open_kitchen and hu >= EAT_AT
                               and t - self.last_order >= ORDER_EVERY) else 0.0,
             "research": ((0.42 + 0.3 * (1 - self.boredom) + 0.2 * max(0, rel.get("attention", 1) - 1))
                          * (WORKDAY_RESEARCH if workday else 1.0)
@@ -393,7 +509,7 @@ class Life:
                      + self.desire("phone", t) + 0.2 * max(0, rel.get("salience", 1) - 1),
             "park": (0.8 * self.boredom + 0.05 + (WORKDAY_OUT if workday else 0.0) + (WEEKEND_PARK if wk else 0.0)
                      + 0.8 * max(0, rel.get("reward", 1) - 1) + self.desire("park", t))
-                    if park_open and rel.get("fear", 1) < 1.3 and not self.delivery else 0.0,
+                    if open_park and rel.get("fear", 1) < 1.3 and not self.delivery else 0.0,
             "window": (0.2 + (WORKDAY_OUT if workday else 0.0) + 0.15 * max(0, rel.get("fear", 1) - 1)
                        + self.desire("window", t)) * desk,
             "chat": 0.6 + 0.25 * min(3, self.chat_waiting) if self.chat_waiting else 0.0,
@@ -415,8 +531,9 @@ class Life:
                               + self.desire("play_console",t))*desk,
                 use_computer=(.22 + .2*max(0,rel.get("attention",1)-1) + self.desire("use_computer",t))*desk,
                 use_bathroom=max(0,(getattr(self,"home_bladder",0)-.45)*4)+self.desire("use_bathroom",t))
-        if s.get(self.plan_hint, 0.0) > 0:              # the plan only tilts what is possible now
-            s[self.plan_hint] += PLAN_BONUS
+        hint_now = self.plan_hint or self.day_hint      # the mind's next step, else the template's step for this hour
+        if s.get(hint_now, 0.0) > 0:                    # the plan only tilts what is possible now
+            s[hint_now] += PLAN_BONUS
         nudge = self.nudge(t)
         if nudge and s.get(nudge, 0.0) > 0:             # viewers' vote: the same, stronger; never the impossible
             s[nudge] += VOTE_BONUS
@@ -579,7 +696,7 @@ class Life:
     def update(self, t, dt_real, dt_sim, stage, rel, hot=0.0, pressure=0.0, levels=None, amygdala=0.0):
         if self.console_wish and not 0 <= t - self.console_wish[1] <= CONSOLE_WISH_TTL:
             self.console_wish = None
-        self._t = t
+        self._t, self.stage = t, stage
         if self.own_body:                                  # an external body is stepped by its owner
             self.body.update(dt_sim, levels, amygdala, stage, exertion=self.exertion())
         # the courier at the door: from anywhere at home or on the bench he goes to the door (a purchase at the counter
@@ -625,15 +742,36 @@ class Life:
         if self.arrival_check is not None and arrived and self.dur is not None:
             self.until = self.timer(t)
             self.dur = None
-        # Arrival gates expiry/effects; urgent needs and sleep can still interrupt travel.
-        if self.activity == "sleep" and stage != "AWAKE":
-            return                                        # asleep: nothing to decide until the brain wakes up
+        # Arrival gates expiry/effects. Travel is not interrupted: needs, a chat impulse and a sleep stage that begins on the
+        # way wait for arrival (only the courier turns him back, above). Sleep starts only in bed: from anywhere else the
+        # sleep start walks him there first (start() routes him, and his activity is 'sleep' on the way).
+        if self.activity == "sleep" and stage != "AWAKE" and self.place == "bed":
+            return                                        # asleep in bed: nothing to decide until the brain wakes up
         must_sleep = stage != "AWAKE"
         woke = stage == "AWAKE" and self.activity == "sleep"
-        # an interruption names what he gets up for: the food action (needs first), else the wish or the vote
+        self.day_hint = day_plan_hint(t)                  # the daily template's step for this hour, if it has one
+        # a chat impulse is carried out at once when he is awake (a walk or a sleep stage keeps it pending). The activity he
+        # is already doing in its place is done, not started again: its arrival effects would apply twice. One that waited
+        # is checked again here: stale (IMPULSE_TTL) or impossible by now (why_not), it is dropped and the log says why
+        impulse = None
+        if self.impulse and stage == "AWAKE":
+            want, asked, t0 = self.impulse
+            if want == "sleep" or want not in ACTIVITIES or (want == self.activity and self.place == ACTIVITIES[want][0]):
+                if want == "play_console" and want == self.activity:
+                    self.switch_console(t)                # at the TV already: a named game asked meanwhile switches it
+                self.impulse = None                       # not carried out: sleep follows its stage; or he is at it already
+            else:
+                late = "That was more than an hour ago." if t - t0 > IMPULSE_TTL else self.why_not(want, t)
+                if late:
+                    what = f"{asked or 'asked in chat: ' + want}; not any more: {late[0].lower() + late[1:].rstrip('.')}"
+                    self.log = (self.log + [{"t": t, "what": what}])[-30:]
+                    self.impulse = None
+                else:
+                    impulse = self.impulse
+        # an interruption names what he gets up for: the chat impulse, else the food action (needs first), else wish or vote
         hungry = self.hungry_now(t, rel, hot, pressure) if stage == "AWAKE" else False
         wish = (not hungry and self.wish_now(t, rel, hot, pressure)) if stage == "AWAKE" else False
-        if (arrived and t >= self.until) or must_sleep or woke or hungry or wish:
+        if (arrived and t >= self.until) or must_sleep or woke or hungry or wish or impulse:
             if arrived:
                 if self.activity == "buy_bread" and self.place == "counter":
                     self.bread += BREAD_PER_TRIP
@@ -657,7 +795,10 @@ class Life:
                     self.food_items.append(self.delivery.get("dish", "bento"))
                     self.delivery = None
                     self.food += 1
-            nxt = (hungry or wish) if (hungry or wish) and not must_sleep else self.choose(t, stage, rel, hot, pressure)
+            if impulse:
+                nxt = impulse[0]                          # the chat impulse wins over the needs, the wishes and the choice
+            else:
+                nxt = (hungry or wish) if (hungry or wish) and not must_sleep else self.choose(t, stage, rel, hot, pressure)
             why = {
                 "sleep": "falls asleep" if self.place == "bed" else "goes to bed",
                 "eat": "hungry: eats some bread",
@@ -685,7 +826,13 @@ class Life:
                 why = f"hungry: eats the {(self.food_items[0] if self.food_items else 'meal').replace('konbini_', '')} at the table"
             if woke:
                 why = "wakes up"
-            self.start(nxt, t, why)
+            if impulse:
+                why = impulse[1] or why                   # the request's own words
+                if woke:
+                    why = "wakes up; " + why
+            self.start(nxt, t, why)                       # sleep from elsewhere: start() walks him to bed first
+            if impulse:
+                self.impulse = None                       # carried out
 
     def music_bg_ok(self):
         """Background music is possible now (#68): at the desk reading or playing chess, on the park bench, or walking
@@ -747,6 +894,8 @@ class Life:
                 "order": self.order_dish if self.activity == "order_food" else None, "courier": self.courier(self._t), "log": [{"t": e["t"], "what": e["what"]} for e in self.log[-8:]], "console_choice": self.console_choice, "console_wish": self.console_wish}
 
     def label(self):
+        if self.activity == "sleep" and self.path:
+            return "walking to bed"
         if self.activity == "eat" and self.eating in EAT_LABEL:
             return EAT_LABEL[self.eating]
         if self.activity == "order_food" and self.order_dish:
@@ -761,5 +910,5 @@ class Life:
                 "last_chess": self.last_chess, "last_order": self.last_order, "viewer_nudge": self.viewer_nudge,
                 "console_wish": self.console_wish, "console_choice": self.console_choice,
                 "started": [[ts, a] for ts, a in self.started], "dur": self.dur, "trip": self.trip,
-                "video_block_until": self.video_block_until,
+                "video_block_until": self.video_block_until, "impulse": list(self.impulse) if self.impulse else None,
                 **({"body": self.body.to_dict()} if self.own_body else {})}

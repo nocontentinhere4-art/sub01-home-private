@@ -1,0 +1,204 @@
+{
+  "archives": [
+    {
+      "path": "/workspace/sub01-home-private/completion-20261021/candidate-backend-resume.tar.gz",
+      "sha256": "2d6e7ee7c1584be34f5a6d4b04e313c67f50674f3dd7397612be1ab5bbfc069b",
+      "members": 707,
+      "unsafe_names": [],
+      "links": [],
+      "top_levels": [
+        "atlas_subject.py",
+        "audience.py",
+        "brain_sim.py",
+        "brain_vote.py",
+        "browse.py",
+        "browse_service.py",
+        "build_connectome.py",
+        "build_cortex.py",
+        "chat.py",
+        "chess_game.py",
+        "clips.py",
+        "console_requests.py",
+        "costs.py",
+        "diary.py",
+        "export_fibres.py",
+        "export_web.py",
+        "eye.py",
+        "eyes.py",
+        "home_api.py",
+        "home_computer.py",
+        "home_geometry_profile.py",
+        "home_http.py",
+        "home_interactions.py",
+        "home_minecraft.py",
+        "home_minecraft_controller.py",
+        "home_minecraft_input.py",
+        "home_native_feedback.py",
+        "home_native_identity.py",
+        "home_phone.py",
+        "home_remote_computer.py",
+        "home_world.py",
+        "interests.py",
+        "launchpad_eval.py",
+        "lexicon.py",
+        "life.py",
+        "live_server.py",
+        "make_brand.py",
+        "memory_guard.py",
+        "mind.py",
+        "music.py",
+        "novelty.py",
+        "process_rest.py",
+        "readings.py",
+        "real_baseline.py",
+        "render_connectome.py",
+        "research.py",
+        "runpod_api.py",
+        "screens.py",
+        "scripts",
+        "search_sources.py",
+        "sessions.py",
+        "short_videos.py",
+        "sleep.py",
+        "spiking",
+        "state_io.py",
+        "tastes.py",
+        "tools",
+        "twin",
+        "view_only.py",
+        "youtube_api.py"
+      ],
+      "unpacked_bytes": 6453089
+    },
+    {
+      "path": "/workspace/sub01-home-private/completion-20261021/completion-backend.tar.gz",
+      "sha256": "0dbd64536da82172b9e84e123267141e21bf129323e8c797bae1502915cd568b",
+      "members": 990,
+      "unsafe_names": [],
+      "links": [],
+      "top_levels": [
+        "atlas_subject.py",
+        "audience.py",
+        "brain_sim.py",
+        "brain_vote.py",
+        "browse.py",
+        "browse_service.py",
+        "build_connectome.py",
+        "build_cortex.py",
+        "chat.py",
+        "chess_game.py",
+        "clips.py",
+        "console_requests.py",
+        "costs.py",
+        "diary.py",
+        "export_fibres.py",
+        "export_web.py",
+        "eye.py",
+        "eyes.py",
+        "home_api.py",
+        "home_computer.py",
+        "home_geometry_profile.py",
+        "home_http.py",
+        "home_interactions.py",
+        "home_minecraft.py",
+        "home_minecraft_controller.py",
+        "home_minecraft_input.py",
+        "home_native_feedback.py",
+        "home_native_identity.py",
+        "home_phone.py",
+        "home_remote_computer.py",
+        "home_world.py",
+        "interests.py",
+        "launchpad_eval.py",
+        "lexicon.py",
+        "life.py",
+        "live_server.py",
+        "make_brand.py",
+        "memory_guard.py",
+        "mind.py",
+        "music.py",
+        "novelty.py",
+        "process_rest.py",
+        "readings.py",
+        "real_baseline.py",
+        "render_connectome.py",
+        "research.py",
+        "runpod_api.py",
+        "screens.py",
+        "scripts",
+        "search_sources.py",
+        "sessions.py",
+        "short_videos.py",
+        "sleep.py",
+        "state_io.py",
+        "tastes.py",
+        "tests",
+        "tools",
+        "view_only.py",
+        "youtube_api.py"
+      ],
+      "unpacked_bytes": 8262355
+    },
+    {
+      "path": "/workspace/sub01-home-private/completion-20261021/backend-diagnostic.tar.gz",
+      "sha256": "4be49d04e8c67564506722e1152cfd2ba62d454422f2093d6487d0ba1be8e4e2",
+      "members": 2,
+      "unsafe_names": [],
+      "links": [],
+      "top_levels": [
+        "home_candidate_coordinator.py",
+        "home_candidate_preflight.py"
+      ],
+      "unpacked_bytes": 19705
+    },
+    {
+      "path": "/workspace/sub01-migration-20261025/restored-native-v24.tar",
+      "sha256": "acd41589b49be9c535f134afebe944f37ade35b1cf6edccb1d26f3e6e85744fc",
+      "members": 6432,
+      "unsafe_names": [],
+      "links": [
+        {
+          "name": "cinematic-source-v3-final/Sub01HomeLab/DerivedDataCache",
+          "target": "/workspace/sub01-private-playable-r21-static-20261016/Sub01HomeLab/DerivedDataCache"
+        }
+      ],
+      "top_levels": [
+        "cinematic-source-v3-final"
+      ],
+      "unpacked_bytes": 1771980768
+    },
+    {
+      "path": "/workspace/sub01-chatterbox-public-5bb1f6ee-20261025.tar",
+      "sha256": "f7c28da126e723700da23f8d4f809aa17b7c67487ed1fed23c03b4f36af2e9a9",
+      "members": 11,
+      "unsafe_names": [],
+      "links": [
+        {
+          "name": "hub/models--ResembleAI--chatterbox/snapshots/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/conds.pt",
+          "target": "../../blobs/6552d70568833628ba019c6b03459e77fe71ca197d5c560cef9411bee9d87f4e"
+        },
+        {
+          "name": "hub/models--ResembleAI--chatterbox/snapshots/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/s3gen.safetensors",
+          "target": "../../blobs/2b78103c654207393955e4900aac14a12de8ef25f4b09424f1ef91941f161d4e"
+        },
+        {
+          "name": "hub/models--ResembleAI--chatterbox/snapshots/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/t3_cfg.safetensors",
+          "target": "../../blobs/914cb1696f47527fe8852ca8f1fe1fa63cb34f76f9c715e84e067b744dd0da81"
+        },
+        {
+          "name": "hub/models--ResembleAI--chatterbox/snapshots/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/tokenizer.json",
+          "target": "../../blobs/abd07c710243ba89bf1b21780e7c37ddde92334e"
+        },
+        {
+          "name": "hub/models--ResembleAI--chatterbox/snapshots/5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18/ve.safetensors",
+          "target": "../../blobs/f0921cab452fa278bc25cd23ffd59d36f816d7dc5181dd1bef9751a7fb61f63c"
+        }
+      ],
+      "top_levels": [
+        "hub"
+      ],
+      "unpacked_bytes": 3191967032
+    }
+  ],
+  "states": []
+}

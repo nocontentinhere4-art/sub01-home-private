@@ -1,0 +1,41 @@
+One focused DESIGN+EXACT-DELTA review for next performance diagnostic only; do not modify active attempt02. Prerequisite: current30min readiness ends, cleanup independently verified, finalizedrecordings decode. No execution yet. Owner wants functional60fps beforeappearance. Current native source receipt confirms frozenR9 fallback/spectator; three expected seatedassets absent fromstagedbaseline. Therefore defer newly approved voice/headtest andcam60 until factualprerequisites assessed; no mouthwrite/noanimreconstruction now.
+Actual currentdata after~12min: gamePERF59.4..59.8fps; GPU6.5..7.1ms, render8.5..10.6ms, maincapture~57.7..59.95fps; mainrate_skipped946 by13:38UTC, cumulativequeue_drops56 unchanged sincebootstrap, currentoutputdup/drop0/currentgaps0; last5minmainuniquefpsmedian58.59/min55.78. Cam2original30 at28.85..29.98fps. CPUabout6.2/13.6cores, no newcgroupthrottling. Hypothesis: double frame cap leaves periodic capture skips, not demonstrated cause. Historicalcap61 onolderloadednode was inconclusive/failedwriterloss; newdirectlibx264isolatedpipeline differs, so no oldpassclaim.
+Propose exactlyONE controlledcap61 diagnostic, same exact recoveredmodule/source/originaltuning/cam2=30/voiceSTOPsilent/desktopscaffold/FIFO/libx264/HLS and allapprovedFD/PID/cleanupgates. Newoutputpaths preservepreviousresults; only render t.MaxFPS60->61 (capture/outputremain60). Existing singlebootstraptransition allowed; afterfirstrealFIFOrecording collectfixed300s thencleanup, totalboundstill30minwith900swarmupgate. No dynamic tuning, no61->62sweep, no retry. Compare last180s unique main cadence and zero newgap/cut/bad/repeat/overflow againstbaseline correspondingpostwarmsegment; >=59.5fpsrequired forcadencepass, nofullacceptanceorcam60claim. Preservefaileddata regardless. Restore implicitrendercap byprocess exit; originaltuningbytesunchanged. Exactcandidatefullhash follows; fullsourceidentical toapproved7ba3bbea5cf5a9415787f826076d363c72bf1b512238f76ae289e34edb60dd75 exceptdelta below. Return APPROVE ONE RUN or criticalcorrections only. This is a fresh hypothesis test, notblindrerunofearlierfailures.
+35b426374d3fc63217fd5989138845c8c3a6f09cb8de33e2d3b92080f88362f7
+--- approved-attempt02.py
++++ cadence61-candidate.py
+@@ -1,13 +1,13 @@
+ #!/usr/bin/env python3
+-"""Attempt02 candidate for exact review; NOT executed. Integrated readiness only, no live-agent acceptance."""
++"""Cadence61 candidate for exact review; NOT executed. Integrated readiness only, no live-agent acceptance."""
+ import psutil
+ import hashlib,json,math,os,pwd,secrets,select,signal,stat,subprocess,threading,time,shutil,socket,urllib.request
+ from pathlib import Path
+ P=Path('/home/unreal/.sub01-private');STREAM=P/'streamer'
+ PROJECT=Path('/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab/Sub01HomeLab.uproject')
+ ENGINE='/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
+-OUT=Path('/home/unreal/.sub01-private/integrated-readiness-20261026-attempt02')
+-PERSIST=Path('/workspace/sub01-integrated-readiness-20261026-attempt02')
++OUT=Path('/home/unreal/.sub01-private/integrated-cadence61-20261026')
++PERSIST=Path('/workspace/sub01-integrated-cadence61-20261026')
+ SOURCE=Path('/home/sub01-recovery-stage-20261026/runtime-source')
+ PYTHON='/home/unreal/voice-rt-venv/bin/python'
+ CONFIG=OUT/'voice.json'
+@@ -154,7 +154,7 @@
+    need(x.poll()is None and time.monotonic()<until,'Xvfb failed');time.sleep(.2)
+   spawn('xvfb-desktop',['/usr/bin/Xvfb',':103','-screen','0','1920x1080x24','-nolisten','tcp','-auth',str(auth)],base)
+   env=dict(base,DISPLAY=':99',SDL_VIDEODRIVER='x11',XAUTHORITY=str(auth),XDG_RUNTIME_DIR=str(P/'xdg-runtime'),SUB01_ADMIN_TOKEN=token,SUB01_HOME_ORIGIN='http://127.0.0.1:8831',SUB01_PC_ORIGIN='http://127.0.0.1:8832',LD_LIBRARY_PATH='/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu',OMP_NUM_THREADS='4',OPENBLAS_NUM_THREADS='1')
+-  args=[ENGINE,str(PROJECT),'/Game/Sub01Home/ActualHome','-game','-Sub01CompletionSandbox','-Sub01ManualView','-Sub01StreamerVisual','-Sub01NativeControl='+str(control),'-vulkan','-unattended','-NoSound','-NoSplash','-NoLiveCoding','-NoHotReloadFromIDE','-corelimit='+str(cores),'-RenderOffScreen','-windowed','-NoBorder','-WinX=0','-WinY=0','-ResX=1920','-ResY=1080','-ForceRes','-ExecCmds=t.MaxFPS 60,t.IdleWhenNotForeground 0,r.VSync 0,Slate.bAllowThrottling 0','-stdout','-FullStdOutLogOutput']
++  args=[ENGINE,str(PROJECT),'/Game/Sub01Home/ActualHome','-game','-Sub01CompletionSandbox','-Sub01ManualView','-Sub01StreamerVisual','-Sub01NativeControl='+str(control),'-vulkan','-unattended','-NoSound','-NoSplash','-NoLiveCoding','-NoHotReloadFromIDE','-corelimit='+str(cores),'-RenderOffScreen','-windowed','-NoBorder','-WinX=0','-WinY=0','-ResX=1920','-ResY=1080','-ForceRes','-ExecCmds=t.MaxFPS 61,t.IdleWhenNotForeground 0,r.VSync 0,Slate.bAllowThrottling 0','-stdout','-FullStdOutLogOutput']
+   game=spawn('native',args,env);receipt['phase']='warmup';save()
+   # Voice warms under STOP; no speech request or fake backend state.
+   sideenv=dict(base,XAUTHORITY=str(auth),HF_HOME='/home/sub01-recovery-stage-20261026/voice-public',HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1',OMP_NUM_THREADS='4',OPENBLAS_NUM_THREADS='1')
+@@ -177,7 +177,7 @@
+     need(state.get('restarts',0)<=1,'Unexpected multiple bootstrap restarts')
+     need(time.monotonic()-bootstrap_started<900,'No real FIFO before warmup bound')
+     if real_fifo and state.get('recording'):
+-     pinned_run=run;first_fifo_at=time.time();receipt['real_fifo_started_utc']=first_fifo_at;receipt['bootstrap_restarts']=state.get('restarts',0)
++     pinned_run=run;first_fifo_at=time.time();receipt['real_fifo_started_utc']=first_fifo_at;receipt['bootstrap_restarts']=state.get('restarts',0);deadline=min(deadline,time.monotonic()+300)
+    else:
+     need(run==pinned_run and real_fifo and state.get('restarts',0)==receipt['bootstrap_restarts'],'Post-readiness restart/source change')
+    fpid=state.get('ffmpeg_pid')

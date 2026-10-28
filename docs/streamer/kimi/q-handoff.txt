@@ -1,0 +1,6 @@
+You are the coordinator's partner on SUB-01. The attached HANDOFF.md is re-injected into the coordinator's context after every context compaction and at session start; it must always carry the main goal and a well-organised plan so work continues correctly after memory loss. Review it as a co-lead:
+1. Is the main goal stated precisely and completely (owner's requirements)? What is missing or ambiguous?
+2. Is the plan ordered correctly, with clear done-criteria per step? Propose the corrected ordered plan (max 8 steps, each with a one-line done-criterion).
+3. What operational facts would a fresh session need that are missing (and which listed facts are risky to keep, e.g. volatile pids)?
+4. Anything that contradicts the working rules.
+Answer in English, concise (max ~500 words), as concrete edits.

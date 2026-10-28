@@ -1,0 +1,705 @@
+Review this private-branch commit diff. Owner explicitly requires no funding guard/RunPod calls/broad kills, Oct15 copied302-memory substitute, canonicalstreamer, STOP onlystartup. Design consultation approved consistentofflinecopy/privatewrites/originalhashes.10tests pass. Currentruntime retryr2 pendinghealth; no successclaim. Identify actual blockingbugs only, concise APPROVE COMMIT or corrections. Files are newadditions below; do not restore obsolete constraints. Step1 Q/A includedincommit verbatim alreadyreviewed.
+
+NEW FILE tools/private_backend_coordinator.py
+#!/usr/bin/env python3
+"""Launch and supervise only private candidate backend8830/state-bridge8831.
+
+2026-10-23 copy: the latest code packet may also live on the protected rootfs private directory, because the
+workspace volume is at its quota (every other path rule is unchanged).
+
+Run on the restored Linux host as root after coordinator review. No provider API,
+native process, VM, identity authority or baseline service is started,
+stopped or modified. Minecraft is disabled unless the explicitly pinned original-world runtime is supplied.
+No funding guard or provider API is used. Originals are preserved; only a new private copy runs.
+"""
+import argparse
+from contextlib import contextmanager
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import signal
+import shutil
+import socket
+import stat
+import subprocess
+import tarfile
+import time
+import urllib.request
+
+STATE_FILES=('state.json','life.json','body.json','home.json','reading.json','screens.json',
+             'browsing.json','tastes.json','teach.json','chess.jsonl')
+REQUIRED_SOURCE=('live_server.py','home_native_feedback.py',
+                 'scripts/home_pc_runner.py','scripts/home_device_proxy.py',
+                 'tools/unreal_home_state_bridge.py','computer/input_receipts.py')
+COMPUTER_STATIC=('worker.cjs','vga_framebuffer.cjs','V86-LICENSE','NOTICE.md',
+                 'manifest.json','libv86.cjs','input_receipts.cjs','guest_mouse.cjs',
+                 'guest_keyboard.cjs','BIOS-LICENSE')
+BASELINE_OUT_ASSETS=('out/connectome.npz','out/atlas_names.json')
+LATEST_STATIC=('music_curated.json',)
+
+
+class Refusal(ValueError):
+    """Only literal, internally authored explanations may be returned to logs."""
+    pass
+
+
+class StageFailure(Refusal):
+    pass
+
+
+def filesystem_failure(error,stage,roots):
+    failure=StageFailure('Candidate filesystem staging failed; inspect stage and errno')
+    failure.stage=stage;failure.os_errno=error.errno;failure.os_error_type=type(error).__name__
+    failure.controlled_filename='outside-reviewed-staging-paths'
+    if isinstance(error.filename,(str,bytes)):
+        path=Path(os.fsdecode(error.filename)).absolute()
+        for label,root in roots.items():
+            root=Path(root).absolute()
+            if contains(root,path):
+                relative=path.relative_to(root).as_posix()
+                if len(relative)<=512 and not any(ord(c)<32 for c in relative):failure.controlled_filename=label+'/'+relative
+                break
+    return failure
+
+
+@contextmanager
+def filesystem_step(stage,roots):
+    try:yield
+    except OSError as error:raise filesystem_failure(error,stage,roots) from None
+
+
+def failure_record(error):
+    record=dict(status='candidate_launch_refused_or_stopped',error=type(error).__name__,
+                reason=str(error) if isinstance(error,Refusal) else 'External OS, parse or dependency failure; inspect the read-only preflight report',
+                native_authority_assigned=False,native_accepted=False)
+    if isinstance(error,StageFailure):
+        record.update(stage=error.stage,filename=error.controlled_filename,errno=error.os_errno,os_error_type=error.os_error_type)
+        if hasattr(error,'probe_metadata'):record['probe_metadata']=error.probe_metadata
+    return record
+
+
+def digest(path):
+    with Path(path).open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
+
+
+def identity(pid,proc=Path('/proc')):
+    directory=proc/str(pid)
+    fields=(directory/'stat').read_text().rsplit(')',1)[1].split()
+    return dict(pid=pid,start_ticks=int(fields[19]),uid=directory.stat().st_uid,
+                argv=[os.fsdecode(x) for x in (directory/'cmdline').read_bytes().split(b'\0') if x])
+
+
+def contains(parent,child):
+    return parent==child or parent in child.parents
+
+
+def refuse_state_writer(state_dir,proc=Path('/proc')):
+    """Only an offline snapshot may seed candidate state; never pause baseline."""
+    target=Path(state_dir).resolve()
+    for directory in proc.iterdir():
+        if not directory.name.isdigit():continue
+        try:
+            args=[os.fsdecode(x) for x in (directory/'cmdline').read_bytes().split(b'\0') if x]
+            if not any(Path(a).name=='live_server.py' for a in args):continue
+            cwd=(directory/'cwd').resolve()
+            if '--data-dir' in args:
+                value=Path(args[args.index('--data-dir')+1]);candidate=(value if value.is_absolute() else cwd/value).resolve()
+            else:
+                script=next(Path(a) for a in args if Path(a).name=='live_server.py')
+                candidate=((script if script.is_absolute() else cwd/script).parent/'data').resolve()
+            if contains(target,candidate) or contains(candidate,target):
+                raise Refusal('State snapshot is in use; provide a verified offline snapshot')
+        except (FileNotFoundError,ProcessLookupError,PermissionError,IndexError,StopIteration):continue
+
+
+def tree_manifest(directory):
+    root=Path(directory);records={}
+    if root.is_symlink() or not root.is_dir():raise Refusal('Original must be a real directory')
+    for p in sorted(root.rglob('*')):
+        info=p.lstat()
+        if stat.S_ISDIR(info.st_mode):continue
+        if not stat.S_ISREG(info.st_mode):raise Refusal('Original contains symlink or special file')
+        records[p.relative_to(root).as_posix()]=digest(p)
+    return records
+
+
+def source_manifest(root,kind):
+    """Hash only inputs prepare_source consumes; never unrelated private/cache trees."""
+    root=Path(root);files=set()
+    if kind in ('baseline','latest'):
+        files.update(root.glob('*.py'))
+        for package in ('scripts','tools','spiking','twin','computer'):
+            folder=root/package
+            for base,dirs,names in os.walk(folder,followlinks=False):
+                dirs[:]=[d for d in dirs if d not in ('__pycache__','.git','logs','private') and not (package=='twin' and Path(base)==folder and d=='data')]
+                files.update(Path(base)/name for name in names if name.endswith('.py'))
+        files.update(root/'computer'/name for name in COMPUTER_STATIC if (root/'computer'/name).exists())
+    if kind=='baseline':
+        files.update(root/name for name in BASELINE_OUT_ASSETS)
+        # These are the static UI files actually copied for serving.
+        files.update(p for p in (root/'web').rglob('*') if not p.is_dir())
+    if kind=='latest':files.update(root/name for name in LATEST_STATIC)
+    if kind=='models':
+        files.update(p for p in (root/'twin/data').rglob('*') if not p.is_dir())
+    result={}
+    for p in sorted(files):
+        if not stat.S_ISREG(p.lstat().st_mode):raise Refusal('Used source input is not a regular file')
+        result[p.relative_to(root).as_posix()]=digest(p)
+    return result
+
+
+def copy_state(snapshot,target,expected_memories=302):
+    snapshot,target=Path(snapshot),Path(target)
+    if not (snapshot/'state.json').is_file() or target.exists():
+        raise Refusal('Require offline saved state and a new private copy')
+    before=tree_manifest(snapshot)
+    shutil.copytree(snapshot,target,symlinks=False)
+    for p in [target,*target.rglob('*')]:p.chmod(0o700 if p.is_dir() else 0o600)
+    if tree_manifest(snapshot)!=before or tree_manifest(target)!=before:
+        raise Refusal('Offline snapshot changed or complete companion copy differs')
+    state=json.loads((target/'state.json').read_text())
+    if not isinstance(state.get('engine'),dict) or not isinstance(state.get('memory'),list) or len(state['memory'])!=expected_memories:
+        raise Refusal('NEW_COPY must contain exactly the expected302 memories and preserved engine')
+    return before
+
+
+def verify_private_state(directory,uid,gid):
+    """Check actual rootfs metadata; never repair privacy by widening access."""
+    directory=Path(directory)
+    for path in [directory,*directory.rglob('*')]:
+        info=path.lstat()
+        if stat.S_ISLNK(info.st_mode) or (info.st_uid,info.st_gid)!=(uid,gid):
+            raise Refusal('Candidate private state ownership or symlink check failed')
+        expected=0o700 if stat.S_ISDIR(info.st_mode) else 0o600
+        if not (stat.S_ISDIR(info.st_mode) or stat.S_ISREG(info.st_mode)) or stat.S_IMODE(info.st_mode)!=expected:
+            raise Refusal('Candidate private state permissions must be exactly 0700 directories and 0600 files')
+
+
+def stage_private_state(snapshot,directory,user):
+    """Create mutable state/logs as UID1001 on protected rootfs, not the volume."""
+    directory=Path(directory);parent=Path('/home/unreal/.sub01-private')
+    if directory.parent!=parent or directory.exists() or parent.is_symlink() or parent.resolve()!=parent:
+        raise Refusal('Use a new direct child of the protected rootfs private directory for candidate state')
+    info=parent.lstat()
+    if not stat.S_ISDIR(info.st_mode) or (info.st_uid,info.st_gid)!=(user.pw_uid,user.pw_gid) or stat.S_IMODE(info.st_mode)!=0o700:
+        raise Refusal('Existing rootfs private parent must belong to UID1001 with mode0700')
+    read_fd,write_fd=os.pipe();pid=os.fork()
+    if pid==0:
+        os.close(read_fd)
+        try:
+            os.initgroups(user.pw_name,user.pw_gid);os.setgid(user.pw_gid);os.setuid(user.pw_uid);os.umask(0o077)
+            os.environ.clear()
+            with filesystem_step('copy-protected-rootfs-state',{'candidate-state':directory,'offline-state':snapshot}):
+                hashes=copy_state(snapshot,directory)
+                logs=directory/'logs';logs.mkdir(mode=0o700,exist_ok=True)
+                for name in ('backend.log','bridge.log'):(logs/name).touch(mode=0o600)
+                verify_private_state(directory,user.pw_uid,user.pw_gid)
+            value=dict(ok=True,state_sha256=hashes)
+        except Exception as error:value=dict(ok=False,failure=failure_record(error))
+        raw=json.dumps(value).encode()
+        try:
+            while raw:
+                count=os.write(write_fd,raw);raw=raw[count:]
+        finally:os.close(write_fd)
+        os._exit(0)
+    os.close(write_fd);chunks=[]
+    try:
+        while True:
+            part=os.read(read_fd,65536)
+            if not part:break
+            chunks.append(part)
+    finally:os.close(read_fd)
+    _,status=os.waitpid(pid,0)
+    if status:raise Refusal('Protected rootfs staging worker exited before verification')
+    value=json.loads(b''.join(chunks))
+    if not value.get('ok'):
+        failure=value.get('failure') or {}
+        if failure.get('error')=='StageFailure':
+            error=StageFailure('Candidate filesystem staging failed; inspect stage and errno')
+            error.stage=failure.get('stage');error.controlled_filename=failure.get('filename');error.os_errno=failure.get('errno');error.os_error_type=failure.get('os_error_type')
+            raise error
+        raise Refusal(failure.get('reason') or 'Protected rootfs staging failed')
+    verify_private_state(directory,user.pw_uid,user.pw_gid)
+    return value['state_sha256']
+
+
+def verify_model_source(models,expected=None):
+    models=Path(models)
+    required=('twin/data/slow_layer.npz','twin/data/receptors_214.csv')
+    hashes={}
+    if expected is not None and set(expected)!=set(required):
+        raise Refusal('Explicit model override requires both independently reviewed SHA256 pins')
+    for name in required:
+        if not (models/name).is_file():raise Refusal('Explicit preserved model source is missing: '+name)
+        before=(models/name).stat();hashes[name]=digest(models/name);after=(models/name).stat()
+        if (before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns)!=(after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns):
+            raise Refusal('Preserved model source changed during hashing')
+        if expected is not None and (not isinstance(expected[name],str) or not re.fullmatch('[0-9a-f]{64}',expected[name]) or hashes[name]!=expected[name]):
+            raise Refusal('Preserved model source differs from its independently reviewed SHA256 pin: '+name)
+    return hashes
+
+
+def prepare_source(baseline,latest,target,model_source=None,expected_models=None):
+    """Copy code only; never stage .env, provider metadata, guest or world data."""
+    baseline,latest,target=map(Path,(baseline,latest,target))
+    models=Path(model_source) if model_source is not None else baseline
+    for name in (*REQUIRED_SOURCE,*LATEST_STATIC):
+        if not (latest/name).is_file():raise Refusal('Latest candidate source packet is incomplete: '+name)
+    for name in ('spiking/words.py','spiking/live.py','twin/body.py','twin/hopf.py','twin/neurochem.py',*BASELINE_OUT_ASSETS):
+        if not (baseline/name).is_file():raise Refusal('Preserved baseline code/model asset is missing: '+name)
+    if model_source is not None and expected_models is None:
+        raise Refusal('Explicit model override requires both independently reviewed SHA256 pins')
+    verify_model_source(models,expected_models)
+    if not (baseline/'web').is_dir() or target.exists():raise Refusal('Require baseline static UI and a new source directory')
+    target.mkdir(mode=0o755)
+    for root in (baseline,latest):
+        for file in root.glob('*.py'):
+            if file.is_symlink():raise Refusal('Code packet contains a symlink')
+            shutil.copyfile(file,target/file.name)
+        for package in ('scripts','tools','spiking','twin','computer'):
+            folder=root/package
+            if not folder.is_dir():continue
+            for file in folder.rglob('*.py'):
+                if any(part in ('__pycache__','.git','logs','private') for part in file.relative_to(folder).parts) or (package=='twin' and 'data' in file.relative_to(folder).parts):continue
+                if file.is_symlink():raise Refusal('Code packet contains a symlink')
+                destination=target/file.relative_to(root);destination.parent.mkdir(parents=True,exist_ok=True)
+                shutil.copyfile(file,destination)
+        # Explicit immutable tracked PC code only: never guest disks, VM state,
+        # screenshots, world data, arbitrary package files or operator secrets.
+        for name in COMPUTER_STATIC:
+            file=root/'computer'/name
+            if not file.exists():continue
+            if file.is_symlink() or not file.is_file():raise Refusal('Computer static code must use regular files')
+            destination=target/'computer'/name;destination.parent.mkdir(exist_ok=True)
+            shutil.copyfile(file,destination)
+    (target/'out').mkdir(exist_ok=True)
+    for name in LATEST_STATIC:
+        file=latest/name
+        if file.is_symlink():raise Refusal('Reviewed root static assets must use regular files')
+        shutil.copyfile(file,target/name)
+    # Only immutable model/UI assets are shared. Mutable runtime data is copied.
+    for relative in (*BASELINE_OUT_ASSETS,'twin/data','web'):
+        destination=target/relative
+        if destination.exists():raise Refusal('Immutable asset destination unexpectedly exists')
+        destination.parent.mkdir(parents=True,exist_ok=True)
+        origin=(models if relative=='twin/data' else baseline)/relative
+        if origin.is_dir():shutil.copytree(origin,destination)
+        else:shutil.copyfile(origin,destination)
+    if (target/'.env').exists():raise Refusal('Environment files must never enter candidate source')
+    files=[p for p in target.rglob('*.py') if p.is_file()]
+    files.extend(target/'computer'/name for name in COMPUTER_STATIC if (target/'computer'/name).is_file())
+    files.extend(target/name for name in BASELINE_OUT_ASSETS)
+    files.extend(target/name for name in LATEST_STATIC)
+    return {p.relative_to(target).as_posix():digest(p) for p in files}
+
+
+def environment(token_file,token,data,interpreter):
+    return dict(PATH=str(interpreter.parent)+':/usr/local/bin:/usr/bin:/bin',HOME='/home/unreal',TMPDIR=str(data/'tmp'),XDG_CACHE_HOME=str(data/'cache'),XDG_CONFIG_HOME=str(data/'config'),XDG_DATA_HOME=str(data/'local-share'),USER='unreal',LOGNAME='unreal',
+        LANG='C.UTF-8',PYTHONNOUSERSITE='1',PYTHONDONTWRITEBYTECODE='1',
+        HOME_ENABLED='1',HOME_ENTRYPOINT='1',HOME_NATIVE_REQUIRED='1',HOME_NATIVE_BATHROOM_CORRIDOR_PROFILE='5ffac2406e66',
+        SUB01_ADMIN_TOKEN=token,HOME_COMPUTER_TOKEN_FILE=str(token_file),HOME_COMPUTER_ORIGIN='http://127.0.0.1:8832',
+        HOME_NATIVE_MANUAL_TV_INPUT='0',SUB01_BRAIN_CONTROLLER='0',SUB01_MINECRAFT='0',
+        SUB01_MC_SERVER_PORT='25579',SUB01_MC_VIEW_PORT='8813',
+        SUB01_SESSIONS='off',SUB01_SPIKING_LIVE='0',SUB01_DAY_LIVE='0',MIND='0',CLIPS='0',BROWSE='0',SUB01_STREAMER='1',STREAMER_DIR='/home/unreal/.sub01-private/streamer')
+
+
+def minecraft_runtime(root,user):
+    """Explicitly restore the original offline world, never accept a new EULA."""
+    root=Path(root)
+    if root!=Path('/home/unreal/.sub01-private/minecraft-restored-v1') or root.is_symlink():
+        raise Refusal('Only the separately restored original Minecraft runtime is allowed')
+    info=root.stat()
+    if info.st_uid!=user.pw_uid or stat.S_IMODE(info.st_mode)!=0o700:
+        raise Refusal('Minecraft runtime must remain private to the native owner')
+    receipt=root/'install-receipt.json'
+    if receipt.is_symlink() or receipt.stat().st_size>1024*1024:
+        raise Refusal('Bounded original Minecraft restoration receipt required')
+    proof=json.loads(receipt.read_text())
+    original=Path('/workspace/sub01-home-private/backend-state/minecraft')
+    data=root/'data/minecraft';code=root/'source/games/minecraft'
+    if (proof.get('schema')!='sub01.original-minecraft-runtime-restoration.v1'
+        or proof.get('original_source')!=str(original)
+        or proof.get('data_dir')!=str(root/'data')
+        or proof.get('worker_source')!=str(code)
+        or proof.get('existing_eula_copied_unchanged') is not True
+        or proof.get('new_eula_acceptance') is not False
+        or proof.get('server_started') is not False
+        or proof.get('brain_enabled') is not False):
+        raise Refusal('Original world/EULA restoration provenance differs')
+    pins=proof.get('original_files_sha256')
+    if not isinstance(pins,dict) or not any(k.startswith('world/') for k in pins):
+        raise Refusal('Actual original world file hashes required')
+    for relative,sha in pins.items():
+        rel=Path(relative)
+        if rel.is_absolute() or '..' in rel.parts or not re.fullmatch('[0-9a-f]{64}',sha):
+            raise Refusal('Invalid original Minecraft file pin')
+        source=original/rel;copied=data/rel
+        if source.is_symlink() or copied.is_symlink() or digest(source)!=sha:
+            raise Refusal('Original Minecraft source changed since restoration')
+        if relative not in ('downloads.json','server.properties') and digest(copied)!=sha:
+            raise Refusal('Restored Minecraft world/JAR/EULA differs')
+    if not any(line.strip()=='eula=true' for line in (data/'eula.txt').read_text().splitlines()):
+        raise Refusal('Preserved Minecraft EULA approval is absent')
+    archive=root/'original-minecraft-code.tar.gz'
+    if digest(archive)!='8f48c8dac0d5444ec216dc0329ed9d6986052d0fbe1917d03428a0148569248e':
+        raise Refusal('Reviewed original Minecraft worker archive differs')
+    with tarfile.open(archive) as packet:
+        for member in packet:
+            if not member.isfile() or len(Path(member.name).parts)!=1:
+                raise Refusal('Minecraft worker archive scope differs')
+            if hashlib.sha256(packet.extractfile(member).read()).hexdigest()!=digest(code/member.name):
+                raise Refusal('Restored Minecraft worker code differs from reviewed source')
+    if digest(code/'package-lock.json')!=proof.get('package_lock_sha256'):
+        raise Refusal('Pinned Minecraft dependency lock differs')
+    nodes=list((root/'runtime/node').glob('*/bin/node'))
+    javas=list((root/'runtime/java').glob('*/bin/java'))
+    if len(nodes)!=1 or len(javas)!=1 or not os.access(nodes[0],os.X_OK) or not os.access(javas[0],os.X_OK):
+        raise Refusal('Restored official executable runtimes are unavailable')
+    nodearchives=list((root/'downloads').glob('node-v22.*-linux-x64.tar.xz'))
+    if len(nodearchives)!=1 or digest(nodearchives[0])!=proof.get('node_archive_sha256') or digest(root/'downloads/official-temurin17-jre.tar.gz')!=proof.get('java_archive_sha256'):
+        raise Refusal('Restored official runtime archive checksums differ')
+    java=json.loads((data/'downloads.json').read_text()).get('java')
+    if java!=str(code/'bin/java') or str(javas[0]) not in Path(java).read_text():
+        raise Refusal('Minecraft must use the verified restored Java wrapper')
+    browser=Path('/home/unreal/.sub01-private/city-readonly-browser/venv/lib/python3.12/site-packages')
+    if not (browser/'playwright/async_api/__init__.py').is_file():
+        raise Refusal('Actual installed browser runtime is required for Minecraft frames')
+    return dict(root=str(root),data=str(data),code=str(code),node=str(nodes[0]),browser_packages=str(browser),
+                receipt_sha256=digest(receipt),original_world_files=sum(k.startswith('world/') for k in pins))
+
+
+def stage_minecraft(runtime,source,data,user,env,snapshot=None):
+    destination=data/'minecraft'
+    if destination.exists():raise Refusal('New candidate Minecraft state must be separate')
+    origin=Path(runtime['data'])
+    saved=Path(snapshot)/'minecraft' if snapshot is not None else None
+    if saved is not None and saved.exists():
+        # Preserve the latest stopped session, rather than reset to the template.
+        if saved.is_symlink() or digest(saved/'server.jar')!=digest(origin/'server.jar') or digest(saved/'eula.txt')!=digest(origin/'eula.txt'):
+            raise Refusal('Saved Minecraft session must retain the original JAR/EULA')
+        for process in Path('/proc').iterdir():
+            if not process.name.isdigit():continue
+            try:argv=(process/'cmdline').read_bytes().split(b'\0')
+            except (OSError,ProcessLookupError):continue
+            if str(saved/'server.jar').encode() in argv:
+                raise Refusal('Minecraft world still has a live server writer')
+        origin=saved
+    source_pins={p.relative_to(origin).as_posix():digest(p) for p in origin.rglob('*') if p.is_file()}
+    shutil.copytree(origin,destination,symlinks=False)
+    for path in [destination,*destination.rglob('*')]:
+        if path.is_symlink():raise Refusal('Minecraft mutable state symlinks are refused')
+        os.chown(path,user.pw_uid,user.pw_gid);path.chmod(0o700 if path.is_dir() else 0o600)
+    if any(digest(destination/name)!=sha or digest(origin/name)!=sha for name,sha in source_pins.items()):
+        raise Refusal('Offline Minecraft session changed during staging')
+    runtime.update(copied_session_source=str(origin),copied_session_sha256=source_pins)
+    games=source/'games';games.mkdir(exist_ok=True)
+    (games/'minecraft').symlink_to(runtime['code'],target_is_directory=True)
+    env.update(SUB01_MINECRAFT='1',HOME_NATIVE_MANUAL_TV_INPUT='1',SUB01_BRAIN_CONTROLLER='0',
+               SUB01_MC_RESTORED_ISOLATED_BROWSER='1',SUB01_MC_DISPLAY=':101',
+               SUB01_MC_XAUTHORITY=str(Path(runtime['root'])/'xauthority-101'),
+               PYTHONPATH=runtime['browser_packages'],PATH=str(Path(runtime['node']).parent)+':'+env['PATH'])
+    verify_private_state(data,user.pw_uid,user.pw_gid)
+
+
+def require_free_ports(minecraft=False):
+    for port in ((8830,8831,25579,8813) if minecraft else (8830,8831)):   # 8832 is the PC device proxy, started separately
+        with socket.socket() as probe:
+            # Match aiohttp's normal address reuse after an owned graceful stop.
+            # This still refuses every active listener (SO_REUSEPORT is never set).
+            probe.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+            try:probe.bind(('127.0.0.1',port))
+            except OSError:raise Refusal('Required private backend port is occupied; no existing service was stopped') from None
+
+
+def owns_listener(pid,port,operation=None):
+    def mark(value):
+        if operation is not None:operation(value)
+    inodes=set()
+    mark('tcp-table-read')
+    for row in Path('/proc/net/tcp').read_text().splitlines()[1:]:
+        parts=row.split()
+        if parts[1]==f'0100007F:{port:04X}' and parts[3]=='0A':inodes.add(parts[9])
+    mark('fd-directory-list')
+    descriptors=list((Path('/proc')/str(pid)/'fd').iterdir())
+    for fd in descriptors:
+        try:
+            value=os.readlink(fd)
+            if value.startswith('socket:[') and value[8:-1] in inodes:return True
+        except (FileNotFoundError,PermissionError):pass
+    return False
+
+
+def owned_listener_probe(pid,ticks,port,user):
+    """Inspect only this child's sockets as its UID, without ptrace privileges."""
+    def exact_child():
+        value=identity(pid)
+        return value['uid']==user.pw_uid and value['start_ticks']==ticks
+    if not exact_child():raise Refusal('Candidate listener process identity changed before ownership probe')
+    read_fd,write_fd=os.pipe();worker=os.fork()
+    if worker==0:
+        os.close(read_fd)
+        stage='drop-worker-uid'
+        def operation(value):
+            nonlocal stage
+            stage=value
+        try:
+            os.initgroups(user.pw_name,user.pw_gid);os.setgid(user.pw_gid);os.setuid(user.pw_uid)
+            os.environ.clear()
+            stage='exact-child-start'
+            if not exact_child():raise Refusal('Candidate listener process identity changed during ownership probe')
+            owned=owns_listener(pid,port,operation)
+            stage='exact-child-end'
+            if not exact_child():raise Refusal('Candidate listener process identity changed during ownership probe')
+            result=dict(ok=True,owned=owned)
+        except OSError as error:
+            # PID and errno are controlled metadata; never serialize OS messages.
+            result=dict(ok=False,errno=error.errno,operation=stage)
+        except Exception:result=dict(ok=False,errno=None,operation=stage)
+        if not result.get('ok'):
+            metadata=dict(worker_uid=os.getuid(),worker_gid=os.getgid())
+            try:
+                directory=Path('/proc')/str(pid);info=directory.stat()
+                metadata['target_proc_uid']=info.st_uid;metadata['target_proc_gid']=info.st_gid
+                fields={'Uid','Gid','TracerPid','NoNewPrivs','CoreDumping'}
+                metadata['target_status']={line.split(':',1)[0]:line.split(':',1)[1].strip()
+                    for line in (directory/'status').read_text().splitlines() if line.split(':',1)[0] in fields}
+            except OSError as error:metadata['status_errno']=error.errno
+            result['metadata']=metadata
+        try:os.write(write_fd,json.dumps(result).encode())
+        finally:os.close(write_fd)
+        os._exit(0)
+    os.close(write_fd)
+    try:raw=os.read(read_fd,4096)
+    finally:os.close(read_fd)
+    _,status=os.waitpid(worker,0)
+    if not exact_child():raise Refusal('Candidate listener process identity changed after ownership probe')
+    try:result=json.loads(raw) if status==0 else {}
+    except (ValueError,UnicodeError):result={}
+    if not result.get('ok'):
+        error=StageFailure('Candidate listener ownership probe failed; inspect controlled PID and errno')
+        operations={'drop-worker-uid','exact-child-start','tcp-table-read','fd-directory-list','exact-child-end'}
+        operation=result.get('operation')
+        error.stage='listener-ownership/'+(operation if operation in operations else 'worker-result')
+        error.controlled_filename='owned-process/'+str(pid)
+        error.os_errno=result.get('errno');error.os_error_type='OwnedListenerProbeError'
+        if isinstance(result.get('metadata'),dict):error.probe_metadata=result['metadata']
+        raise error
+    return result['owned'] is True
+
+
+def load_token(path,uid):
+    fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
+    with os.fdopen(fd,'rb') as stream:
+        info=os.fstat(stream.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_uid!=uid or info.st_mode&0o077 or not 12<=info.st_size<=4096:
+            raise Refusal('Protected existing operator credential required')
+        token=stream.read(4097).decode().strip()
+    if len(token)<12:raise Refusal('Protected operator credential is too short')
+    return token
+
+
+def terminate_owned(children):
+    for process,ticks in children:
+        try:
+            if process.poll() is None and (ticks is None or identity(process.pid)['start_ticks']==ticks):process.terminate()
+        except (OSError,ValueError,IndexError):pass
+    for process,_ in children:
+        try:process.wait(timeout=12)
+        except subprocess.TimeoutExpired:pass  # Never escalate to killing a reused or unrelated PID.
+
+
+def run(args):
+    if os.name!='posix' or os.getuid()!=0:raise Refusal('Launch coordinator requires root on the reviewed Linux host')
+    import pwd
+    user=pwd.getpwnam('unreal')
+    if user.pw_uid!=1001:raise Refusal('Expected preserved unreal UID1001')
+    latest=Path(args.latest_source).resolve();baseline=Path(args.baseline_source).resolve();snapshot=Path(args.state_snapshot).resolve()
+    models=Path(args.model_source).resolve() if args.model_source else baseline
+    target=Path(args.run_dir).resolve()
+    if not args.offline_snapshot:raise Refusal('Explicit stopped-writer offline snapshot confirmation required')
+    if not Path(args.stop_file).is_file():raise Refusal('Production agent STOP must remain held')
+    originals={'snapshot':dict(path=str(snapshot),hashes=tree_manifest(snapshot)),**{kind:dict(path=str(p),hashes=source_manifest(p,kind)) for kind,p in (('latest',latest),('baseline',baseline),('models',models))}}
+    requested_state=Path(args.state_dir)
+    if not requested_state.is_absolute() or '..' in requested_state.parts or requested_state.parent!=Path('/home/unreal/.sub01-private'):
+        raise Refusal('Candidate state must be an explicit new protected rootfs private directory')
+    data=requested_state
+    mc_requested=getattr(args,'minecraft_runtime',None)
+    private_offline_snapshot=bool(snapshot.parent==Path('/home/unreal/.sub01-private') and not snapshot.is_symlink())
+    private_mc_run=bool(target.parent==Path('/home/unreal/.sub01-private') and not target.is_symlink())
+    if target.parent!=Path('/home/unreal/.sub01-private'):
+        raise Refusal('Run/source/output directory must be a new private rootfs child')
+    if target.exists() or any(contains(p,target) or contains(target,p) for p in (latest,baseline,snapshot)):
+        raise Refusal('Run directory must be new and separate from preserved source/state')
+    require_free_ports(bool(mc_requested));refuse_state_writer(snapshot)
+    token_file=Path(args.token_file);token=load_token(token_file,user.pw_uid)
+    minecraft=None
+    if mc_requested:
+        pin=getattr(args,'minecraft_receipt_sha256',None)
+        if not isinstance(pin,str) or not re.fullmatch('[0-9a-f]{64}',pin) or digest(Path(mc_requested)/'install-receipt.json')!=pin:
+            raise Refusal('Explicit independently recorded Minecraft restoration receipt SHA256 required')
+        minecraft=minecraft_runtime(mc_requested,user)
+    interpreter=Path(args.python).absolute()
+    if not interpreter.is_file():raise Refusal('Restored candidate Python runtime is missing')
+    roots={'candidate-source':target/'source','candidate-run':target,'offline-state':snapshot,'baseline-source':baseline,'latest-source':latest,'model-source':models,'candidate-state':data}
+    with filesystem_step('create-candidate-volume-run',roots):target.mkdir(mode=0o751)
+    source=target/'source';logs=data/'logs'
+    expected_models=None if not args.model_source else {'twin/data/slow_layer.npz':args.slow_layer_sha256,'twin/data/receptors_214.csv':args.receptors_sha256}
+    with filesystem_step('prepare-volume-source-and-model-links',roots):
+        source_hashes=prepare_source(baseline,latest,source,models if args.model_source else None,expected_models)
+    for copied in [source,*source.rglob('*')]:os.chown(copied,user.pw_uid,user.pw_gid)
+    state_hashes=stage_private_state(snapshot,data,user)
+    for name in ('tmp','cache','config','local-share'):
+        p=data/name;p.mkdir(mode=0o700,exist_ok=True);os.chown(p,user.pw_uid,user.pw_gid)
+    env=environment(token_file,token,data,interpreter)
+    for kind,record in originals.items():
+        actual=tree_manifest(record['path']) if kind=='snapshot' else source_manifest(record['path'],kind)
+        if actual!=record['hashes']:raise Refusal('Original changed before launch')
+    (target/'original-manifests.json').write_text(json.dumps(originals,sort_keys=True))
+    if minecraft:stage_minecraft(minecraft,source,data,user,env,snapshot)
+    specs=[('backend',8830,[str(interpreter),str(source/'live_server.py'),'--host','127.0.0.1','--port','8830','--data-dir',str(data)]),
+           ('bridge',8831,[str(interpreter),str(source/'tools/unreal_home_state_bridge.py'),'--host','127.0.0.1','--port','8831',
+                            '--backend','http://127.0.0.1:8830','--token-file',str(token_file)])]
+    children=[];stop=False
+    def requested_stop(*unused):
+        nonlocal stop
+        stop=True
+    signal.signal(signal.SIGTERM,requested_stop);signal.signal(signal.SIGINT,requested_stop)
+    def lower_privileges():
+        os.initgroups(user.pw_name,user.pw_gid);os.setgid(user.pw_gid);os.setuid(user.pw_uid);os.umask(0o077)
+    own=identity(os.getpid())
+    receipt=dict(schema='sub01.isolated-candidate-services.v1',native_authority_assigned=False,native_accepted=False,
+        coordinator=dict(pid=own['pid'],start_ticks=own['start_ticks'],uid=own['uid']),
+        state_sha256=state_hashes,source_sha256=source_hashes,
+        private_state_dir=str(data),state_protection='verified-rootfs-uid1001-dirs0700-files0600',
+        volume_source_permissions_are_not_authority=True,
+        model_sha256={name:digest(source/name) for name in (*BASELINE_OUT_ASSETS,'twin/data/slow_layer.npz','twin/data/receptors_214.csv')},
+        model_source=str(models),
+        scope='reviewed-model candidate services',full_brain_restored=False,
+        services={},minecraft_runtime=minecraft,
+        expected_memories=302,offline_snapshot=True,provider_calls=False)
+    try:
+        for name,port,argv in specs:
+            with (logs/(name+'.log')).open('ab') as log:
+                process=subprocess.Popen(argv,cwd=source,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+                                         start_new_session=True,preexec_fn=lower_privileges)
+            children.append((process,None))
+            current=identity(process.pid);children[-1]=(process,current['start_ticks'])
+            if current['uid']!=user.pw_uid:raise Refusal('Candidate process did not drop to the preserved private UID')
+            deadline=time.monotonic()+60
+            while True:
+                if stop:raise Refusal('Coordinator stop requested during startup')
+                if process.poll() is not None:raise Refusal('Owned '+name+' process exited before health readiness; inspect its private log')
+                if time.monotonic()>deadline:raise Refusal('Owned '+name+' startup timed out; inspect its private log')
+                if owned_listener_probe(process.pid,current['start_ticks'],port,user):
+                    try:
+                        with urllib.request.urlopen(f'http://127.0.0.1:{port}/healthz',timeout=2) as response:
+                            if response.status==200:break
+                    except OSError:pass
+                time.sleep(.2)
+            receipt['services'][name]=dict(pid=process.pid,start_ticks=current['start_ticks'],uid=current['uid'],port=port,argv=argv)
+        receipt['started_utc']=time.time()
+        path=data/'launch-receipt.json'
+        with path.open('x') as stream:json.dump(receipt,stream,indent=2)
+        path.chmod(0o600)
+        # Rootfs supports these attributes. Never chown or widen the volume.
+        info=path.stat()
+        if (info.st_uid,info.st_gid)!=(user.pw_uid,user.pw_gid):os.chown(path,user.pw_uid,user.pw_gid)
+        verify_private_state(data,user.pw_uid,user.pw_gid)
+        (target/'launch-metadata.json').write_text(json.dumps(dict(schema=receipt['schema'],receipt=str(path),
+            source_sha256=source_hashes,model_sha256=receipt['model_sha256'],native_authority_assigned=False,native_accepted=False)))
+        print(json.dumps(dict(status='candidate_services_running',services=receipt['services'],receipt=str(path),
+                              coordinator=receipt['coordinator'],scope=receipt['scope'],full_brain_restored=False,
+                              native_authority_assigned=False,native_accepted=False)),flush=True)
+        while not stop:
+            if any(p.poll() is not None for p,_ in children):
+                raise Refusal('Candidate service stopped')
+            time.sleep(.5)
+    finally:
+        terminate_owned(children)
+        unchanged={kind:(tree_manifest(record['path']) if kind=='snapshot' else source_manifest(record['path'],kind))==record['hashes'] for kind,record in originals.items()}
+        (target/'original-after-stop.json').write_text(json.dumps(unchanged,sort_keys=True))
+        if not all(unchanged.values()):raise Refusal('Original state/package changed; inspect preservation receipt')
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--latest-source',default='/workspace/sub01-home-private/completion-20261021/backend-candidate')
+    parser.add_argument('--model-source',help='Explicit preserved /workspace root containing original twin/data assets; default baseline source')
+    parser.add_argument('--state-dir',required=True,help='New /home/unreal/.sub01-private child on protected rootfs, never mutable state on the permissionless volume')
+    parser.add_argument('--slow-layer-sha256',help='Reviewed original slow-layer asset SHA256, required with --model-source')
+    parser.add_argument('--receptors-sha256',help='Reviewed original receptor CSV SHA256, required with --model-source')
+    for flag in ('baseline-source','state-snapshot','run-dir'):
+        parser.add_argument('--'+flag,required=True)
+    parser.add_argument('--python',required=True,help='Actual verified backend Python interpreter; no assumed venv')
+    parser.add_argument('--offline-snapshot',action='store_true',required=True,help='Owner confirms all snapshot writers stopped')
+    parser.add_argument('--stop-file',default='/home/unreal/.sub01-private/streamer/STOP')
+    parser.add_argument('--token-file',default='/home/unreal/.sub01-private/operator-token')
+    args=parser.parse_args()
+    try:run(args)
+    except Exception as error:
+        print(json.dumps(failure_record(error)),flush=True)
+        return 1
+    return 0
+
+
+if __name__=='__main__':raise SystemExit(main())
+
+NEW FILE tests/test_private_backend_coordinator.py
+import importlib.util,json,tempfile,unittest
+from pathlib import Path
+from unittest.mock import Mock,patch
+P=Path(__file__).resolve().parents[1]/'tools/private_backend_coordinator.py'
+spec=importlib.util.spec_from_file_location('private_backend_coordinator',P);c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
+class CoordinatorTests(unittest.TestCase):
+ def snapshot(self,p,n=302):
+  p.mkdir();(p/'state.json').write_text(json.dumps({'engine':{},'memory':[{}]*n}));(p/'nested').mkdir();(p/'nested'/'memory.db-wal').write_bytes(b'preserved companion');(p/'memory.db-shm').write_bytes(b'companion')
+ def test_complete_copy_count_and_original_unchanged(self):
+  with tempfile.TemporaryDirectory()as d:
+   p=Path(d);self.snapshot(p/'original');before=c.tree_manifest(p/'original');result=c.copy_state(p/'original',p/'new')
+   self.assertEqual(result,before);self.assertEqual(c.tree_manifest(p/'new'),before);self.assertEqual(c.tree_manifest(p/'original'),before)
+ def test_wrong_count_on_new_copy_blocks(self):
+  with tempfile.TemporaryDirectory()as d:
+   p=Path(d);self.snapshot(p/'original',301)
+   with self.assertRaisesRegex(c.Refusal,'NEW_COPY'):c.copy_state(p/'original',p/'new')
+ def test_special_companion_or_existing_destination_blocks(self):
+  with tempfile.TemporaryDirectory()as d:
+   p=Path(d);self.snapshot(p/'original');(p/'original/link').symlink_to(p/'original/state.json')
+   with self.assertRaises(c.Refusal):c.copy_state(p/'original',p/'new')
+   self.assertFalse((p/'new').exists())
+ def test_mutation_during_copy_blocks(self):
+  with tempfile.TemporaryDirectory()as d:
+   p=Path(d);self.snapshot(p/'original');real=c.shutil.copytree
+   def mutate(*a,**kw):
+    result=real(*a,**kw);(p/'original/state.json').write_text('{}');return result
+   with patch.object(c.shutil,'copytree',side_effect=mutate):
+    with self.assertRaises(c.Refusal):c.copy_state(p/'original',p/'new')
+ def test_cleanup_only_owned_matching_child(self):
+  child=Mock(pid=10);child.poll.return_value=None
+  with patch.object(c,'identity',return_value={'start_ticks':20}):c.terminate_owned([(child,19)])
+  child.terminate.assert_not_called()
+  with patch.object(c,'identity',return_value={'start_ticks':20}):c.terminate_owned([(child,20)])
+  child.terminate.assert_called_once()
+ def test_mutable_environment_is_private(self):
+  env=c.environment(Path('/token'),'test-only',Path('/private/new'),Path('/actual/venv/bin/python'))
+  for name in ('TMPDIR','XDG_CACHE_HOME','XDG_CONFIG_HOME','XDG_DATA_HOME'):self.assertTrue(env[name].startswith('/private/new/'))
+  self.assertEqual(env['HOME'],'/home/unreal');self.assertEqual(env['STREAMER_DIR'],'/home/unreal/.sub01-private/streamer')
+  self.assertTrue(env['PATH'].startswith('/actual/venv/bin:'))
+ def test_no_provider_guard_or_broad_kill_entrypoint(self):
+  text=P.read_text()
+  for forbidden in ('guard_alive','--guard-pid','api.runpod','graphql','pgrep','killpg','SIGKILL'):self.assertNotIn(forbidden,text)
+ def test_stop_is_startup_gate_not_service_lifetime(self):
+  text=P.read_text();self.assertEqual(text.count("Path(args.stop_file).is_file()"),1)
+  self.assertNotIn('stop_file',text[text.index('        while not stop:'):text.index('    finally:\n        terminate_owned')])
+ def test_source_manifest_ignores_unconsumed_private_and_cache(self):
+  with tempfile.TemporaryDirectory()as d:
+   root=Path(d);(root/'music_curated.json').write_text('{}');(root/'used.py').write_text('x=1')
+   for name in ('private','logs','__pycache__','.git'):
+    (root/'tools'/name).mkdir(parents=True);(root/'tools'/name/'secret.py').write_text('not an input')
+   (root/'.env').write_text('do not hash');(root/'old-state').mkdir();(root/'old-state'/'large').write_bytes(b'unused')
+   result=c.source_manifest(root,'latest');self.assertEqual(set(result),{'used.py','music_curated.json'})
+ def test_occupied_port_refuses_without_signalling(self):
+  with patch.object(c.socket.socket,'bind',side_effect=OSError('occupied')):
+   with self.assertRaises(c.Refusal):c.require_free_ports(False)
+if __name__=='__main__':unittest.main()

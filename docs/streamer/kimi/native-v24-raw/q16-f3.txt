@@ -1,0 +1,24 @@
+Context: main_fifo_probe.py, a stdlib Python go/no-go reader of the FIFO main.mjpeg (the writer, a game, writes whole TurboJPEG baseline frames; on a cut it closes the FIFO and later reopens with a fresh SOI; FF D8 FF never occurs inside one of its frames: entropy data is stuffed, header bodies (JFIF APP0, COM "seq=<n>", DQT at quality >= 40, SOF0, DHT, SOS) hold no FF D8 FF). In follow-up F1 you found: (1) `exclusive` true only meant "no other reader observed"; (2) a close/reopen with no EOF seen in between could glue an old partial frame to the next writer's frame. The changes, verbatim:
+
+(1) the report field (the scans every 5 s and at the end are unchanged):
+```
+            # the scans can show another reader, never prove there was none (one could open and close between two scans)
+            'other_reader_seen': None if force else bool(intruders), 'other_readers_during_run': sorted(intruders)}
+```
+(the README's go/no-go now asks for `other_reader_seen false` AND states that exclusivity comes from the procedure: the director stopped or in x11 mode, its tap not draining the FIFO)
+
+(2) in Walker.feed, right after `end, complete = self._walk()` (end None = more bytes needed; complete False = a cut detected at `end`):
+```
+            fresh = self._soi(2)   # a NEW frame's SOI after this one's start (FF D8 FF never occurs inside an encoder's frame)
+            if fresh > 0 and (end is None or end > fresh):
+                # the writer restarted (it closed on a cut and reopened with no EOF seen in between): this frame can never complete,
+                # and a walk that ran past the new SOI would glue two frames together
+                self.cuts += 1
+                del self.buffer[:fresh]
+                continue
+```
+(`_soi(start)` = `self.buffer.find(b'\xff\xd8\xff', start)`; the loop then restarts on the new SOI; a test glues an old frame cut inside its DQT so that the segment's length swallows exactly the new frame's SOI+APP0+COM: without the guard a bogus frame with the OLD seq passed the contract; with it the new frame comes out whole and one cut is counted)
+
+1. Are (1) and (2) fixed? 2. Can (2) drop a good frame or loop without progress?
+
+Answer in at most 12 lines: APPROVE, or numbered findings with severity (blocking/minor), each with the line and the fix.

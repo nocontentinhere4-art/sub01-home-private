@@ -1,0 +1,23 @@
+{
+ "request": {
+  "url": "https://api.moonshot.ai/v1/chat/completions",
+  "model": "kimi-k3.1-pro",
+  "reasoning_effort": "low",
+  "max_tokens": 9000,
+  "timeout_s": 280,
+  "question_sha256": "b4b58f043f19cd4f9c005258e5aacfed55a0c43c87d6898ce91eab69f0392226"
+ },
+ "sent_utc": "2026-10-26 02:05:12 UTC",
+ "http": 200,
+ "request_id_headers": {
+  "Msh-Request-Id": "ad90f97c-d0e1-11f1-85a1-32035ae47f50"
+ },
+ "model": "kimi-k3.1-pro",
+ "finish_reason": "stop",
+ "prompt_tokens": 656,
+ "completion_tokens": 1839,
+ "reasoning_tokens": 1557,
+ "answer": "APPROVE WITH CHANGES\n\n- **Verify every pinned input before restoration:** this must explicitly include the standalone native `.so` (`1c78\u202669b0`), not only the two archives. Any mismatch, unexpected member count, or malformed link graph must abort that extraction.\n- **Make extraction race-safe and fail-closed:** create new, initially empty per-artifact destinations and fail if they exist. Extract unprivileged, without restoring ownership, setuid bits, capabilities, or xattrs. Use dirfd/`openat2`-style beneath-only resolution (or equivalent), with exclusive file creation and no symlink following; prevalidation alone does not prevent traversal through filesystem races.\n- **Bound extraction before writing:** check declared uncompressed sizes, available space, and inode requirements; apply file-size, total-size, and member-count limits to prevent disk exhaustion.\n- **Make the receipt accurate:** record input hashes, extracted-file hashes, the omitted `DerivedDataCache` link, and all recreated voice-link targets. Compare file hashes against trusted expected hashes where available; otherwise label them as observed extraction hashes, not independent authentication. Hash mismatches must leave the affected artifact quarantined and unusable.\n\nWith these changes, the plan is sufficient for **staging only**; it does not establish recovery of historical/backend state or authorize activation.",
+ "seconds": 70.7,
+ "ended_utc": "2026-10-26 02:06:22 UTC"
+}

@@ -1,0 +1,81 @@
+--- v6-reviewed.py
++++ v7-candidate.py
+@@ -6,7 +6,7 @@
+  raise SystemExit("Refusing optimized interpreter mode")
+ import urllib.request
+ P=Path('/home/unreal/.sub01-private');SHARE=Path('/tmp/sub01-share')
+-BASE=P/'voice-director-diagnostic-v6-20261025';SOURCE=P/'latest-source-20261023/scripts'
++ROOT=P/'voice-director-diagnostic-v7-20261025';BASE=ROOT/'confined';BROKER=ROOT/'broker';SOURCE=P/'latest-source-20261023/scripts'
+ MAIN=P/'streamer/main.mjpeg';MAINJSON=P/'streamer/main.json';STOP=P/'streamer/STOP'
+ LEASE=SHARE/'MEASURING';OWNER='codex-voice-director-'+uuid.uuid4().hex
+ WRAPPER=SHARE/'restrict-diagnostic-child-v2.py';NATIVE=(29950,53274039)
+@@ -157,7 +157,7 @@
+  last_guard=time.monotonic()
+  assert os.statvfs('/').f_bavail*os.statvfs('/').f_frsize>10*1024**3,'root reserve'
+  size=0
+- for path in BASE.rglob('*'):
++ for path in ROOT.rglob('*'):
+   try:
+    if path.is_file()and not path.is_symlink():size+=path.stat().st_size
+   except FileNotFoundError:pass
+@@ -206,6 +206,7 @@
+   TRITON_CACHE_DIR=str(cache/'triton'),NUMBA_CACHE_DIR=str(cache/'numba'),HF_HOME='/home/unreal/.cache/sub01-voice-offline',
+   HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1',HF_DATASETS_OFFLINE='1',XAUTHORITY=str(P/'native-xauthority'),DISPLAY='unix:99',
+   OMP_NUM_THREADS='4',OPENBLAS_NUM_THREADS='1')
++ if role=='director':env.update(SUB01_WRITER_CONFIG=str(BROKER/'targets.json'),SUB01_WRITER_SNAPSHOT=str(BROKER/'snapshot.json'))
+  cmd=['/usr/bin/taskset','-c','6-13',python,str(WRAPPER),'--directory',str(BASE),'--bind-port',str(port),'--',python,*args]
+  with (BASE/(role+'.log')).open('wb')as f:p=subprocess.Popen(cmd,stdin=subprocess.DEVNULL,stdout=f,stderr=f,env=env,user=1001,group=1001,extra_groups=[],start_new_session=True,close_fds=True)
+  children[role]=p;register(p.pid);log('child-start',role=role,pid=p.pid,identity=identities[p.pid])
+@@ -220,7 +221,7 @@
+  libc=ctypes.CDLL(None,use_errno=True)
+  if libc.prctl(36,1,0,0,0)!=0:raise OSError(ctypes.get_errno(),'child subreaper')
+  signal.setitimer(signal.ITIMER_REAL,max(.001,deadline-time.monotonic()))
+- native();assert not LEASE.exists() and not BASE.exists()
++ native();assert not LEASE.exists() and not ROOT.exists()
+  assert not listeners(),'occupied diagnostic port'
+  for port in (8855,8856):
+   with socket.socket()as s:
+@@ -236,6 +237,10 @@
+  for pid in proof['owned']:assert not Path('/proc/'+pid).exists(),'prior CUDA process remains'
+  assert sha(OBSERVER)=='acbf714e8a0466aafb858544bd16e0dd1d7e22cd469984bbbe48afa028bf18ae'
+  assert sha(WRAPPER)=='68710e0196159a242afdc82377a152f9dea7659dd3da38f7bee49248fb9bdf17'
++ assert sha(SHARE/'voice-writer-broker.py')=='13212849f4c28a6cf09cab30e3375b7bb9c55cefd85d19be7d10b1031680dbdb'
++ assert sha(SHARE/'director-with-writer-proof.py')=='b4351230e60e6df00ec9ba13666b5f2f0b1818eaf26909867bcf092745b756fe'
++ assert sha(SHARE/'voice-writer-proof-validation.py')=='2bea39a3cf92ba05c9fc1fb84154521607bfd347b024e815c2e2557950eba63d'
++ proof_validation=__import__('runpy').run_path(str(SHARE/'voice-writer-proof-validation.py'))
+  assert sha(SOURCE/'voice_server.py')=='95758eb8fd0a4341d6e6fe1a684c1511ca0c98fc8c6f89a753f226a4f5eefce5'
+  assert sha(SOURCE/'streamer_director.py')=='d7ff873b40ac390c2004c248e5aa825255bcefd49e44684a077b78d91c799b8c'
+  cfgpath=P/'streamer/voice/voice.json';cfg=read(cfgpath);assert cfg['chosen']=='K07'and cfg['engine']=='chatterbox'
+@@ -248,7 +253,7 @@
+  assert sha(manifest_path)=='56b3bdca9852fb5ecc29c3489071c364271e513f68996622ee1b5af5f4de9021'
+  manifest=read(manifest_path)
+  for item in manifest['files'].values():assert sha(item['source'])==item['sha256'],'ROOT cache changed'
+- newdir(BASE);newdir(BASE/'voice');newdir(BASE/'director');newdir(BASE/'director/recordings')
++ newdir(ROOT);newdir(BASE);newdir(BROKER);newdir(BASE/'voice');newdir(BASE/'director');newdir(BASE/'director/recordings')
+  result['inputs']={'controller_sha256':sha(__file__),'observer_sha256':sha(OBSERVER),'wrapper_sha256':sha(WRAPPER),'voice_source_sha256':sha(SOURCE/'voice_server.py'),'director_source_sha256':sha(SOURCE/'streamer_director.py'),'config_sha256':sha(cfgpath),'reference_sha256':sha(cfg['voice_prompt']),'cache_manifest_sha256':sha(manifest_path),'tuning_before_sha256':tuning_before,'main_inode':main_inode}
+  save(BASE/'inputs.json',result['inputs'])
+  fd=os.open(LEASE,os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,0o600)
+@@ -257,9 +262,22 @@
+  launch('voice','/home/unreal/voice-rt-venv/bin/python',[str(SOURCE/'voice_server.py'),'--host','127.0.0.1','--port','8855','--token-file',str(P/'operator-token'),'--streamer-dir',str(BASE/'voice'),'--voice-config',str(cfgpath),'--engine','chatterbox','--fallback','none','--device','cuda','--threads','4','--offline','--keep-hours','0'],8855)
+  health=wait_for(lambda:(lambda h:h if h.get('ready')is True and h.get('engine')=='chatterbox'else None)(api(8855,'/healthz')),120)
+  save(BASE/'voice-ready.json',health);voice_fifo=BASE/'voice/voice.pcm';voice_inode=fifo(voice_fifo)
+- launch('director','/home/unreal/venv/bin/python',[str(SOURCE/'streamer_director.py'),'--host','127.0.0.1','--port','8856','--token-file',str(P/'operator-token'),'--streamer-dir',str(BASE/'director'),'--recordings-dir',str(BASE/'director/recordings'),'--voice-fifo',str(voice_fifo),'--main-fifo',str(MAIN),'--main-json',str(MAINJSON),'--ffmpeg','/usr/bin/ffmpeg','--game-source','fifo','--layout','webcam_only','--desktop-display',':99.0','--encoder','libx264','--fps','60','--preset','veryfast','--crf','23','--keep-segments','0'],8856)
++ targets=[{'role':'native','pid':NATIVE[0],'ticks':NATIVE[1],'fifo':list(main_inode)},{'role':'voice','pid':children['voice'].pid,'ticks':identities[children['voice'].pid]['ticks'],'fifo':list(voice_inode)}]
++ assert proof_validation['targets_ok'](targets)
++ save(BROKER/'targets.json',targets);os.chmod(BROKER/'targets.json',0o600);os.chown(BROKER/'targets.json',1001,1001)
++ with (ROOT/'broker.log').open('wb')as output:
++  broker=subprocess.Popen(['/home/unreal/venv/bin/python','-I',str(SHARE/'voice-writer-broker.py'),'--config',str(BROKER/'targets.json'),'--output',str(BROKER),'--owner-base',str(BASE)],user=1001,group=1001,extra_groups=[],env={'PATH':'/usr/bin:/bin','LANG':'C.UTF-8','PYTHONDONTWRITEBYTECODE':'1'},stdin=subprocess.DEVNULL,stdout=output,stderr=output,start_new_session=True)
++ children['broker']=broker;register(broker.pid);log('child-start',role='broker',pid=broker.pid,identity=identities[broker.pid])
++ launch('director','/home/unreal/venv/bin/python',[str(SHARE/'director-with-writer-proof.py'),'--host','127.0.0.1','--port','8856','--token-file',str(P/'operator-token'),'--streamer-dir',str(BASE/'director'),'--recordings-dir',str(BASE/'director/recordings'),'--voice-fifo',str(voice_fifo),'--main-fifo',str(MAIN),'--main-json',str(MAINJSON),'--ffmpeg','/usr/bin/ffmpeg','--game-source','fifo','--layout','webcam_only','--desktop-display',':99.0','--encoder','libx264','--fps','60','--preset','veryfast','--crf','23','--keep-segments','0'],8856)
++ readiness_last=[-10.0]
+  def ready():
+   d=api(8856,'/director/state');m=d.get('main')or{}
++  if time.monotonic()-readiness_last[0]>=1:
++   snapshot=read(BROKER/'snapshot.json');moment=time.monotonic()
++   decisions={t['role']:proof_validation['valid'](snapshot,t,moment) for t in targets}
++   diagnostic={'utc':time.time(),'director':d,'voice':api(8855,'/state'),'broker_snapshot':snapshot,'broker_age':moment-snapshot.get('monotonic',0),'broker_decisions':decisions}
++   with (BASE/'readiness-states.jsonl').open('a')as f:f.write(json.dumps(diagnostic)+'\n')
++   readiness_last[0]=time.monotonic()
+   return d if d.get('voice')is True and m.get('source')=='fifo'and m.get('fresh')is True and m.get('main_tap_ok')is True else None
+  initial=wait_for(ready,45);save(BASE/'director-ready.json',initial)
+  log('recording-window-start',director=initial);window=time.monotonic();sent=False;last_sample=0;last_check=0

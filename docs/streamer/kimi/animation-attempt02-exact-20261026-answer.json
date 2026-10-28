@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "# APPROVE \u2014 static bundle/design approval only\n\nI found no blocking defect in the supplied exact attempt02 wrapper, importer, preflight, pinned helper, launcher, cache gate, or cleanup implementation. Nothing was executed.\n\nKey points reviewed:\n\n- **Admission and pins:** Fresh attempt02 paths, bundle hashes, source/input pins, original helper bytes, immutable package checks, full baseline comparisons, skeleton-only reference-pose admission, and exactly-three-target gates are retained.\n- **Timeouts and cleanup:** The 300s preflight, 600s import, and 1200s overall limits are implemented. Post-`Popen` protection, detached-session discovery, PID/start-time/UID rechecks, TERM for 2s, KILL with up to 5s polling, and direct-child reaping are present. The supplied offline fault tests exercise these paths only through AST/stubs.\n- **Prelaunch evidence:** Root-owned admission plans and copied inputs are persisted and read back before engine invocation.\n- **Cache gate:** It verifies the pinned `BaseEngine.ini` SHA and exact active graph entry without editing configuration or trace flags. It does **not** prove runtime Shared/Cloud disablement, omit those graph nodes, establish network behavior, or make `/home/sub01probe` a freshly isolated cache.\n- **Scope:** No rendering, runtime promotion, provenance claim, visual acceptance, STOP release, source build, backend/agent replacement, or provider/Vagon work is added.\n\nApproval remains conditional on the independent root prelaunch reconfirmation: no overlapping work or UID1002 processes, canonical STOP present, no MEASURING lease, sole-provider context, and balance context **31.364513 at 15:36:23 UTC**. Launch only once through the exact detached launcher and monitor the supervisor\u2019s preserved status.\n\nA successful result would establish only the separately recorded reconstruction/import checks\u2014not runtime proof, original-asset provenance, or visual acceptance.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 22166,
+    "completion_tokens": 8979,
+    "total_tokens": 31145,
+    "completion_tokens_details": {
+      "reasoning_tokens": 8569
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 22016
+    }
+  },
+  "seconds": 347.86
+}

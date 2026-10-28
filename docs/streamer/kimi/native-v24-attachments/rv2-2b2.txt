@@ -1,0 +1,22 @@
+ void ResetRing(){for(int32 S=0;S<Slots;++S){if(Pending[S]&&!SlotProbe[S])++DroppedFormat;Pending[S]=false;Readback[S].Reset();}}
+ void Collect(){
+  // finished copies, OLDEST first (a newer one never overtakes an older one), every one of them; the fence is polled, never waited on
+  for(;;){
+   int32 S=-1;for(int32 K=0;K<Slots;++K)if(Pending[K]&&(S<0||SlotOrder[K]<SlotOrder[S]))S=K;
+   if(S<0||!Readback[S]->IsReady())return;
+   if(!SlotProbe[S]&&Reader.load()&&EncodeInFlight.load()>=Encoders)return; // no encoder free: it stays pending (in order); a full ring drops the NEWEST capture
+   Pending[S]=false;
+   if(SlotProbe[S]){if(EncodeInFlight.load()>0)continue;} // a diagnostic copy never delays the stream
+   else if(!Reader.load()){++DroppedNoReader;continue;} // the reader left during the copy
+   const double C0=FPlatformTime::Seconds();int32 Pitch=0,Rows=0; // Lock: the row pitch in PIXELS
+   const uint8* Mapped=static_cast<const uint8*>(Readback[S]->Lock(Pitch,&Rows));LastPitch.store(Pitch);LastRows.store(Rows);
+   if(!Mapped||Pitch<Width||Rows<Height){if(Mapped)Readback[S]->Unlock();if(!SlotProbe[S])++DroppedFormat;continue;}
+   FSub01MainJob Job;Job.Seq=SlotSeq[S];Job.Session=SlotSession[S];Job.Probe=SlotProbe[S];Job.Kind=RingKind;Job.Width=Width;Job.Height=Height;Job.CapturedAt=SlotAt[S];Job.Pixels=TakeBuffer();
+   Job.Pixels.SetNumUninitialized(int64(Width)*Height*4);
+   for(int32 Y=0;Y<Height;++Y)FMemory::Memcpy(Job.Pixels.GetData()+int64(Y)*Width*4,Mapped+int64(Y)*Pitch*4,size_t(Width)*4);
+   Readback[S]->Unlock();++Copied;CopyUs+=int64((FPlatformTime::Seconds()-C0)*1e6);
+   {std::lock_guard<std::mutex> Lock(Mutex);if(!Job.Probe){EncodeInFlight.fetch_add(1);Outstanding.push_back(Job.Seq);}Jobs.push_back(MoveTemp(Job));}
+   JobCv.notify_one();
+  }
+ }
+ TArray64<uint8> TakeBuffer(){std::lock_guard<std::mutex> Lock(Mutex);if(Pool.empty())return TArray64<uint8>();TArray64<uint8> Buffer=MoveTemp(Pool.back());Pool.pop_back();return Buffer;}

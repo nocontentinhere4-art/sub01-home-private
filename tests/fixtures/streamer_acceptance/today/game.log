@@ -1,0 +1,143 @@
+[2026.10.24-14.04.25:327][  0]LogTemp: Display: SUB01_NATIVE_INIT_BEGIN
+[2026.10.24-14.05.11:996][  1]LogTemp: Display: SUB01_STREAMER_VISUAL_FACE_RIG bones=66 faceOrHeadBones=3 [Neck,Head,HeadTop_End] morphTargets=0 []
+[2026.10.24-14.05.12:645][  3]LogTemp: Display: SUB01_STREAMER_VISUAL_MOUTH_READY rig=head_only (no jaw bone, no morph targets: emphasis, not lip sync) file=/home/unreal/.sub01-private/streamer/mouth.json pollHz=30 headPitchDeg=2 jawPitchDeg=12
+[2026.10.24-14.08.12:973][382]LogTemp: Display: SUB01_STREAMER_VISUAL_STATE idle -> reading
+[2026.10.24-14.08.59:590][854]LogTemp: Display: SUB01_STREAMER_VISUAL_STATE reading -> idle
+[2026.10.24-15.29.52:432][391]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.29.57:210][627]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=49.4 ms=20.23 max_ms=25.5 gpu_ms=10.68 frames=495 window_s=10 gpu_samples=495 game_ms=2.70 render_ms=16.98 rhi_ms=3.77 swap_ms=0.01 render_wait_ms=3.26 game_wait_ms=17.55
+[2026.10.24-15.29.57:210][627]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.2 headYaw=0.2 seatYaw=0.0 loopSeams=1020 loopFade=0.50 bodyRight=X=-0.999 Y=0.049 Z=0.000 faceMeanS=5084.9 backrestGapCm=0.9
+[2026.10.24-15.29.57:433][638]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.02:433][885]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.07:214][102]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=47.5 ms=21.06 max_ms=201.4 gpu_ms=10.69 frames=475 window_s=10 gpu_samples=475 game_ms=2.77 render_ms=17.76 rhi_ms=4.40 swap_ms=0.01 render_wait_ms=3.29 game_wait_ms=18.27
+[2026.10.24-15.30.07:214][102]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.6 headYaw=0.2 seatYaw=0.0 loopSeams=1022 loopFade=0.50 bodyRight=X=-0.999 Y=0.049 Z=0.000 faceMeanS=5094.9 backrestGapCm=0.9
+[2026.10.24-15.30.07:446][113]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.12:454][356]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.13:748][420]LogTemp: Display: SUB01_STREAMER_VISUAL_CAM2 fps=40.0 capture_fps=48.6 target_fps=60 frames=204775 reader=1 game_ms_per_capture=0.00 game_ms_per_frame=0.004 readback_ms=0.48 encode_ms=3.9 kb=100 dropped_no_reader_or_full=240 dropped_busy=19 dropped_slots=0 on=1 window_s=30
+[2026.10.24-15.30.17:226][590]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=48.7 ms=20.52 max_ms=25.6 gpu_ms=10.69 frames=488 window_s=10 gpu_samples=488 game_ms=2.72 render_ms=17.24 rhi_ms=3.79 swap_ms=0.01 render_wait_ms=3.28 game_wait_ms=17.80
+[2026.10.24-15.30.17:226][590]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.1 headYaw=-0.2 seatYaw=0.0 loopSeams=1024 loopFade=0.50 bodyRight=X=-0.999 Y=0.048 Z=0.000 faceMeanS=5105.0 backrestGapCm=0.9
+[2026.10.24-15.30.17:455][601]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.22:463][843]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.27:241][ 75]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=48.4 ms=20.65 max_ms=24.7 gpu_ms=10.67 frames=485 window_s=10 gpu_samples=485 game_ms=2.74 render_ms=17.33 rhi_ms=3.78 swap_ms=0.01 render_wait_ms=3.32 game_wait_ms=17.91
+[2026.10.24-15.30.27:241][ 75]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.3 headYaw=0.7 seatYaw=0.0 loopSeams=1026 loopFade=0.50 bodyRight=X=-0.999 Y=0.049 Z=0.000 faceMeanS=5115.0 backrestGapCm=0.9
+[2026.10.24-15.30.27:480][ 87]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.32:491][328]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.37:257][557]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=48.1 ms=20.78 max_ms=26.2 gpu_ms=10.67 frames=482 window_s=10 gpu_samples=482 game_ms=2.75 render_ms=17.51 rhi_ms=3.83 swap_ms=0.01 render_wait_ms=3.27 game_wait_ms=18.03
+[2026.10.24-15.30.37:257][557]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.6 headYaw=0.4 seatYaw=0.0 loopSeams=1028 loopFade=0.50 bodyRight=X=-0.999 Y=0.049 Z=0.000 faceMeanS=5125.0 backrestGapCm=0.9
+[2026.10.24-15.30.37:507][569]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.42:523][809]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.43:753][868]LogTemp: Display: SUB01_STREAMER_VISUAL_CAM2 fps=39.9 capture_fps=48.3 target_fps=60 frames=205971 reader=1 game_ms_per_capture=0.00 game_ms_per_frame=0.004 readback_ms=0.48 encode_ms=3.9 kb=100 dropped_no_reader_or_full=240 dropped_busy=13 dropped_slots=0 on=1 window_s=30
+[2026.10.24-15.30.47:272][ 37]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=47.9 ms=20.86 max_ms=31.5 gpu_ms=10.68 frames=480 window_s=10 gpu_samples=480 game_ms=2.82 render_ms=17.61 rhi_ms=3.87 swap_ms=0.01 render_wait_ms=3.25 game_wait_ms=18.04
+[2026.10.24-15.30.47:272][ 37]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.5 headYaw=-0.3 seatYaw=0.0 loopSeams=1030 loopFade=0.50 bodyRight=X=-0.999 Y=0.050 Z=0.000 faceMeanS=5135.0 backrestGapCm=0.9
+[2026.10.24-15.30.47:532][ 50]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.52:550][291]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.30.57:274][518]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=48.1 ms=20.79 max_ms=25.7 gpu_ms=10.67 frames=481 window_s=10 gpu_samples=481 game_ms=2.70 render_ms=17.49 rhi_ms=3.81 swap_ms=0.01 render_wait_ms=3.30 game_wait_ms=18.10
+[2026.10.24-15.30.57:274][518]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.7 headYaw=0.1 seatYaw=0.0 loopSeams=1032 loopFade=0.50 bodyRight=X=-0.999 Y=0.051 Z=0.000 faceMeanS=5145.0 backrestGapCm=0.9
+[2026.10.24-15.30.57:566][532]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.02:578][772]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.07:287][996]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=47.7 ms=20.95 max_ms=26.2 gpu_ms=10.65 frames=478 window_s=10 gpu_samples=478 game_ms=2.81 render_ms=17.63 rhi_ms=3.81 swap_ms=0.01 render_wait_ms=3.31 game_wait_ms=18.13
+[2026.10.24-15.31.07:287][996]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.4 headYaw=-0.2 seatYaw=0.0 loopSeams=1034 loopFade=0.50 bodyRight=X=-0.999 Y=0.051 Z=0.000 faceMeanS=5155.0 backrestGapCm=0.9
+[2026.10.24-15.31.07:594][ 11]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.12:603][250]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.13:767][306]LogTemp: Display: SUB01_STREAMER_VISUAL_CAM2 fps=40.0 capture_fps=47.9 target_fps=60 frames=207173 reader=1 game_ms_per_capture=0.00 game_ms_per_frame=0.004 readback_ms=0.48 encode_ms=3.9 kb=100 dropped_no_reader_or_full=228 dropped_busy=8 dropped_slots=0 on=1 window_s=30
+[2026.10.24-15.31.17:290][472]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=47.6 ms=21.02 max_ms=26.2 gpu_ms=10.68 frames=476 window_s=10 gpu_samples=476 game_ms=2.71 render_ms=17.72 rhi_ms=3.84 swap_ms=0.01 render_wait_ms=3.30 game_wait_ms=18.31
+[2026.10.24-15.31.17:290][472]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.5 headYaw=0.5 seatYaw=0.0 loopSeams=1036 loopFade=0.50 bodyRight=X=-0.999 Y=0.051 Z=0.000 faceMeanS=5165.0 backrestGapCm=0.9
+[2026.10.24-15.31.17:609][487]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.22:633][726]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.27:292][947]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=47.5 ms=21.06 max_ms=27.8 gpu_ms=10.68 frames=475 window_s=10 gpu_samples=475 game_ms=2.80 render_ms=17.82 rhi_ms=3.84 swap_ms=0.01 render_wait_ms=3.23 game_wait_ms=18.26
+[2026.10.24-15.31.27:292][947]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.5 headYaw=0.1 seatYaw=0.0 loopSeams=1038 loopFade=0.50 bodyRight=X=-0.999 Y=0.051 Z=0.000 faceMeanS=5175.0 backrestGapCm=0.9
+[2026.10.24-15.31.27:653][964]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.32:655][198]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.37:311][416]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=46.8 ms=21.36 max_ms=26.9 gpu_ms=10.69 frames=469 window_s=10 gpu_samples=469 game_ms=2.78 render_ms=17.98 rhi_ms=3.88 swap_ms=0.01 render_wait_ms=3.38 game_wait_ms=18.58
+[2026.10.24-15.31.37:311][416]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.9 headYaw=-0.2 seatYaw=0.0 loopSeams=1040 loopFade=0.50 bodyRight=X=-0.999 Y=0.051 Z=0.000 faceMeanS=5185.0 backrestGapCm=0.9
+[2026.10.24-15.31.37:666][433]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.42:666][667]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.43:787][719]LogTemp: Display: SUB01_STREAMER_VISUAL_CAM2 fps=40.1 capture_fps=47.1 target_fps=60 frames=208377 reader=1 game_ms_per_capture=0.00 game_ms_per_frame=0.004 readback_ms=0.48 encode_ms=3.8 kb=100 dropped_no_reader_or_full=203 dropped_busy=6 dropped_slots=0 on=1 window_s=30
+[2026.10.24-15.31.47:319][883]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=46.7 ms=21.43 max_ms=29.0 gpu_ms=10.69 frames=467 window_s=10 gpu_samples=467 game_ms=2.81 render_ms=18.00 rhi_ms=3.82 swap_ms=0.01 render_wait_ms=3.43 game_wait_ms=18.65
+[2026.10.24-15.31.47:319][883]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.2 headYaw=-0.3 seatYaw=0.0 loopSeams=1042 loopFade=0.50 bodyRight=X=-0.999 Y=0.052 Z=0.000 faceMeanS=5195.1 backrestGapCm=0.9
+[2026.10.24-15.31.47:682][900]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.52:697][135]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.31.57:326][349]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=46.6 ms=21.48 max_ms=25.9 gpu_ms=10.68 frames=466 window_s=10 gpu_samples=466 game_ms=2.72 render_ms=18.18 rhi_ms=3.84 swap_ms=0.01 render_wait_ms=3.29 game_wait_ms=18.73
+[2026.10.24-15.31.57:326][349]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.5 headYaw=-0.5 seatYaw=0.0 loopSeams=1044 loopFade=0.50 bodyRight=X=-0.999 Y=0.052 Z=0.000 faceMeanS=5205.1 backrestGapCm=0.9
+[2026.10.24-15.31.57:712][367]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.02:713][599]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.07:345][814]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=46.4 ms=21.55 max_ms=25.6 gpu_ms=10.69 frames=465 window_s=10 gpu_samples=465 game_ms=2.77 render_ms=18.25 rhi_ms=3.80 swap_ms=0.01 render_wait_ms=3.30 game_wait_ms=18.78
+[2026.10.24-15.32.07:345][814]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.6 headYaw=-0.2 seatYaw=0.0 loopSeams=1046 loopFade=0.50 bodyRight=X=-0.999 Y=0.053 Z=0.000 faceMeanS=5215.1 backrestGapCm=0.9
+[2026.10.24-15.32.07:733][832]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.12:749][ 63]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.13:803][112]LogTemp: Display: SUB01_STREAMER_VISUAL_CAM2 fps=40.0 capture_fps=46.4 target_fps=60 frames=209578 reader=1 game_ms_per_capture=0.00 game_ms_per_frame=0.004 readback_ms=0.48 encode_ms=3.8 kb=100 dropped_no_reader_or_full=189 dropped_busy=3 dropped_slots=0 on=1 window_s=30
+[2026.10.24-15.32.17:358][276]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=46.1 ms=21.67 max_ms=25.9 gpu_ms=10.70 frames=462 window_s=10 gpu_samples=462 game_ms=2.78 render_ms=18.28 rhi_ms=3.81 swap_ms=0.01 render_wait_ms=3.40 game_wait_ms=18.90
+[2026.10.24-15.32.17:358][276]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.2 headYaw=-0.3 seatYaw=0.0 loopSeams=1048 loopFade=0.50 bodyRight=X=-0.999 Y=0.053 Z=0.000 faceMeanS=5225.1 backrestGapCm=0.9
+[2026.10.24-15.32.17:752][294]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.22:769][526]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.27:360][738]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=46.2 ms=21.65 max_ms=26.0 gpu_ms=10.69 frames=462 window_s=10 gpu_samples=462 game_ms=2.76 render_ms=18.30 rhi_ms=3.79 swap_ms=0.01 render_wait_ms=3.34 game_wait_ms=18.89
+[2026.10.24-15.32.27:360][738]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.2 headYaw=0.2 seatYaw=0.0 loopSeams=1050 loopFade=0.50 bodyRight=X=-0.999 Y=0.053 Z=0.000 faceMeanS=5235.1 backrestGapCm=0.9
+[2026.10.24-15.32.27:777][757]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.32:787][990]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.37:371][202]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=46.3 ms=21.58 max_ms=25.6 gpu_ms=10.69 frames=464 window_s=10 gpu_samples=464 game_ms=2.72 render_ms=18.28 rhi_ms=3.78 swap_ms=0.01 render_wait_ms=3.29 game_wait_ms=18.85
+[2026.10.24-15.32.37:371][202]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.6 headYaw=0.2 seatYaw=0.0 loopSeams=1052 loopFade=0.50 bodyRight=X=-0.999 Y=0.053 Z=0.000 faceMeanS=5245.1 backrestGapCm=0.9
+[2026.10.24-15.32.37:801][222]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.42:808][451]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.43:806][497]LogTemp: Display: SUB01_STREAMER_VISUAL_CAM2 fps=37.7 capture_fps=46.2 target_fps=60 frames=210710 reader=1 game_ms_per_capture=0.00 game_ms_per_frame=0.004 readback_ms=0.48 encode_ms=3.8 kb=100 dropped_no_reader_or_full=250 dropped_busy=3 dropped_slots=0 on=1 window_s=30
+[2026.10.24-15.32.47:387][661]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=45.8 ms=21.82 max_ms=27.4 gpu_ms=10.70 frames=459 window_s=10 gpu_samples=459 game_ms=2.82 render_ms=18.43 rhi_ms=3.80 swap_ms=0.01 render_wait_ms=3.39 game_wait_ms=19.01
+[2026.10.24-15.32.47:387][661]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.5 headYaw=0.1 seatYaw=0.0 loopSeams=1054 loopFade=0.50 bodyRight=X=-0.999 Y=0.054 Z=0.000 faceMeanS=5255.1 backrestGapCm=0.9
+[2026.10.24-15.32.47:818][681]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.52:834][910]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.32.57:405][119]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=45.7 ms=21.87 max_ms=26.2 gpu_ms=10.73 frames=458 window_s=10 gpu_samples=458 game_ms=2.76 render_ms=18.57 rhi_ms=3.79 swap_ms=0.01 render_wait_ms=3.30 game_wait_ms=19.11
+[2026.10.24-15.32.57:405][119]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.7 headYaw=0.7 seatYaw=0.0 loopSeams=1056 loopFade=0.50 bodyRight=X=-0.999 Y=0.054 Z=0.000 faceMeanS=5265.1 backrestGapCm=0.9
+[2026.10.24-15.32.57:845][139]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.02:854][365]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.07:422][572]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=45.2 ms=22.11 max_ms=28.9 gpu_ms=10.72 frames=453 window_s=10 gpu_samples=453 game_ms=2.84 render_ms=18.65 rhi_ms=3.78 swap_ms=0.01 render_wait_ms=3.47 game_wait_ms=19.27
+[2026.10.24-15.33.07:422][572]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.0 headYaw=0.0 seatYaw=0.0 loopSeams=1058 loopFade=0.50 bodyRight=X=-0.999 Y=0.052 Z=0.000 faceMeanS=5275.2 backrestGapCm=0.9
+[2026.10.24-15.33.07:864][592]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.12:885][821]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.13:820][864]LogTemp: Display: SUB01_STREAMER_VISUAL_CAM2 fps=42.1 capture_fps=45.5 target_fps=60 frames=211974 reader=1 game_ms_per_capture=0.00 game_ms_per_frame=0.004 readback_ms=0.48 encode_ms=3.8 kb=100 dropped_no_reader_or_full=101 dropped_busy=2 dropped_slots=0 on=1 window_s=30
+[2026.10.24-15.33.17:436][ 28]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=45.5 ms=21.96 max_ms=26.9 gpu_ms=10.71 frames=456 window_s=10 gpu_samples=456 game_ms=2.79 render_ms=18.62 rhi_ms=3.77 swap_ms=0.01 render_wait_ms=3.33 game_wait_ms=19.16
+[2026.10.24-15.33.17:436][ 28]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.5 headYaw=-0.3 seatYaw=0.0 loopSeams=1060 loopFade=0.50 bodyRight=X=-0.999 Y=0.052 Z=0.000 faceMeanS=5285.2 backrestGapCm=0.9
+[2026.10.24-15.33.17:891][ 52]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.22:903][327]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.27:452][577]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=54.8 ms=18.24 max_ms=22.2 gpu_ms=10.60 frames=549 window_s=10 gpu_samples=549 game_ms=2.66 render_ms=15.08 rhi_ms=3.78 swap_ms=0.01 render_wait_ms=3.17 game_wait_ms=15.60
+[2026.10.24-15.33.27:452][577]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.8 headYaw=0.8 seatYaw=0.0 loopSeams=1062 loopFade=0.50 bodyRight=X=-0.998 Y=0.055 Z=0.000 faceMeanS=5295.2 backrestGapCm=0.9
+[2026.10.24-15.33.27:908][602]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.32:921][875]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.37:458][124]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=54.7 ms=18.29 max_ms=21.7 gpu_ms=10.63 frames=547 window_s=10 gpu_samples=547 game_ms=2.66 render_ms=15.09 rhi_ms=3.75 swap_ms=0.01 render_wait_ms=3.20 game_wait_ms=15.63
+[2026.10.24-15.33.37:458][124]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.2 headYaw=0.1 seatYaw=0.0 loopSeams=1064 loopFade=0.50 bodyRight=X=-0.998 Y=0.055 Z=0.000 faceMeanS=5305.2 backrestGapCm=0.9
+[2026.10.24-15.33.37:922][149]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.42:927][423]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.43:837][473]LogTemp: Display: SUB01_STREAMER_VISUAL_CAM2 fps=39.4 capture_fps=53.6 target_fps=60 frames=213158 reader=1 game_ms_per_capture=0.00 game_ms_per_frame=0.004 readback_ms=0.50 encode_ms=3.9 kb=100 dropped_no_reader_or_full=398 dropped_busy=26 dropped_slots=0 on=1 window_s=30
+[2026.10.24-15.33.47:461][668]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=54.4 ms=18.39 max_ms=28.0 gpu_ms=10.63 frames=544 window_s=10 gpu_samples=544 game_ms=2.69 render_ms=15.19 rhi_ms=3.83 swap_ms=0.01 render_wait_ms=3.20 game_wait_ms=15.70
+[2026.10.24-15.33.47:461][668]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.1 headYaw=0.5 seatYaw=0.0 loopSeams=1066 loopFade=0.50 bodyRight=X=-0.998 Y=0.055 Z=0.000 faceMeanS=5315.2 backrestGapCm=0.9
+[2026.10.24-15.33.47:929][694]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.52:937][968]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.33.57:476][215]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=54.6 ms=18.31 max_ms=22.5 gpu_ms=10.65 frames=547 window_s=10 gpu_samples=547 game_ms=2.68 render_ms=15.20 rhi_ms=3.78 swap_ms=0.01 render_wait_ms=3.11 game_wait_ms=15.63
+[2026.10.24-15.33.57:476][215]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.8 headYaw=-0.7 seatYaw=0.0 loopSeams=1068 loopFade=0.50 bodyRight=X=-0.998 Y=0.055 Z=0.000 faceMeanS=5325.2 backrestGapCm=0.9
+[2026.10.24-15.33.57:941][240]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.02:947][513]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.07:489][760]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=54.4 ms=18.37 max_ms=22.9 gpu_ms=10.62 frames=545 window_s=10 gpu_samples=545 game_ms=2.67 render_ms=15.24 rhi_ms=3.77 swap_ms=0.01 render_wait_ms=3.13 game_wait_ms=15.70
+[2026.10.24-15.34.07:489][760]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.5 headYaw=0.9 seatYaw=0.0 loopSeams=1070 loopFade=0.50 bodyRight=X=-0.999 Y=0.054 Z=0.000 faceMeanS=5335.2 backrestGapCm=0.9
+[2026.10.24-15.34.07:963][786]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.12:972][ 59]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.13:853][107]LogTemp: Display: SUB01_STREAMER_VISUAL_CAM2 fps=36.6 capture_fps=54.4 target_fps=60 frames=214258 reader=1 game_ms_per_capture=0.00 game_ms_per_frame=0.004 readback_ms=0.50 encode_ms=3.8 kb=100 dropped_no_reader_or_full=509 dropped_busy=26 dropped_slots=0 on=1 window_s=30
+[2026.10.24-15.34.17:501][302]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=54.1 ms=18.47 max_ms=23.4 gpu_ms=10.65 frames=542 window_s=10 gpu_samples=542 game_ms=2.64 render_ms=15.31 rhi_ms=3.79 swap_ms=0.01 render_wait_ms=3.17 game_wait_ms=15.83
+[2026.10.24-15.34.17:501][302]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.5 headYaw=0.5 seatYaw=0.0 loopSeams=1072 loopFade=0.50 bodyRight=X=-0.999 Y=0.054 Z=0.000 faceMeanS=5345.2 backrestGapCm=0.9
+[2026.10.24-15.34.17:983][328]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.23:000][598]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.27:506][839]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=53.7 ms=18.63 max_ms=22.8 gpu_ms=10.64 frames=537 window_s=10 gpu_samples=537 game_ms=2.64 render_ms=15.49 rhi_ms=3.76 swap_ms=0.01 render_wait_ms=3.14 game_wait_ms=15.99
+[2026.10.24-15.34.27:506][839]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.6 headYaw=0.4 seatYaw=0.0 loopSeams=1074 loopFade=0.50 bodyRight=X=-0.999 Y=0.054 Z=0.000 faceMeanS=5355.2 backrestGapCm=0.9
+[2026.10.24-15.34.28:019][867]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.33:031][130]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.37:517][368]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=52.8 ms=18.93 max_ms=23.8 gpu_ms=10.64 frames=529 window_s=10 gpu_samples=529 game_ms=2.69 render_ms=15.81 rhi_ms=3.83 swap_ms=0.01 render_wait_ms=3.12 game_wait_ms=16.24
+[2026.10.24-15.34.37:517][368]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=15.0 headYaw=0.4 seatYaw=0.0 loopSeams=1076 loopFade=0.50 bodyRight=X=-0.999 Y=0.053 Z=0.000 faceMeanS=5365.3 backrestGapCm=0.9
+[2026.10.24-15.34.38:048][396]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.43:058][660]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.43:866][702]LogTemp: Display: SUB01_STREAMER_VISUAL_CAM2 fps=41.8 capture_fps=53.1 target_fps=60 frames=215514 reader=1 game_ms_per_capture=0.00 game_ms_per_frame=0.004 readback_ms=0.49 encode_ms=3.8 kb=100 dropped_no_reader_or_full=296 dropped_busy=43 dropped_slots=0 on=1 window_s=30
+[2026.10.24-15.34.47:536][895]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=52.6 ms=19.01 max_ms=24.3 gpu_ms=10.65 frames=527 window_s=10 gpu_samples=527 game_ms=2.72 render_ms=15.77 rhi_ms=3.81 swap_ms=0.01 render_wait_ms=3.24 game_wait_ms=16.29
+[2026.10.24-15.34.47:536][895]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.5 headYaw=0.1 seatYaw=0.0 loopSeams=1078 loopFade=0.50 bodyRight=X=-0.999 Y=0.052 Z=0.000 faceMeanS=5375.3 backrestGapCm=0.9
+[2026.10.24-15.34.48:068][923]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.53:081][184]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.34.57:541][420]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=52.5 ms=19.06 max_ms=30.6 gpu_ms=10.66 frames=525 window_s=10 gpu_samples=525 game_ms=2.76 render_ms=15.89 rhi_ms=3.84 swap_ms=0.01 render_wait_ms=3.17 game_wait_ms=16.30
+[2026.10.24-15.34.57:541][420]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=14.5 headYaw=0.3 seatYaw=0.0 loopSeams=1080 loopFade=0.50 bodyRight=X=-0.999 Y=0.051 Z=0.000 faceMeanS=5385.3 backrestGapCm=0.9
+[2026.10.24-15.34.58:094][449]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.35.03:093][710]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0
+[2026.10.24-15.35.07:541][941]LogTemp: Display: SUB01_STREAMER_VISUAL_PERF fps=52.1 ms=19.19 max_ms=23.8 gpu_ms=10.64 frames=521 window_s=10 gpu_samples=521 game_ms=2.69 render_ms=15.99 rhi_ms=3.81 swap_ms=0.01 render_wait_ms=3.21 game_wait_ms=16.51
+[2026.10.24-15.35.07:541][941]LogTemp: Display: SUB01_STREAMER_VISUAL_POSE leanCmd=-6.0 leanMeasured=-6.0 gain=1.42 headPitch=16.0 headYaw=0.2 seatYaw=0.0 loopSeams=1082 loopFade=0.50 bodyRight=X=-0.999 Y=0.051 Z=0.000 faceMeanS=5395.3 backrestGapCm=0.9
+[2026.10.24-15.35.08:098][970]LogTemp: Display: SUB01_GHOST_STATE enabled=0 fresh=1 private=0 views=0 requests=0 capacity=2 rate=8.0

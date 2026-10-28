@@ -1,0 +1,33 @@
+void ASub01HomeCharacter::ArmStreamerVisualMainTap(double Now){
+ FSub01MainTap& Tap=*StreamerVisualMainTap;StreamerVisualMainArmed=true;StreamerVisualMainJudged=false;StreamerVisualMainArmedSource=Tap.Source.load();StreamerVisualMainArmedAt=Now;
+ const int64 Base[5]={Tap.Calls.load(),Tap.FrameSpan.load(),Tap.DupCalls.load(),Tap.MissedFrames.load(),Tap.WrongThread.load()};for(int32 K=0;K<5;++K)StreamerVisualMainGoBase[K]=Base[K];
+ Tap.NonBlack.store(false);Tap.JpegOk.store(false); // judged on this window's pictures only
+ StreamerVisualMainVerdict=TEXT("PENDING");StreamerVisualMainWhy=TEXT("measuring");
+}
+void ASub01HomeCharacter::JudgeStreamerVisualMainTap(double Now){
+ // The go/no-go of the hand-off path (spec step 2): once per arming, after 600 render frames (or 120.0 s; 30.0 s without a single call).
+ FSub01MainTap& Tap=*StreamerVisualMainTap;const double Age=Now-StreamerVisualMainArmedAt;
+ const int64 Calls=Tap.Calls.load()-StreamerVisualMainGoBase[0],Frames=Tap.FrameSpan.load()-StreamerVisualMainGoBase[1],Dup=Tap.DupCalls.load()-StreamerVisualMainGoBase[2],Missed=Tap.MissedFrames.load()-StreamerVisualMainGoBase[3],Wrong=Tap.WrongThread.load()-StreamerVisualMainGoBase[4];
+ const bool Black=!Tap.NonBlack.load();const int32 Kind=Tap.LastKind.load();
+ const bool Readable=Kind!=Sub01MainTap::KindUnknown&&Tap.LastWidth.load()==FSub01MainTap::Width&&Tap.LastHeight.load()==FSub01MainTap::Height; // else no picture can ever come
+ if(!(Frames>=600&&(!Black||!Readable||Age>=120.0))&&!((Calls<=1||Wrong>0)&&Age>=30.0)&&Age<120.0)return;
+ const double Fires=Frames>0?double(Calls-1)/double(Frames):0.;
+ const TCHAR* Why=nullptr;
+ if(StreamerVisualMainArmedSource==0&&!Tap.Bound)Why=TEXT("the back-buffer delegate is not bound");
+ else if(Wrong>0)Why=TEXT("called off the render thread");
+ else if(Calls<=1)Why=StreamerVisualMainArmedSource==0?TEXT("the delegate never fired for the game window"):TEXT("the fallback command never ran");
+ else if(Fires<0.95||Fires>1.05)Why=TEXT("not once per render frame");
+ else if(Dup*100>Frames)Why=TEXT("duplicate calls in one render frame"); // independent criteria: a net ratio can hide duplicates cancelling misses
+ else if(Missed*20>Frames)Why=TEXT("missed render frames");
+ else if(Tap.LastWidth.load()!=FSub01MainTap::Width||Tap.LastHeight.load()!=FSub01MainTap::Height)Why=TEXT("back buffer extent");
+ else if(Kind==Sub01MainTap::KindUnknown)Why=TEXT("unhandled pixel format");
+ else if(Tap.Copied.load()<=0)Why=TEXT("no readback completed");
+ else if(Tap.LastPitch.load()<FSub01MainTap::Width||Tap.LastRows.load()<FSub01MainTap::Height)Why=TEXT("readback pitch/rows");
+ else if(Black)Why=TEXT("black picture (checksum)");
+ else if(!Tap.JpegOk.load())Why=TEXT("no valid stamped JPEG");
+ StreamerVisualMainJudged=true;StreamerVisualMainVerdict=Why?TEXT("NO-GO"):TEXT("GO");StreamerVisualMainWhy=Why?FString(Why):FString(TEXT("-"));
+ UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_MAIN_TAP_GONOGO verdict=%s reason=%s source=%s fires_per_frame=%.3f calls=%lld frames=%lld dup_calls=%lld missed_frames=%lld other_windows=%lld wrong_thread=%lld extent=%dx%d format=%s(%d) pitch_px=%d rows=%d checksum=%llx max_channel=%d nonblack=%d jpeg_ok=%d jpeg=%dx%d held_ref=1 offscreen=%d window_s=%.1f"),
+  *StreamerVisualMainVerdict,*StreamerVisualMainWhy,StreamerVisualMainArmedSource==0?TEXT("backbuffer-delegate"):TEXT("viewport-provider-command"),Fires,static_cast<long long>(Calls),static_cast<long long>(Frames),static_cast<long long>(Dup),
+  static_cast<long long>(Missed),static_cast<long long>(Tap.OtherWindows.load()),static_cast<long long>(Wrong),Tap.LastWidth.load(),Tap.LastHeight.load(),Sub01MainTap::KindName(Kind),Tap.LastFormat.load(),Tap.LastPitch.load(),Tap.LastRows.load(),
+  static_cast<unsigned long long>(Tap.LastChecksum.load()),Tap.MaxChannel.load(),Black?0:1,Tap.JpegOk.load()?1:0,Tap.LastJpegWidth.load(),Tap.LastJpegHeight.load(),StreamerVisualMainOffscreen?1:0,Age);
+}

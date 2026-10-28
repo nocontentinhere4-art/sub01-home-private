@@ -1,0 +1,43 @@
+ // ---- the writer thread
+ void WriterLoop(){
+  {sigset_t Block;sigemptyset(&Block);sigaddset(&Block,SIGPIPE);pthread_sigmask(SIG_BLOCK,&Block,nullptr);} // this thread only: a broken pipe gives EPIPE
+  while(!Stop.load()){
+   const double Now=FPlatformTime::Seconds();const bool Want=On.load()!=0&&FifoOk.load();
+   if(!Want){CloseFifo();ReleaseLock();DropQueued();WaitIdle();continue;} // main_tap 0: the director sees EOF, another game may take the lock
+   if(LockState.load()!=1){if(Now>=NextLockAt){NextLockAt=Now+5.0;TakeLock();}if(LockState.load()!=1){DropQueued();WaitIdle();continue;}}
+   if(Fd<0){if(Now>=NextProbeAt){NextProbeAt=Now+1.0;OpenFifo();}if(Fd<0){DropQueued();WaitIdle();continue;}}
+   FSub01MainFrame Frame;bool Have=false;
+   {std::unique_lock<std::mutex> Lock(Mutex);OutCv.wait_for(Lock,std::chrono::milliseconds(100),[this](){return Stop.load()||!Out.empty();});
+    if(!Out.empty()){Frame=MoveTemp(Out.front());Out.pop_front();Have=true;}}
+   if(!Have){if(ReaderGone())CloseFifo();continue;} // idle: notice a reader that left without writing
+   if(Frame.Session!=Session.load()){++DroppedNoReader;continue;} // captured for an earlier output session: never crosses a reconnect
+   WriteWhole(Frame);
+  }
+  CloseFifo();
+ }
+ void WaitIdle(){std::unique_lock<std::mutex> Lock(Mutex);OutCv.wait_for(Lock,std::chrono::milliseconds(100),[this](){return Stop.load();});}
+ void DropQueued(){std::lock_guard<std::mutex> Lock(Mutex);DroppedNoReader+=int64(Out.size());Out.clear();}
+ void TakeLock(){
+  if(LockFd<0){LockFd=::open(LockUtf8.c_str(),O_RDWR|O_CREAT|O_CLOEXEC|O_NOFOLLOW,0600);if(LockFd<0){SetLockState(3,errno);return;}}
+  struct stat Info;if(::fstat(LockFd,&Info)!=0||!S_ISREG(Info.st_mode)||Info.st_uid!=getuid()){::close(LockFd);LockFd=-1;SetLockState(3,0);return;}
+  if(::flock(LockFd,LOCK_EX|LOCK_NB)==0)SetLockState(1,0);else SetLockState(errno==EWOULDBLOCK?2:3,errno);
+ }
+ void ReleaseLock(){if(LockFd>=0){::close(LockFd);LockFd=-1;}if(LockState.load()!=0)SetLockState(0,0);}
+ void SetLockState(int32 State,int Error){
+  if(LockState.exchange(State)==State)return;
+  UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_MAIN_TAP_LOCK state=%s errno=%d lock=%s"),State==1?TEXT("held"):State==2?TEXT("busy (another writer holds it)"):State==3?TEXT("error"):TEXT("released"),Error,*LockPath);
+ }
+ void OpenFifo(){
+  struct stat Info;
+  if(::lstat(FifoUtf8.c_str(),&Info)!=0||!S_ISFIFO(Info.st_mode)||Info.st_uid!=getuid()||(Info.st_mode&0077)){OpenErrno.store(errno);return;}
+  const int Opened=::open(FifoUtf8.c_str(),O_WRONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW);
+  if(Opened<0){OpenErrno.store(errno==ENXIO?0:errno);return;} // ENXIO: nobody reads it yet
+  if(::fstat(Opened,&Info)!=0||!S_ISFIFO(Info.st_mode)||Info.st_uid!=getuid()||(Info.st_mode&0077)){::close(Opened);return;}
+  const int Set=::fcntl(Opened,F_SETPIPE_SZ,PipeWanted),SetErrno=Set<0?errno:0;const int Size=::fcntl(Opened,F_GETPIPE_SZ); // best effort; never assumed
+  Fd=Opened;PipeSet.store(Set);PipeSize.store(Size);OpenErrno.store(0);++Opens;Session.fetch_add(1);Reader.store(true); // a new session, then captures may start
+  UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_MAIN_TAP_FIFO reader=1 opens=%d pipe_requested=%d set=%d set_errno=%d pipe_size=%d fifo=%s"),int32(Opens.load()),PipeWanted,Set,SetErrno,Size,*FifoPath);
+ }
+ void CloseFifo(){if(Fd>=0){::close(Fd);Fd=-1;Session.fetch_add(1);}Reader.store(false);}
+ bool ReaderGone(){ // a pipe's write end reports POLLERR once no reader is left
+  if(Fd<0)return true;struct pollfd P;P.fd=Fd;P.events=POLLOUT;P.revents=0;return ::poll(&P,1,0)>0&&(P.revents&(POLLERR|POLLHUP|POLLNVAL))!=0;
+ }

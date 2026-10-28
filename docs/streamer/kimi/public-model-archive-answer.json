@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "APPROVE.\n\nThis is a bounded passive-public-bytes diagnostic, not an MFS model cache or a relaxation for secrets/private data.\n\nBefore the MFS write, freeze the trusted ROOT/Mac/Git receipt: exact revision, expected entry list/count, each regular file’s path/size/SHA-256, each symlink’s path/target, and actual archive size/SHA-256. Permit only normalized, relative, duplicate-free member names and the expected regular-file/symlink types; reject hardlinks, devices, absolute/`..` paths, escaping links, and unexpected entries. Rehydration must use validated, non-symlink-following extraction into the fresh ROOT UID1001/0700 cache before any Torch load.\n\nUse `O_CREAT|O_EXCL` for the absent `.part`; after the single ≤180-second copy, fsync, read back and verify SHA-256, then use `renameat2(RENAME_NOREPLACE)` and fsync the parent. Any timeout, I/O, quota, hash, or rename failure stops immediately: preserve artifacts, with no retry or fallback.\n\nSuccess proves only that this archive fit then—no headroom, quota, or launch-readiness inference.",
+ "finish_reason": "stop",
+ "prompt_tokens": 679,
+ "completion_tokens": 4926,
+ "reasoning_tokens": 4668,
+ "seconds": 131.8
+}

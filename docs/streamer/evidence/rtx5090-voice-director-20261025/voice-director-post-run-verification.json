@@ -1,0 +1,142 @@
+{
+  "utc": 1792923088.2344077,
+  "network_rows": [
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    },
+    {
+      "port": 8855,
+      "state": "06",
+      "inode": "0"
+    }
+  ],
+  "voice_pid_gone": true,
+  "native_ticks": 53274039,
+  "STOP": true,
+  "tuning_sha256": "561656b00848a851fd75bd3ee34e9f7823527c12e1c70ec992b958e30341337a",
+  "recordings": 0,
+  "reuse_bind_passed": true,
+  "cleanup_reason": "Original postcondition used non-reuse bind, which can fail for closed TCP TIME_WAIT; no listener/process remains. Original failed result retained."
+}

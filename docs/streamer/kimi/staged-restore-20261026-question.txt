@@ -1,0 +1,20 @@
+Design review of a STAGED RESTORATION PLAN only (no runtime activation). Answer APPROVE / APPROVE WITH CHANGES / BLOCK in <= 250 words; list only critical changes.
+
+Context: SUB-01 private streamer recovery on a new RunPod RTX 5090 pod. The old root disk is lost; the persistent network volume is mounted at /workspace. Verified by a direct shell:
+- preservation set: 211 hashes plus a supplement of 9, all match;
+- native module .so sha256 1c78b83cd2afd44436c281a40bb62d4f452077b2b6be7bf8ef5e1d0c7e769b0b;
+- native project archive sha256 acd41589b49be9c535f134afebe944f37ade35b1cf6edccb1d26f3e6e85744fc, 6432 members; the only external link is DerivedDataCache;
+- public voice-model archive sha256 f7c28da126e723700da23f8d4f809aa17b7c67487ed1fed23c03b4f36af2e9a9, 11 members including 5 contained relative hub links.
+Three backend archives contain no state. The original-memory requirement stays binding: no substitute state; the owner was asked about the historical state.
+
+Plan: restore ONLY native, source and public voice, independently, into a NEW directory /home/sub01-recovery-stage-20261026 (mode 0700).
+1. Validate the pinned archive hashes.
+2. Before any extraction, validate every member's path and type and the link graph (no absolute or ".." paths, no device files, links only to contained targets).
+3. Omit the exact native external DerivedDataCache link.
+4. Recreate the contained voice links last.
+5. Exclusive writes to new paths only.
+6. Read back the hash of every extracted file and write a receipt.
+
+Not included: overwrites, backend state, starting or installing anything, guards, account/user/credential changes, any mutation of the persistent volume.
+
+Question: is this staged plan safe and sufficient as the next step? Critical changes only.

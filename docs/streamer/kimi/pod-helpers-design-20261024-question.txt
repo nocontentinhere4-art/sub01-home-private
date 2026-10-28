@@ -1,0 +1,115 @@
+Review the repair design BEFORE implementation for two private remote-command helpers. Terminal helper captures shell status after echo and falsely reports success. Kernel helper prints child output but loses returncode; also hardcodes a Linux CA file absent on macOS. Propose smallest reliable changes: immediately preserve shell status, propagate kernel subprocess returncode through a unique protocol marker and reject missing marker / kernel errors / disconnect; verified default TLS context with existing custom bundle only when available, never disable TLS. Cover timeout and negative subprocess status mapping, HTTP failure cleanup, sentinels not confused with command echo or user output. Recommend meaningful offline and loopback mocked Jupyter tests, and live exit 0/7 checks. Do not redesign unrelated runtime. Identify blockers and approve or revise this design. Original files follow.
+
+--- podterm.py ---
+"""Run a bash snippet on the pod through the Jupyter terminals websocket (fallback when kernels cannot start).
+usage: podterm.py pods.json POD_ID 'bash commands' [timeout_s]   (output between sentinels, ANSI stripped)"""
+import asyncio, json, re, ssl, sys, time, uuid
+import aiohttp
+
+pods = json.load(open(sys.argv[1])); pod = [p for p in pods if p["id"] == sys.argv[2]][0]
+TOKEN = pod["env"]["JUPYTER_PASSWORD"]; BASE = f"https://{sys.argv[2]}-8888.proxy.runpod.net"
+CMD, LIMIT = sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else 230.0
+ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07|\r")
+
+
+async def main():
+    ctx = ssl.create_default_context(cafile="/root/.ccr/ca-bundle.crt") if __import__("os").path.exists("/root/.ccr/ca-bundle.crt") else None
+    headers = {"Authorization": f"token {TOKEN}"}
+    async with aiohttp.ClientSession(headers=headers) as s:
+        async with s.post(BASE + "/api/terminals", ssl=ctx) as r:
+            name = (await r.json())["name"]
+        tag = uuid.uuid4().hex[:10]
+        script = f"echo BEGIN{tag}; ( {CMD} ) 2>&1; echo; echo END{tag} $?\n"
+        out, t0 = "", time.time()
+        try:
+            async with s.ws_connect(f"{BASE}/terminals/websocket/{name}", ssl=ctx, max_msg_size=0) as ws:
+                await ws.send_str(json.dumps(["stdin", "stty -echo; export HISTFILE=/dev/null\n"]))
+                await asyncio.sleep(0.5)
+                await ws.send_str(json.dumps(["stdin", script]))
+                while time.time() - t0 < LIMIT:
+                    try:
+                        msg = await asyncio.wait_for(ws.receive(), timeout=5)
+                    except asyncio.TimeoutError:
+                        continue
+                    if msg.type != aiohttp.WSMsgType.TEXT:
+                        break
+                    data = json.loads(msg.data)
+                    if data[0] == "stdout":
+                        out += data[1]
+                        if re.search(rf"END{tag} \d+", ANSI.sub("", out)):
+                            break
+        finally:
+            async with s.delete(f"{BASE}/api/terminals/{name}", ssl=ctx):
+                pass
+    clean = ANSI.sub("", out)
+    m = re.search(rf"BEGIN{tag}\n(.*?)END{tag} (\d+)", clean, re.S)
+    if not m:
+        print(clean[-4000:].replace(TOKEN, "***"))
+        sys.exit(124)
+    print(m.group(1).rstrip("\n").replace(TOKEN, "***"))
+    sys.exit(int(m.group(2)))
+
+asyncio.run(main())
+
+--- podrun.py ---
+"""Run one shell command on the pod through a short-lived Jupyter kernel (no terminal, no file written there).
+usage: podrun.py pods.json POD_ID 'shell command'. The Jupyter token is masked from the output."""
+import asyncio
+import datetime
+import json
+import ssl
+import sys
+import uuid
+
+import aiohttp
+
+POD, COMMAND = sys.argv[2], sys.argv[3]
+pods = json.load(open(sys.argv[1]))
+TOKEN = [p for p in pods if p["id"] == POD][0]["env"]["JUPYTER_PASSWORD"]
+BASE = f"https://{POD}-8888.proxy.runpod.net"
+CODE = ("import subprocess\n"
+        "r = subprocess.run(['bash', '-lc', %r], capture_output=True, text=True, timeout=240)\n"
+        "print(r.stdout); print(r.stderr[-3000:])" % COMMAND)
+
+
+async def main():
+    ctx = ssl.create_default_context(cafile="/root/.ccr/ca-bundle.crt")
+    async with aiohttp.ClientSession(trust_env=True, headers={"Authorization": "token " + TOKEN}) as s:
+        async with s.post(BASE + "/api/kernels", json={"name": "python3"}, ssl=ctx) as r:
+            kernel = await r.json()
+        kid = kernel["id"]
+        try:
+            sid = uuid.uuid4().hex
+            async with s.ws_connect(f"{BASE}/api/kernels/{kid}/channels?session_id={sid}", ssl=ctx, max_msg_size=0) as ws:
+                mid = uuid.uuid4().hex
+                await ws.send_str(json.dumps({
+                    "header": {"msg_id": mid, "username": "probe", "session": sid, "msg_type": "execute_request",
+                               "version": "5.3", "date": datetime.datetime.now(datetime.timezone.utc).isoformat()},
+                    "parent_header": {}, "metadata": {}, "channel": "shell", "buffers": [],
+                    "content": {"code": CODE, "silent": False, "store_history": False, "user_expressions": {},
+                                "allow_stdin": False, "stop_on_error": True}}))
+                out = []
+                while True:
+                    m = await asyncio.wait_for(ws.receive(), 300)
+                    if m.type != aiohttp.WSMsgType.TEXT:
+                        if m.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                            out.append(f"\n[websocket {m.type}]")
+                            break
+                        continue
+                    d = json.loads(m.data)
+                    if d.get("parent_header", {}).get("msg_id") != mid:
+                        continue
+                    t = d["header"]["msg_type"]
+                    if t == "stream":
+                        out.append(d["content"]["text"])
+                    elif t == "error":
+                        out.append("\n".join(d["content"]["traceback"]))
+                    elif t == "status" and d["content"]["execution_state"] == "idle":
+                        break
+                print("".join(out).replace(TOKEN, "<token>"))
+        finally:
+            async with s.delete(f"{BASE}/api/kernels/{kid}", ssl=ctx):
+                pass
+
+
+asyncio.run(main())

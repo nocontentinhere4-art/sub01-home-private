@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE PROCESSING.** No remaining concrete blocker is evident in the supplied source and test receipts.\n\n- **Supervisor:** ordinary monitoring now ends at `START+296`; bounded discovery, pidfd `SIGKILL`, and reap retries continue through `START+299`, with the independent hard exit at 300 seconds. The scaled failure-injection test killed and reaped both the alarm/TERM-resistant worker and its live grandchild in **2.046 s**, with `all_owned_reaped=true`.\n- **Worker finalization:** the first executable finalizer action disarms `ITIMER_REAL`; the former worker-side hard `_exit` reporting bypass is absent. Reports are encoded with a **512 KiB cap**, and the actual-source alarm-injection test confirms both failure reports were written.\n- **Resource bounds:** small JSON is **1 MiB**, journal **16 MiB**, and source WAV **4 MiB**. Duration/allocation preflight, cumulative **180 s** PCM limits, ffmpeg `-fs`, near-cap rejection, and final root/OUT reservations are present. Inputs are hashed before parsing and reverified afterward.\n- **Timing:** correctly remains **OPEN**; `transport_gates_pass=False` is preserved independently of waveform results.\n\nApproval covers **one supervised launch only**, using the frozen manifest and reviewed runner SHA-256 `0f9bffcd…fc07c`. The test results are accepted from the supplied receipts; I did not independently execute them.",
+ "finish_reason": "stop",
+ "prompt_tokens": 5314,
+ "completion_tokens": 4942,
+ "reasoning_tokens": 4629,
+ "seconds": 143.9
+}

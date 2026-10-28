@@ -1,0 +1,9 @@
+{
+  "foreground-launch.py": "17661c22ed6da1959e58842e9750dc8df3a38fb1aacbfa1b4d8f4b1b9f0828f7",
+  "visual-supervisor.candidate.py": "e3ec4709bed25134a04bbf45ce1f4782f91e2322347ac507fe06e87ec27ab90e",
+  "admission.json": "6b2b74ed69fa4b761fceb677a2d966f973b6906ebddd2e33264d7d0996e358e1",
+  "fifo_observer_collector.py": "0ba8ee861eb7bc653f07df04245d2ad14b75c3282c477604ddda533133067329",
+  "contract_reference.py": "20aaf881203db5a2ed8d7009ca215c32d9dc81164aa2fe49c846fb36bd1d1a54",
+  "access_barrier.py": "82d82b23a5746a4e1386526010ee6355401a637f83f3bdfbf50c05696ae9d0f6",
+  "ddc_launch_checks.py": "416e05f6f746835309dda72a1ca77fc277307d1bb6552ad8ae5727ac923cc371"
+}

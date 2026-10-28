@@ -1,0 +1,1 @@
+{"t": 1792838401.3551311, "kind": "trip", "why": "heartbeat missing for 41261 s", "stop_written": true, "release_status": null, "release_ok": false, "state": {"t": 1792838401.353084, "heartbeat_age_s": 41261.4, "loop_age_s": null, "actions_last_minute": {"agent": 0, "runner": 0}, "stop": false}}

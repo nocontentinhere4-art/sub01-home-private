@@ -1,0 +1,481 @@
+{
+  "native_log_bytes": 981260,
+  "native_log_sha256": "abfbad370d680f8d105515f7b9527833acea1d1a6049c967efaeaad972c523a7",
+  "lines": [
+    {
+      "line": 391,
+      "text": "LogConfig: Applying CVar settings from Section [/Script/RenderDocPlugin.RenderDocPluginSettings] File [Engine]"
+    },
+    {
+      "line": 406,
+      "text": "LogConfig: Applying CVar settings from Section [/Script/CompositeCore.CompositeCorePluginSettings] File [Engine]"
+    },
+    {
+      "line": 494,
+      "text": "[2026.10.26-21.13.43:814][  0]LogConfig: Applying CVar settings from Section [/Script/Engine.RendererSettings] File [Engine]"
+    },
+    {
+      "line": 511,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [/Script/Engine.RendererOverrideSettings] File [Engine]"
+    },
+    {
+      "line": 512,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [/Script/Engine.StreamingSettings] File [Engine]"
+    },
+    {
+      "line": 531,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [/Script/Engine.GarbageCollectionSettings] File [Engine]"
+    },
+    {
+      "line": 543,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [/Script/Engine.NetworkSettings] File [Engine]"
+    },
+    {
+      "line": 547,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [/Script/UnrealEd.CookerSettings] File [Engine]"
+    },
+    {
+      "line": 592,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [ViewDistanceQuality@3] File [Scalability]"
+    },
+    {
+      "line": 595,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [AntiAliasingQuality@3] File [Scalability]"
+    },
+    {
+      "line": 605,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [ShadowQuality@3] File [Scalability]"
+    },
+    {
+      "line": 642,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [GlobalIlluminationQuality@3] File [Scalability]"
+    },
+    {
+      "line": 687,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [ReflectionQuality@3] File [Scalability]"
+    },
+    {
+      "line": 698,
+      "text": "[2026.10.26-21.13.43:815][  0]LogConfig: Applying CVar settings from Section [PostProcessQuality@3] File [Scalability]"
+    },
+    {
+      "line": 733,
+      "text": "[2026.10.26-21.13.43:816][  0]LogConfig: Applying CVar settings from Section [TextureQuality@3] File [Scalability]"
+    },
+    {
+      "line": 743,
+      "text": "[2026.10.26-21.13.43:816][  0]LogConfig: Applying CVar settings from Section [EffectsQuality@3] File [Scalability]"
+    },
+    {
+      "line": 777,
+      "text": "[2026.10.26-21.13.43:816][  0]LogConfig: Applying CVar settings from Section [FoliageQuality@3] File [Scalability]"
+    },
+    {
+      "line": 781,
+      "text": "[2026.10.26-21.13.43:816][  0]LogConfig: Applying CVar settings from Section [ShadingQuality@3] File [Scalability]"
+    },
+    {
+      "line": 786,
+      "text": "[2026.10.26-21.13.43:816][  0]LogConfig: Applying CVar settings from Section [LandscapeQuality@3] File [Scalability]"
+    },
+    {
+      "line": 794,
+      "text": "[2026.10.26-21.13.43:816][  0]LogConfig: Applying CVar settings from Section [Startup] File [../../../Engine/Config/ConsoleVariables.ini]"
+    },
+    {
+      "line": 797,
+      "text": "[2026.10.26-21.13.43:820][  0]LogConfig: Applying CVar settings from Section [Startup_Linux] File [../../../Engine/Config/ConsoleVariables.ini]"
+    },
+    {
+      "line": 798,
+      "text": "[2026.10.26-21.13.43:820][  0]LogConfig: Applying CVar settings from Section [Startup] File [/home/sub01-animation-visual-20261026-attempt05/ddc-launch.ini]"
+    },
+    {
+      "line": 799,
+      "text": "[2026.10.26-21.13.43:820][  0]LogConfig: Set CVar [[DDC.Graph:(ProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp),InstalledProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp,Compressed=true),EnginePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp,Compressed=true),EnterprisePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp,Compressed=true),Local=(Type=FileSystem,Path=/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache,ReadOnly=false,UnusedFileAge=34,PromptIfMissing=true,Clean=false,Flush=false,DeleteUnused=false))]]"
+    },
+    {
+      "line": 800,
+      "text": "[2026.10.26-21.13.43:821][  0]LogConfig: Applying CVar settings from Section [Startup_Linux] File [/home/sub01-animation-visual-20261026-attempt05/ddc-launch.ini]"
+    },
+    {
+      "line": 801,
+      "text": "[2026.10.26-21.13.43:821][  0]LogConfig: Applying CVar settings from Section [ConsoleVariables] File [Engine]"
+    },
+    {
+      "line": 804,
+      "text": "[2026.10.26-21.13.43:821][  0]LogConfig: Applying CVar settings from Section [ConsoleVariables] File [/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/Saved/Config/LinuxEditor/Editor.ini]"
+    },
+    {
+      "line": 1401,
+      "text": "[2026.10.26-21.13.52:778][  0]LogDerivedDataCache: ProjectPak: Pak cache file /home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp not found, will not use a pak cache."
+    },
+    {
+      "line": 1402,
+      "text": "[2026.10.26-21.13.52:778][  0]LogDerivedDataCache: InstalledProjectPak: Pak cache file /home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp not found, will not use a pak cache."
+    },
+    {
+      "line": 1403,
+      "text": "[2026.10.26-21.13.52:883][  0]LogDerivedDataCache: Display: /workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp: Opened pak cache for reading. (1081 MiB)"
+    },
+    {
+      "line": 1404,
+      "text": "[2026.10.26-21.13.52:887][  0]LogDerivedDataCache: EnterprisePak: Pak cache file /workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp not found, will not use a pak cache."
+    },
+    {
+      "line": 1405,
+      "text": "[2026.10.26-21.13.52:888][  0]LogDerivedDataCache: /home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache: Speed tests took 0.00 seconds."
+    },
+    {
+      "line": 1406,
+      "text": "[2026.10.26-21.13.52:888][  0]LogDerivedDataCache: Display: /home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache: Performance: Latency=0.01ms. RandomReadSpeed=4923.02MBs, RandomWriteSpeed=1146.43MBs. Assigned SpeedClass 'Local'"
+    },
+    {
+      "line": 1407,
+      "text": "[2026.10.26-21.13.52:888][  0]LogDerivedDataCache: Local: Using data cache path /home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache: Writable"
+    },
+    {
+      "line": 1409,
+      "text": "[2026.10.26-21.13.52:891][  0]LogShaderCompilers: Guid format shader working directory is 15 characters bigger than the processId version (../../../../../home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/Intermediate/Shaders/WorkingDirectory/5515/)."
+    },
+    {
+      "line": 1410,
+      "text": "[2026.10.26-21.13.52:891][  0]LogShaderCompilers: Cleaned the shader compiler working directory '../../../../../home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/Intermediate/Shaders/tmp/01A17A1005FB777A878BD9EA88387BA2/'."
+    },
+    {
+      "line": 1411,
+      "text": "[2026.10.26-21.13.52:891][  0]LogShaderCompilers: Display: Distributed shader compilation is disabled"
+    },
+    {
+      "line": 1412,
+      "text": "[2026.10.26-21.13.52:891][  0]LogShaderCompilers: Display: Using 1 local workers for shader compilation"
+    },
+    {
+      "line": 1413,
+      "text": "[2026.10.26-21.13.52:892][  0]LogShaderCompilers: Display: Compiling shader autogen file: ../../../../../home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/Intermediate/ShaderAutogen/VULKAN_SM6/AutogenShaderHeaders.ush"
+    },
+    {
+      "line": 1414,
+      "text": "[2026.10.26-21.13.52:892][  0]LogShaderCompilers: Display: Failed to delete old shader autogen file: ../../../../../home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/Intermediate/ShaderAutogen/VULKAN_SM6/AutogenShaderHeaders.ush"
+    },
+    {
+      "line": 1415,
+      "text": "[2026.10.26-21.13.52:892][  0]LogShaderCompilers: Display: Shader autogen file written: ../../../../../home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/Intermediate/ShaderAutogen/VULKAN_SM6/AutogenShaderHeaders.ush"
+    },
+    {
+      "line": 1494,
+      "text": "[2026.10.26-21.14.24:857][  0]LogConfig: Applying CVar settings from Section [/Script/CQTest.CQTestSettings] File [Engine]"
+    },
+    {
+      "line": 1676,
+      "text": "[2026.10.26-21.14.34:079][  0]LogConfig: Applying CVar settings from Section [/Script/PCG.PCGEngineSettings] File [Engine]"
+    },
+    {
+      "line": 1748,
+      "text": "[2026.10.26-21.14.35:928][  0]LogConfig: Applying CVar settings from Section [/Script/NNEDenoiser.NNEDenoiserSettings] File [Engine]"
+    },
+    {
+      "line": 4154,
+      "text": "[2026.10.26-21.15.13:851][  1]LogTemp: Display: SUB01_STREAMER_VISUAL_V2_READY clips=3/3 facingAxis=+Y facingDot=0.957 monitorCamera=X=275.188 Y=-232.600 Z=161.000 look=P=-17.457021 Y=-113.306464 R=0.000000; v1 events keep the frozen R9 path"
+    }
+  ],
+  "result_keys": [
+    "status",
+    "performance",
+    "visual",
+    "scope",
+    "failures",
+    "subreaper",
+    "ddc_access",
+    "sdk_prelaunch",
+    "ddc_prelaunch",
+    "accepted_actual_event_count",
+    "control_workers_before_teardown",
+    "fifo_preservation_location",
+    "lifecycle_cleanup",
+    "workers",
+    "drain_pipes",
+    "access_barrier"
+  ],
+  "lifecycle_related": {
+    "subreaper": {
+      "enabled": true,
+      "pid": 5493,
+      "ticks": 62085561,
+      "before_any_Popen": true
+    },
+    "lifecycle_cleanup": {
+      "pending": [],
+      "errors": [],
+      "outcomes": [
+        {
+          "pid": 5505,
+          "identity": {
+            "pid": 5505,
+            "ticks": 62086051,
+            "ppid": 5493,
+            "sid": 5505,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "python3"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5505,
+            "ticks": 62086051,
+            "ppid": 5493,
+            "sid": 5505,
+            "state": "R",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "5febaf13036b448ab808c97bf9b88ef03f99862d973eeed2f9e4e5cbb81117bd",
+            "comm": "python3"
+          },
+          "parent_identity": {
+            "pid": 5493,
+            "ticks": 62085561,
+            "ppid": 5488,
+            "sid": 5488,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "897f8e1ced44c80899c2b6565c4e52952b952462580b06a2559eb88aaad36311",
+            "comm": "python3"
+          },
+          "wait_status": 15,
+          "returncode": -15
+        },
+        {
+          "pid": 5510,
+          "identity": {
+            "pid": 5510,
+            "ticks": 62086070,
+            "ppid": 5493,
+            "sid": 5510,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "Xvfb"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5510,
+            "ticks": 62086070,
+            "ppid": 5493,
+            "sid": 5510,
+            "state": "R",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "27923af4f43855fa20b8bf35bdb746476375f28442b80dace47bb9dd014bc9fc",
+            "comm": "Xvfb"
+          },
+          "parent_identity": {
+            "pid": 5493,
+            "ticks": 62085561,
+            "ppid": 5488,
+            "sid": 5488,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "897f8e1ced44c80899c2b6565c4e52952b952462580b06a2559eb88aaad36311",
+            "comm": "python3"
+          },
+          "wait_status": 0,
+          "returncode": 0
+        },
+        {
+          "pid": 5515,
+          "identity": {
+            "pid": 5515,
+            "ticks": 62086327,
+            "ppid": 5493,
+            "sid": 5515,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "UnrealEditor-Cm"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5515,
+            "ticks": 62086327,
+            "ppid": 5493,
+            "sid": 5515,
+            "state": "S",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "8df06260c4eb1c0b8f7e0c8d0608382aed44d8a672ff7b2c8be1b7612ec8b154",
+            "comm": "UnrealEditor-Cm"
+          },
+          "parent_identity": {
+            "pid": 5493,
+            "ticks": 62085561,
+            "ppid": 5488,
+            "sid": 5488,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "897f8e1ced44c80899c2b6565c4e52952b952462580b06a2559eb88aaad36311",
+            "comm": "python3"
+          },
+          "wait_status": 36608,
+          "returncode": 143
+        }
+      ]
+    }
+  }
+}

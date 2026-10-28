@@ -1,0 +1,6 @@
+1. Yes. Release—not encode completion—frees capacity, and the deadline now bounds partial-write trickles too. A stalled head leaves at most `Encoders-1` retained `Done` frames; nothing unreleased is trimmed.
+2. No. Failed encodes release via an empty frame; probes touch neither `Outstanding` nor the counter. `Stop` may abandon queued work only during terminal, one-shot teardown, so it cannot poison a restart.
+3. Yes. Zeroing writer-local retry timestamps while disabled merely makes both existing, gated attempts immediately due after re-enable; cleanup and `WaitIdle()` ordering remain intact.
+4. Yes. Pinning prevents callback/destruction overlap, an abandoned binding can only observe an expired weak pointer, and game-thread removal checks the raw renderer pointer before use.
+
+no blocking issue

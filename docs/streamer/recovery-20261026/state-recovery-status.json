@@ -1,0 +1,18 @@
+{
+  "status": "ORIGINAL_STATE_NOT_FOUND_IN_CHECKED_SOURCES",
+  "no_substitution": true,
+  "checked": [
+    "local recovered runtime archives",
+    "preservation manifest211files and supplement9files",
+    "bounded persistent state search23549entries",
+    "candidate-backend-resume.tar.gz",
+    "completion-backend.tar.gz",
+    "backend-diagnostic.tar.gz",
+    "native and voice archives",
+    "Claude local transcript search"
+  ],
+  "limits": "Not a proof that every possible backup is absent; original old pod remains untouched.",
+  "claude_report": "resume20/21 stored only under old root /home/unreal/.sub01-private; no backup found in his transcripts.",
+  "backend_started": false,
+  "owner_decision_requested": true
+}

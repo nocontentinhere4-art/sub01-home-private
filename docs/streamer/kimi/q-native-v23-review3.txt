@@ -1,0 +1,16 @@
+Last check before the commit: native v23, your three notes on the delta, applied. Short answer please ("ok" or the concrete problem).
+
+1. Continuity at the shoulder line (your note 1). StreamerV23Target (anim proxy), after the law-of-cosines root:
+     const double Bq=FVector::DotProduct(Ahead,V);if(Bq<0){StreamerV23Slide[S]=-1;return StreamerV23Effective[S];}
+     const double Slide=FMath::Clamp(-Bq+FMath::Sqrt(FMath::Max(0.,Bq*Bq-Cq)),0.,15.)*FMath::Min(1.,Bq/5.);
+     StreamerV23Slide[S]=float(Slide);StreamerV23Effective[S]=StreamerV2HandTarget[S]+Ahead*Slide;
+   (V = target - shoulder, Ahead = the keyboard's forward axis, Cq = |V|^2 - Reach^2 < 0 here.) The applied slide is 0 at Bq = 0 and
+   reaches the capped root at Bq >= 5 cm, so a target crossing the shoulder line moves continuously; the published value is -1 behind
+   the line. Normal keyboard targets sit about 20 cm ahead of the shoulder (factor 1, unchanged). New test: a target 1 cm ahead of the
+   shoulder with elbow_min_deg 95 (uncapped root about 29 cm) slides exactly 15 x 1/5 = 3 cm and the wrist sits 3 cm from the sent target.
+2. Mobility save (your note 2): the test mouse now starts Stationary; asserted Movable while adopted, the saved value Stationary, and
+   Stationary again after the release. Removing the save in AdoptStreamerVisualV23Mouse now fails the test.
+3. Key glide back (your note 3): after the first v1 tick the key is asserted at side 30-3 = 27 cm and up 10-3 = 7 cm (30 cm/s x 0.1 s);
+   an instantaneous reset now fails the test.
+
+All 133 tests pass; mutation checks (ramp removed, mobility save removed, key offset set without the glide) each fail their test.

@@ -1,0 +1,6 @@
+{
+ "http": 200,
+ "finish": "stop",
+ "seconds": 10.9,
+ "answer": "APPROVE \u2014 the narrowed regex correctly limits `jump` handling to top/bottom navigation. Tests cover Home/End mappings, `jump back`, and conversational false positives parsing to `None` with no action or refusal."
+}

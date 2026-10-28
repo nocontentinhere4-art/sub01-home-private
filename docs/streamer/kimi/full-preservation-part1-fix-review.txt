@@ -1,0 +1,111 @@
+Review ONLY these corrections to your two part-1 blockers. All other reviewed part-1 bytes unchanged. Three focused unittest tests PASS. Return COMMIT YES for corrected part 1 if resolved. No runtime execution is requested.
+diff --git a/HANDOFF.md b/HANDOFF.md
+index 9a870a0..ac0ab83 100644
+--- a/HANDOFF.md
++++ b/HANDOFF.md
+@@ -782,3 +782,7 @@ Check the RunPod console balance before heavy work and every two hours; notify b
+ First review and push all unpushed work to the private branch, and persist root/tmp scripts and results on /workspace. Then restore the existing stack with FIFO/libx264, resume21 backend, voice, director, agent held by STOP, desktop runner, local HLS, watchdog and feed monitor. Measure combined CPU headroom and frame rates. No NVENC work.
+ Notify the owner when backend and operator console are ready; only the owner logs into Vagon and arms the PC. Then verify input frames, agent checks, live K07/head motion without mouth animation, simultaneous camera 2 at 60fps, and a 30-minute acceptance recording. An eight-hour soak requires actual credit. Monitor game memory growth. Appearance and disclosed reconstructed animations follow functional work.
+ Use one diagnostic consultation per step and act; report any step blocked for two hours. No public output, main, merge, credential change or payment. No new runtime job has been started.
++
++### 2026-10-25 14:35 UTC — preservation and review corrections
++The non-secret preservation copy contains 220 allowlisted scripts/results on /workspace/sub01-preservation-20261025-1424. Source and destination hashes were checked independently with readback. Nine initial exclusions were false matches on speak-request labels; actual key/token checks and corrected account-ID matching passed before supplementary copies. Originals remain untouched. Manifest hashes: ba30f7c9834e4aba56c8a1e7cd787a245960a79a771cf4869084b9e963b83a15 and 474a9b921881472630e8f4941cacff7da9a9a22f0f2e72497852bda6670dd00c.
++The complete private staged diff was reviewed in two whole-file parts. Part 2 required redacting an account identifier in a historical quota error; the restricted original remains outside Git, and the correction received COMMIT YES. Part 1 required rejecting cross-sample tuning/source/clip identity drift in the unused contact analyzer and explicitly leaving supplied-tuning completeness open. Those corrections pass three focused tests and await delta review. No native diagnostic or stack restart was performed.
+diff --git a/tools/native_streamer_visual_v2/contact_geometry_analyse.py b/tools/native_streamer_visual_v2/contact_geometry_analyse.py
+index 5ec5942..1a8d84d 100644
+--- a/tools/native_streamer_visual_v2/contact_geometry_analyse.py
++++ b/tools/native_streamer_visual_v2/contact_geometry_analyse.py
+@@ -1,7 +1,7 @@
+ """Validate bounded native geometry snapshots; report bone-origin/AABB distances.
+ 
+ This tool does not acquire poses or correlate JPEGs, and cannot establish skin
+-contact. It deliberately refuses incomplete acquisition metadata.
++contact or tuning completeness. It checks supplied acquisition metadata only.
+ """
+ from __future__ import annotations
+ 
+@@ -49,6 +49,7 @@ def analyse(document):
+     seen_ids = set()
+     previous_frame = previous_pose = -1
+     results = []
++    acquisition_identity = None
+     for sample in samples:
+         capture = sample.get("capture_id")
+         require(isinstance(capture, str) and capture and capture not in seen_ids, "duplicate/missing capture ID")
+@@ -62,7 +63,7 @@ def analyse(document):
+         previous_frame, previous_pose = frame, pose
+         require(sample.get("coordinate_space") == "world_cm", "world centimetres required")
+         tuning = sample.get("effective_tuning")
+-        require(isinstance(tuning, dict) and tuning, "missing complete effective tuning")
++        require(isinstance(tuning, dict) and tuning, "missing supplied tuning mapping")
+         require(sample.get("effective_tuning_sha256") == digest(tuning), "effective tuning digest mismatch")
+         require(sha(sample.get("source_tuning_sha256")), "missing source tuning digest")
+         clip = sample.get("clip")
+@@ -71,6 +72,11 @@ def analyse(document):
+         require(integer(clip.get("loop_count")) and integer(clip.get("replay_seed")), "missing loop count/replay seed")
+         require(type(clip.get("seconds")) in (int, float) and math.isfinite(clip["seconds"]) and clip["seconds"] >= 0,
+                 "invalid evaluation time")
++        identity = (sample["effective_tuning_sha256"], sample["source_tuning_sha256"],
++                    clip["path"], clip["package_sha256"], clip["evaluator_sha256"], clip["replay_seed"])
++        if acquisition_identity is None:
++            acquisition_identity = identity
++        require(identity == acquisition_identity, "immutable acquisition identity drift")
+         bones, keys = sample.get("bones"), sample.get("keys")
+         require(isinstance(bones, list) and 0 < len(bones) <= 32, "bone budget exceeded or empty")
+         require(isinstance(keys, list) and 0 < len(keys) <= 128, "key budget exceeded or empty")
+@@ -105,7 +111,7 @@ def analyse(document):
+         results.append({"capture_id": capture, "game_frame": frame, "pose_serial": pose,
+                         "clip_seconds": clip["seconds"], "distances": distances})
+     return {"schema": "sub01.contact-geometry-analysis.v1", "geometry_structure_validated": True,
+-            "skin_contact_accepted": False, "jpeg_correlated": False,
++            "skin_contact_accepted": False, "jpeg_correlated": False, "tuning_completeness_validated": False,
+             "interpretation": "Supplied structure/hash consistency only, not independent acquisition authenticity. Bone origins versus world axis-aligned bounds; zero distance is not skin contact.",
+             "samples": results}
+ 
+
+NEW FILE tests/test_contact_geometry_acquisition_identity.py
+import copy
+import unittest
+from tools.native_streamer_visual_v2.contact_geometry_analyse import analyse, digest
+
+
+def fixture():
+    tuning = {"supplied_field": 1}
+    sample = {"capture_id": "one", "game_frame": 1, "pose_serial": 1,
+              "finalized_frame": 1, "published_frame": 1, "finalized_pose_serial": 1,
+              "coordinate_space": "world_cm", "effective_tuning": tuning,
+              "effective_tuning_sha256": digest(tuning), "source_tuning_sha256": "a" * 64,
+              "clip": {"path": "/clip", "package_sha256": "b" * 64,
+                       "evaluator_sha256": "c" * 64, "loop_count": 0, "replay_seed": 3, "seconds": 0},
+              "bones": [{"name": str(i), "role": "terminal_finger", "world_xyz": [0, 0, 0]} for i in range(10)],
+              "keys": [{"name": "key", "bounds_source": "CalcBounds(GetComponentToWorld()).GetBox()",
+                        "world_aabb_min": [0, 0, 0], "world_aabb_max": [1, 1, 1]}]}
+    second = copy.deepcopy(sample)
+    second.update(capture_id="two", game_frame=2, pose_serial=2, finalized_frame=2,
+                  published_frame=2, finalized_pose_serial=2)
+    return {"schema": "sub01.contact-geometry.v1", "geometry_only": True, "jpeg_correlated": False,
+            "overflow": False, "acquisition_complete": True, "input_manifest_sha256": "d" * 64,
+            "engine_build_manifest_sha256": "e" * 64, "required_bones": [str(i) for i in range(10)],
+            "samples": [sample, second]}
+
+
+class AcquisitionIdentityTests(unittest.TestCase):
+    def test_supplied_mapping_does_not_claim_completeness(self):
+        self.assertFalse(analyse(fixture())["tuning_completeness_validated"])
+
+    def test_recomputed_tuning_digest_does_not_allow_drift(self):
+        doc = fixture()
+        second = doc["samples"][1]
+        second["effective_tuning"]["supplied_field"] = 2
+        second["effective_tuning_sha256"] = digest(second["effective_tuning"])
+        with self.assertRaisesRegex(ValueError, "identity drift"):
+            analyse(doc)
+
+    def test_source_and_clip_identity_drift(self):
+        for key in ["source_tuning_sha256", "package_sha256", "evaluator_sha256", "replay_seed"]:
+            with self.subTest(key=key):
+                doc = fixture()
+                target = doc["samples"][1] if key == "source_tuning_sha256" else doc["samples"][1]["clip"]
+                target[key] = 4 if key == "replay_seed" else "f" * 64
+                with self.assertRaisesRegex(ValueError, "identity drift"):
+                    analyse(doc)

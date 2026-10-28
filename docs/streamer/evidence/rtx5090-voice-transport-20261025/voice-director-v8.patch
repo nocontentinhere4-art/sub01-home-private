@@ -1,0 +1,31 @@
+--- v7-reviewed.py
++++ v8-candidate.py
+@@ -6,7 +6,7 @@
+  raise SystemExit("Refusing optimized interpreter mode")
+ import urllib.request
+ P=Path('/home/unreal/.sub01-private');SHARE=Path('/tmp/sub01-share')
+-ROOT=P/'voice-director-diagnostic-v7-20261025';BASE=ROOT/'confined';BROKER=ROOT/'broker';SOURCE=P/'latest-source-20261023/scripts'
++ROOT=P/'voice-director-diagnostic-v8-20261025';BASE=ROOT/'confined';BROKER=ROOT/'broker';SOURCE=P/'latest-source-20261023/scripts'
+ MAIN=P/'streamer/main.mjpeg';MAINJSON=P/'streamer/main.json';STOP=P/'streamer/STOP'
+ LEASE=SHARE/'MEASURING';OWNER='codex-voice-director-'+uuid.uuid4().hex
+ WRAPPER=SHARE/'restrict-diagnostic-child-v2.py';NATIVE=(29950,53274039)
+@@ -297,9 +297,17 @@
+    m=d.get('main')or{}
+    assert d.get('run')==initial.get('run')and d.get('voice')is True and m.get('source')=='fifo'and m.get('fresh')is True,'transport source/run changed'
+    assert fifo(MAIN)==main_inode and fifo(voice_fifo)==voice_inode
+-   for ident,expected in ((main_inode,children['director'].pid),(voice_inode,children['director'].pid)):
++   ffmpeg_pid=d.get('ffmpeg_pid')
++   assert type(ffmpeg_pid)is int and ffmpeg_pid in identities,'current ffmpeg not registered'
++   assert identities[ffmpeg_pid]['exe']==FFMPEG_EXE and owned(ffmpeg_pid,identities[ffmpeg_pid]),'current ffmpeg ownership changed'
++   expected_readers={children['director'].pid,ffmpeg_pid}
++   # Pinned director retains passive VoiceTap/FifoTap read ends; only this
++   # owned ffmpeg consumes the on-air main+voice FIFOs. See source drain_tick.
++   for ident in (main_inode,voice_inode):
++    observe(force=True)
+     readers={p for p,modes in fifo_users(ident).items()if modes&{0,2}}
+-    assert readers=={expected},'unexpected FIFO reader'
++    log('fifo-readers',fifo_identity=ident,observed=sorted(readers),expected=sorted(expected_readers),ffmpeg_identity=identities[ffmpeg_pid])
++    assert readers==expected_readers,'unexpected FIFO reader topology'
+    writers={p for p,modes in fifo_users(voice_inode).items()if modes&{1,2}}
+    assert writers<={children['voice'].pid},'unexpected PCM writer'
+    last_check=now

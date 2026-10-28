@@ -1,0 +1,921 @@
+{
+  "owner": "codex-readiness-c8851e0c468a4087b92f42774c0e3bca",
+  "status": "failed",
+  "pid": 38487,
+  "ticks": 56869465,
+  "probe": {
+    "schema": "sub01.standalone-readiness.v1",
+    "status": "recorded",
+    "error": null,
+    "samples": [
+      {
+        "monotonic": 568694.779892822,
+        "wall": 1792932419.2619286,
+        "duration": 0.0009837429970502853,
+        "fresh": false,
+        "reason": "main view last written 3620.6s ago",
+        "report": {
+          "age_s": 0.004,
+          "last_write_age_s": 3620.612,
+          "fps": 0.0,
+          "valid": true,
+          "written": 216784,
+          "sequence": 216848,
+          "dropped_slots": 0,
+          "dropped_encode": 0,
+          "dropped_queue": 28,
+          "dropped_noreader": 39,
+          "frames_discarded_midwrite": 2
+        },
+        "hard": false,
+        "voice_writer": false,
+        "voice_absence_expected": true,
+        "fifo_inode": [
+          67,
+          6480385251
+        ],
+        "fresh_for": 0.0,
+        "retry_in": 0.0,
+        "ready": false
+      },
+      {
+        "monotonic": 568695.784780465,
+        "wall": 1792932420.266816,
+        "duration": 0.6021321139996871,
+        "fresh": false,
+        "reason": "no process writes to the main FIFO",
+        "report": {
+          "age_s": 0.009,
+          "last_write_age_s": 0.014,
+          "fps": 13.999300956726074,
+          "valid": true,
+          "written": 216798,
+          "sequence": 216867,
+          "dropped_slots": 0,
+          "dropped_encode": 0,
+          "dropped_queue": 28,
+          "dropped_noreader": 39,
+          "frames_discarded_midwrite": 2
+        },
+        "hard": false,
+        "voice_writer": false,
+        "voice_absence_expected": true,
+        "fifo_inode": [
+          67,
+          6480385251
+        ],
+        "fresh_for": 0.0,
+        "retry_in": 0.0,
+        "ready": false
+      },
+      {
+        "monotonic": 568696.781760882,
+        "wall": 1792932421.2637963,
+        "duration": 0.6026245170505717,
+        "fresh": false,
+        "reason": "no process writes to the main FIFO",
+        "report": {
+          "age_s": 1.006,
+          "last_write_age_s": 1.011,
+          "fps": 13.999300956726074,
+          "valid": true,
+          "written": 216798,
+          "sequence": 216867,
+          "dropped_slots": 0,
+          "dropped_encode": 0,
+          "dropped_queue": 28,
+          "dropped_noreader": 39,
+          "frames_discarded_midwrite": 2
+        },
+        "hard": false,
+        "voice_writer": false,
+        "voice_absence_expected": true,
+        "fifo_inode": [
+          67,
+          6480385251
+        ],
+        "fresh_for": 0.0,
+        "retry_in": 0.0,
+        "ready": false
+      },
+      {
+        "monotonic": 568697.783281887,
+        "wall": 1792932422.2653177,
+        "duration": 0.6023732461035252,
+        "fresh": false,
+        "reason": "no process writes to the main FIFO",
+        "report": {
+          "age_s": 0.991,
+          "last_write_age_s": 0.995,
+          "fps": 59.99943542480469,
+          "valid": true,
+          "written": 216859,
+          "sequence": 216928,
+          "dropped_slots": 0,
+          "dropped_encode": 0,
+          "dropped_queue": 28,
+          "dropped_noreader": 39,
+          "frames_discarded_midwrite": 2
+        },
+        "hard": false,
+        "voice_writer": false,
+        "voice_absence_expected": true,
+        "fifo_inode": [
+          67,
+          6480385251
+        ],
+        "fresh_for": 0.0,
+        "retry_in": 0.0,
+        "ready": false
+      },
+      {
+        "monotonic": 568698.781662216,
+        "wall": 1792932423.2636979,
+        "duration": 0.6021158141084015,
+        "fresh": false,
+        "reason": "no process writes to the main FIFO",
+        "report": {
+          "age_s": 0.989,
+          "last_write_age_s": 0.995,
+          "fps": 59.99931335449219,
+          "valid": true,
+          "written": 216919,
+          "sequence": 216988,
+          "dropped_slots": 0,
+          "dropped_encode": 0,
+          "dropped_queue": 28,
+          "dropped_noreader": 39,
+          "frames_discarded_midwrite": 2
+        },
+        "hard": false,
+        "voice_writer": false,
+        "voice_absence_expected": true,
+        "fifo_inode": [
+          67,
+          6480385251
+        ],
+        "fresh_for": 0.0,
+        "retry_in": 0.0,
+        "ready": false
+      },
+      {
+        "monotonic": 568699.782717017,
+        "wall": 1792932424.2647524,
+        "duration": 0.6024851059773937,
+        "fresh": false,
+        "reason": "no process writes to the main FIFO",
+        "report": {
+          "age_s": 0.973,
+          "last_write_age_s": 0.979,
+          "fps": 59.9991455078125,
+          "valid": true,
+          "written": 216980,
+          "sequence": 217049,
+          "dropped_slots": 0,
+          "dropped_encode": 0,
+          "dropped_queue": 28,
+          "dropped_noreader": 39,
+          "frames_discarded_midwrite": 2
+        },
+        "hard": false,
+        "voice_writer": false,
+        "voice_absence_expected": true,
+        "fifo_inode": [
+          67,
+          6480385251
+        ],
+        "fresh_for": 0.0,
+        "retry_in": 0.0,
+        "ready": false
+      },
+      {
+        "monotonic": 568700.780368301,
+        "wall": 1792932425.2624037,
+        "duration": 0.6027395820710808,
+        "fresh": false,
+        "reason": "no process writes to the main FIFO",
+        "report": {
+          "age_s": 0.955,
+          "last_write_age_s": 0.958,
+          "fps": 60.000274658203125,
+          "valid": true,
+          "written": 217041,
+          "sequence": 217110,
+          "dropped_slots": 0,
+          "dropped_encode": 0,
+          "dropped_queue": 28,
+          "dropped_noreader": 39,
+          "frames_discarded_midwrite": 2
+        },
+        "hard": false,
+        "voice_writer": false,
+        "voice_absence_expected": true,
+        "fifo_inode": [
+          67,
+          6480385251
+        ],
+        "fresh_for": 0.0,
+        "retry_in": 0.0,
+        "ready": false
+      },
+      {
+        "monotonic": 568701.784228179,
+        "wall": 1792932426.2662635,
+        "duration": 0.6021432949928567,
+        "fresh": false,
+        "reason": "no process writes to the main FIFO",
+        "report": {
+          "age_s": 0.959,
+          "last_write_age_s": 0.963,
+          "fps": 59.99931335449219,
+          "valid": true,
+          "written": 217101,
+          "sequence": 217170,
+          "dropped_slots": 0,
+          "dropped_encode": 0,
+          "dropped_queue": 28,
+          "dropped_noreader": 39,
+          "frames_discarded_midwrite": 2
+        },
+        "hard": false,
+        "voice_writer": false,
+        "voice_absence_expected": true,
+        "fifo_inode": [
+          67,
+          6480385251
+        ],
+        "fresh_for": 0.0,
+        "retry_in": 0.0,
+        "ready": false
+      },
+      {
+        "monotonic": 568702.783064433,
+        "wall": 1792932427.2650998,
+        "duration": 0.6022201189771295,
+        "fresh": false,
+        "reason": "no process writes to the main FIFO",
+        "report": {
+          "age_s": 0.957,
+          "last_write_age_s": 0.958,
+          "fps": 59.99970626831055,
+          "valid": true,
+          "written": 217161,
+          "sequence": 217230,
+          "dropped_slots": 0,
+          "dropped_encode": 0,
+          "dropped_queue": 28,
+          "dropped_noreader": 39,
+          "frames_discarded_midwrite": 2
+        },
+        "hard": false,
+        "voice_writer": false,
+        "voice_absence_expected": true,
+        "fifo_inode": [
+          67,
+          6480385251
+        ],
+        "fresh_for": 0.0,
+        "retry_in": 0.0,
+        "ready": false
+      },
+      {
+        "monotonic": 568703.781699269,
+        "wall": 1792932428.2637348,
+        "duration": 0.6025888500735164,
+        "fresh": false,
+        "reason": "no process writes to the main FIFO",
+        "report": {
+          "age_s": 0.939,
+          "last_write_age_s": 0.944,
+          "fps": 59.99905014038086,
+          "valid": true,
+          "written": 217222,
+          "sequence": 217291,
+          "dropped_slots": 0,
+          "dropped_encode": 0,
+          "dropped_queue": 28,
+          "dropped_noreader": 39,
+          "frames_discarded_midwrite": 2
+        },
+        "hard": false,
+        "voice_writer": false,
+        "voice_absence_expected": true,
+        "fifo_inode": [
+          67,
+          6480385251
+        ],
+        "fresh_for": 0.0,
+        "retry_in": 0.0,
+        "ready": false
+      }
+    ],
+    "drains": [
+      {
+        "monotonic": 568694.779607517,
+        "bytes": 0,
+        "total": 0,
+        "lag": 0.0004608829040080309
+      },
+      {
+        "monotonic": 568694.881314823,
+        "bytes": 0,
+        "total": 0,
+        "lag": 0.002168189035728574
+      },
+      {
+        "monotonic": 568694.982516972,
+        "bytes": 0,
+        "total": 0,
+        "lag": 0.0033703380031511188
+      },
+      {
+        "monotonic": 568695.083676331,
+        "bytes": 0,
+        "total": 0,
+        "lag": 0.00452969700563699
+      },
+      {
+        "monotonic": 568695.179796617,
+        "bytes": 0,
+        "total": 0,
+        "lag": 0.0006499830633401871
+      },
+      {
+        "monotonic": 568695.280946118,
+        "bytes": 0,
+        "total": 0,
+        "lag": 0.0017994840163737535
+      },
+      {
+        "monotonic": 568695.382301264,
+        "bytes": 0,
+        "total": 0,
+        "lag": 0.00315463007427752
+      },
+      {
+        "monotonic": 568695.483674744,
+        "bytes": 0,
+        "total": 0,
+        "lag": 0.004528110148385167
+      },
+      {
+        "monotonic": 568695.580089442,
+        "bytes": 339822,
+        "total": 339822,
+        "lag": 0.0009428081102669239
+      },
+      {
+        "monotonic": 568695.68202188,
+        "bytes": 1019011,
+        "total": 1358833,
+        "lag": 0.0028752462239935994
+      },
+      {
+        "monotonic": 568695.784136619,
+        "bytes": 1018126,
+        "total": 2376959,
+        "lag": 0.004989985143765807
+      },
+      {
+        "monotonic": 568695.881608197,
+        "bytes": 1016708,
+        "total": 3393667,
+        "lag": 0.0024615632137283683
+      },
+      {
+        "monotonic": 568695.983728687,
+        "bytes": 1014752,
+        "total": 4408419,
+        "lag": 0.00458205328322947
+      },
+      {
+        "monotonic": 568696.080600542,
+        "bytes": 1009878,
+        "total": 5418297,
+        "lag": 0.0014539082767441869
+      },
+      {
+        "monotonic": 568696.1823087,
+        "bytes": 1007280,
+        "total": 6425577,
+        "lag": 0.0031620663357898593
+      },
+      {
+        "monotonic": 568696.283761088,
+        "bytes": 1004257,
+        "total": 7429834,
+        "lag": 0.004614454344846308
+      },
+      {
+        "monotonic": 568696.380176667,
+        "bytes": 1003299,
+        "total": 8433133,
+        "lag": 0.0010300333378836513
+      },
+      {
+        "monotonic": 568696.481861922,
+        "bytes": 1002766,
+        "total": 9435899,
+        "lag": 0.00271528831217438
+      },
+      {
+        "monotonic": 568696.583231394,
+        "bytes": 1004147,
+        "total": 10440046,
+        "lag": 0.004084760323166847
+      },
+      {
+        "monotonic": 568696.679642686,
+        "bytes": 1005492,
+        "total": 11445538,
+        "lag": 0.0004960524383932352
+      },
+      {
+        "monotonic": 568696.781024732,
+        "bytes": 1009823,
+        "total": 12455361,
+        "lag": 0.0018780984682962298
+      },
+      {
+        "monotonic": 568696.88290408,
+        "bytes": 1016278,
+        "total": 13471639,
+        "lag": 0.003757446422241628
+      },
+      {
+        "monotonic": 568696.979792376,
+        "bytes": 1020666,
+        "total": 14492305,
+        "lag": 0.0006457425188273191
+      },
+      {
+        "monotonic": 568697.081581555,
+        "bytes": 1025079,
+        "total": 15517384,
+        "lag": 0.0024349214509129524
+      },
+      {
+        "monotonic": 568697.183387876,
+        "bytes": 1025169,
+        "total": 16542553,
+        "lag": 0.004241242539137602
+      },
+      {
+        "monotonic": 568697.280134847,
+        "bytes": 1024825,
+        "total": 17567378,
+        "lag": 0.0009882135782390833
+      },
+      {
+        "monotonic": 568697.381928575,
+        "bytes": 1024797,
+        "total": 18592175,
+        "lag": 0.002781941555440426
+      },
+      {
+        "monotonic": 568697.483349484,
+        "bytes": 1024626,
+        "total": 19616801,
+        "lag": 0.004202850628644228
+      },
+      {
+        "monotonic": 568697.579627346,
+        "bytes": 1023447,
+        "total": 20640248,
+        "lag": 0.00048071262426674366
+      },
+      {
+        "monotonic": 568697.681133414,
+        "bytes": 1020132,
+        "total": 21660380,
+        "lag": 0.001986780669540167
+      },
+      {
+        "monotonic": 568697.782634223,
+        "bytes": 1018676,
+        "total": 22679056,
+        "lag": 0.0034875896526500583
+      },
+      {
+        "monotonic": 568697.879579846,
+        "bytes": 1020175,
+        "total": 23699231,
+        "lag": 0.0004332127282395959
+      },
+      {
+        "monotonic": 568697.981149784,
+        "bytes": 1021672,
+        "total": 24720903,
+        "lag": 0.0020031507592648268
+      },
+      {
+        "monotonic": 568698.083204771,
+        "bytes": 1021749,
+        "total": 25742652,
+        "lag": 0.004058137768879533
+      },
+      {
+        "monotonic": 568698.179947524,
+        "bytes": 1023028,
+        "total": 26765680,
+        "lag": 0.0008008907316252589
+      },
+      {
+        "monotonic": 568698.281824288,
+        "bytes": 1022972,
+        "total": 27788652,
+        "lag": 0.0026776547310873866
+      },
+      {
+        "monotonic": 568698.383760292,
+        "bytes": 1022534,
+        "total": 28811186,
+        "lag": 0.004613658762536943
+      },
+      {
+        "monotonic": 568698.480563177,
+        "bytes": 1023600,
+        "total": 29834786,
+        "lag": 0.0014165438478812575
+      },
+      {
+        "monotonic": 568698.58226892,
+        "bytes": 1023119,
+        "total": 30857905,
+        "lag": 0.00312228687107563
+      },
+      {
+        "monotonic": 568698.684021351,
+        "bytes": 1023353,
+        "total": 31881258,
+        "lag": 0.00487471790984273
+      },
+      {
+        "monotonic": 568698.780830277,
+        "bytes": 1023451,
+        "total": 32904709,
+        "lag": 0.0016836439026519656
+      },
+      {
+        "monotonic": 568698.88327776,
+        "bytes": 1023343,
+        "total": 33928052,
+        "lag": 0.00413112691603601
+      },
+      {
+        "monotonic": 568698.979630202,
+        "bytes": 1023867,
+        "total": 34951919,
+        "lag": 0.00048356899060308933
+      },
+      {
+        "monotonic": 568699.080890459,
+        "bytes": 1023647,
+        "total": 35975566,
+        "lag": 0.0017438259674236178
+      },
+      {
+        "monotonic": 568699.182656045,
+        "bytes": 1023028,
+        "total": 36998594,
+        "lag": 0.003509411937557161
+      },
+      {
+        "monotonic": 568699.284108252,
+        "bytes": 1023145,
+        "total": 38021739,
+        "lag": 0.004961619037203491
+      },
+      {
+        "monotonic": 568699.380709089,
+        "bytes": 1023287,
+        "total": 39045026,
+        "lag": 0.0015624560182914138
+      },
+      {
+        "monotonic": 568699.482425692,
+        "bytes": 1021378,
+        "total": 40066404,
+        "lag": 0.0032790590776130557
+      },
+      {
+        "monotonic": 568699.584015227,
+        "bytes": 1019593,
+        "total": 41085997,
+        "lag": 0.004868594114668667
+      },
+      {
+        "monotonic": 568699.68038442,
+        "bytes": 1020338,
+        "total": 42106335,
+        "lag": 0.0012377870734781027
+      },
+      {
+        "monotonic": 568699.782041051,
+        "bytes": 1022089,
+        "total": 43128424,
+        "lag": 0.002894418081268668
+      },
+      {
+        "monotonic": 568699.879164287,
+        "bytes": 1023830,
+        "total": 44152254,
+        "lag": 1.765415072441101e-05
+      },
+      {
+        "monotonic": 568699.981076576,
+        "bytes": 1022796,
+        "total": 45175050,
+        "lag": 0.0019299432169646025
+      },
+      {
+        "monotonic": 568700.08290005,
+        "bytes": 1020501,
+        "total": 46195551,
+        "lag": 0.003753417171537876
+      },
+      {
+        "monotonic": 568700.17951843,
+        "bytes": 1020184,
+        "total": 47215735,
+        "lag": 0.0003717972431331873
+      },
+      {
+        "monotonic": 568700.280900055,
+        "bytes": 1021162,
+        "total": 48236897,
+        "lag": 0.001753422198817134
+      },
+      {
+        "monotonic": 568700.382556516,
+        "bytes": 1022315,
+        "total": 49259212,
+        "lag": 0.003409883240237832
+      },
+      {
+        "monotonic": 568700.479395078,
+        "bytes": 1022357,
+        "total": 50281569,
+        "lag": 0.00024844531435519457
+      },
+      {
+        "monotonic": 568700.581309251,
+        "bytes": 1020456,
+        "total": 51302025,
+        "lag": 0.0021626183297485113
+      },
+      {
+        "monotonic": 568700.683190062,
+        "bytes": 1018949,
+        "total": 52320974,
+        "lag": 0.004043429275043309
+      },
+      {
+        "monotonic": 568700.779950097,
+        "bytes": 1017485,
+        "total": 53338459,
+        "lag": 0.000803464325144887
+      },
+      {
+        "monotonic": 568700.88207201,
+        "bytes": 1015608,
+        "total": 54354067,
+        "lag": 0.0029253773391246796
+      },
+      {
+        "monotonic": 568700.983949014,
+        "bytes": 1012639,
+        "total": 55366706,
+        "lag": 0.004802381386980414
+      },
+      {
+        "monotonic": 568701.080824916,
+        "bytes": 1007943,
+        "total": 56374649,
+        "lag": 0.0016782834427431226
+      },
+      {
+        "monotonic": 568701.182721556,
+        "bytes": 1003049,
+        "total": 57377698,
+        "lag": 0.00357492349576205
+      },
+      {
+        "monotonic": 568701.279506789,
+        "bytes": 1001749,
+        "total": 58379447,
+        "lag": 0.0003601565258577466
+      },
+      {
+        "monotonic": 568701.381428657,
+        "bytes": 1000679,
+        "total": 59380126,
+        "lag": 0.002282024477608502
+      },
+      {
+        "monotonic": 568701.483312293,
+        "bytes": 999355,
+        "total": 60379481,
+        "lag": 0.0041656604735180736
+      },
+      {
+        "monotonic": 568701.580066487,
+        "bytes": 1001411,
+        "total": 61380892,
+        "lag": 0.0009198545012623072
+      },
+      {
+        "monotonic": 568701.682015095,
+        "bytes": 1002545,
+        "total": 62383437,
+        "lag": 0.002868462586775422
+      },
+      {
+        "monotonic": 568701.783867372,
+        "bytes": 1007447,
+        "total": 63390884,
+        "lag": 0.004720739554613829
+      },
+      {
+        "monotonic": 568701.880897714,
+        "bytes": 1014985,
+        "total": 64405869,
+        "lag": 0.0017510816687718034
+      },
+      {
+        "monotonic": 568701.982774087,
+        "bytes": 1019579,
+        "total": 65425448,
+        "lag": 0.0036274546291679144
+      },
+      {
+        "monotonic": 568702.079597451,
+        "bytes": 1024057,
+        "total": 66449505,
+        "lag": 0.00045081868302077055
+      },
+      {
+        "monotonic": 568702.181472371,
+        "bytes": 1025442,
+        "total": 67474947,
+        "lag": 0.0023257386637851596
+      },
+      {
+        "monotonic": 568702.283458479,
+        "bytes": 1023948,
+        "total": 68498895,
+        "lag": 0.00431184668559581
+      },
+      {
+        "monotonic": 568702.380238,
+        "bytes": 1024383,
+        "total": 69523278,
+        "lag": 0.0010913676815107465
+      },
+      {
+        "monotonic": 568702.482111928,
+        "bytes": 1024691,
+        "total": 70547969,
+        "lag": 0.00296529580373317
+      },
+      {
+        "monotonic": 568702.584058012,
+        "bytes": 1021999,
+        "total": 71569968,
+        "lag": 0.004911379772238433
+      },
+      {
+        "monotonic": 568702.68085182,
+        "bytes": 1018812,
+        "total": 72588780,
+        "lag": 0.00170518783852458
+      },
+      {
+        "monotonic": 568702.78269998,
+        "bytes": 1018652,
+        "total": 73607432,
+        "lag": 0.003553347778506577
+      },
+      {
+        "monotonic": 568702.879650692,
+        "bytes": 1019419,
+        "total": 74626851,
+        "lag": 0.0005040598334744573
+      },
+      {
+        "monotonic": 568702.981559666,
+        "bytes": 1020442,
+        "total": 75647293,
+        "lag": 0.002413033857010305
+      },
+      {
+        "monotonic": 568703.08336211,
+        "bytes": 1020794,
+        "total": 76668087,
+        "lag": 0.00421547784935683
+      },
+      {
+        "monotonic": 568703.180166358,
+        "bytes": 1022001,
+        "total": 77690088,
+        "lag": 0.0010197259252890944
+      },
+      {
+        "monotonic": 568703.282030067,
+        "bytes": 1023231,
+        "total": 78713319,
+        "lag": 0.002883434994146228
+      },
+      {
+        "monotonic": 568703.383892643,
+        "bytes": 1023819,
+        "total": 79737138,
+        "lag": 0.00474601099267602
+      },
+      {
+        "monotonic": 568703.480894532,
+        "bytes": 1023691,
+        "total": 80760829,
+        "lag": 0.0017479000380262733
+      },
+      {
+        "monotonic": 568703.582850634,
+        "bytes": 1024075,
+        "total": 81784904,
+        "lag": 0.0037040020106360316
+      },
+      {
+        "monotonic": 568703.679510802,
+        "bytes": 1024231,
+        "total": 82809135,
+        "lag": 0.000364170060493052
+      },
+      {
+        "monotonic": 568703.781013915,
+        "bytes": 1023996,
+        "total": 83833131,
+        "lag": 0.0018672830192372203
+      },
+      {
+        "monotonic": 568703.883387249,
+        "bytes": 1024489,
+        "total": 84857620,
+        "lag": 0.004240617039613426
+      },
+      {
+        "monotonic": 568703.980204872,
+        "bytes": 1024092,
+        "total": 85881712,
+        "lag": 0.0010582400718703866
+      },
+      {
+        "monotonic": 568704.0820311,
+        "bytes": 1023895,
+        "total": 86905607,
+        "lag": 0.002884468180127442
+      },
+      {
+        "monotonic": 568704.183808778,
+        "bytes": 1023169,
+        "total": 87928776,
+        "lag": 0.004662146093323827
+      },
+      {
+        "monotonic": 568704.280701943,
+        "bytes": 1022577,
+        "total": 88951353,
+        "lag": 0.0015553111443296075
+      },
+      {
+        "monotonic": 568704.382738716,
+        "bytes": 1022569,
+        "total": 89973922,
+        "lag": 0.003592084161937237
+      },
+      {
+        "monotonic": 568704.47919917,
+        "bytes": 1020705,
+        "total": 90994627,
+        "lag": 5.253823474049568e-05
+      },
+      {
+        "monotonic": 568704.580566468,
+        "bytes": 1018327,
+        "total": 92012954,
+        "lag": 0.001419836189597845
+      },
+      {
+        "monotonic": 568704.682359485,
+        "bytes": 1019911,
+        "total": 93032865,
+        "lag": 0.0032128532184287906
+      }
+    ],
+    "discarded_bytes": 93032865,
+    "no_voice_started": true,
+    "no_ffmpeg_started": true,
+    "no_frames_persisted": true
+  },
+  "cleanup_error": "Traceback (most recent call last):\n  File \"/tmp/sub01-share/run-readiness-standalone.py\", line 58, in <module>\n    if native().get('main_tap_reader'):raise RuntimeError('Native reader remains')\n                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Native reader remains\n",
+  "elapsed": 10.275513772037812
+}

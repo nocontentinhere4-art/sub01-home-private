@@ -382,9 +382,11 @@ class HomeWorld:
             target = "outside"
         self.bladder = min(1, self.bladder + max(0, sim_dt) / 18000)
         if target != self.target:
-            # Finish current edge before replanning; no teleports through furniture.
-            origin = self.path[0] if self.path else self.node
-            self.path = ([origin] if self.path else []) + route(origin, target)[1:]
+            # Finish the edge he is on before replanning; no teleports through furniture. Standing on a node
+            # (or still getting up from a seat) he has not stepped onto an edge yet: the route starts there.
+            on_edge = bool(self.path) and self.position != list(NODES[self.node])
+            origin = self.path[0] if on_edge else self.node
+            self.path = ([origin] if on_edge else []) + route(origin, target)[1:]
             self.target = target
             self.sequence += 1
         self.activity = activity
@@ -406,7 +408,7 @@ class HomeWorld:
                 arrival_speed = 0.4 + 0.85 * max(0, min(1, cosine))
             # Brake ahead of a corner or seat, instead of stopping abruptly
             # at the waypoint. Straight segments preserve walking momentum.
-            desired_speed = min(1.25, math.sqrt(arrival_speed ** 2 + 2 * 1.4 * distance))
+            desired_speed = min(1.2, math.sqrt(arrival_speed ** 2 + 2 * 1.4 * distance))   # his pace: 1.2 m/s, as in life.py
             if self.speed < desired_speed:
                 self.speed = min(desired_speed, self.speed + dt * 1.15)
             else:
@@ -431,7 +433,7 @@ class HomeWorld:
             )
             if self.node == "bathroom" and (not self.native_feedback.required
                                            or self.activity_ready('use_bathroom')):
-                self.bladder = max(0, self.bladder - dt * 0.06)
+                self.bladder = max(0, self.bladder - max(0, sim_dt) * 0.06)   # sim time, as the filling above
                 self.last_bathroom = self.time
             if activity != self.last_activity and self.activity_ready(activity):
                 self.memories.append(

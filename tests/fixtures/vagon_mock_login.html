@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- Mock of a Vagon account login page for tests/test_streamer_desktop_workstation.py (no Vagon code, no real account).
+     Served at /app/login by the test server. E-mail and password fields, "Sign in" (Enter submits), a decorative
+     "Continue with Google" button. The accepted password is the test constant `mock-password-1` (not a credential of
+     anything): it stores the mock session (a persistent cookie and a localStorage flag, like a real web app) and goes
+     to the workstation page; anything else shows an error. The runner never types here; the owner does, through the
+     operator console. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vagon mock - Sign in</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #f4f5f7; color: #222; font-family: sans-serif; }
+  #card { position: absolute; left: 760px; top: 280px; width: 400px; padding: 24px; background: #fff; border-radius: 8px; box-sizing: border-box; }
+  h1 { margin: 0 0 8px; font-size: 26px; }
+  input { display: block; width: 100%; height: 42px; margin: 10px 0; font-size: 18px; padding: 0 8px; box-sizing: border-box; }
+  button { display: block; width: 100%; height: 46px; margin: 10px 0; font-size: 18px; cursor: pointer; }
+  #error { color: #b00020; min-height: 20px; }
+</style>
+</head>
+<body>
+<div id="card">
+  <h1>Sign in</h1>
+  <p>Welcome back to Mock Vagon. Don't have an account? <a href="register">Create account</a></p>
+  <form id="form">
+    <input id="email" type="email" placeholder="E-mail" autocomplete="off">
+    <input id="password" type="password" placeholder="Password" autocomplete="off">
+    <button id="signin" type="submit">Sign in</button>
+  </form>
+  <button id="google" type="button">Continue with Google</button>
+  <p id="error"></p>
+  <a href="forgot">Forgot your password?</a>
+</div>
+<script>
+  window.__typed = () => ({email: document.getElementById('email').value, password: document.getElementById('password').value});
+  document.getElementById('form').addEventListener('submit', e => {
+    e.preventDefault();
+    if (document.getElementById('password').value === 'mock-password-1') {
+      document.cookie = 'mocksession=1; path=/; max-age=86400';
+      try { localStorage.setItem('mocksession', '1'); } catch (err) {}
+      location.href = 'workstation';
+    } else {
+      document.getElementById('error').textContent = 'Wrong e-mail or password';
+    }
+  });
+  document.getElementById('google').addEventListener('click', () => {
+    document.getElementById('error').textContent = 'Google sign-in is not part of this mock';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{
+ "pid": 1986091,
+ "started": "2026-10-24T11:48:19Z",
+ "updated": "2026-10-24T15:56:20Z",
+ "stop": true,
+ "stopping": false,
+ "services": {
+  "xvfb": {
+   "status": "up",
+   "pid": null,
+   "external": true,
+   "starts": 1,
+   "restarts_in_window": 0,
+   "restart_limit": 5,
+   "restarts_total": 0,
+   "last_exit": null,
+   "last_error": null,
+   "detail": "existing X server, not ours",
+   "since": 1792842499.4469018,
+   "health": "/tmp/.X11-unix/X103"
+  },
+  "desktop": {
+   "status": "up",
+   "pid": 1986092,
+   "external": false,
+   "starts": 1,
+   "restarts_in_window": 0,
+   "restart_limit": 5,
+   "restarts_total": 0,
+   "last_exit": null,
+   "last_error": null,
+   "detail": "http 200",
+   "since": 1792842500.4515507,
+   "health": "http://127.0.0.1:8838/healthz"
+  },
+  "voice": {
+   "status": "up",
+   "pid": 1986129,
+   "external": false,
+   "starts": 1,
+   "restarts_in_window": 0,
+   "restart_limit": 5,
+   "restarts_total": 0,
+   "last_exit": null,
+   "last_error": null,
+   "detail": "http 200",
+   "since": 1792842501.5361066,
+   "health": "http://127.0.0.1:8835/healthz"
+  },
+  "agent": {
+   "status": "held",
+   "pid": null,
+   "external": false,
+   "starts": 0,
+   "restarts_in_window": 0,
+   "restart_limit": 5,
+   "restarts_total": 0,
+   "last_exit": null,
+   "last_error": null,
+   "detail": "held down by the STOP file",
+   "since": null,
+   "health": "http://127.0.0.1:8836/healthz"
+  },
+  "director": {
+   "status": "up",
+   "pid": 1988814,
+   "external": false,
+   "starts": 3,
+   "restarts_in_window": 0,
+   "restart_limit": 5,
+   "restarts_total": 0,
+   "last_exit": {
+    "code": 0,
+    "t": "2026-10-24T12:20:20Z",
+    "pid": 1986821
+   },
+   "last_error": null,
+   "detail": "http 200",
+   "since": 1792850666.4405255,
+   "health": "http://127.0.0.1:8837/healthz"
+  }
+ }
+}

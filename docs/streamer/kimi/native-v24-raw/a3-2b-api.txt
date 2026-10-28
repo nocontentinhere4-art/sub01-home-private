@@ -1,0 +1,7 @@
+1. yes—`Get()` returns the render thread’s immediate list used here; Slate’s draw commands are already enqueued, so the transition/copy execute after that frame’s draw.
+2. no—leaving the texture in `CopySrc` does not break reuse; Slate’s next-frame transition to RTV/SRV handles the current RHI state, so no restoration is required.
+3. yes—for an actual 1920×1080, four-byte/texel source, `Pitch*4` is the byte stride and `1920*4` the active row size; use actual dimensions/`Rows` if they are not fixed.
+4. yes—once `IsReady()` is true, an unwanted result may be discarded without `Lock`/`Unlock`; `Unlock()` only pairs with `Lock()`. Never recycle while the copy is still in flight.
+5. yes—provided it is not locked, render-thread `Reset` with only GPU work outstanding is safe: RHI command/resource lifetime and deferred deletion cover the staging texture and fence.
+6. no—raw CPU reading is valid; on little-endian Linux each texel is a packed 32-bit word with those fields. It is not BGRA8, so an 8-bit MJPEG path must unpack and convert the 10-bit UNORM RGB.
+no blocking issue

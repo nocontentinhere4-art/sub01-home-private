@@ -1,0 +1,15 @@
+Context: UE 5.8.3 game-module C++ on Linux/Vulkan, the game run with -RenderOffScreen (Slate renders the game window into a texture, no swapchain). Pre-commit review of install_v24.py's generated code: the Slate back buffer -> 3-slot FRHIGPUTextureReadback ring (render thread) -> 2 encoder threads -> in-order release -> output queue of 2 -> 1 writer thread -> the FIFO main.mjpeg. It compiles against a stub with g++/clang++ -Wall -Werror -Wshadow and a runtime driver passes. Answer ONLY the numbered questions, each in at most 3 lines, starting with yes/no (or "ok"/"bug"); quote the line for any bug and give the fix. Do not review anything else. End with "no blocking issue" or "blocking: ...".
+
+Attached: the writer thread (loop, flock, FIFO open/close, reader-gone check) and WriteWhole. Fd/LockFd are writer-thread only (the
+destructor touches them after joining). Check ONLY:
+1. Linux FIFO: open(O_WRONLY|O_NONBLOCK) fails with ENXIO when no reader; after the reader closes, poll() on the write end reports
+   POLLERR; write() gives EPIPE (SIGPIPE blocked in this thread by pthread_sigmask, the pending one consumed by sigtimedwait with a
+   zero timeout). Correct?
+2. flock(LOCK_EX|LOCK_NB) on a 0600 regular file opened O_RDWR|O_CREAT|O_NOFOLLOW, released by close(): correct, and EWOULDBLOCK
+   when another process holds it?
+3. Session/Reader ordering against the render thread: OpenFifo does Session.fetch_add(1) then Reader.store(true); the render thread
+   checks Reader, then records Session at acceptance; the writer drops a frame whose Session differs. Can a frame captured before a
+   reconnect be written after it?
+4. WriteWhole: every frame ends in exactly one of Written, DiscardedMidwrite (some bytes sent), DroppedStalled (deadline, nothing
+   sent), DroppedNoReader; the 0.5 s deadline bounds the call (poll slices <= 20 ms, EINTR handled)?
+5. Any loop in the writer that can spin without waiting, or block longer than ~0.6 s with Stop set?

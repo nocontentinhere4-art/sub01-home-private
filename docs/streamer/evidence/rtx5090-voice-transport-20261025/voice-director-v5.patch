@@ -1,0 +1,20 @@
+--- v4-reviewed.py
++++ v5-candidate.py
+@@ -6,7 +6,7 @@
+  raise SystemExit("Refusing optimized interpreter mode")
+ import urllib.request
+ P=Path('/home/unreal/.sub01-private');SHARE=Path('/tmp/sub01-share')
+-BASE=P/'voice-director-diagnostic-v4-20261025';SOURCE=P/'latest-source-20261023/scripts'
++BASE=P/'voice-director-diagnostic-v5-20261025';SOURCE=P/'latest-source-20261023/scripts'
+ MAIN=P/'streamer/main.mjpeg';MAINJSON=P/'streamer/main.json';STOP=P/'streamer/STOP'
+ LEASE=SHARE/'MEASURING';OWNER='codex-voice-director-'+uuid.uuid4().hex
+ WRAPPER=SHARE/'restrict-diagnostic-child-v2.py';NATIVE=(29950,53274039)
+@@ -254,7 +254,7 @@
+  launch('voice','/home/unreal/voice-rt-venv/bin/python',[str(SOURCE/'voice_server.py'),'--host','127.0.0.1','--port','8855','--token-file',str(P/'operator-token'),'--streamer-dir',str(BASE/'voice'),'--voice-config',str(cfgpath),'--engine','chatterbox','--fallback','none','--device','cuda','--threads','4','--offline','--keep-hours','0'],8855)
+  health=wait_for(lambda:(lambda h:h if h.get('ready')is True and h.get('engine')=='chatterbox'else None)(api(8855,'/healthz')),120)
+  save(BASE/'voice-ready.json',health);voice_fifo=BASE/'voice/voice.pcm';voice_inode=fifo(voice_fifo)
+- launch('director','/home/unreal/venv/bin/python',[str(SOURCE/'streamer_director.py'),'--host','127.0.0.1','--port','8856','--token-file',str(P/'operator-token'),'--streamer-dir',str(BASE/'director'),'--recordings-dir',str(BASE/'director/recordings'),'--voice-fifo',str(voice_fifo),'--main-fifo',str(MAIN),'--main-json',str(MAINJSON),'--ffmpeg','/usr/bin/ffmpeg','--game-source','fifo','--layout','webcam_only','--desktop-display','unix:99.0','--encoder','libx264','--fps','60','--preset','veryfast','--crf','23','--keep-segments','0'],8856)
++ launch('director','/home/unreal/venv/bin/python',[str(SOURCE/'streamer_director.py'),'--host','127.0.0.1','--port','8856','--token-file',str(P/'operator-token'),'--streamer-dir',str(BASE/'director'),'--recordings-dir',str(BASE/'director/recordings'),'--voice-fifo',str(voice_fifo),'--main-fifo',str(MAIN),'--main-json',str(MAINJSON),'--ffmpeg','/usr/bin/ffmpeg','--game-source','fifo','--layout','webcam_only','--desktop-display',':99.0','--encoder','libx264','--fps','60','--preset','veryfast','--crf','23','--keep-segments','0'],8856)
+  def ready():
+   d=api(8856,'/director/state');m=d.get('main')or{}
+   return d if d.get('voice')is True and m.get('source')=='fifo'and m.get('fresh')is True and m.get('main_tap_ok')is True else None

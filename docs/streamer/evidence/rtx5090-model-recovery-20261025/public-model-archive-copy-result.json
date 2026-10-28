@@ -1,0 +1,14 @@
+{
+  "status": "verified-passive-public-archive",
+  "archive": "/workspace/sub01-chatterbox-public-5bb1f6ee-20261025.tar",
+  "bytes": 3191982080,
+  "sha256": "f7c28da126e723700da23f8d4f809aa17b7c67487ed1fed23c03b4f36af2e9a9",
+  "trusted_receipt_sha256": "65614418da0bf16e7459566b22a74b7aa860ac3e835536227f66eca3b8605767",
+  "entry_count": 11,
+  "root_original_retained": true,
+  "no_runtime_load": true,
+  "quota_headroom_proven": false,
+  "posix_privacy_claim": false,
+  "utc": 1792913436.721736,
+  "elapsed": 9.138705968856812
+}

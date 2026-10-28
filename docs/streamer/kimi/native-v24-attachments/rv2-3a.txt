@@ -1,0 +1,30 @@
+ // ---- encoder threads
+ void EncodeLoop(){
+  for(;;){
+   FSub01MainJob Job;
+   {std::unique_lock<std::mutex> Lock(Mutex);JobCv.wait(Lock,[this](){return Stop.load()||!Jobs.empty();});if(Stop.load())return;Job=MoveTemp(Jobs.front());Jobs.pop_front();}
+   const double T0=FPlatformTime::Seconds();uint8* Pixels=Job.Pixels.GetData();
+   Sub01MainTap::ToBgra8(Pixels,int64(Job.Width)*Job.Height,Job.Kind);
+   int32 Max=0;const uint64 Sum=Sub01MainTap::Checksum(Pixels,Job.Width,Job.Height,Max);LastChecksum.store(Sum);MaxChannel.store(Max);if(Max>16)NonBlack.store(true);
+   TArray64<uint8> Jpeg,Stamped;int32 JpegWidth=0,JpegHeight=0;
+   const bool Ok=Images&&Images->CompressImage(Jpeg,EImageFormat::JPEG,FImageView(reinterpret_cast<const FColor*>(Pixels),Job.Width,Job.Height),Quality.load())&&Jpeg.Num()>0
+    &&Sub01MainTap::Stamp(Jpeg.GetData(),Jpeg.Num(),Job.Seq,Stamped,JpegWidth,JpegHeight)&&JpegWidth==Width&&JpegHeight==Height;
+   LastJpegWidth.store(JpegWidth);LastJpegHeight.store(JpegHeight);if(Ok)JpegOk.store(true);
+   const int64 Us=int64((FPlatformTime::Seconds()-T0)*1e6);if(!Job.Probe){EncodeUs+=Us;if(Us>EncodeMaxUs.load())EncodeMaxUs.store(Us);}
+   std::lock_guard<std::mutex> Lock(Mutex);
+   if(int32(Pool.size())<PoolMax)Pool.push_back(MoveTemp(Job.Pixels));
+   if(Job.Probe){if(Ok)++ProbeJpegs;continue;}
+   EncodeInFlight.fetch_sub(1);if(Ok){++Encoded;}else ++DroppedEncode;
+   FSub01MainFrame Frame;Frame.Seq=Job.Seq;Frame.Session=Job.Session;if(Ok)Frame.Jpeg=MoveTemp(Stamped);Done.push_back(MoveTemp(Frame));
+   // the reorder buffer: release in sequence order (a failed encode releases its place with an empty frame)
+   while(!Outstanding.empty()){
+    int32 Found=-1;for(int32 K=0;K<int32(Done.size());++K)if(Done[size_t(K)].Seq==Outstanding.front()){Found=K;break;}
+    if(Found<0)break;
+    FSub01MainFrame Next=MoveTemp(Done[size_t(Found)]);Done.erase(Done.begin()+Found);Outstanding.pop_front();
+    if(Next.Jpeg.Num()<=0)continue;
+    if(int32(Out.size())>=QueueMax){Out.pop_front();++DroppedQueue;} // full: the OLDEST goes (latency stays bounded)
+    Out.push_back(MoveTemp(Next));OutCv.notify_one();
+   }
+   while(int32(Done.size())>ReorderMax){Done.pop_front();++DroppedQueue;} // never reached with <= 2 encodes in flight; a bound all the same
+  }
+ }

@@ -1,0 +1,37 @@
+void ASub01HomeCharacter::StartStreamerVisualMainTap(){
+ // Once per process at v2 start (next to cam2): the FIFO (mkfifo 0600 when absent; never replaced), the tap and its back-buffer delegate. Its
+ // threads start when the tap is first switched on (main_tap; auto = on when Slate renders offscreen).
+ if(StreamerVisualMainTap)return;
+ StreamerVisualMainOffscreen=FSlateApplication::IsInitialized()&&FSlateApplication::Get().IsRenderingOffScreen();
+ if(StreamerVisualMainTapOn<0)StreamerVisualMainTapOn=StreamerVisualMainOffscreen?1.f:0.f; // main_tap auto (a value from the tuning file wins)
+ StreamerVisualMainTap=MakeShared<FSub01MainTap>();FSub01MainTap& Tap=*StreamerVisualMainTap;
+ Tap.FifoPath=StreamerVisualCam2Dir+TEXT("/main.mjpeg");Tap.LockPath=StreamerVisualCam2Dir+TEXT("/main.mjpeg.lock");Tap.FifoUtf8=TCHAR_TO_UTF8(*Tap.FifoPath);Tap.LockUtf8=TCHAR_TO_UTF8(*Tap.LockPath);
+ Tap.Images=&FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName(TEXT("ImageWrapper")));Tap.PipeWanted=Sub01MainTap::PipeMaxSize();
+ ::mkdir(TCHAR_TO_UTF8(*StreamerVisualCam2Dir),0700);struct stat S;StreamerVisualMainReason.Empty();
+ if(::lstat(Tap.FifoUtf8.c_str(),&S)!=0){if(::mkfifo(Tap.FifoUtf8.c_str(),0600)!=0)StreamerVisualMainReason=FString::Printf(TEXT("mkfifo failed errno=%d"),errno);}
+ else if(!S_ISFIFO(S.st_mode)||S.st_uid!=getuid()||(S.st_mode&0077))StreamerVisualMainReason=TEXT("path exists and is not this user's private FIFO (left untouched)");
+ Tap.FifoOk.store(StreamerVisualMainReason.IsEmpty());
+ if(FSlateApplication::IsInitialized())if(FSlateRenderer* Renderer=FSlateApplication::Get().GetRenderer()){
+  Tap.Handle=Renderer->OnBackBufferReadyToPresent().AddSP(StreamerVisualMainTap.ToSharedRef(),&FSub01MainTap::OnBackBuffer);Tap.Bound=true;}
+ const double Now=FPlatformTime::Seconds();StreamerVisualMainLogAt=Now+10.0;StreamerVisualMainLogWindowAt=StreamerVisualMainStatusWindowAt=Now;StreamerVisualMainStatusAt=0;
+ UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_MAIN_TAP started=%d fifo=%s offscreen=%d on=%d source=%d bound=%d size=1920x1080 targetFps=%.0f quality=%d pipeWanted=%d slots=3 encoders=2 queue=2 deadlineS=0.5 reason=%s"),
+  StreamerVisualMainReason.IsEmpty()?1:0,*Tap.FifoPath,StreamerVisualMainOffscreen?1:0,StreamerVisualMainTapOn>0?1:0,StreamerVisualMainSource>0?1:0,Tap.Bound?1:0,StreamerVisualMainFps,int32(StreamerVisualMainQuality),Tap.PipeWanted,
+  StreamerVisualMainReason.IsEmpty()?TEXT("-"):*StreamerVisualMainReason);
+}
+void ASub01HomeCharacter::UpdateStreamerVisualMainTap(double Now,float Dt){
+ if(!StreamerVisualMainTap)return;FSub01MainTap& Tap=*StreamerVisualMainTap;
+ const bool On=StreamerVisualMainTapOn>0&&Tap.FifoOk.load();const int32 Source=StreamerVisualMainSource>0?1:0;
+ if(On&&!Tap.Started)Tap.StartThreads();
+ Tap.Source.store(Source);Tap.Quality.store(int32(StreamerVisualMainQuality));Tap.PeriodUs.store(int64(1e6/FMath::Clamp(double(StreamerVisualMainFps),1.,60.)));
+ SWindow* Window=GEngine&&GEngine->GameViewport?GEngine->GameViewport->GetWindow().Get():nullptr;Tap.GameWindow.store(Window);Tap.On.store(On?1:0);
+ if(On&&Source==1&&Window&&FSlateApplication::IsInitialized()) // main_source 1: the same back buffer, read by a render command each tick (the previous frame's picture)
+  if(FSlateRenderer* Renderer=FSlateApplication::Get().GetRenderer())if(ISlateViewportProvider* Provider=Renderer->GetViewportProvider(*Window)){
+   ENQUEUE_RENDER_COMMAND(Sub01StreamerMainTapFallback)([Self=StreamerVisualMainTap,Provider](FRHICommandListImmediate& RHICmdList){if(Self->Source.load()!=1)return;FTextureRHIRef Held=Provider->GetBackBufferResource();Self->Pump(RHICmdList,Held.GetReference());});}
+ const int64 Shape=(int64(Tap.LastKind.load()+1)<<40)|(int64(Tap.LastWidth.load()&0xFFFFF)<<20)|int64(Tap.LastHeight.load()&0xFFFFF);
+ const bool Reshaped=Shape!=StreamerVisualMainShape;StreamerVisualMainShape=Shape;
+ if(On&&(!StreamerVisualMainArmed||StreamerVisualMainArmedSource!=Source||Reshaped))ArmStreamerVisualMainTap(Now); // a new go/no-go window per switch-on, source, format or extent
+ if(!On)StreamerVisualMainArmed=false;
+ if(StreamerVisualMainArmed&&!StreamerVisualMainJudged)JudgeStreamerVisualMainTap(Now);
+ if(Now>=StreamerVisualMainStatusAt&&Tap.LockState.load()==1)WriteStreamerVisualMainStatus(Now); // only the lock holder writes the status (never a second game)
+ if(Now>=StreamerVisualMainLogAt)LogStreamerVisualMainTap(Now);
+}

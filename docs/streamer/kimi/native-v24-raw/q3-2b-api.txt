@@ -1,0 +1,26 @@
+Context: UE 5.8.3 game-module C++ on Linux/Vulkan, the game run with -RenderOffScreen (Slate renders the game window into a texture, no swapchain). Pre-commit review of install_v24.py's generated code: the Slate back buffer -> 3-slot FRHIGPUTextureReadback ring (render thread) -> 2 encoder threads -> in-order release -> output queue of 2 -> 1 writer thread -> the FIFO main.mjpeg. It compiles against a stub with g++/clang++ -Wall -Werror -Wshadow and a runtime driver passes. Answer ONLY the numbered questions, each in at most 3 lines, starting with yes/no (or "ok"/"bug"); quote the line for any bug and give the fix. Do not review anything else. End with "no blocking issue" or "blocking: ...".
+
+The render-thread code (in FSlateRenderer::OnBackBufferReadyToPresent, called in FSlateRHIRenderer::PresentWindow_RenderThread
+before the present, which offscreen is skipped), per accepted frame:
+```
+FTextureRHIRef Held=Provider.GetBackBufferResource();            // ISlateViewportProvider&, render thread
+FRHICommandListImmediate& RHICmdList=FRHICommandListImmediate::Get();
+RHICmdList.Transition(FRHITransitionInfo(Held.GetReference(),ERHIAccess::Unknown,ERHIAccess::CopySrc));
+Readback[Free]->EnqueueCopy(RHICmdList,Held.GetReference());     // TUniquePtr<FRHIGPUTextureReadback>, one of 3, created lazily
+```
+and at the start of every callback (polled, never waited on), oldest slot first:
+```
+if(Readback[S]->IsReady()){int32 Pitch=0,Rows=0;const uint8* P=static_cast<const uint8*>(Readback[S]->Lock(Pitch,&Rows));
+ for(int32 Y=0;Y<1080;++Y)FMemory::Memcpy(Dst+Y*1920*4,P+int64(Y)*Pitch*4,1920*4); Readback[S]->Unlock();}
+```
+1. Is FRHICommandListImmediate::Get() the right list inside this delegate, and is the copy ordered after Slate's draw of that frame?
+2. Transition Unknown->CopySrc before the copy (PixelCapture does the same): can it break Slate's own use of the texture next frame
+   (Slate transitions it to RTV/SRV itself when it renders again)?
+3. 5.8.3: Lock(int32& OutRowPitchInPixels, int32* OutBufferHeight). Is copying 1920*4 bytes per row at Pitch*4 stride correct for a
+   4-byte format (B8G8R8A8 or A2B10G10R10)?
+4. A slot whose result is not wanted (a diagnostic probe while encoders are busy) is marked free WITHOUT Lock/Unlock and later reused
+   with EnqueueCopy: allowed?
+5. On a source-format change the 3 readbacks are destroyed (TUniquePtr::Reset) on the render thread, possibly with a copy in flight:
+   safe (the staging texture and fence are ref-counted RHI resources, deferred deletion)?
+6. The staging texture is created by the first EnqueueCopy from the source's desc. For PF_A2B10G10R10 (the offscreen default,
+   r.DefaultBackBufferPixelFormat 4) on Vulkan: any problem reading it on the CPU (bits: R 9:0, G 19:10, B 29:20, A 31:30)?

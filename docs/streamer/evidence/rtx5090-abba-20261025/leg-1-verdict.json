@@ -1,0 +1,21 @@
+{
+  "index": 1,
+  "arm": "B",
+  "elapsed": 900.0198829895817,
+  "nominal_opportunities": 54000,
+  "actual_opportunities": 54001.1929793749,
+  "from_mono": 543951.1290004815,
+  "to_mono": 544851.148883471,
+  "delta": {
+    "unique": 54000,
+    "gaps": 0,
+    "bad": 0,
+    "cut": 0,
+    "overflows": 0,
+    "repeated": 0,
+    "noseq": 0
+  },
+  "unique_fps": 59.99867449664452,
+  "same_run": true,
+  "available_gate_pass": true
+}

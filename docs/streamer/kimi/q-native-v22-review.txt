@@ -1,0 +1,39 @@
+Code review before commit (owner's rule): SUB-01 native UE 5.8 build v22, installer tools/native_streamer_visual_v2/install_v22.py
+(marker // SUB01_STREAMER_VISUAL_V2_V22), applied on the v21 stack. You already reviewed the design (your answer is summarised
+at the end). Attached: v22.diff = the unified diff of what the installer generates on the v21 pod sources (Sub01HomeLab.h/.cpp,
+Sub01PCBridge.h/.cpp, Sub01HomeDeviceBridge.h/.cpp and the new Sub01PersistentTexture.h). Nothing has been built with Unreal: the
+offline tests compile the extracted code against a syntax/runtime STUB (not Unreal) and run it (a real FIFO, a stub JPEG decoder,
+a stub UTexture2D whose UpdateTextureRegions copies on a simulated render thread then runs the cleanup; AddressSanitizer on the
+persistent-texture helper; the patched bridge's own gate methods run against stand-ins for its other members).
+
+Please review for correctness bugs and engine pitfalls, in order of severity, and say which are BLOCKING:
+1. Privacy: can the feed ever be bound or stay bound while the bridge is private, the backend unconfirmed, or the Vagon desktop not
+   connected? (ShowFrame routing of all 6 former SetTextureParameterValue("PCFrame") sites, ClearPrivateState, NoteMonitorFeedSource
+   in Poll with the second read's start time, SetMonitorFeedFrame renewal, the character's epoch/guard logic.)
+2. Threading/lifetime: the single pump task (Busy), Ready pointer swap, the fd owned by the task, destruction while a task runs,
+   UpdateTextureRegions heap buffer + region freed in the cleanup, GC of the persistent textures (UPROPERTY).
+3. Engine API use on UE 5.8 (list anything you believe does not exist or behaves differently): UTexture2D::CreateTransient,
+   GetResource, UpdateTextureRegions + FUpdateTextureRegion2D, SRGB/NeverStream/Filter/AddressX, IImageWrapperModule::
+   CreateImageWrapper + IImageWrapper::SetCompressed/GetWidth/GetHeight/GetRaw(ERGBFormat::BGRA,8,TArray64), FImageUtils::
+   DecompressImage + FImage::CopyTo, FPostProcessSettings auto-exposure fields (bOverride_*, AutoExposureMethod AEM_Manual,
+   AutoExposureApplyPhysicalCameraExposure), TMap::FindOrAdd returning TObjectPtr&.
+4. The JPEG marker walk (resync, newest frame, limits) and the pump's read loop (EAGAIN/EOF/errors, per-pump cap).
+5. cam2 exposure: modes, restore of the copied values, weight forcing, defaults.
+6. Anything in the tests' assumptions that hides a real-engine failure.
+
+What changed after your design answer: the confirm-after playout (monitor_delay_s 0.75; ring 64 frames/16 MiB of compressed
+JPEGs; one decode per pump of the newest frame read >= delay ago and before the start of the newest completed validating
+confirmation), SelectMonitorFrame with BoundFrame (MID only on a change) called by ShowFrame, SetMonitorFeedFrame,
+NoteMonitorFeedSource and at the top of the bridge's 0.5 s Poll timer; display.kind "graphical" required; EndPlay clears the
+gate; re-clear on a source-rect change; a global pending-upload counter (feed skips uploads at 3); no-progress staleness
+(monitor_stale_s 2.0, the texture blanked on fallback); split drop counters, gate-transition log, richer receipt.
+The sidecar gate you asked for was implemented by another worker and merged (commit 8634ff9: layout.jsonl privacy cuts,
+runner privacy, Vagon connected AND phase connected, stale answers, neutral grey frames every 0.5 s during a cut, a new
+ffmpeg per open period, its display pinned by the supervisor to the desktop child's). This layer treats neutral grey frames
+as ordinary frames and was not changed further on the sidecar side.
+NOT applied: your cam2 default "manual, bias -3". Our reasoning: with AutoExposureApplyPhysicalCameraExposure off, manual mode
+fixes the exposure at the engine's EV100 base, so the bias is the absolute log2 scale; the house's histogram volume pins this
+dim interior at its EV100 -3 floor with bias 1, i.e. scale 2^(1+3) = 16 (the same arithmetic our older daylight-exposure tool
+uses: "minEV -3 / bias 1 caps scale at 16"). Manual -3 would be 2^-3, ~7 EV darker than the webcam: black. We kept mode 1
+(auto + bias) at -1.0 (a relative -2 EV in every eye-adaptation state) as the default; manual stays available live (+4 would
+match the webcam, +2 two stops darker). Please confirm or refute this EV arithmetic for UE 5.8 manual mode.

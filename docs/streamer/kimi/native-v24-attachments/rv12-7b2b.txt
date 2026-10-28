@@ -1,0 +1,32 @@
+    def _walk(self) -> tuple:
+        """-> (end, True) for a whole frame, (cut position, False) for a cut one, (None, False) when more bytes are needed."""
+        b, n, pos = self.buffer, len(self.buffer), 2
+        while True:
+            if pos + 4 > n:
+                return None, False
+            if b[pos] != 0xFF:
+                return pos, False
+            marker = b[pos + 1]
+            if marker == 0xD8:
+                return pos, False
+            length = (b[pos + 2] << 8) | b[pos + 3]
+            if length < 2:
+                return pos, False
+            if pos + 2 + length > n:
+                return None, False
+            pos += 2 + length
+            if marker == 0xDA:
+                break
+        while True:
+            hit = b.find(b'\xff', pos)
+            if hit < 0 or hit + 1 >= n:
+                return None, False
+            nxt = b[hit + 1]
+            if nxt == 0x00 or 0xD0 <= nxt <= 0xD7:
+                pos = hit + 2
+                continue
+            if nxt == 0xD9:
+                return hit + 2, True
+            return hit, False                    # another marker (an SOI of the next frame): this one was cut
+
+

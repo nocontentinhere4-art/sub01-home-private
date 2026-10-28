@@ -1,0 +1,21 @@
+{
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox",
+    "TMPDIR": "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox",
+    "LANG": "C.UTF-8",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "launch": [
+    "env",
+    "-u",
+    "PYTHONOPTIMIZE",
+    "/usr/bin/python3",
+    "-I",
+    "/tmp/sub01-share/supervise-cuda-driver-fixed-diagnostic.py"
+  ],
+  "probe_sha256": "1c071f42a73df894514ac0029063a70a7b97538522b0c5be32cfa65cbfad0dd0",
+  "fixture_sha256": "9737ab554b11e14ce67a884c9078383dcf3478be8183340b8d4b898e0721c883",
+  "runner_sha256": "a8aae74e0f05c3bdf227236112f752b34773e140c588992b4808dbba8e58c815",
+  "supervisor_sha256": "e738a2a720206141bab3ffd5c6091962e17e8e09b13ed95dd56ac32993014e34"
+}

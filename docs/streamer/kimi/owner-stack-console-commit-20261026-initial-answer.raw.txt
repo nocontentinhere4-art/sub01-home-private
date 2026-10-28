@@ -1,0 +1,2 @@
+{"http_status": 200, "answer": "", "finish_reason": "length", "usage": {"prompt_tokens": 10369, "completion_tokens": 9000, "total_tokens": 19369, "completion_tokens_details": {"reasoning_tokens": 8997}, "prompt_tokens_details": {"cache_write_tokens": 10240}}, "seconds": 248.46}
+root@45b2350a6a96:/# 

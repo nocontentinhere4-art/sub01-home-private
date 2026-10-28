@@ -101,7 +101,11 @@ export function createMotion(env){
       env.actions[sw.action] = a;
       for (const k of sw.hips) env.HIPS[k] = info.hips.slice();
       if (sw.edge) env.EDGE.add(clip.name);
-      if (info.stride && env.setStride) env.setStride(info.stride);   // the page's walk time scale is speed / stride
+      // the walk's reference foot speed for the page's rate (speed / (stride share · it), room.html drive()): the manifest's
+      // refFootSpeed as measured on the shipped clip (room_build/kimodo_g12/walk_metrics.py: 0.628 m/s, cycle 1.884 s, stride
+      // 1.182 m), else its stride field (the constant the retarget wrote, 0.65); two steps a loop
+      const ref = info.refFootSpeed || info.stride;
+      if (ref && env.setStride) env.setStride(ref, 2);
       M.swapped[sw.action] = {from: old, to: a};
       handOver(old, a);
     }
@@ -126,7 +130,7 @@ export function createMotion(env){
       const old = env.actions[sw.action], a = env.mixer.clipAction(clip);
       env.actions[sw.action] = a;
       if (env.HIPS0 && env.HIPS0[sw.action]) env.HIPS[sw.action] = env.HIPS0[sw.action].slice();
-      if (sw.slot === "walk" && env.setStride && env.stride0) env.setStride(env.stride0);   // room.html's STRIDE_V for the first walk clip
+      if (sw.slot === "walk" && env.setStride && env.stride0) env.setStride(env.stride0, env.steps0 || 2);   // room.html's REF_SPEED and steps a loop for the first walk clip
       M.swapped[sw.action] = {from: old, to: a, old: true};
       handOver(old, a);
     } catch (e) { M.log.push(`old ${sw.slot}: ${e.message}`); }
@@ -211,6 +215,7 @@ export function createMotion(env){
   // the feet's rest pose: heights above the floor and world rotations, read off a clip file's rig (the same nodes as
   // boy.glb, unanimated; the skin's bind pose is hips-centred and of no use here). Until one has loaded: boy.glb's numbers
   const TIP = 0.09, HEEL = 0.05;                         // m from the toe joint to the toe tip, and from the ankle back to the heel
+  const CONTACT = 0.01;                                  // m: a sole this close to the floor is in contact (the owner's tolerance: 1 cm)
   const REST = {q: {}, p: {}, ankle: 0.120, toe: 0.034, fromScene: false};
   function restFromScene(scene){
     if (REST.fromScene) return;
@@ -276,11 +281,12 @@ export function createMotion(env){
         if (toe) { toe.getWorldQuaternion(_q); low = Math.min(low, _c.copy(REST[side + "tip"]).applyQuaternion(_q).add(_b).y); }
       }
       let target = null;
-      // locking: when the sole is on the floor and the foot moves slowly it is planted: keep it there (within 12 cm)
+      // locking: when the sole is within a centimetre of the floor and the foot moves slowly it is planted: keep it there
+      // (within 12 cm; the clip's rate is set so it should not move at all: room.html drive(), room/gait.js)
       const L = LOCK[side];
       if (walking) {
         const vel = L && L.prev ? _a.distanceTo(L.prev) / Math.max(dt, 1e-3) : 9;
-        if (!L || !L.on) { if (low < F + 0.02 && vel < 0.35) LOCK[side] = {on: true, p: _a.clone(), prev: _a.clone(), w: 0}; else if (L) L.prev.copy(_a); }
+        if (!L || !L.on) { if (low < F + CONTACT && vel < 0.35) LOCK[side] = {on: true, p: _a.clone(), prev: _a.clone(), w: 0}; else if (L) L.prev.copy(_a); }
         if (LOCK[side] && LOCK[side].on) {
           const K = LOCK[side]; K.prev.copy(_a);
           const lifting = low > F + 0.05 || _a.distanceTo(K.p) > 0.12;

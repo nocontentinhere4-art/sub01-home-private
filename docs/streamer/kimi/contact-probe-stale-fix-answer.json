@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "APPROVE KERNEL",
+ "finish_reason": "stop",
+ "prompt_tokens": 3354,
+ "completion_tokens": 1409,
+ "reasoning_tokens": 1390,
+ "seconds": 44.8
+}

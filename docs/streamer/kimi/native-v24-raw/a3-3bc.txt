@@ -1,0 +1,9 @@
+1. yes — assuming the last reader has closed: `ENXIO`, `POLLERR`, and `EPIPE` are correct; blocked thread-directed `SIGPIPE` becomes pending and zero-timeout `sigtimedwait` can consume it.
+2. yes — `close()` releases the lock here once this open file description has no remaining references; `LOCK_EX|LOCK_NB` contention fails with `EWOULDBLOCK`.
+3. no — for a `CloseFifo`/`OpenFifo` reconnect, an earlier acceptance retains an older `Session`; the epoch advances before `Reader` enables new captures, so the writer drops it.
+4. bug — terminal accounting is exclusive, but 0.5 s does not bound the whole call.  
+   `"if(N>0){Sent+=int64(N);continue;}"`: repeated successful partial writes bypass the deadline check.  
+   Fix: immediately after the `Stop` check, insert `if(FPlatformTime::Seconds()>=Deadline){Why=3;break;}`.
+5. no — idle waits are ≤100 ms and poll slices ≤20 ms; FIFO writes and `flock` are nonblocking, and `Stop` is checked each write iteration, so no empty busy-spin or >~0.6 s Stop-set wait.
+
+blocking: `WriteWhole` does not enforce its total 0.5 s deadline under continued partial-write progress.

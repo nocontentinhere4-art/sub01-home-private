@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "[no answer: max_tokens reached while reasoning (23997 reasoning tokens); raise --max-tokens]",
+ "finish_reason": "length",
+ "prompt_tokens": 1689,
+ "completion_tokens": 24000,
+ "reasoning_tokens": 23997,
+ "seconds": 433.1
+}

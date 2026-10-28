@@ -1,0 +1,18 @@
+Context: UE 5.8.3 game-module C++ emitted by install_v24.py. In part 1 you reviewed the JPEG header rebuild `Stamp` and the `Checksum` and found: (a) `Marker==0xDA` broke out before the length/bounds checks, so a truncated or malformed SOS could be copied verbatim; (b) the FNV-1a 64-bit offset basis was wrong. Everything else in part 1 had no finding. These are the changed lines only, verbatim (In = the JPEG bytes, N = its size, already checked to start FF D8 and end FF D9; P = the current marker position):
+
+```
+ while(P+4<=N){
+  if(In[P]!=0xFF)return false;const uint8 Marker=In[P+1];
+  const int64 Length=(int64(In[P+2])<<8)|int64(In[P+3]);if(Length<2||P+2+Length>N)return false;
+  if(Marker==0xDA){ // the SOS header must be whole and consistent (Ls = 6 + 2 Ns) with scan data and the EOI after it
+   const int64 Components=P+4<N?int64(In[P+4]):0;if(Components<1||Components>4||Length!=6+2*Components||P+2+Length>N-2)return false;Sos=P;break;}
+```
+and in Checksum:
+```
+ uint64 Hash=14695981039346656037ull;MaxChannel=0;
+ ... Hash=(Hash^uint64(Q[C]))*1099511628211ull;
+```
+1. Is (a) fixed: the SOS header's length is bounds-checked before use, Ns is 1..4, Ls == 6 + 2*Ns, and the header ends before the final EOI; can any of these lines read out of bounds?
+2. Is (b) fixed: the FNV-1a 64-bit offset basis and prime?
+
+Answer in at most 12 lines: APPROVE, or numbered findings with severity (blocking/minor), each with the line and the fix.

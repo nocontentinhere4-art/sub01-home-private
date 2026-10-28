@@ -1,0 +1,70 @@
+def other_readers(path: Path, proc: Path = Path('/proc'), target: tuple | None = None) -> tuple:
+    """-> (PIDs other than this one holding `path` open for reading (O_RDONLY or O_RDWR), from /proc/<pid>/fd and fdinfo;
+    the number of processes whose descriptors this user may not list: another user's reader would be invisible).
+    `target` = (st_dev, st_ino) of the FIFO already opened (else `path` is stat'ed)."""
+    if target is None:
+        info = os.stat(path)
+        target = (info.st_dev, info.st_ino)
+    found, unchecked = [], 0
+    for entry in proc.iterdir():
+        if not entry.name.isdigit() or int(entry.name) == os.getpid():
+            continue
+        try:
+            try:
+                fds = list((entry / 'fd').iterdir())
+            except PermissionError:
+                unchecked += 1
+                continue
+            for fd in fds:
+                try:
+                    st = os.stat(fd)
+                except OSError:
+                    continue
+                if (st.st_dev, st.st_ino) != tuple(target):
+                    continue
+                flags = 0
+                for line in (entry / 'fdinfo' / fd.name).read_text().splitlines():
+                    if line.startswith('flags:'):
+                        flags = int(line.split()[1], 8)
+                if flags & os.O_ACCMODE in (os.O_RDONLY, os.O_RDWR):
+                    found.append(int(entry.name))
+                    break
+        except OSError:
+            continue
+    return found, unchecked
+
+
+def check_contract(frame: bytes) -> tuple:
+    """-> (ok, seq or None, reason) for one whole JPEG."""
+    pos, segments, seq, sof = 2, 0, None, None
+    while pos + 4 <= len(frame):
+        if frame[pos] != 0xFF:
+            return False, seq, 'not a marker where one must be'
+        marker = frame[pos + 1]
+        if marker == 0xDA:
+            break
+        length = (frame[pos + 2] << 8) | frame[pos + 3]
+        body = frame[pos + 4:pos + 2 + length]
+        segments += 1
+        if segments == 1 and marker != 0xE0:
+            return False, seq, 'APP0 is not the first segment'
+        if segments == 1 and not body.startswith(b'JFIF\0'):
+            return False, seq, 'APP0 is not JFIF'
+        if segments == 2:
+            if marker != 0xFE or not body.startswith(COM_PREFIX) or not body[len(COM_PREFIX):].isdigit():
+                return False, seq, 'the second segment is not COM "seq=<n>"'
+            seq = int(body[len(COM_PREFIX):])
+        elif segments > 2 and (0xE0 <= marker <= 0xEF or marker == 0xFE):
+            return False, seq, 'another APPn/COM segment'
+        elif marker in (0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF):
+            return False, seq, 'not baseline'
+        elif marker == 0xC0:
+            if len(body) < 5:
+                return False, seq, 'SOF0 too short'
+            sof = ((body[3] << 8) | body[4], (body[1] << 8) | body[2])
+        pos += 2 + length
+    if sof != (WIDTH, HEIGHT):
+        return False, seq, f'SOF0 {sof} is not {WIDTH}x{HEIGHT}'
+    return True, seq, ''
+
+

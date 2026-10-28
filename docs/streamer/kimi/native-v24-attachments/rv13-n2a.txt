@@ -1,0 +1,58 @@
+# cam2 evidence (spec step 3: "find that loss first"): the FIONREAD level seen at the full-pipe drops, and the pipe size, in cam2.json
+CAM2_ATOMICS = v21.CAM2_ATOMICS_V21
+assert CAM2_ATOMICS.endswith('\n') and '//' in CAM2_ATOMICS  # its line ends in a comment: the new members get their own line
+CAM2_ATOMICS_V24 = CAM2_ATOMICS + (' std::atomic<int64> FullQueuedMax{0};std::atomic<int32> PipeSizeSeen{0}; // SUB01_STREAMER_VISUAL_V2_V24: FIONREAD at the'
+                                   ' full-pipe drops (max since the last status), F_GETPIPE_SZ for the status\n')
+CAM2_OPENED = '   ::fcntl(Fd,F_SETPIPE_SZ,1048576);PipeBytes=::fcntl(Fd,F_GETPIPE_SZ);Rest.Reset();RestAt=0;OpenErrno.store(0);}\n'
+assert v21.CAM2_OPEN_V21.endswith(CAM2_OPENED)
+CAM2_OPENED_V24 = ('   ::fcntl(Fd,F_SETPIPE_SZ,1048576);PipeBytes=::fcntl(Fd,F_GETPIPE_SZ);PipeSizeSeen.store(PipeBytes);Rest.Reset();RestAt=0;OpenErrno.store(0);}'
+                   ' // + SUB01_STREAMER_VISUAL_V2_V24: the pipe size for cam2.json\n')
+CAM2_FULL = '   if(!Room)++DroppedFull; // the reader is behind: this whole frame is dropped\n'
+CAM2_FULL_V24 = ('   if(!Room){++DroppedFull;if(Known&&int64(Queued)>FullQueuedMax.load())FullQueuedMax.store(int64(Queued));} // the reader is behind: this whole frame is dropped;'
+                 ' SUB01_STREAMER_VISUAL_V2_V24: the pipe level seen\n')
+CAM2_STATUS = v21.CAM2_STATUS_V21
+CAM2_STATUS_V24 = CAM2_STATUS + (' Status->SetNumberField(TEXT("pipe_size"),Pipe.PipeSizeSeen.load());Status->SetNumberField(TEXT("full_queued_max_kb"),double(Pipe.FullQueuedMax.exchange(0))/1024.);'
+                                 ' // SUB01_STREAMER_VISUAL_V2_V24: the cam2 loss evidence (reader back-pressure)\n')
+
+EDITS = [
+    ('header', HEADER_V22_END, HEADER_V22_END + HEADER_FIELDS),
+    ('cpp', INCLUDE_ANCHOR, INCLUDE_V24),
+    ('cpp', CPP_V22_END, CPP_V22_END + CPP_METHODS),
+    ('cpp', START_ANCHOR, START_V24),
+    ('cpp', TICK_ANCHOR, TICK_V24),
+    ('cpp', TUNING_ANCHOR, TUNING_BLOCK),
+    ('cpp', RECEIPT_ANCHOR, RECEIPT_V24),
+    ('cpp', CAM2_ATOMICS, CAM2_ATOMICS_V24),
+    ('cpp', CAM2_OPENED, CAM2_OPENED_V24),
+    ('cpp', CAM2_FULL, CAM2_FULL_V24),
+    ('cpp', CAM2_STATUS, CAM2_STATUS_V24),
+]
+REQUIRES = (('header', v23.MARKER, 'v23'), ('cpp', v23.MARKER, 'v23'), ('header', v22.MARKER, 'v22'), ('cpp', v22.MARKER, 'v22'),
+            ('header', v21.MARKER, 'v21'), ('cpp', v21.MARKER, 'v21'), ('cpp', cam2.MARKER, 'cam2'))
+
+
+def plan(sources: dict) -> dict:
+    """Pure transformation of the two LF texts; raises Refused, never partial."""
+    problems = [f'{FILES[key]} already carries {MARKER} (v24 already installed)' for key in FILES if MARKER in sources[key]]
+    if problems:
+        raise Refused('; '.join(problems))
+    problems = [f'{FILES[key]} lacks {name} ({marker}); run the stack up to install_v23.py first' for key, marker, name in REQUIRES
+                if marker + ' BEGIN' not in sources[key]]
+    if problems:
+        raise Refused('; '.join(problems))
+    out, edits = dict(sources), []
+    for key, anchor, replacement in EDITS:
+        count = out[key].count(anchor)
+        edits.append({'file': FILES[key], 'anchor': anchor.strip()[:96], 'anchor_sha256': v2.sha256(anchor), 'count': count})
+        if count != 1:
+            problems.append(f'anchor {"missing" if count == 0 else f"found {count}x"} in {FILES[key]}: {anchor.strip()[:96]!r}')
+            continue
+        out[key] = out[key].replace(anchor, replacement, 1)
+    if problems:
+        raise Refused('; '.join(problems))
+    for key in FILES:
+        if v2.balance(sources[key]) != v2.balance(out[key]):
+            raise Refused(f'{FILES[key]}: bracket balance changed by the install')
+        if MARKER not in out[key]:
+            raise Refused(f'{FILES[key]}: marker missing after install')
+    return {'sources': out, 'edits': edits}

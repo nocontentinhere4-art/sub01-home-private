@@ -1,0 +1,33 @@
+{"event": "frozen-protocol", "utc": 1792906610.1174622, "monotonic": 542885.635427739, "sha256": "d1fd16f3d9b8dce311720e56dcf1a3539511b7fe55f371dde1ae8a89e1f2f6ef"}
+{"event": "director-start", "utc": 1792906611.323144, "monotonic": 542886.841108968, "pid": 33077, "ticks": 54288683, "args": ["/home/unreal/venv/bin/python", "/home/unreal/.sub01-private/latest-source-20261023/scripts/streamer_director.py", "--host", "127.0.0.1", "--port", "8849", "--token-file", "/home/unreal/.sub01-private/operator-token", "--streamer-dir", "/home/unreal/.sub01-private/director-abba-20261025-03", "--recordings-dir", "/home/unreal/.sub01-private/director-abba-20261025-03/recordings", "--main-fifo", "/home/unreal/.sub01-private/streamer/main.mjpeg", "--main-json", "/home/unreal/.sub01-private/streamer/main.json", "--game-source", "fifo", "--layout", "webcam_only", "--desktop-display", ":99.0", "--encoder", "libx264", "--fps", "60", "--preset", "veryfast", "--crf", "23", "--keep-segments", "0"]}
+{"event": "arm-written", "utc": 1792906613.336646, "monotonic": 542888.854612876, "arm": "A", "tuning_sha256": "bdf228829c7e62d0b0727c55c603f428e042c320d6684b424a2a2f7b7b156687"}
+{"event": "arm-acknowledged", "utc": 1792906613.8837416, "monotonic": 542889.401706561, "arm": "A", "boundary": 542889.3840353806}
+{"event": "arm-written", "utc": 1792906613.8873222, "monotonic": 542889.40528718, "arm": "B", "tuning_sha256": "b12d05d488acb4093fbaa361bc49d3d8768cd17950695583a4e3d39b0fee0e6a"}
+{"event": "arm-acknowledged", "utc": 1792906623.2441986, "monotonic": 542898.762163785, "arm": "B", "boundary": 542898.743719721}
+{"event": "arm-written", "utc": 1792906623.2472425, "monotonic": 542898.765207598, "arm": "A", "tuning_sha256": "d7050064a87639fde1d9d91cdde3f59e91b00431e4366d2b9437e73625044204"}
+{"event": "arm-acknowledged", "utc": 1792906627.9215088, "monotonic": 542903.439474119, "arm": "A", "boundary": 542903.419370089}
+{"event": "arm-written", "utc": 1792906627.9253485, "monotonic": 542903.443314043, "arm": "B", "tuning_sha256": "62d9aa1d25e72604b936c7fbf0982b40373cd1cfc66f16ed2884f71aa76feaee"}
+{"event": "arm-acknowledged", "utc": 1792906639.3662019, "monotonic": 542914.884166724, "arm": "B", "boundary": 542914.8664294474}
+{"event": "transition-preflight-passed", "utc": 1792906639.3662307, "monotonic": 542914.884195678, "order": "ABAB", "game_pid": 29950, "director_pid": 33077}
+{"event": "arm-written", "utc": 1792906639.3838096, "monotonic": 542914.901774507, "arm": "A", "tuning_sha256": "b4c855ca23661420d2edee10284f581a06538a94c44d4a1820bf037001f4611b"}
+{"event": "arm-acknowledged", "utc": 1792906644.0693614, "monotonic": 542919.587326489, "arm": "A", "boundary": 542919.5694985535}
+{"event": "settle-start", "utc": 1792906644.0693877, "monotonic": 542919.587352708, "index": 0, "arm": "A", "ack_mono": 542919.5694985535}
+{"event": "leg-start", "utc": 1792906704.111169, "monotonic": 542979.62913429, "index": 0, "arm": "A", "mono": 542979.6090724135}
+{"event": "leg-end", "utc": 1792907604.130895, "monotonic": 543879.648859751, "index": 0, "arm": "A", "elapsed": 900.0206531444564, "nominal_opportunities": 54000, "actual_opportunities": 54001.23918866739, "from_mono": 542979.6090724135, "to_mono": 543879.629725558}
+{"event": "arm-written", "utc": 1792907604.1428242, "monotonic": 543879.660789145, "arm": "B", "tuning_sha256": "f4cc6297f83ba8d83e187d650afe7d8a0ad653eff14b0a8915678cdd7df46555"}
+{"event": "arm-acknowledged", "utc": 1792907615.5898461, "monotonic": 543891.107811204, "arm": "B", "boundary": 543891.0879811165}
+{"event": "settle-start", "utc": 1792907615.5898983, "monotonic": 543891.107863092, "index": 1, "arm": "B", "ack_mono": 543891.0879811165}
+{"event": "leg-start", "utc": 1792907675.6301732, "monotonic": 543951.148138277, "index": 1, "arm": "B", "mono": 543951.1290004815}
+{"event": "leg-end", "utc": 1792908575.651012, "monotonic": 544851.168976971, "index": 1, "arm": "B", "elapsed": 900.0198829895817, "nominal_opportunities": 54000, "actual_opportunities": 54001.1929793749, "from_mono": 543951.1290004815, "to_mono": 544851.148883471, "delta": {"unique": 54000, "gaps": 0, "bad": 0, "cut": 0, "overflows": 0, "repeated": 0, "noseq": 0}, "unique_fps": 59.99867449664452, "same_run": true, "available_gate_pass": true}
+{"event": "arm-written", "utc": 1792908575.654042, "monotonic": 544851.172007118, "arm": "B", "tuning_sha256": "f10e3a008e545eb5f9b3d0abf0f0c014f542a476cec48f39c940ef79955d44ad"}
+{"event": "arm-acknowledged", "utc": 1792908576.714977, "monotonic": 544852.23294201, "arm": "B", "boundary": 544852.213565654}
+{"event": "settle-start", "utc": 1792908576.7150226, "monotonic": 544852.232987485, "index": 2, "arm": "B", "ack_mono": 544852.213565654}
+{"event": "leg-start", "utc": 1792908636.7560863, "monotonic": 544912.274051099, "index": 2, "arm": "B", "mono": 544912.2552536374}
+{"event": "leg-end", "utc": 1792909536.7763505, "monotonic": 545812.294315514, "index": 2, "arm": "B", "elapsed": 900.0194735025289, "nominal_opportunities": 54000, "actual_opportunities": 54001.16841015173, "from_mono": 544912.2552536374, "to_mono": 545812.27472714, "delta": {"unique": 53988, "gaps": 0, "bad": 0, "cut": 0, "overflows": 0, "repeated": 0, "noseq": 0}, "unique_fps": 59.985368749744396, "same_run": true, "available_gate_pass": true}
+{"event": "arm-written", "utc": 1792909536.7789266, "monotonic": 545812.296891711, "arm": "A", "tuning_sha256": "294cc8734595c50811f63ac4e3a959714539b78ea0a7f7ef9d7d060ef5e2f1fb"}
+{"event": "arm-acknowledged", "utc": 1792909540.9464881, "monotonic": 545816.464452946, "arm": "A", "boundary": 545816.4461943086}
+{"event": "settle-start", "utc": 1792909540.9465313, "monotonic": 545816.464496197, "index": 3, "arm": "A", "ack_mono": 545816.4461943086}
+{"event": "leg-start", "utc": 1792909600.987876, "monotonic": 545876.50584093, "index": 3, "arm": "A", "mono": 545876.486915418}
+{"event": "leg-end", "utc": 1792910501.007169, "monotonic": 546776.525134018, "index": 3, "arm": "A", "elapsed": 900.0196120254695, "nominal_opportunities": 54000, "actual_opportunities": 54001.17672152817, "from_mono": 545876.486915418, "to_mono": 546776.5065274434}
+{"event": "original-tuning-restored", "utc": 1792910501.7740853, "monotonic": 546777.292050495, "sha256": "561656b00848a851fd75bd3ee34e9f7823527c12e1c70ec992b958e30341337a"}
+{"event": "cleanup-finished", "utc": 1792910501.891085, "monotonic": 546777.409049883, "success": true, "errors": []}

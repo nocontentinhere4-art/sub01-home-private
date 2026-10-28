@@ -1,0 +1,10 @@
+Results of your step 2/3 on game m3 (rolled back: cores 0-5, default workers). Decide the v22 scope and the measurement method, max ~350 words, numbered.
+
+Rebaseline, uncapped (t.MaxFPS 0), 3 x 30 s windows each, medians:
+- full (cam2 60 requested): 48.2 fps, frame 20.8, render 17.6, RHI 4.0, GPU 10.6, cam2 43.4, max frame 1381 ms (one hitch).
+- cam2 off: 59.2 fps, frame 16.9, render 13.1, RHI 2.6, GPU 7.0, max 347 ms.
+- cam2 at 30 requested: 61.1 fps, frame 16.4, render 13.6, RHI 3.2, GPU 8.5, cam2 28.8 achieved, max 35.8 ms.
+Per-thread CPU over the windows (from /proc, % of one core): RenderThread 50-70%, RHIThread 60-71%, game thread 14-18%, 3 background workers 74-119% total, 2 foreground workers 96-115% total. No thread saturated; frame ~= render + RHI in every case (they do not overlap).
+Sync A/B (30 s each, cam2 full, uncapped): baselines that day varied 44.1 / 48.2 / 51.3 fps for the SAME config (so noise is about +-5 fps, not +-2). r.GTSyncType 1: 50.4 fps (cam2 50.5, render 14.4); GTSyncType 2: 49.4 (cam2 48.4); r.OneFrameThreadLag 0: 26 fps; r.FinishCurrentFrame 1: 47.2; r.Vulkan.CpuWaitForFence 0 (default 1, waits on the acquire fence in AcquireImageIndex): 53.8 fps vs a 44.1 baseline right before; r.Vulkan.DelayAcquireBackBuffer is read only at RHI init (runtime change has no effect). Vulkan on Xvfb :99 through the NVIDIA driver; swapchain present mode not logged.
+
+Questions: (1) Given the noise, what A/B protocol (interleaved ABAB, length) should gate decisions? (2) v22 scope: cam2 bMainViewFamily (A/B-able via tuning), per-capture timestamps (CaptureScene -> readback -> encode -> FIFO), plus engine-level timing of acquire/present/fence waits on the RHI thread logged in our PERF line (we can wrap nothing inside the engine module, only call public APIs/stats from our game module), and DelayAcquireBackBuffer 0 / CpuWaitForFence 0 as launch-time options. Anything to drop or add? (3) Is the frame ~= render + RHI pattern itself the main lead (serialization), and what would you check first?

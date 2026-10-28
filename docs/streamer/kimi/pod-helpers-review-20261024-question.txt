@@ -1,0 +1,317 @@
+Review this exact repair diff before commit. Focus only on concrete correctness blockers in status propagation, multiline shell commands, Jupyter completion, TLS and tests. The focused design was approved. 25 regression tests pass; live Jupyter commands exit 0 and 7 returned exactly 0 and 7 in BOTH helpers. No application runtime changed. Say COMMIT YES or list blockers; keep answer under 500 words. Consultation receipts (stored verbatim) are omitted from this diff.
+
+diff --git a/HANDOFF.md b/HANDOFF.md
+index 91d05d4..e04eb05 100644
+--- a/HANDOFF.md
++++ b/HANDOFF.md
+@@ -304,3 +304,23 @@ or binaries: only the m5 launcher file and the patch). If that session is gone,
+ - Pod bootstrap for a new session: recreate the scratchpad helpers (`podrun.py` runs bash through the Jupyter kernel
+   API, `jupput.py` uploads through the contents API; downloads via `/files/tmp/sub01-share/...`), with the Jupyter
+   token from the owner's RunPod pod.
++
++## Codex access verification — 2026-10-24 22:12 UTC
++- Separate takeover checkout verified clean at a0332c9549b99bc7d9eccfba7113b0978ca87410. Immutable baseline unchanged.
++- Authenticated existing JupyterLab session reached through the authorized personal browser; no credentials copied or printed. Local pods.json has not yet been provisioned.
++- Tiny read at 22:11:46 UTC: no MEASURING lease; root has 7.4 GB available; PID 63 is Ts, started Wed Oct 21 19:05:18 2026, exact expected guard-v3.py command. It remains paused because 00:20 UTC has not arrived.
++- Existing v24 worker is progressing: shared directory had review7 and m5-fix artefacts timestamped 22:10 UTC; durable v24-wip-2149.patch and v24-wip-on-92bea07-2203.patch exist. Do not duplicate or interrupt its review.
++- Runtime ownership handed to Codex at approximately 22:16 UTC: Claude explicitly confirmed no more builds, deploys, restarts, tuning, console cvars, MEASURING or STOP changes, and no branch commits. Claude cancelled its 00:20 UTC guard reminder. Its v24 worker continues review only and will deliver final patch, verbatim consultations and MANIFEST.txt under /workspace/sub01-w-v24/.
++- Offline reproductions confirm podterm shell status false-positive (false -> END 0) and podrun generated-code false-positive (exit 7 -> local exit 0). No fix or commit yet: consult the on-pod partner first.
++- No runtime changes, builds, restarts, API balance polling, Vagon starts or commits performed by Codex.
++
++### Codex continuation — 2026-10-24 22:19 UTC
++- Private local access provisioned outside git in ~/.sub01/pods.json (directory 700, file 600), downloaded through authenticated Jupyter UI without showing the value; pod transfer file removed. Local terminal helper connection succeeds with certificate verification enabled.
++- Helper design consultation running on the pod: /tmp/sub01-share/codex-helpers/{question.txt,answer.json,consult.err}. Save question/answer verbatim under docs/streamer/kimi/ before committing repairs.
++- Baseline v24 artefact names corrected from Claude's live response: v24-wip-on-92bae07-2203.patch (base 92bae07), sha256 prefix 64352b3cb21440bd; launcher m5 prefix 4d9bd83099609f73. Earlier note spelling 92bea07 was a transcription error. No final MANIFEST.txt yet.
++
++### Helper repair checkpoint — 2026-10-24 22:30 UTC
++- Partner's initial broad consultation exhausted its reasoning budget without an answer (saved verbatim); the focused follow-up explicitly approved the limited status/TLS repair with no blockers.
++- Local fixes preserve the shell status before printf, delimit multiline commands correctly, require kernel completion and an exit marker, map signal exits, and use verified default CA trust when the Linux bundle is absent. No commit until the exact diff review finishes.
++- Live Jupyter probes: both terminal and kernel helpers returned exactly 0 and 7 for the corresponding harmless commands, with expected stdout. No application runtime mutation.
++- Read-only live health: director recording=true, webcam_only, window_speed=1.0; Vagon phase dashboard (does not authorize or prove PC start). Native PID 2015338 remains the 19:13 v23 process; latest 10 s PERF samples at 22:25 UTC = 58.4, 57.1, 56.0 fps, below acceptance.
+diff --git a/tools/pod/README.md b/tools/pod/README.md
+index 2318eae..2566cff 100644
+--- a/tools/pod/README.md
++++ b/tools/pod/README.md
+@@ -16,7 +16,7 @@ the tools only need this shape:
+ `SUB01_HOME_CONTROL_API_KEY`; point `SUB01_POD_SECRETS_DIR` at its folder. Growing the volume costs money: only with
+ the owner's explicit OK. NEVER use "Edit Pod" on the container disk (it wipes everything outside `/workspace`).
+ 
+-The tools mask the token in their output. Python needs `aiohttp` (podterm, podrun) and `curl` (jupput, vagon_dl).
++The tools mask the token in their output. `podterm.py` and `podrun.py` propagate the remote command exit status; missing completion evidence, kernel errors and failed HTTP requests return nonzero. A signal termination maps to the usual shell status (128 + signal) in `podrun.py`. TLS certificate and hostname verification stay enabled; the existing custom CA bundle is used when present, otherwise the system trust store is used. Python needs `aiohttp` (podterm, podrun) and `curl` (jupput, vagon_dl).
+ 
+ ## Tools (run locally)
+ 
+diff --git a/tools/pod/podrun.py b/tools/pod/podrun.py
+index 6e2e5b7..257d111 100644
+--- a/tools/pod/podrun.py
++++ b/tools/pod/podrun.py
+@@ -3,9 +3,12 @@ usage: podrun.py pods.json POD_ID 'shell command'. The Jupyter token is masked f
+ import asyncio
+ import datetime
+ import json
++import os
++import re
+ import ssl
+ import sys
+ import uuid
++import time
+ 
+ import aiohttp
+ 
+@@ -13,15 +16,20 @@ POD, COMMAND = sys.argv[2], sys.argv[3]
+ pods = json.load(open(sys.argv[1]))
+ TOKEN = [p for p in pods if p["id"] == POD][0]["env"]["JUPYTER_PASSWORD"]
+ BASE = f"https://{POD}-8888.proxy.runpod.net"
++TAG = uuid.uuid4().hex
+ CODE = ("import subprocess\n"
+         "r = subprocess.run(['bash', '-lc', %r], capture_output=True, text=True, timeout=240)\n"
+-        "print(r.stdout); print(r.stderr[-3000:])" % COMMAND)
++        "print(r.stdout); print(r.stderr[-3000:])\n"
++        "print('\\nEND%s', r.returncode if r.returncode >= 0 else 128 - r.returncode)" % (COMMAND, TAG))
+ 
+ 
+ async def main():
+-    ctx = ssl.create_default_context(cafile="/root/.ccr/ca-bundle.crt")
++    ca = "/root/.ccr/ca-bundle.crt"
++    ctx = ssl.create_default_context(cafile=ca if os.path.exists(ca) else None)
++    result = 124  # No authenticated completion marker means no successful command.
+     async with aiohttp.ClientSession(trust_env=True, headers={"Authorization": "token " + TOKEN}) as s:
+         async with s.post(BASE + "/api/kernels", json={"name": "python3"}, ssl=ctx) as r:
++            r.raise_for_status()
+             kernel = await r.json()
+         kid = kernel["id"]
+         try:
+@@ -35,10 +43,12 @@ async def main():
+                     "content": {"code": CODE, "silent": False, "store_history": False, "user_expressions": {},
+                                 "allow_stdin": False, "stop_on_error": True}}))
+                 out = []
++                failed, replied, idle = False, False, False
++                deadline = time.monotonic() + 300
+                 while True:
+-                    m = await asyncio.wait_for(ws.receive(), 300)
++                    m = await asyncio.wait_for(ws.receive(), max(0, deadline - time.monotonic()))
+                     if m.type != aiohttp.WSMsgType.TEXT:
+-                        if m.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
++                        if m.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                             out.append(f"\n[websocket {m.type}]")
+                             break
+                         continue
+@@ -49,13 +59,29 @@ async def main():
+                     if t == "stream":
+                         out.append(d["content"]["text"])
+                     elif t == "error":
++                        failed = True
+                         out.append("\n".join(d["content"]["traceback"]))
++                    elif t == "execute_reply":
++                        replied = True
++                        failed |= d["content"].get("status") != "ok"
+                     elif t == "status" and d["content"]["execution_state"] == "idle":
++                        idle = True
++                    if idle and replied:
+                         break
+-                print("".join(out).replace(TOKEN, "<token>"))
++                output = "".join(out)
++                markers = list(re.finditer(rf"^END{TAG} ([0-9]+)\r?$", output, re.M))
++                marker = markers[0] if len(markers) == 1 else None
++                if failed:
++                    result = 1
++                elif marker and int(marker.group(1)) <= 255 and replied and idle:
++                    result = int(marker.group(1))
++                if marker:
++                    output = output[:marker.start()] + output[marker.end():]
++                print(output.replace(TOKEN, "<token>"))
+         finally:
+-            async with s.delete(f"{BASE}/api/kernels/{kid}", ssl=ctx):
+-                pass
++            async with s.delete(f"{BASE}/api/kernels/{kid}", ssl=ctx) as r:
++                r.raise_for_status()
++    return result
+ 
+ 
+-asyncio.run(main())
++sys.exit(asyncio.run(main()))
+diff --git a/tools/pod/podterm.py b/tools/pod/podterm.py
+index 3bd8fb9..69bd329 100644
+--- a/tools/pod/podterm.py
++++ b/tools/pod/podterm.py
+@@ -14,9 +14,12 @@ async def main():
+     headers = {"Authorization": f"token {TOKEN}"}
+     async with aiohttp.ClientSession(headers=headers) as s:
+         async with s.post(BASE + "/api/terminals", ssl=ctx) as r:
++            r.raise_for_status()
+             name = (await r.json())["name"]
+         tag = uuid.uuid4().hex[:10]
+-        script = f"echo BEGIN{tag}; ( {CMD} ) 2>&1; echo; echo END{tag} $?\n"
++        # Capture the command's status before printf (and keep here-doc terminators on their own line).
++        script = (f"printf '\\nBEGIN{tag}\\n'; (\n{CMD}\n) 2>&1\n"
++                  f"__sub01_rc=$?; printf '\\nEND{tag} %s\\n' \"$__sub01_rc\"\n")
+         out, t0 = "", time.time()
+         try:
+             async with s.ws_connect(f"{BASE}/terminals/websocket/{name}", ssl=ctx, max_msg_size=0) as ws:
+@@ -33,14 +36,14 @@ async def main():
+                     data = json.loads(msg.data)
+                     if data[0] == "stdout":
+                         out += data[1]
+-                        if re.search(rf"END{tag} \d+", ANSI.sub("", out)):
++                        if re.search(rf"^END{tag} \d+$", ANSI.sub("", out), re.M):
+                             break
+         finally:
+-            async with s.delete(f"{BASE}/api/terminals/{name}", ssl=ctx):
+-                pass
++            async with s.delete(f"{BASE}/api/terminals/{name}", ssl=ctx) as r:
++                r.raise_for_status()
+     clean = ANSI.sub("", out)
+-    m = re.search(rf"BEGIN{tag}\n(.*?)END{tag} (\d+)", clean, re.S)
+-    if not m:
++    m = re.search(rf"^BEGIN{tag}\n(.*?)^END{tag} (\d+)$", clean, re.S | re.M)
++    if not m or len(re.findall(rf"^END{tag} \d+$", clean, re.M)) != 1 or int(m.group(2)) > 255:
+         print(clean[-4000:].replace(TOKEN, "***"))
+         sys.exit(124)
+     print(m.group(1).rstrip("\n").replace(TOKEN, "***"))
+
+--- new file tests/test_pod_command_status.py ---
+"""Run the actual CLI helpers against a fake Jupyter transport and real local child commands.
+
+No pod, credentials, network, engine or GPU are needed. The transport executes the submitted shell/Python payload,
+so these tests catch status loss in the wire payload as well as in the local wrapper.
+"""
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+FAKE_TRANSPORT = r'''
+import asyncio, json, os, re, subprocess, sys
+from types import SimpleNamespace
+class WSMsgType:
+    TEXT, CLOSE, CLOSED, ERROR = 1, 2, 3, 4
+class Response:
+    def raise_for_status(self):
+        if os.environ.get("POD_TEST_MODE") == "http_error": raise RuntimeError("HTTP failure")
+    async def __aenter__(self): return self
+    async def __aexit__(self, *args): pass
+    async def json(self): return {"name": "test-terminal", "id": "test-kernel"}
+class Socket(Response):
+    def __init__(self): self.messages = []
+    async def send_str(self, raw):
+        data = json.loads(raw)
+        mode = os.environ.get("POD_TEST_MODE", "normal")
+        if isinstance(data, list):
+            if "stty -echo" in data[1]: return
+            if mode == "closed": return
+            result = subprocess.run(["bash", "-c", data[1]], capture_output=True, text=True, timeout=3)
+            text = result.stdout + result.stderr
+            if mode == "out_of_range": text = re.sub(r"(END[0-9a-f]+) \d+", r"\1 256", text)
+            if mode == "duplicate": text += text
+            # Terminal websocket output may arrive split in the middle of a marker.
+            self.messages = [json.dumps(["stdout", text[:len(text)//2]]),
+                             json.dumps(["stdout", text[len(text)//2:]])]
+            if mode == "duplicate": self.messages = [json.dumps(["stdout", text])]
+        else:
+            if mode == "closed": return
+            mid = data["header"]["msg_id"]
+            code = data["content"]["code"]
+            if mode == "timeout": code = code.replace("timeout=240", "timeout=0.05")
+            result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=3)
+            output = result.stdout
+            if mode == "missing": output = re.sub(r"END[0-9a-f]+ \d+", "", output)
+            if mode == "out_of_range": output = re.sub(r"(END[0-9a-f]+) \d+", r"\1 256", output)
+            if mode == "duplicate": output += output
+            def msg(kind, content, parent=mid):
+                return json.dumps({"parent_header":{"msg_id":parent}, "header":{"msg_type":kind},
+                                   "content":content})
+            messages = [msg("stream", {"text":"unrelated request"}, "foreign"),
+                        msg("stream", {"text":output})]
+            if result.returncode or mode == "kernel_error":
+                messages.append(msg("error", {"traceback":[result.stderr or "kernel error"]}))
+            reply = msg("execute_reply", {"status":"error" if result.returncode or mode == "reply_error" else "ok"})
+            idle = msg("status", {"execution_state":"idle"})
+            messages.extend([idle, reply] if mode == "idle_first" else [reply, idle])
+            self.messages = messages
+    async def receive(self):
+        if self.messages: return SimpleNamespace(type=WSMsgType.TEXT, data=self.messages.pop(0))
+        return SimpleNamespace(type=WSMsgType.CLOSED, data="")
+class ClientSession(Response):
+    def __init__(self, **kwargs): pass
+    def post(self, *args, **kwargs): return Response()
+    def delete(self, *args, **kwargs): return Response()
+    def ws_connect(self, *args, **kwargs): return Socket()
+'''
+
+
+@pytest.fixture
+def cli(tmp_path):
+    (tmp_path / 'aiohttp.py').write_text(FAKE_TRANSPORT)
+    pods = tmp_path / 'pods.json'
+    pods.write_text(json.dumps([{'id': 'test-pod', 'env': {'JUPYTER_PASSWORD': 'secret-test-token'}}]))
+
+    def run(helper, command, mode='normal'):
+        env = dict(os.environ, PYTHONPATH=str(tmp_path), POD_TEST_MODE=mode)
+        return subprocess.run([sys.executable, str(ROOT / 'tools/pod' / helper), str(pods), 'test-pod', command],
+                              env=env, capture_output=True, text=True, timeout=6)
+    return run
+
+
+@pytest.mark.parametrize('helper', ['podterm.py', 'podrun.py'])
+@pytest.mark.parametrize('command,status', [('true', 0), ('false', 1), ('exit 7', 7), ('exit 42', 42)])
+def test_child_status_survives_transport(cli, helper, command, status):
+    result = cli(helper, command)
+    assert result.returncode == status, result.stderr + result.stdout
+
+
+@pytest.mark.parametrize('helper', ['podterm.py', 'podrun.py'])
+def test_output_and_secret_redaction(cli, helper):
+    result = cli(helper, "printf 'stdout secret-test-token'; printf 'stderr' >&2; exit 7")
+    assert result.returncode == 7
+    assert 'stdout' in result.stdout and 'stderr' in result.stdout
+    assert 'secret-test-token' not in result.stdout + result.stderr
+
+
+def test_terminal_multiline_here_document(cli):
+    result = cli('podterm.py', "cat <<'TEXT'\nhello\nTEXT\nexit 7")
+    assert result.returncode == 7
+    assert 'hello' in result.stdout
+
+
+@pytest.mark.parametrize('helper', ['podterm.py', 'podrun.py'])
+def test_disconnect_is_not_success(cli, helper):
+    assert cli(helper, 'true', 'closed').returncode == 124
+
+
+@pytest.mark.parametrize('helper', ['podterm.py', 'podrun.py'])
+@pytest.mark.parametrize('mode', ['duplicate', 'out_of_range', 'http_error'])
+def test_invalid_completion_or_http_failure_is_not_success(cli, helper, mode):
+    assert cli(helper, 'true', mode).returncode != 0
+
+
+def test_kernel_signal_maps_to_shell_status(cli):
+    assert cli('podrun.py', 'kill -TERM $$').returncode == 143
+
+
+@pytest.mark.parametrize('mode,status', [('missing', 124), ('kernel_error', 1), ('reply_error', 1),
+                                        ('idle_first', 0), ('timeout', 1)])
+def test_kernel_completion_protocol(cli, mode, status):
+    result = cli('podrun.py', 'sleep 1' if mode == 'timeout' else 'true', mode)
+    assert result.returncode == status, result.stderr + result.stdout
+    assert 'unrelated request' not in result.stdout
+
+--- new file docs/streamer/POD-ACCESS-20261024.md ---
+# Pod command status repair
+
+The terminal helper reported the status of an intervening echo instead of the command; the kernel helper discarded the subprocess status. Both could report success after a failed build or test. The kernel helper also required a Linux-only CA path.
+
+The terminal wrapper now preserves the subshell status immediately and puts multiline command delimiters on separate lines. The kernel wrapper requires its invocation-specific exit marker, an OK execute reply and idle state; errors and disconnects fail closed. Negative signal exits map to 128 + signal. Both reject observed duplicate or out-of-range completion markers and failed HTTP responses. The terminal stops at the first complete marker; it cannot inspect data arriving after completion. TLS verification remains enabled, with the default trust store when the custom bundle is absent.
+
+## Validation
+
+Regression coverage runs the actual CLI scripts through a fake Jupyter transport which executes their submitted payload using real local child processes. It covers successful and failed exits, stdout/stderr and secret masking, a here-document, signal termination, disconnects, missing/duplicate/out-of-range markers, HTTP errors, kernel errors, reply errors, timeout errors and idle/reply ordering. These are transport tests, not native scene acceptance.
+
+Live private Jupyter probes returned exactly the expected status (0 and 7) through each helper and preserved stdout. No game, director, supervisor, agent, STOP, lease, Vagon or provider state was changed.
+
+## Kimi review
+
+The initial broad design request exhausted its reasoning budget without an answer; its full question and response are preserved. The focused follow-up approved the limited repair with no concrete blockers and required strict completion checks and verified TLS. Both consultations are saved verbatim in `kimi/pod-helpers-design*-20261024-*`. Exact diff review is pending; no commit is permitted until it is complete.

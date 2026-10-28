@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "## APPROVE DESIGN \u2014 closed-experiment provenance invariant\n\nUnder the explicitly stated assumptions\u2014trusted sole coordinator, STOP held, agents offline, known launchers paused, fixed trusted background-service behavior, and no malicious-root/kernel adversary\u2014the proposed design is coherent and sufficient **as a design**.\n\nThe reasoning is sound:\n\n- A freshly created, verified FIFO inode excludes pre-existing open or inherited descriptors to that inode.\n- The initial credentialed census establishes the starting process/FD state; it is not being misrepresented as continuous lifecycle monitoring.\n- Supervisor-exclusive launches, controlled descriptor inheritance, owned-process accounting, and the closed-opener assumption exclude unrelated subsequent openers **by the experiment model**, with snapshots providing corroboration.\n- The warm-reader stop/reap/descendant/FD gate and expected-inode checks provide the required handoff condition before the sole collector opens.\n- Periodic snapshots are not being treated as kernel-enforced access control or proof against every transient process.\n\nNo stronger isolation is required by this design approval unless the foundational assumptions fail. The supplied material identifies no specific ordinary observed service that invalidates them; that is not a finding that none exists. Any discovered root/UID1001/capability-holding service or launcher whose behavior cannot be constrained or proven out of scope is a runtime **BLOCK**: stop and reassess isolation rather than weakening the invariant.\n\nThis approval does **not** assert that the invariant is already implemented or evidenced. In particular:\n\n- `integrated_readiness_attempt02.py`, `main_fifo_probe.py`, and the cited warm-reader closure logic remain insufficient as the complete observer.\n- No probe/collector adaptation may execute before the exact combined observer+collector and relevant native/supervisor/warm-reader source review approves the implementation in source order.\n- That review must verify actual FIFO creation/reopen behavior, launch trees and FD inheritance, warm-reader wait/reaping, census error handling, collector open gating, and the complete evidence journal. Any gap blocks execution.\n- No `--force`, unchecked FD skips, namespace changes, production changes, or blind IPC deletion are authorized.\n\nThe collector\u2019s existing visual, timing, byte/journal-accounting, deadline, post-validation, and receipt/clip-loop gates remain unchanged and subject to that same exact review. Visual execution remains conditional on successful attempt02 import and teardown; attempt02\u2019s current preflight-running state is not approval to proceed.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 2291,
+    "completion_tokens": 2084,
+    "total_tokens": 4375,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1579
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 2048
+    }
+  },
+  "seconds": 82.42
+}

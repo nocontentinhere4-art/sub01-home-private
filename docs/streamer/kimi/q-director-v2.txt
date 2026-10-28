@@ -1,0 +1,35 @@
+Review an ffmpeg design for a local stream recorder. Keep your reasoning SHORT (you have a limited budget): answer in at most ~25 numbered points, concrete, exact ffmpeg option spellings where they matter, no generic advice.
+
+Context: a Python asyncio "director" launches ONE ffmpeg process and restarts it on failure. Pod: Linux, RTX 4090, 16 vCPU; ffmpeg version on the pod unknown (>= 6.1 assumed). Profile for the pod (owner decision): 60 fps on EVERYTHING: game capture, desktop capture, cam2, recording and HLS. Command-line defaults on the pod: --fps 60 --desktop-fps 60 --encoder h264_nvenc, cam2 written by the game at 60.
+
+Sources: input 0 = x11grab of the Unreal game window (1920x1080) on :99; input 1 = x11grab desktop :102 (1920x1080); input 2 = voice PCM FIFO s16le 48k stereo (or anullsrc); input 3 (only when usable) = cam2.mjpeg, a FIFO written by the game (MJPEG 1280x720 at 60 fps), with cam2.json (fps, last-frame time).
+Layouts: webcam (game viewport full + desktop PiP 480x270 bottom-right), desktop (desktop full + game PiP), split (game | desktop side by side), room (cam2 full + game PiP). The agent picks the layout at runtime.
+
+EXACT 60 fps COMMAND (as generated now):
+ffmpeg -hide_banner -stdin -loglevel warning
+ -thread_queue_size 512 -f x11grab -framerate 60 -draw_mouse 0 -window_id 2097164 -i :99.0
+ -thread_queue_size 512 -f x11grab -framerate 60 -draw_mouse 0 -video_size 1920x1080 -i :102.0
+ -thread_queue_size 4096 -f s16le -ar 48000 -ac 2 -i voice.pcm
+ -thread_queue_size 512 -use_wallclock_as_timestamps 1 -probesize 2000000 -analyzeduration 1000000 -f mjpeg -framerate 60 -i cam2.mjpeg
+ -filter_complex '[0:v]fps=60,scale=1920:1080,setsar=1,format=yuv420p,split=3[gm][gp][gh];[1:v]scale=1920:1080,setsar=1,format=yuv420p,fps=60,split=3[dm][dp][dh];[gp]scale=480:270:flags=area,setsar=1,split=2[gpa][gpb];[dp]scale=480:270:flags=area,setsar=1[dpip];[gm][dpip]overlay=x=W-w-24:y=H-h-24:eof_action=pass[lwebcam];[dm][gpa]overlay=x=W-w-24:y=H-h-24:eof_action=pass[ldesktop];[gh]scale=960:540,setsar=1[gl];[dh]scale=960:540,setsar=1[dr];[gl][dr]hstack=inputs=2,pad=1920:1080:0:(oh-ih)/2:black,setsar=1[lsplit];[3:v]scale=1920:1080,setsar=1,format=yuv420p,fps=60,tpad=stop=-1:stop_mode=clone[cm];[cm][gpb]overlay=x=W-w-24:y=H-h-24:eof_action=pass[lroom];[lwebcam][ldesktop][lsplit][lroom]streamselect@layout=inputs=4:map=0,format=yuv420p[vout];[2:a]apad[aout]'
+ -map '[vout]' -map '[aout]' -c:v h264_nvenc -preset p4 -tune ll -rc vbr -cq 23 -b:v 0 -bf 2 -g 120 -pix_fmt yuv420p -r 60 -max_muxing_queue_size 1024 -c:a aac -b:a 96k -ar 48000 -ac 2
+ -flags +global_header -fflags +flush_packets -f tee '[f=segment:segment_time=600:reset_timestamps=1:segment_format=mp4:segment_format_options=movflags=+frag_keyframe+empty_moov+default_base_moof:fflags=+flush_packets]recordings/sub01-20261023-210000-%03d.mp4|[f=hls:onfail=ignore:hls_time=4:hls_list_size=6:hls_flags=delete_segments+independent_segments+omit_endlist+discont_start+temp_file:hls_start_number_source=epoch:hls_segment_filename=hls/sub01-20261023-210000-%d.ts]hls/live.m3u8'
+ (optional third tee branch: [f=flv:onfail=ignore:use_fifo=1:fifo_options=drop_pkts_on_overflow=1\\:attempt_recovery=1\\:recovery_wait_time=5\\:restart_with_keyframe=1]rtmp://...)
+Without HLS/RTMP the output is the plain -f segment muxer (no tee, no global_header).
+
+LIVE LAYOUT SWITCH: the graph renders all 4 composites; the director writes to ffmpeg's stdin "c" + "streamselect@layout -1 map N\n" (ffmpeg's interactive command = avfilter_graph_send_command) and waits for "Command reply for stream 0: ret:0" (7.x prints "for graph 0: ret:<0>"); no reply in 3 s -> relaunch ffmpeg with the new initial map. sendcmd is not used because it reads its file only at init. One command per switch, so no half-switched frames. Alternative mode --layout-switch restart renders only one composite and relaunches at each switch.
+
+LOCAL FINDINGS (ffmpeg 6.1.1, no GPU): (1) the stdin 'c' command switches streamselect and prints ret:0, output content changes within ~0.1-0.8 s; (2) the tee string above works (mp4 + HLS ts with SPS/PPS, RTMP branch failing with onfail=ignore keeps the run alive; fifo recovery retries; the RTMP URL appears in ffmpeg's error messages -> the director redacts it); (3) cam2 writer EOF: tpad keeps the output at full rate; (4) cam2 writer that stops writing but keeps the FIFO open stalls the WHOLE output until EOF -> the director checks cam2 every 3 s (writer present via /proc fdinfo + cam2.json last frame < 5 s) and relaunches ffmpeg without cam2 at once.
+
+MEASURING 60: I plan to add "-progress pipe:1 -stats_period 2" and read frame=, fps=, out_time_us=, dup_frames=, drop_frames=, speed= from stdout; per 10-min segment I log frames / wall seconds, frames / media seconds, dup and drop deltas, in /state and an events.jsonl row, to prove 60 fps.
+
+QUESTIONS (answer each briefly):
+a) Is this graph correct and free of hidden resampling at 60 (no source silently reduced below 60)? Anything that makes the output not truly 60 distinct frames per second when all sources are 60?
+b) CPU on 16 vCPU at 1080p60 with four composites always rendered (3 full-frame scale/format conversions, 3 overlays which copy the shared main frame, 2 half scales + hstack + pad, 2 PiP scales) + NVENC: realistic? Cheaper arrangement that still switches with ONE command? Should I use scale_cuda/overlay_cuda or hwupload at the end?
+c) x11grab at 60 fps 1080p twice: realistic on Xvfb (:102) and on the GPU X server (:99)? Options to make it cheaper (-show_region 0, use_shm default)? thread_queue_size enough?
+d) stdin 'c' command channel in production (6.1 and 7.x): pitfalls? Is "-stdin" correct to force it on? Will "-progress pipe:1" disable stdin interaction?
+e) cam2 MJPEG FIFO at 60: -use_wallclock_as_timestamps + -f mjpeg ok? jitter -> fps=60 duplicates/drops; better: setpts/fps with round=near? MJPEG decode of 720p60 cost; yuvj422p range warning.
+f) dup_frames/drop_frames from -progress: do they reflect the -r 60 output vsync (dup = source did not deliver)? Is that the right proof of 60? Better metric?
+g) tee: are onfail=ignore and use_fifo correct on the hls branch too? hls_flags combination OK (temp_file + delete_segments + omit_endlist + discont_start, start number epoch)? Anything for hls.js/Safari (EXT-X-PROGRAM-DATE-TIME, independent segments)?
+h) NVENC options: valid for h264_nvenc and hevc_nvenc (-tune ll with -bf 2; -rc vbr -cq 23 -b:v 0; -g 120)? Add -zerolatency/-rc-lookahead/-spatial-aq? Is probing with a 640x360 1 s lavfi encode representative?
+i) A/V sync: video inputs on wallclock, voice FIFO on sample count, each input offset to start at 0 by ffmpeg. Risks and a cheap fix?

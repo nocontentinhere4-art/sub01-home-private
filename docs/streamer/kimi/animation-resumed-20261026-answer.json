@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "BLOCK\n\n1. **Reference-pose admission does not match the importer\u2019s actual call.** Preflight may call `get_reference_pose(mesh)` and records `reference_pose_argument='mesh'`, but the supervisor never validates that field. The importer unconditionally calls `get_reference_pose(skeleton)`. A mesh-signature engine can therefore pass preflight and the pinned-digest gate, then fail before import, consuming the sole attempt.\n\n   **Fix:** strictly validate `reference_pose_argument` and use that same mesh/skeleton argument for every importer reference-pose call, or require `reference_pose_argument == 'skeleton'` during admission. Re-pin and review the changed packet before execution.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 21011,
+    "completion_tokens": 12809,
+    "total_tokens": 33820,
+    "completion_tokens_details": {
+      "reasoning_tokens": 12659
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 20992
+    }
+  },
+  "seconds": 480.99
+}

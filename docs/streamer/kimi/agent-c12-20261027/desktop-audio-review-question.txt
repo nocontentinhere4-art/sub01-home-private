@@ -1,0 +1,314 @@
+Review this final diff (your earlier proposal, spliced by me) for a live stream. Changes vs your proposal: the socket is probed ONCE per browser launch and passed to chromium_args(cfg, pulse)/chromium_env(display, pulse=); the desktop Config has no data_dir, so the fallback is cfg.profile.parent.parent; Director.__init__ sets apps_audio=False and the launch sets it from the argv; unmute is sent after EVERY successful live switch to a non-private layout (idempotent, covers an unknown previous state); pa file gets auth-anonymous=1 (socket dir 0700). Tests added. Answer in at most 12 lines: first word APPROVE or BLOCK, then concrete defects only (line + fix).
+
+diff --git a/scripts/streamer_audio.sh b/scripts/streamer_audio.sh
+index 84b1d32..c10fb4c 100755
+--- a/scripts/streamer_audio.sh
++++ b/scripts/streamer_audio.sh
+@@ -111,7 +111,9 @@ write_pa() {
+   cat >"$PA_FILE" <<EOF
+ .fail
+ # SUB-01 application audio. Unix socket only: no TCP/network protocol module, no hardware detection.
+-load-module module-native-protocol-unix
++# auth-anonymous: the socket's directory is 0700 (uid unreal), which is the access control; Chromium's audio service
++# and ffmpeg then need no cookie file.
++load-module module-native-protocol-unix auth-anonymous=1
+ load-module module-null-sink sink_name=$SINK rate=48000 channels=2 format=s16le channel_map=front-left,front-right sink_properties=device.description=SUB01_Apps
+ set-default-sink $SINK
+ EOF
+diff --git a/scripts/streamer_desktop.py b/scripts/streamer_desktop.py
+index 52acdce..6143d1a 100644
+--- a/scripts/streamer_desktop.py
++++ b/scripts/streamer_desktop.py
+@@ -1619,8 +1619,25 @@ class ActFailed(RuntimeError):
+     """An action could not be carried out (stale mark, covered element, blocked target); the text goes to the agent."""
+ 
+ 
+-def chromium_args(cfg):
+-    """The browser's flags: the fixed set, the GPU mode (GPU_ARGS), the autoplay policy and the operator's extra flags."""
++PULSE_SINK = "sub01_apps"              # the application-audio null sink of scripts/streamer_audio.sh
++
++
++def pulse_socket(streamer_dir):
++    """The application-audio server's socket (<streamer-dir>/run/pulse/native, scripts/streamer_audio.sh) when it accepts
++    a connection within 0.5 s, else None: the browser is then launched muted, exactly as before."""
++    path = Path(streamer_dir) / "run" / "pulse" / "native"
++    try:
++        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
++            sock.settimeout(0.5)
++            sock.connect(str(path))
++    except OSError:
++        return None
++    return path
++
++
++def chromium_args(cfg, pulse=None):
++    """The browser's flags: the fixed set, the GPU mode (GPU_ARGS), the autoplay policy and the operator's extra flags.
++    With `pulse` (an answering application-audio socket) the browser is not muted and media may play without a click."""
+     args = ["--no-first-run", "--no-default-browser-check", "--disable-sync", "--disable-extensions",
+             "--disable-background-networking", "--mute-audio", "--password-store=basic",
+             "--disable-dev-shm-usage", "--deny-permission-prompts", "--disable-session-crashed-bubble",
+@@ -1628,17 +1645,22 @@ def chromium_args(cfg):
+             "--disable-features=Translate,AutofillServerCommunication", "--window-position=0,0",
+             f"--window-size={cfg.width},{cfg.height}"]
+     args += GPU_ARGS.get(getattr(cfg, "gpu", "off") or "off", GPU_ARGS["off"])
+-    if getattr(cfg, "autoplay", False):
++    if pulse:
++        args.remove("--mute-audio")
++    if pulse or getattr(cfg, "autoplay", False):
+         args.append("--autoplay-policy=no-user-gesture-required")
+     args += [str(a) for a in (getattr(cfg, "extra_args", ()) or ()) if str(a).startswith("--")]
+     return args + (["--kiosk"] if cfg.kiosk and not cfg.headless else [])
+ 
+ 
+-def chromium_env(display, environ=None):
+-    """A clean environment for the browser: no operator token, no API keys, only what Chromium needs."""
++def chromium_env(display, environ=None, pulse=None):
++    """A clean environment for the browser: no operator token, no API keys, only what Chromium needs (with `pulse`, the
++    application-audio server and its sink)."""
+     environ = os.environ if environ is None else environ
+     env = {k: v for k, v in environ.items() if k in SAFE_ENV}
+     env["DISPLAY"] = display
++    if pulse:
++        env["PULSE_SERVER"], env["PULSE_SINK"] = f"unix:{pulse}", PULSE_SINK
+     return env
+ 
+ 
+@@ -2414,7 +2436,10 @@ class Desktop:
+         self.feed.clear()
+         self.pw = await async_playwright().start()
+         # Headed: the real window is the viewport (an emulated viewport would undo --kiosk). Headless: emulate the size.
+-        options = {"headless": cfg.headless, "args": chromium_args(cfg), "env": chromium_env(cfg.display),
++        pulse = pulse_socket(os.environ.get("STREAMER_DIR") or cfg.profile.parent.parent)   # probed at every launch
++        if pulse:
++            log(f"browser audio: on, into {PULSE_SINK} ({pulse})")
++        options = {"headless": cfg.headless, "args": chromium_args(cfg, pulse), "env": chromium_env(cfg.display, pulse=pulse),
+                    "accept_downloads": False, "service_workers": "block", "locale": "en-US", "permissions": [],
+                    "ignore_default_args": ["--enable-automation"]}
+         options.update({"viewport": {"width": cfg.width, "height": cfg.height}} if cfg.headless else {"no_viewport": True})
+diff --git a/scripts/streamer_director.py b/scripts/streamer_director.py
+index 70bcc9d..7e593a5 100644
+--- a/scripts/streamer_director.py
++++ b/scripts/streamer_director.py
+@@ -121,6 +121,7 @@ import re
+ import shlex
+ import shutil
+ import signal
++import socket
+ import stat
+ import subprocess
+ import sys
+@@ -496,6 +497,23 @@ def tap_output_args(cfg, tap_fd):
+             "-drop_pkts_on_overflow", "1", "-attempt_recovery", "0", "-queue_size", TAP_QUEUE, f"pipe:{int(tap_fd)}"]
+ 
+ 
++APPS_GAIN = 0.6         # the desktop browser's audio (scripts/streamer_audio.sh sink sub01_apps) before ducking
++APPS_SOURCE = "sub01_apps.monitor"
++
++
++def pulse_socket(streamer_dir):
++    """The application-audio server's socket (<streamer-dir>/run/pulse/native, scripts/streamer_audio.sh) when it accepts
++    a connection within 0.5 s, else None (no desktop audio input: the argv is exactly as before)."""
++    path = Path(streamer_dir) / "run" / "pulse" / "native"
++    try:
++        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
++            sock.settimeout(0.5)
++            sock.connect(str(path))
++    except OSError:
++        return None
++    return path
++
++
+ def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, layout=None, live=False,
+                       encoder=None, cam2_fps=None, main=None, tap_fd=None):
+     """The one ffmpeg command line. `window_id` None captures the whole of :99.0 instead.
+@@ -541,17 +559,34 @@ def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, la
+     music_index = argv.count("-i")       # the next input's index (cam2 and live inputs counted, not assumed)
+     if music:                           # last input: the established 0..N indices never move
+         argv += ["-stream_loop", "-1", "-i", str(music)]
++    apps = None if cfg.test_sources else pulse_socket(cfg.streamer_dir)
++    apps_index = argv.count("-i")
++    if apps:                            # the desktop browser's audio, after the music
++        argv += ["-thread_queue_size", "1024", "-f", "pulse", "-server", f"unix:{apps}", "-i", APPS_SOURCE]
+     graph = build_live_graph(cfg, cam2, layout, main) if live else build_filter_complex(layout, cfg, main)
+-    if music:
++    if music or apps:
+         # apad also covers a vanished voice writer; normalize=0 leaves the voice's level untouched
+-        graph += (f";[2:a]apad,asplit=2[voice][key];[{music_index}:a]aresample=48000,"
+-                  "aformat=sample_fmts=fltp:channel_layouts=stereo,volume=0.08[bgm];"
+-                  "[bgm][key]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=500[ducked];"
+-                  "[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
++        graph += ";[2:a]apad,asplit=2[voice][key]"
++        if music:
++            graph += (f";[{music_index}:a]aresample=48000,"
++                      "aformat=sample_fmts=fltp:channel_layouts=stereo,volume=0.08[bgm]")
++        if apps:
++            # volume@apps: 0 on the privacy layout; the director changes it live around a privacy cut (apply_layout)
++            gain = 0 if layout == PRIVATE_LAYOUT else APPS_GAIN
++            graph += (f";[{apps_index}:a]aresample=48000:async=1:first_pts=0,"
++                      f"aformat=sample_fmts=fltp:channel_layouts=stereo,volume@apps={gain}[apps]")
++        if music and apps:
++            graph += ";[bgm][apps]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[bed]"
++        bed = "bed" if music and apps else "bgm" if music else "apps"
++        mixed = "mix" if apps else "aout"
++        graph += (f";[{bed}][key]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=500[ducked];"
++                  f"[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[{mixed}]")
++        if apps:
++            graph += ";[mix]alimiter=limit=0.891[aout]"
+     elif voice:
+         # apad: if the voice server goes away the FIFO hits EOF; silence keeps the audio track running meanwhile
+         graph += ";[2:a]apad[aout]"
+-    argv += ["-filter_complex", graph, "-map", "[vout]", "-map", "[aout]" if voice or music else "2:a",
++    argv += ["-filter_complex", graph, "-map", "[vout]", "-map", "[aout]" if voice or music or apps else "2:a",
+              *video_codec_args(cfg, encoder or cfg.encoder), "-max_muxing_queue_size", "1024",
+              "-c:a", "aac", "-b:a", cfg.audio_bitrate, "-ar", "48000", "-ac", "2"]
+     if cfg.test_seconds:
+@@ -1702,6 +1737,7 @@ class Director:
+         self.layout = cfg.layout or DEFAULT_LAYOUT     # the requested layout; PRIVATE_LAYOUT wins while privacy is on
+         self.live_layout, self.live_order = None, ()      # live_layout: on air (confirmed by a reply or by the launch)
+         self.privacy = None                               # the privacy cut in force (layout.jsonl reason "privacy")
++        self.apps_audio = False                           # this run's graph has volume@apps (the desktop's audio)
+         self.last_privacy = None                          # the last cut that ended, and its restore
+         self._switching = None                            # the layout a map command in flight goes to
+         self.stale_pids = set()                           # older ffmpegs that survived the reap (never acknowledge then)
+@@ -2038,6 +2074,12 @@ class Director:
+                 self._note_switch(target, "restart", True, 0)
+                 self.request_restart(f"layout {target}")
+                 return "restart"
++            if self.apps_audio and target == PRIVATE_LAYOUT:   # the desktop's sound goes before its picture
++                muted, why = await self.send_command("volume@apps", "volume", "0")
++                if not muted:
++                    self.event("apps_mute_failed", detail=why, run=self.prefix)
++                    self.request_restart("privacy: apps mute failed")     # the relaunch starts with volume@apps=0
++                    return "restart"
+             started = self._clock()
+             self._switching = target                     # desktop_hidden is false until the reply settles it
+             try:
+@@ -2052,6 +2094,10 @@ class Director:
+                 self._note_switch(target, "live", True, ms)
+                 self.event("layout_switched", layout=target, previous=previous, how="live", ms=ms, run=self.prefix)
+                 self._on_air("live switch")
++                if self.apps_audio and target != PRIVATE_LAYOUT:   # idempotent: also right after an unknown state
++                    unmuted, why = await self.send_command("volume@apps", "volume", str(APPS_GAIN))
++                    if not unmuted:
++                        self.event("apps_unmute_failed", detail=why, run=self.prefix)
+                 if effective_layout(self.wanted(), self.cam2) != target:
+                     self.kick_layout()           # the wanted layout changed meanwhile (a new cut): at once, not next tick
+                 return "live"
+@@ -2365,6 +2411,7 @@ class Director:
+             argv = build_ffmpeg_argv(cfg, prefix=prefix, window_id=window, voice=voice, cam2=cam2, layout=target,
+                                      live=live, encoder=self.encoder, cam2_fps=self.cam2_fps, main=main, tap_fd=tap_fd)
+             proc = await (self._spawn(argv, pass_fds=(tap_fd,)) if tap else self._spawn(argv))
++            self.apps_audio = APPS_SOURCE in argv           # volume@apps exists in this run's graph
+         except (OSError, ValueError) as exc:
+             if tap:
+                 tap.close()
+diff --git a/tests/test_streamer_desktop.py b/tests/test_streamer_desktop.py
+index d21f188..38fa735 100644
+--- a/tests/test_streamer_desktop.py
++++ b/tests/test_streamer_desktop.py
+@@ -1173,3 +1173,26 @@ def test_healthz_reports_status_without_credentials(tmp_path):
+         finally:
+             await http.close()
+     run(body())
++
++
++def test_browser_audio_only_with_an_answering_pulse_socket(tmp_path):
++    import socket as socket_mod
++    cfg = sd.Config(profile=tmp_path / "desktop" / "profile", kiosk=False, autoplay=True)
++    assert sd.pulse_socket(tmp_path) is None
++    assert sd.chromium_args(cfg, None) == sd.chromium_args(cfg) and "--mute-audio" in sd.chromium_args(cfg)
++    assert sd.chromium_env(":103", {"PATH": "/bin"}) == {"PATH": "/bin", "DISPLAY": ":103"}
++    path = tmp_path / "run" / "pulse" / "native"
++    path.parent.mkdir(parents=True)
++    server = socket_mod.socket(socket_mod.AF_UNIX, socket_mod.SOCK_STREAM)
++    server.bind(str(path))
++    try:
++        assert sd.pulse_socket(tmp_path) is None                     # bound but not listening: refused
++        server.listen()
++        pulse = sd.pulse_socket(tmp_path)
++        assert pulse == path
++        args = sd.chromium_args(cfg, pulse)
++        assert "--mute-audio" not in args and args.count("--autoplay-policy=no-user-gesture-required") == 1
++        env = sd.chromium_env(":103", {"PATH": "/bin", "SUB01_ADMIN_TOKEN": "x" * 20}, pulse=pulse)
++        assert env == {"PATH": "/bin", "DISPLAY": ":103", "PULSE_SERVER": f"unix:{path}", "PULSE_SINK": "sub01_apps"}
++    finally:
++        server.close()
+diff --git a/tests/test_streamer_director.py b/tests/test_streamer_director.py
+index f87906f..c315382 100644
+--- a/tests/test_streamer_director.py
++++ b/tests/test_streamer_director.py
+@@ -1944,3 +1944,74 @@ def test_optional_bgm_is_last_input_and_mixes_both_voice_paths(tmp_path, monkeyp
+         assert graph.endswith("[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
+         assert argv[argv.index("-map", fc + 3) + 1] == "[aout]"
+         assert argv[argv.index("-ar") + 1:argv.index("-ar") + 4] == ["48000", "-ac", "2"]
++
++
++def _apps_cfg(tmp_path, monkeypatch):
++    import socket as socket_mod
++    from types import SimpleNamespace
++    cfg = SimpleNamespace(streamer_dir=tmp_path, ffmpeg="ffmpeg", width=1280, height=720,
++                          pip_width=320, pip_height=180, fps=30, desktop_fps=5, stats_period=1,
++                          test_sources=False, test_seconds=None, encoder="libx264",
++                          audio_bitrate="128k", game_display=":99.0", desktop_display=":99.0",
++                          voice_fifo=tmp_path / "voice.raw")
++    monkeypatch.setattr(sd, "effective_layout", lambda layout, cam2: layout)
++    monkeypatch.setattr(sd, "build_filter_complex", lambda *args: "VIDEO")
++    monkeypatch.setattr(sd, "video_codec_args", lambda *args: [])
++    monkeypatch.setattr(sd, "output_args", lambda *args: ["out.mkv"])
++    path = tmp_path / "run" / "pulse" / "native"
++    path.parent.mkdir(parents=True)
++    server = socket_mod.socket(socket_mod.AF_UNIX, socket_mod.SOCK_STREAM)
++    server.bind(str(path))
++    server.listen()
++    return cfg, server, path
++
++
++def test_desktop_audio_is_the_last_input_ducked_with_the_music_and_zero_on_the_privacy_layout(tmp_path, monkeypatch):
++    cfg, server, path = _apps_cfg(tmp_path, monkeypatch)
++    try:
++        argv = sd.build_ffmpeg_argv(cfg, prefix="out")
++        fc = argv.index("-filter_complex")
++        assert argv[fc - 8:fc] == ["-thread_queue_size", "1024", "-f", "pulse", "-server", f"unix:{path}",
++                                   "-i", "sub01_apps.monitor"]
++        graph = argv[fc + 1]
++        assert graph == ("VIDEO;[2:a]apad,asplit=2[voice][key];[3:a]aresample=48000:async=1:first_pts=0,"
++                         "aformat=sample_fmts=fltp:channel_layouts=stereo,volume@apps=0.6[apps];"
++                         "[apps][key]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=500[ducked];"
++                         "[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[mix];"
++                         "[mix]alimiter=limit=0.891[aout]")
++        assert argv[argv.index("-map", fc + 3) + 1] == "[aout]"
++        assert "volume@apps=0[apps]" in sd.build_ffmpeg_argv(cfg, prefix="out", layout=sd.PRIVATE_LAYOUT)[fc + 1]
++        bgm = tmp_path / "music" / "bgm.mp3"
++        bgm.parent.mkdir()
++        bgm.write_bytes(b"test")
++        argv = sd.build_ffmpeg_argv(cfg, prefix="out")
++        assert argv.index(str(bgm)) < argv.index("sub01_apps.monitor")
++        graph = argv[argv.index("-filter_complex") + 1]
++        assert "[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=0.08[bgm]" in graph
++        assert "[4:a]aresample=48000:async=1:first_pts=0," in graph
++        assert ";[bgm][apps]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[bed];[bed][key]" in graph
++        cfg.test_sources = True                          # test recordings never take the desktop's audio
++        assert "sub01_apps.monitor" not in sd.build_ffmpeg_argv(cfg, prefix="out")
++    finally:
++        server.close()
++    cfg.test_sources = False
++    assert "sub01_apps.monitor" not in sd.build_ffmpeg_argv(cfg, prefix="out")   # socket gone: no input, music only
++
++
++def test_privacy_cut_mutes_the_desktop_audio_before_the_picture_and_unmutes_after(tmp_path):
++    async def body():
++        director, proc = live_director(tmp_path)
++        director.apps_audio = True
++        proc.stdin = FakeStdin(director)
++        private = str(director.live_order.index(sd.PRIVATE_LAYOUT))
++        director.layout = sd.PRIVATE_LAYOUT
++        assert await director.apply_layout() == "live"
++        assert proc.stdin.lines == [b"cvolume@apps -1 volume 0\n", f"cstreamselect@layout -1 map {private}\n".encode()]
++        director.layout = "split"
++        assert await director.apply_layout() == "live"
++        assert proc.stdin.lines[-2:] == [b"cstreamselect@layout -1 map 2\n", b"cvolume@apps -1 volume 0.6\n"]
++        proc.stdin = FakeStdin(director, ret=None)       # the mute gets no reply: relaunch, the picture never switched
++        director.layout = sd.PRIVATE_LAYOUT
++        assert await director.apply_layout() == "restart"
++        assert director._restart_reason == "privacy: apps mute failed" and proc.stdin.lines == [b"cvolume@apps -1 volume 0\n"]
++    run(body())

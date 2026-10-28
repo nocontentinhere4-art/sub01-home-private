@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "APPROVE ONE RUN\n\nThe four controller blockers are closed in the supplied v2:\n\n1. **Launch safety:** no `preexec_fn` or controller threads; `Popen` uses UID/GID 1001, empty supplementary groups, a new session, and absolute `/usr/bin/taskset -c 6-13`.\n2. **Deadline enforcement:** single-threaded SIGALRM handling enforces the 280-second operation and 300-second hard deadlines. Request timers cover connection, headers, body reading, and JSON decoding; responses are capped at 2 MiB. SIGTERM enters `KeyboardInterrupt`/`finally`.\n3. **Assertion integrity:** optimized interpreter modes are rejected before actions. The outer launcher removes `PYTHONOPTIMIZE` and uses `python3 -I`; child environments do not reintroduce optimization.\n4. **Process ownership/cleanup:** local subreaper adoption, UID, start ticks, session leadership, executable inode, current ancestry, and BASE-scoped argv checks are combined before registration/signalling. Native PID 29950 is explicitly excluded. Interrupted-launcher discovery and bounded 8-second TERM/2-second KILL cleanup are present.\n\nThe pinned source/wrapper/manifest hashes, FIFO/run/freshness checks, single `/speak`, 90-second window, and failure-artifact preservation match the stated protocol.\n\nApproval is solely for one execution via the exact supplied outer launcher—not service, audio-quality, performance, or lipsync acceptance.",
+ "finish_reason": "stop",
+ "prompt_tokens": 10192,
+ "completion_tokens": 6006,
+ "reasoning_tokens": 5690,
+ "seconds": 196.3
+}

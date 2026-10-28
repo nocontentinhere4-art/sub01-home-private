@@ -1,0 +1,108 @@
+You are reviewing a DESIGN (no code yet) for SUB-01's native Unreal Engine 5.8 build v22: an installer layered on our v21
+stack (tools/native_streamer_visual_v2/install_v22.py, marker // SUB01_STREAMER_VISUAL_V2_V22). Linux, Vulkan, game pinned
+to 6 of 10.2 CPUs (cgroup quota), render thread is the bottleneck (16-19 ms with cam2 on; 60 fps target everywhere).
+Please answer each numbered decision with a clear choice, defaults, and any blocking risk. Be concrete.
+
+== 1. In-game PC monitor at a smooth frame rate ==
+Today: USub01PCBridge (attached: Sub01PCBridge.h/.cpp, the CURRENT pod copy) polls the PC runner every 0.5 s (two
+authenticated /pc/state reads around each async step), fetches /pc/frame.png, decodes it on the game thread, pads it
+to the screen aspect (Sub01GuestFrameLayout: centred, black borders) and creates a NEW UTexture2D per frame
+(FImageUtils::CreateTexture2DFromImage), then sets the monitor MID parameter "PCFrame". ~2 fps.
+A sidecar exists (attached: scripts/streamer_monitor_feed.py): ffmpeg x11grab of display :103 (the Vagon Chrome window
+the runner on 8838 drives) at 60 fps, 1280x720 JPEG (-q:v 5, ~60-150 KB/frame), whole JPEGs concatenated into the FIFO
+/home/unreal/.sub01-private/streamer/monitor.mjpeg (mode 0600, created by the sidecar), pipe ~256 KB (~2 frames),
+non-blocking writer that drops whole frames; ffmpeg runs only while a reader holds the FIFO (stops 10 s after the last
+reader). A reader may see one truncated JPEG after a reconnect/crash: resync on SOI.
+
+Proposed game side (character, streamer mode only, inside our v2 tick):
+ a) Thread model: like our cam2 encoder: a TSharedPtr<FSub01MonitorFeed> state object and ONE background task in
+    flight at a time (AsyncTask(AnyBackgroundThreadNormalTask), atomic Busy). The game thread launches a "pump" when
+    due (monitor_fps cap, half-tick tolerance, at most one per tick). The pump: opens the FIFO if needed
+    (O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_NOFOLLOW, then fstat: S_ISFIFO, our uid, no group/other bits, else refused with a
+    reason; ENOENT retried every 1 s), reads everything available (cap 16 MiB per pump, EAGAIN stops, 0 = no writer,
+    keep the fd), appends to a parse buffer, extracts complete JPEGs, keeps ONLY THE NEWEST complete frame (older ones
+    counted as dropped), keeps the partial tail, and decodes that newest frame in the same task. So at most one decode
+    is ever in flight and nothing on the game thread reads, parses or decodes. Alternative: a dedicated FRunnable
+    thread blocking in poll() on the FIFO (lower latency, more lifecycle code). Which one?
+ b) Framing parser: walk JPEG markers, not just FF D8 / FF D9: SOI (FF D8) then segments (skip fill FFs; standalone
+    markers 01/D0-D7; length-skipped segments; after SOS scan entropy data with memchr for FF not followed by 00 or
+    RST0-7); the frame ends at EOI (FF D9). Anything unexpected (a marker where none can be, an SOI inside a frame, a
+    frame > 4 MiB, a buffer > 8 MiB without a frame) = resync: drop up to the next FF D8 FF. Is this overkill vs a
+    plain "SOI..EOI" scan? (APPn payloads could contain FF D9, e.g. EXIF thumbnails; ffmpeg's mjpeg has none.)
+ c) Decode: IImageWrapperModule pointer taken on the game thread at start (LoadModuleChecked), one IImageWrapper(JPEG)
+    reused by the single task: SetCompressed + GetRaw(ERGBFormat::BGRA, 8, TArray64) -> W x H BGRA. Frames larger than
+    the layout limit (1280x1024) are rejected.
+ d) Upload: ONE persistent UTexture2D (CreateTransient(LayoutW, LayoutH, PF_B8G8R8A8), SRGB=true, NeverStream=true,
+    no mips, clamp, bilinear, UpdateResource) created once per size; the layout is the bridge's own
+    (Sub01GuestFrameLayout with the bridge's ScreenAspect, so the picture does not jump between feed and bridge).
+    At creation one full-texture UpdateTextureRegions of opaque black; then per frame UpdateTextureRegions of ONLY the
+    1280x720 source rect at the layout offset, from a heap TArray64 moved out of the decoder and freed (with the heap
+    region struct) in the DataCleanupFunc. Called on the game thread only when GetResource() is non-null. ~3.7 MB per
+    frame through RHIUpdateTexture2D on the render thread at up to 60 Hz: acceptable on a render-thread-bound game, or
+    should the default be lower / the copy go elsewhere?
+ e) Binding without flicker: the bridge re-binds "PCFrame" on its 0.5 s poll (6 call sites), which would fight a
+    feed bound from outside. So every bridge call site goes through a new private ShowFrame(Own) that binds
+    FeedFrame instead of Own while a feed frame is set AND the bridge's gate is open; a new public
+    SetMonitorFeedFrame(UTexture*) (null = the bridge's own picture back) re-checks the gate and touches the MID only
+    on change. The character calls it every tick (cheap), so the bridge and the character both enforce the gate.
+ f) Stale fallback: the feed is "fresh" while the newest SHOWN frame was read from the FIFO < 1.0 s ago; stale (or
+    monitor_feed 0, or gate closed) -> SetMonitorFeedFrame(nullptr) -> the bridge's PNG/terminal picture is back.
+    monitor_feed 0 also closes the fd (so the sidecar stops ffmpeg).
+
+== 2. Privacy gate (the important part) ==
+Bridge facts: Private (true after ClearPrivateState: backend unreachable/private/error; false after a public
+ApplyTerminal), LocalPrivacy (immediate: bathroom view or LiveHomePrivate via SetLocalPrivacy, which stays true until
+/pc/privacy is acknowledged), PrivacyDesired, Generation (++ on every ClearPrivateState), IsPublicState(state) =
+!LocalPrivacy && state.privacy == false. The streamer tick calls UpdateNativePCPrivacy() -> SetLocalPrivacy every frame.
+Runner facts (scripts/streamer_desktop.py on 8838): /pc/state has privacy, pc_mode ("vagon"), vagon.connected; until the
+remote desktop is connected (login/account pages of the owner's Vagon account) the runner serves ONLY a neutral picture
+on /pc/frame.png. The sidecar's raw x11grab of :103 BYPASSES that lock (it would show the login page). Also: the
+running game m3 still has SUB01_PC_ORIGIN=8832 (the old bundled Chromium runner, pc_mode chromium) while :103 is the
+Vagon runner 8838: a feed gated only on 8832's privacy would show 8838's login page.
+Proposed gate (feed shown only if ALL hold, checked in the bridge AND in the character every tick):
+ - !Private && !LocalPrivacy && !PrivacyDesired && !ReadOnlyBrowser && MonitorMaterial;
+ - the last poll's confirming state read said pc_mode=="vagon" && vagon.connected==true && display.available
+   (FeedSourceConnected; cleared by ClearPrivateState);
+ - that confirming read STARTED < 1.5 s ago (PublicConfirmedAt = the start time of the poll's second read; the poll
+   runs every 0.5 s; a hung backend therefore closes the gate within 1.5 s, not after two 3 s HTTP timeouts);
+ - epoch: any closure (or a Generation change) bumps a feed epoch; bytes read while closed are discarded, a decoded
+   frame from an older epoch is never uploaded, and after a reopen the first 0.25 s of FIFO data is discarded (the pipe
+   and ffmpeg hold frames captured while it was closed);
+ - the persistent texture keeps old pixels but is unbound while closed; on reopen it is bound only after a frame of
+   the new epoch was uploaded (the upload is enqueued before the bind, same render-command order).
+Residual risk: a private interval shorter than the poll period (or the up-to-1.5 s detection delay when the runner
+locks) can reach the monitor through the raw feed, because the stream carries no per-frame privacy. The bridge PNG path
+does not have this (the runner serves neutral frames and the bridge confirms after each fetch). Options: (i) accept,
+document, and recommend a follow-up where the SIDECAR gates itself on the runner (stop writing / write the neutral
+frame while /pc/state says locked/private), (ii) add a game-side playout delay D (~0.75 s) and show only frames read
+before the newest public confirmation that started after them (smooth 60 fps but D seconds late), (iii) both.
+Which? Is anything in the gate missing or unnecessary? Is 1.5 s / 0.25 s right?
+
+== 3. No per-frame UTexture2D in the bridges ==
+PC bridge: the CreateTexture2DFromImage path becomes the same persistent-texture helper (full padded frame, ~2 Hz).
+Device bridge (phone/TV, /devices/<d>/frame.jpg, 150 ms poll): FImageUtils::ImportBufferAsTexture2D(Pixels) becomes
+FImageUtils::DecompressImage + FImage::CopyTo(BGRA8, sRGB) + one persistent texture per device (and size), updated in
+place; the existing Images/ImageIdentity maps keep their meaning (Clear() still empties them, so nothing is bound during
+privacy; the persistent texture survives and is overwritten before it is bound again). The helper lives in a new header
+Sub01PersistentTexture.h (Ensure(TObjectPtr<UTexture2D>&, W, H) and Update(Texture, X, Y, W, H, TArray64&&)).
+Any engine pitfall (texture GC/UPROPERTY, in-place update of a texture bound to a MID being rendered, CreateTransient's
+uninitialised mip, UpdateTextureRegions when GetResource() is null)?
+
+== 4. Camera 2 exposure ==
+cam2 (USceneCaptureComponent2D, SCS_FinalColorLDR, persistent view state, CaptureSceneDeferred) copies the webcam's
+PostProcessSettings and weight at start. The level has ONE unbound histogram PPV (EV100 min -3 / max +3; bias not
+overridden = UE default 1.0) and the house is lit very dimly (the webcam's exposure sits at/near the -3 floor). Attached
+frames: now-cam2.jpg (cam2: walls, chair and monitor clipped to white) and now-webcam.jpg (the main view, fine). We do
+not know whether the capture's eye adaptation runs or sits at a fixed exposure.
+Proposed tuning keys (live, applied on change, logged SUB01_STREAMER_VISUAL_CAM2_EXPOSURE):
+ cam2_exposure 0 = as copied (v21), 1 = auto + bias (default), 2 = manual: AEM_Manual, physical-camera exposure off,
+ fixed at the bias; cam2_ev_bias (absolute AutoExposureBias written with its override flag, -8..8; 1.0 = unchanged);
+ cam2_ev_min / cam2_ev_max (EV100 range override, applied in mode 1 only while min <= max, compiled default "not set").
+ In modes 1/2 the capture's PostProcessBlendWeight is forced to 1 (else the override is diluted).
+Questions: the default mode and bias that stops the blow-out without crushing him (black hoodie); whether min/max are
+worth having; whether the MAIN camera should change at all (the brief says: not unless you recommend it).
+
+== 5. Defaults ==
+monitor_feed 1, monitor_fps 60 (owner: 60 fps everywhere; JPEG decode ~3-5 ms per frame on one background core:
+~20-30% of a core at 60). Log SUB01_STREAMER_VISUAL_MONITOR_FEED fps= decoded= dropped= stale= allowed= bound= age_ms=
+resyncs= decode_ms= textures= reason= every 5 s; receipt monitor_feed_* fields. Anything to add or cut?

@@ -1,0 +1,12 @@
+{
+  "status": "installed-import-pass-not-runtime-validated",
+  "persistent": "/workspace/sub01-voice-dependency-recovery-20261026/wheelhouse-ddsezyzn",
+  "script_sha256": "8e0ee1d072c2505bf5d77ef47d461604ebfe3d989f8390aa1ec0ff5025ee2c85",
+  "report_hashes": {
+    "dependencies": "94e33675a149fc04b96c7a1e171cceadbd797b13ca211f4f2a0218297a1e332c",
+    "chatterbox": "046e3b559a34417e105d527b4d4f93f4c2469dc190708c2479c3eed27a438769"
+  },
+  "download_bytes": 182554571,
+  "wheel_count": 55,
+  "scope": "CPU import only; no model instantiated, no audio generated, no runtime activation"
+}

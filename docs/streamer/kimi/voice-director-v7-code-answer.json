@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE ONE RUN.**\n\nNo code-level blocker found. The reviewed v7 satisfies the binding constraints: post-health voice PID/ticks pinning; exactly two validated targets; broker-only target-FD inspection with identity, mode, state, freshness, and fail-closed validation; atomic bounded snapshots; broker registration and owned cleanup; ROOT-wide artifact accounting; byte-pinned launcher delegation; unchanged 45-second readiness and 1 Hz diagnostics; and the fixed capture/speak/deadline gates.\n\nThis approves execution only, not a claim of successful PCM transport. Any failure, timeout, or cleanup error ends the attempt.\n\nLaunch exactly once:\n\n```bash\nenv -u PYTHONOPTIMIZE /usr/bin/python3 -I /tmp/sub01-share/run-voice-director-check-v7.py\n```\n\nNo retry or post-review edits.",
+ "finish_reason": "stop",
+ "prompt_tokens": 11847,
+ "completion_tokens": 6036,
+ "reasoning_tokens": 5852,
+ "seconds": 188.1
+}

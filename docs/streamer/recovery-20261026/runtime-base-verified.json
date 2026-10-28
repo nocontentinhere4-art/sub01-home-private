@@ -1,0 +1,20 @@
+{
+  "receipt": {
+    "status": "BASE_SETUP_ONLY_NO_RUNTIME",
+    "started_utc": 1792980992.3142314,
+    "services_started": false,
+    "pip_or_venv": false,
+    "changes": [
+      "Created unreal group1001",
+      "Created nonlogin unreal1001 without password",
+      "Private STOP/runtime dirs; existing token access; exact staged artifacts owned unreal; staging parent root:unreal0710",
+      "One apt update and one xvfb+xauth install, retries0"
+    ],
+    "completed_utc": 1792980996.231789
+  },
+  "uid": 1001,
+  "shell": "/usr/sbin/nologin",
+  "STOP": true,
+  "Xvfb": "/usr/bin/Xvfb",
+  "xauth": "/usr/bin/xauth"
+}

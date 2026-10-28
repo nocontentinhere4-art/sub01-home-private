@@ -1,0 +1,327 @@
+You are the animation partner for SUB-01, a live AI streamer: a seated character at a desk in a UE 5.8 room, webcam framing (face camera). Owner request today: "make the animations more natural and cooler" (più naturali e fighe). The current tuning is your earlier "quiet version" (2026-10-23): reading nearly still, few nods. On stream he now looks too static.
+
+HARD CONSTRAINT (no native rebuild today): the game reads ONLY these 6 fields from the Python MotionDirector at every agent tick (~4 Hz events, each valid 1.5 s): state (idle|reading|typing|mouse|talking|reacting -> clip choice; typing clip vs website clip; talking adds a speech cadence <= 0.9/0.6 deg; entering reacting nods once; at most one state change per 0.6 s), gaze_yaw_deg (-20..20, right +) and gaze_pitch_deg (-10..10, up +) = HEAD aim (no eye rig), nod_strength 0..1 (native 0.75 s envelope, 1.0 = 6 deg down; it re-arms only after the value falls to <= 0.02), intensity 0..1 (scales the native sway <= 1.5 deg and the nod), camera (face|monitor|spectator, 1 s blend). Everything under "motion" (lean, head_tilt, gestures, fidgets, breathing rate) is IGNORED by the current build. The voice also drives +2 deg head pitch x mouth-open (RMS) natively. Native breathing is fixed 0.6 deg at 0.22 Hz.
+
+So liveliness must come from: head aim (yaw/pitch) movement, nods, intensity, state, camera.
+
+Give me:
+1) DEFAULTS overrides: a Python dict literal of ONLY the keys you change, with new values and a short reason each (keys below).
+2) A new "talk beats" behaviour, written as code: while speaking (and not reacting, not paused), phrase-level head movement like a real streamer: every beat (an interval you choose, irregular, from self.u(...) with new DEFAULTS keys) pick a small head-aim offset (yaw/pitch, you choose ranges; smaller while look_cam is true so he keeps addressing the lens) held until the next beat, eased with gaze_tau_s, plus a small nod on some beats (probability and strength via new keys; respect the native re-arm: a nod only if the current nod value is <= 0.02, use self.nod(strength, now)). Deterministic: only self.rng / self.u. Write:
+   a) the new DEFAULTS keys,
+   b) `def talk_beat(self, now, speaking, reacting, paused, look_cam)` -> (yaw_offset, pitch_offset): updates self.beat_* state (initialise them in __init__: give me the 2-3 init lines), resets to 0 offsets when not speaking (eased out by the caller),
+   c) the exact lines to add in tick: I will call `by, bp = self.talk_beat(now, speaking, reacting, paused, look_cam)` right before "# -- nod, intensity, breathing" and add by/bp to the returned gaze (before the clamp), easing self.beat_yaw_out/self.beat_pitch_out towards (by, bp) with self.ease(..., dt, d["gaze_tau_s"]) — confirm or correct that plan.
+3) Idle/reading liveliness through head aim only: which existing keys to raise (reading_gaze_gain, reading_gaze_max_*, reading_head_wander_deg/hz, idle_gaze_gain, chat glance timing, intensity_by_state, nods...). Keep it natural, never twitchy; no camera look on a timer unless you think a rare one (every few minutes) is right for a streamer — then give keys and code for it too.
+4) pytest tests for the talk beats (deterministic with random.Random(7)): beats only while speaking, offsets bounded, nods respect re-arm, zero when paused.
+
+Output: a 4-line design note, then code blocks only. Current code:
+HANDS = ("rest", "mouse", "keyboard", "gesture")
+FIDGETS = ("none", "desk", "face", "headphones", "neck", "drink", "stretch", "chair")   # only `desk` ships (Kimi 2.5)
+CAMERAS = ("face", "monitor", "spectator")
+POINTER = ("scroll", "click", "navigate")
+
+# ---- defaults: one table. Ranges (lo, hi) are drawn uniformly from the rng once per behaviour episode, never per tick.
+# Column "why" points at docs/streamer/ANIMATION-REFERENCES.md (A1..A24) and the Kimi decisions (K, DECISIONS-ANIMATION-
+# STREAM.md). Posture: `lean` 1.0 = 9 deg forward torso pitch, `lean_back` 1.0 = 8 deg back; `lean_rise_s`/`lean_fall_s`
+# are the time a 0.30 posture change takes (the reading lean), not a full-range slew.
+DEFAULTS = {
+    # timing hygiene
+    "state_min_dwell_s": 0.8,            # no state flaps faster than this; clears the 0.6 s native debounce (K, A22)
+    "mouse_hold_s": 0.8,                 # a scroll/click/navigate keeps the mouse state this long: persistence, not a freeze (K, A4)
+    "read_hold_s": 6.0,                  # a "read" action keeps the reading state this long after the last tick it was given
+    "hands_lead_s": 0.5,                 # hands reach the keyboard two ticks before the typing clip starts (K, A3)
+    "hands_linger_s": 0.7,               # hands stay on the keyboard this long after the last typed tick (K, A3)
+    "keyboard_pause_hold_s": 1.8,        # typing that resumes within this time is the same episode: no new reach, no lead (K)
+    "mouse_hand_rest_after_s": 120.0,    # the mouse hand drifts to rest after two minutes without any pointer action (K, A5)
+    # head aim: discrete targets and the reading filter (the head stands in for the eyes: no eye rig)
+    "click_target_hold_s": (0.7, 1.2),   # a click/search/navigate target holds the head aim this long (K, A4)
+    "scroll_target_hold_s": (0.35, 0.7), # a scroll briefly redirects attention, then the reading filter resumes (K, A2)
+    "action_gaze_gain": 0.45,            # discrete targets give a visible but partial head turn (K)
+    "reading_gaze_gain": 0.12,           # the head barely follows the lines: fixations and saccades are eye work (K, A1, R7, R10)
+    "idle_gaze_gain": 0.18,              # idle attention wanders slightly more than reading (K, A6)
+    "reading_gaze_max_yaw_deg": 2.0,     # hard bound on screen-following yaw while reading (K)
+    "reading_gaze_max_pitch_deg": 1.5,   # no vertical line tracking turning into a reading nod (K)
+    "reading_gaze_smooth_s": 0.8,        # 4 Hz target changes filtered into slow, low-amplitude head motion (K)
+    "reading_head_wander_deg": 0.6,      # independent slow head drift: not frozen, still still (K, A1)
+    "reading_head_wander_hz": 0.04,      # about a 25 s drift scale, two incommensurate sines, not a visible loop (K)
+    "gaze_tau_s": 0.22,                  # voluntary head aims (lens, chat, click target, think) settle in ~0.22 s (K)
+    "camera_pitch_deg": 4.2,             # head-to-lens pitch of the framing recipe: atan(0.07 / 0.95); native computes the real one (K)
+    # chat and camera (event-driven: no camera timer, no camera quota; DIRECTION rule 10)
+    "chat_glance_every_s": (45.0, 105.0),    # silent reading/idle: a clock-like glance at the chat (K, A10)
+    "chat_glance_min_state_s": 8.0,          # no glance within 8 s of speech, a reaction, typing or a page change (K)
+    "chat_glance_s": (0.8, 1.5),             # dwell, excluding the native turn-in/out (K)
+    "chat_yaw_deg": 20.0,                    # the chat anchor: 20 deg to his side (K, R15, R16)
+    "chat_pitch_deg": -4.0,                  # ... and 4 deg below monitor centre (K)
+    "chat_read_first_s": (1.2, 2.2),         # answering chat: one visible read beat at the chat anchor first (K, A11)
+    "chat_ack_nod": 0.24,                    # the first look up to the lens carries one small nod (K, A11)
+    "chat_camera_s": (1.4, 2.4),             # ... one initial lens address (K)
+    "chat_mid_glance_at_s": (5.5, 8.0),      # a longer answer earns one recheck of the message at this point (K)
+    "chat_mid_glance_s": (0.8, 1.2),
+    "chat_continue_s": 2.5,                  # a chat edge this soon after the previous answer is the same answer (chunked speech)
+    "camera_hold_after_speech_s": 0.35,      # no eye-line exit on the last audio sample (K)
+    "wait_glance_at_s": 3.0,                 # waiting for a page longer than this earns one short chat glance (K rule 5)
+    "wait_glance_s": (0.8, 1.2),
+    # nods (native: 0.75 s envelope, strength 1.0 = 6 deg down; rearm at <= 0.02)
+    "nod_decay_s": 1.0,
+    "speech_start_nod": 0.28,                # a small nod opens a non-chat utterance (K, A13)
+    "speech_start_nod_delay_s": 0.12,        # not on the exact state toggle (K)
+    "reaction_nod": {"surprise": 0.0, "laugh": 0.3, "think": 0.0},   # surprise has back/check/share, not a nod (K); laugh keeps a small entry cue for the current build
+    # posture (one signed channel: + forward lean, - lean back; the agent emits mutually exclusive lean / lean_back)
+    "lean_by_state": {"idle": 0.12, "reading": 0.30, "typing": 0.40, "mouse": 0.30, "talking": 0.0, "reacting": 0.30},
+    "talk_back_amount": 0.12,                # a dry page comment releases the body about 1 deg back (K, A9 inverted)
+    "chat_read_lean": 0.24,                  # reading a viewer's message relaxes the forward lean slightly (K)
+    "chat_talk_back_amount": 0.18,           # answering: about 1.4 deg back; engagement is lens aim + nod, not a lunge (K)
+    "lean_rise_s": 0.55,                     # a 0.30 posture change towards a pose takes this long (K)
+    "lean_fall_s": 1.10,                     # ... and relaxing the same amount takes this long (K)
+    "posture_shift_every_s": (240.0, 420.0), # a visible chair shift 9-15 times an hour (K, A7, R4)
+    "posture_back_s": (15.0, 35.0),          # how long the leaned-back hold lasts (K)
+    "posture_back_amount": 0.28,             # about 2.2 deg back: visible at webcam scale, not lounging (K)
+    "weight_shift_every_s": (70.0, 140.0),   # tiny signed weight shifts between the holds (K, R4)
+    "weight_shift_amount": 0.05,             # about half a degree; must stay below conscious notice (K)
+    "weight_shift_s": 1.8,                   # executed slowly (K)
+    "focus_slump_s": 720.0,                  # sag starts after 12 min of one focus (K, A18, R3)
+    "focus_slump_ramp_s": 180.0,             # ... and ramps in over 3 min: a drift, not an event (K)
+    "slump_back_amount": 0.12,               # small signed backward offset (K)
+    "slump_pitch_deg": -1.0,                 # one degree of extra head drop (K)
+    "bored_after_s": 75.0,                   # idle this long with nothing happening: bored, not a page load (K rule 9)
+    "bored_back_amount": 0.22,
+    "bored_rise_s": 1.2,
+    "bored_hold_s": (12.0, 20.0),
+    "bored_gaze_yaw_deg": 4.0,               # the head drifts a little off the screen, never to the camera (K rule 9)
+    "bored_gaze_pitch_deg": 1.0,
+    # reactions (native envelopes draw the sub-second shapes; these are the targets and the timeline)
+    "surprise_s": 2.6,                       # back, forward check, camera share, recovery (K, A14)
+    "surprise_back_amount": 0.40,
+    "surprise_back_rise_s": 0.18,
+    "surprise_check_at_s": 0.45,
+    "surprise_check_lean": 0.45,
+    "surprise_camera_at_s": 1.15,
+    "surprise_camera_s": 0.75,
+    "laugh_s": (2.2, 3.0),                   # a small chuckle: lean back + tilt, camera, recover (K, A15)
+    "laugh_back_amount": 0.55,
+    "laugh_back_rise_s": 0.25,
+    "laugh_tilt_deg": (4.0, 6.0),
+    "laugh_pitch_deg": 2.0,
+    "laugh_camera_at_s": 0.75,
+    "laugh_camera_s": 0.80,
+    "think_s": (1.4, 2.4),                   # head tilt, head off the screen; no chin hand without an authored asset (K, A16)
+    "think_tilt_deg": (4.0, 7.0),
+    "think_gaze_yaw_deg": 7.0,
+    "think_gaze_pitch_deg": 2.0,
+    "think_chin_p": 0.0,
+    "reaction_recover_s": 1.0,               # a reaction pose returns to the prior posture over about a second
+    # hands (the free hand is the left; the right keeps mouse/desk contact unless a chat answer frees it)
+    "gesture_after_speech_start_s": 0.45,    # hands never fire on the same frame as voice and head (K)
+    "gesture_every_chat_s": (8.0, 14.0),     # about one free-hand beat per short answer (K, A8)
+    "gesture_every_talk_s": (14.0, 26.0),    # most page comments get zero or one gesture (K, A8)
+    "gesture_s": (0.9, 1.4),
+    "gesture_strength": (0.25, 0.45),        # the lower part of the 25 deg forearm lift (K)
+    "gesture_right_hand_p": 0.15,            # ... and never while a pointer action is in flight (K)
+    "fidget_every_s": (120.0, 260.0),        # about 19 fidgets an hour instead of 48 (K, A19)
+    "fidget_min_state_s": 25.0,              # a fresh page or state must not instantly produce a fidget (K)
+    "fidget_weights": {"desk": 1.0, "face": 0.0, "headphones": 0.0, "neck": 0.0, "drink": 0.0, "stretch": 0.0},
+    "fidget_s": {"desk": (1.0, 1.8), "face": (1.2, 2.5), "headphones": (1.0, 2.0), "neck": (1.5, 3.0), "drink": (3.0, 5.0),
+                 "stretch": (3.0, 6.0), "chair": (1.5, 3.0)},
+    "fidget_strength": 0.2,                  # amplitude of the desk/finger fidget; the wrist keeps contact
+    "fidget_quiet_after_chat_s": 3.0,        # the beginning of an answer stays clean (K)
+    # breathing (Hz; the native layer currently breathes at a fixed 0.22)
+    "breath_rest_hz": 0.20,                  # twelve cycles a minute (K, A23)
+    "breath_reading_hz": 0.20,
+    "breath_talking_hz": 0.18,               # longer cycles while speaking (R5)
+    "breath_surprise_hz": 0.28,
+    "breath_laugh_hz": 0.34,                 # mostly in the recovery; the laugh beat itself is a native torso pulse (K)
+    "breath_tau_s": 2.0,
+    # intensity (native: scales sway and nod)
+    "intensity_by_state": {"idle": 0.1, "reading": 0.3, "typing": 0.55, "mouse": 0.45, "talking": 0.6, "reacting": 0.5},
+    "intensity_by_reaction": {"surprise": 0.65, "laugh": 0.8, "think": 0.4},
+    "intensity_chat_bonus": 0.1,
+}
+# ...
+    def __init__(self, rng, camera="face", mouse_state="mouse", chat_side=1, defaults=None):
+        if camera not in CAMERAS:
+            raise ValueError(f"camera must be one of {CAMERAS}")
+        if mouse_state not in ("mouse", "reading"):
+            raise ValueError("mouse_state must be 'mouse' or 'reading' (the pre-review workaround)")
+        self.rng = rng
+        self.camera = camera
+        self.mouse_state = mouse_state
+        self.chat_side = 1 if chat_side >= 0 else -1
+        self.d = dict(DEFAULTS)
+        if defaults:
+            self.d.update(defaults)
+        d = self.d
+        self.last_t = None
+        # debounced state
+        self.state, self.state_since = "idle", -1e9
+        # action holds
+        self.type_since, self.type_episode_t0, self.type_last, self.type_until = None, -1e9, -1e9, -1e9
+        self.mouse_until, self.read_until, self.last_pointer, self.last_click = -1e9, -1e9, -1e9, -1e9
+        self.target, self.target_until, self.prev_action = None, -1e9, "none"
+        self.busy_t, self.settle_t = None, None             # last tick that blocks a chat glance / a fidget
+        # edges
+        self.reaction_seen, self.chat_prev, self.speak_prev = "none", False, False
+        # reactions
+        self.react_kind, self.react_t0, self.react_until = "none", -1e9, -1e9
+        self.react_tilt, self.react_yaw, self.react_chin = 0.0, 0.0, False
+        self.react_amount, self.react_rate = 0.0, 0.0
+        # head: chat answer phases, silent glances, the camera hold after a chat answer
+        self.chat_phase, self.chat_phase_until, self.chat_t0, self.chat_end_t = "none", -1e9, -1e9, -1e9
+        self.chat_speech_t0, self.chat_cam_done, self.chat_mid_done, self.chat_mid_at = None, False, False, 0.0
+        self.cam_until = -1e9
+        self.chat_glance_until, self.next_chat_glance, self.wait_glanced = -1e9, None, False
+        # nods
+        self.nod_t0, self.nod_peak, self.pending_nod = -1e9, 0.0, None
+        # hands
+        self.gesture_until, self.gesture_hand, self.gesture_amp, self.next_gesture = -1e9, "left", 0.0, 1e18
+        self.fidget_kind, self.fidget_until, self.fidget_hand, self.next_fidget = "none", -1e9, "left", None
+        # posture
+        self.posture_back_until, self.next_posture_shift = -1e9, None
+        self.wshift, self.wshift_target, self.next_weight_shift = 0.0, 0.0, None
+        self.bored_until, self.bored_done, self.bored_yaw = -1e9, False, 0.0
+        # eased outputs
+        self.yaw = self.pitch = 0.0
+        self.s = 0.0                                          # signed posture: + forward lean, - lean back
+        self.tilt = 0.0
+        self.breath = d["breath_rest_hz"]
+        self.phase_a, self.phase_b = rng.uniform(0, 2 * math.pi), rng.uniform(0, 2 * math.pi)
+
+    # ---- helpers --------------------------------------------------------------------------------------------------
+    def u(self, key):
+        v = self.d[key]
+        return self.rng.uniform(*v) if isinstance(v, tuple) else float(v)
+
+    def nod(self, strength, now):
+        if strength > 0 and strength >= self.nod_peak * max(0.0, 1 - (now - self.nod_t0) / self.d["nod_decay_s"]):
+            self.nod_t0, self.nod_peak = now, clamp(strength, 0.0, 1.0)
+
+    def ease(self, cur, target, dt, tau):
+        return cur + (target - cur) * (1 - math.exp(-dt / tau)) if dt > 0 else cur
+
+    def move(self, cur, target, dt, rate):
+# ... tick (excerpt)
+    def tick(self, now, action="none", speaking=False, chat_addressed=False, reaction="none", seconds_in_state=0.0,
+             screen_target=None, paused=False):
+        d = self.d
+        action = action if action in ACTIONS else "none"
+        reaction = reaction if reaction in REACTIONS else "none"
+        speaking, chat_addressed, paused = bool(speaking), bool(chat_addressed), bool(paused)
+        chat_addressed = chat_addressed and not paused
+        speaking = speaking and not paused
+        dt = 0.25 if self.last_t is None else clamp(now - self.last_t, 0.0, 5.0)
+        self.last_t = now
+        if self.next_fidget is None:                                 # first tick: seed the long schedules
+            self.last_pointer = now                                  # he sits down with the mouse hand on the mouse (A2)
+            self.next_fidget = now + self.u("fidget_every_s")
+            self.next_chat_glance = now + self.u("chat_glance_every_s")
+            self.next_posture_shift = now + self.u("posture_shift_every_s")
+            self.next_weight_shift = now + self.u("weight_shift_every_s")
+            self.busy_t = self.settle_t = now
+            self.state_since = now - d["state_min_dwell_s"]            # the first tick may still pick its state at once
+
+        # -- edges
+        if reaction != "none" and reaction != self.reaction_seen and not paused:
+            self.start_reaction(reaction, now)
+        self.reaction_seen = reaction
+        if chat_addressed and not self.chat_prev:
+            self.start_chat(now)
+        elif self.chat_prev and not chat_addressed:
+            self.end_chat(now)
+        self.chat_prev = chat_addressed
+        if speaking and not self.speak_prev:
+            self.start_speech(now, chat_addressed)
+        elif self.speak_prev and not speaking:
+            self.end_speech(now, chat_addressed)
+        self.speak_prev = speaking
+
+        # -- action holds (A3, A4, A5)
+        if action in ("type", "search") and not paused:
+# ... head aim and output
+        if paused:
+            yaw_t, pitch_t = 0.0, 0.0
+        elif look_cam:
+            yaw_t, pitch_t = 0.0, d["camera_pitch_deg"]
+        elif look_chat:
+            yaw_t, pitch_t = d["chat_yaw_deg"] * self.chat_side, d["chat_pitch_deg"]
+        elif reacting and self.react_kind == "think":
+            yaw_t, pitch_t = self.react_yaw, d["think_gaze_pitch_deg"]
+        elif reacting and self.react_kind == "laugh" and react_pose:
+            yaw_t, pitch_t = 0.0, d["laugh_pitch_deg"]
+        elif self.target is not None and now < self.target_until:
+            yaw_t, pitch_t = gaze_for(*self.target)
+            yaw_t, pitch_t = yaw_t * d["action_gaze_gain"], pitch_t * d["action_gaze_gain"]
+        elif bored:
+            yaw_t, pitch_t, tau = self.bored_yaw, d["bored_gaze_pitch_deg"], d["reading_gaze_smooth_s"]
+        elif state in ("reading", "typing", "mouse"):
+            nx = 0.5 + 0.18 * math.sin(now * 2 * math.pi / 3.2 + self.phase_a)
+            ny = 0.3 + 0.4 * ((now % 24.0) / 24.0)
+            yaw_t, pitch_t = gaze_for(nx, ny)
+            yaw_t = clamp(yaw_t * d["reading_gaze_gain"], -d["reading_gaze_max_yaw_deg"], d["reading_gaze_max_yaw_deg"])
+            pitch_t = clamp(pitch_t * d["reading_gaze_gain"], -d["reading_gaze_max_pitch_deg"], d["reading_gaze_max_pitch_deg"])
+            tau = d["reading_gaze_smooth_s"]
+        else:
+            w, f = d["reading_head_wander_deg"], d["reading_head_wander_hz"]
+            yaw_t = w * 3 * math.sin(2 * math.pi * f * now + self.phase_a) * d["idle_gaze_gain"]
+            pitch_t = w * 2 * math.sin(2 * math.pi * f * 0.7 * now + self.phase_b) * d["idle_gaze_gain"]
+            tau = d["reading_gaze_smooth_s"]
+        if slump_f > 0:
+            pitch_t += d["slump_pitch_deg"] * slump_f
+        # the return from an excursion (chat, lens, target) is a voluntary move too: fast, then the slow filter takes over
+        if abs(yaw_t - self.yaw) > d["reading_gaze_max_yaw_deg"] + 1.0 or abs(pitch_t - self.pitch) > d["reading_gaze_max_pitch_deg"] + 1.0:
+            tau = d["gaze_tau_s"]
+        self.yaw = self.ease(self.yaw, yaw_t, dt, tau)
+        self.pitch = self.ease(self.pitch, pitch_t, dt, tau)
+        w, f = d["reading_head_wander_deg"], d["reading_head_wander_hz"]
+        if paused:
+            wander_y = wander_p = 0.0
+        else:                                                        # two incommensurate sines: smooth drift, not a loop
+            wander_y = w * (0.7 * math.sin(2 * math.pi * f * now + self.phase_b)
+                            + 0.3 * math.sin(2 * math.pi * f * 1.7 * now + self.phase_a)) * (1.4 if speaking else 1.0)
+            wander_p = w * 0.6 * (0.7 * math.sin(2 * math.pi * f * 1.3 * now + self.phase_a)
+                                  + 0.3 * math.sin(2 * math.pi * f * 0.6 * now + self.phase_b))
+
+        # -- nod, intensity, breathing
+        nod = 0.0 if paused else self.nod_peak * max(0.0, 1 - (now - self.nod_t0) / d["nod_decay_s"])
+        if paused:
+            inten = 0.0
+        elif state == "reacting":
+            inten = d["intensity_by_reaction"].get(self.react_kind, 0.5)
+        else:
+            inten = d["intensity_by_state"][state]
+        if chat_addressed and not paused:
+            inten += d["intensity_chat_bonus"]
+        if reacting and self.react_kind == "laugh":
+            breath_t = d["breath_laugh_hz"]
+        elif reacting and self.react_kind == "surprise":
+            breath_t = d["breath_surprise_hz"]
+        elif speaking:
+            breath_t = d["breath_talking_hz"]
+        elif state == "reading":
+            breath_t = d["breath_reading_hz"]
+        else:
+            breath_t = d["breath_rest_hz"]
+        self.breath = self.ease(self.breath, breath_t, dt, 0.4 if reacting else d["breath_tau_s"])
+
+        s_out = 0.0 if paused else self.s + self.wshift
+        return {
+            "state": state,
+            "gaze_yaw_deg": round(clamp(self.yaw + wander_y, -20.0, 20.0), 2),
+            "gaze_pitch_deg": round(clamp(self.pitch + wander_p, -10.0, 10.0), 2),
+            "nod_strength": round(clamp(nod, 0.0, 1.0), 3),
+            "intensity": round(clamp(inten, 0.0, 1.0), 2),
+            "camera": "spectator" if paused else self.camera,
+            "motion": {
+                "schema": SCHEMA,
+                "lean": round(clamp(s_out, 0.0, 1.0), 3),
+                "lean_back": round(clamp(-s_out, 0.0, 1.0), 3),
+                "head_tilt_deg": round(clamp(self.tilt, -12.0, 12.0), 2),
+                "look_at_camera": look_cam,
+                "look_to_chat": look_chat,
+                "hand_left": left,
+                "hand_right": right,
+                "gesture_strength": round(clamp(gesture_strength, 0.0, 1.0), 2),
+                "breathing_rate_hz": round(self.breath, 3),
+                "fidget": fidget,
+                "posture": posture,
+            },
+        }
+
+

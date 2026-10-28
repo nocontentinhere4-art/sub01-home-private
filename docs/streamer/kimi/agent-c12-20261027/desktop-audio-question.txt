@@ -1,0 +1,144 @@
+You are writing code for a live streamer on a headless Linux pod (Python 3.12, ffmpeg 6+). Owner request: the stream must also carry the desktop's audio (a Chromium window showing a remote PC through a WebRTC client). Today Chromium runs with --mute-audio and there is no audio server. I installed PulseAudio; a per-user server (uid unreal) will run with a null sink `sub01_apps`, socket at <STREAMER_DIR>/run/pulse/native (dir 0700), pa file: module-native-protocol-unix auth-anonymous=1 + module-null-sink sink_name=sub01_apps rate=48000 channels=2, default sink sub01_apps. Chromium (desktop runner) and ffmpeg (director) both run as unreal. STREAMER_DIR is in both processes' env (default /home/unreal/.sub01-private/streamer).
+
+Spec (keep it minimal, convention-based like the existing optional music):
+A) streamer_desktop.py: a helper `pulse_socket(streamer_dir)` -> Path or None: the socket path only if a unix-socket connect() succeeds within 0.5 s. At every browser launch, if it returns a path: chromium_args drops "--mute-audio" and adds "--autoplay-policy=no-user-gesture-required" (once, even if cfg.autoplay), and chromium_env adds PULSE_SERVER=unix:<path> and PULSE_SINK=sub01_apps. Otherwise behaviour is byte-identical to today. Streamer dir: os.environ STREAMER_DIR, else Path(cfg.data_dir).parent.
+B) streamer_director.py build_ffmpeg_argv: same helper (copy, no cross import). If the socket answers and not cfg.test_sources: append LAST (after the optional music input, index via argv.count("-i")) `-thread_queue_size 1024 -f pulse -server unix:<path> -i sub01_apps.monitor`. Audio graph cases: voice only (today), +music (today), +apps, +music+apps. Apps chain: aresample=48000:async=1:first_pts=0, aformat fltp stereo, `volume@apps=<g>` with g = 0 if the effective layout is PRIVATE_LAYOUT ("webcam_only", the privacy cut) else APPS_GAIN = 0.6. Music+apps are summed (amix normalize=0) into one bed, the bed is ducked by the voice key (sidechaincompress threshold=0.02:ratio=8:attack=20:release=500), then amix with the voice (duration=first, normalize=0) and alimiter=limit=0.891 only when apps are present. The voice is input 2 always (apad first). No new inputs => argv identical to today.
+C) Privacy: in live mode the layout is switched by `await self.send_command(SWITCH_TARGET, "map", idx)` inside apply_layout (code below). When the running ffmpeg has the apps input (store a flag on the director object when you build argv; say self.apps_audio), mute BEFORE switching to PRIVATE_LAYOUT and unmute AFTER a successful switch away from it, via `await self.send_command("volume@apps", "volume", "0" | str(APPS_GAIN))`. If the mute command fails, call self.request_restart("privacy: apps mute failed") and return "restart" (the relaunch builds argv with the private layout, so g=0). A failed unmute only logs an event.
+D) pytest tests (tests/test_streamer_director.py and tests/test_streamer_desktop.py style: monkeypatch, SimpleNamespace cfg, a real AF_UNIX listening socket in tmp_path for the positive case; note AF_UNIX path length <108). Include: identical argv without the socket; apps-only graph; music+apps graph; privacy layout gives volume@apps=0; chromium args/env with and without the socket.
+
+Output format: no prose except a 5-line design note at the top. Then, per file, the COMPLETE new text of each function you change or add (whole def blocks, ready to paste), plus new constants. Then the test functions. I splice them in myself.
+
+Current code:
+--- streamer_desktop.py
+SAFE_ENV = ("PATH", "HOME", "LANG", "LC_ALL", "TZ", "TMPDIR", "USER", "LD_LIBRARY_PATH", "PLAYWRIGHT_BROWSERS_PATH",
+            "FONTCONFIG_PATH", "XAUTHORITY", "XDG_RUNTIME_DIR")
+def chromium_args(cfg):
+    """The browser's flags: the fixed set, the GPU mode (GPU_ARGS), the autoplay policy and the operator's extra flags."""
+    args = ["--no-first-run", "--no-default-browser-check", "--disable-sync", "--disable-extensions",
+            "--disable-background-networking", "--mute-audio", "--password-store=basic",
+            "--disable-dev-shm-usage", "--deny-permission-prompts", "--disable-session-crashed-bubble",
+            "--hide-crash-restore-bubble", "--disable-infobars", "--noerrdialogs",
+            "--disable-features=Translate,AutofillServerCommunication", "--window-position=0,0",
+            f"--window-size={cfg.width},{cfg.height}"]
+    args += GPU_ARGS.get(getattr(cfg, "gpu", "off") or "off", GPU_ARGS["off"])
+    if getattr(cfg, "autoplay", False):
+        args.append("--autoplay-policy=no-user-gesture-required")
+    args += [str(a) for a in (getattr(cfg, "extra_args", ()) or ()) if str(a).startswith("--")]
+    return args + (["--kiosk"] if cfg.kiosk and not cfg.headless else [])
+
+
+def chromium_env(display, environ=None):
+    """A clean environment for the browser: no operator token, no API keys, only what Chromium needs."""
+    environ = os.environ if environ is None else environ
+    env = {k: v for k, v in environ.items() if k in SAFE_ENV}
+    env["DISPLAY"] = display
+    return env
+# in Browser._launch (cfg = self.cfg):
+        options = {"headless": cfg.headless, "args": chromium_args(cfg), "env": chromium_env(cfg.display),
+--- streamer_director.py (PRIVATE_LAYOUT = "webcam_only", SWITCH_TARGET = "streamselect@layout")
+def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, layout=None, live=False,
+                      encoder=None, cam2_fps=None, main=None, tap_fd=None):
+    ...
+            argv += ["-thread_queue_size", "512", "-use_wallclock_as_timestamps", "1", "-probesize", "2000000",
+                     "-analyzeduration", "1000000", "-f", "mjpeg", "-framerate", str(rate), "-i", str(cfg.cam2_fifo)]
+    music = cfg.streamer_dir / "music" / "bgm.mp3"
+    music = music if music.exists() else None
+    music_index = argv.count("-i")       # the next input's index (cam2 and live inputs counted, not assumed)
+    if music:                           # last input: the established 0..N indices never move
+        argv += ["-stream_loop", "-1", "-i", str(music)]
+    graph = build_live_graph(cfg, cam2, layout, main) if live else build_filter_complex(layout, cfg, main)
+    if music:
+        # apad also covers a vanished voice writer; normalize=0 leaves the voice's level untouched
+        graph += (f";[2:a]apad,asplit=2[voice][key];[{music_index}:a]aresample=48000,"
+                  "aformat=sample_fmts=fltp:channel_layouts=stereo,volume=0.08[bgm];"
+                  "[bgm][key]sidechaincompress=threshold=0.02:ratio=8:attack=20:release=500[ducked];"
+                  "[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
+    elif voice:
+        # apad: if the voice server goes away the FIFO hits EOF; silence keeps the audio track running meanwhile
+        graph += ";[2:a]apad[aout]"
+    argv += ["-filter_complex", graph, "-map", "[vout]", "-map", "[aout]" if voice or music else "2:a",
+             *video_codec_args(cfg, encoder or cfg.encoder), "-max_muxing_queue_size", "1024",
+             "-c:a", "aac", "-b:a", cfg.audio_bitrate, "-ar", "48000", "-ac", "2"]
+    if cfg.test_seconds:
+
+    async def apply_layout(self):
+        """Bring the running ffmpeg to the wanted layout: live through streamselect, else by a relaunch.
+        -> idle | same | live | restart | stale"""
+        async with self._switch_lock:
+            if not self.alive or self._restart_reason:
+                return "idle"
+            proc, wanted = self.proc, self.wanted()
+            if LAYOUTS[wanted]["needs_cam2"] and not self.cam2 and self.cam2_now:
+                # right after a relaunch that dropped a stalled cam2, wait (no relaunch loop); cam2_tick adds it later
+                if self.last_restart_reason != CAM2_DROP or self.uptime() >= CAM2_MIN_UPTIME:
+                    self.request_restart(f"layout {wanted}: relaunch with cam2")
+                    return "restart"
+            target = effective_layout(wanted, self.cam2)
+            if target == self.live_layout:
+                self._on_air("same")
+                return "same"
+            if self.cfg.layout_switch != "live" or target not in self.live_order:
+                self._note_switch(target, "restart", True, 0)
+                self.request_restart(f"layout {target}")
+                return "restart"
+            started = self._clock()
+            self._switching = target                     # desktop_hidden is false until the reply settles it
+            try:
+                ok, detail = await self.send_command(SWITCH_TARGET, "map", str(self.live_order.index(target)))
+            finally:
+                self._switching = None
+            ms = round((self._clock() - started) * 1000)
+            if self.proc is not proc or self._restart_reason:
+                return "stale"                   # relaunched meanwhile: the new run starts with the wanted layout
+            if ok:
+                previous, self.live_layout = self.live_layout, target
+                self._note_switch(target, "live", True, ms)
+                self.event("layout_switched", layout=target, previous=previous, how="live", ms=ms, run=self.prefix)
+                self._on_air("live switch")
+                if effective_layout(self.wanted(), self.cam2) != target:
+                    self.kick_layout()           # the wanted layout changed meanwhile (a new cut): at once, not next tick
+                return "live"
+            if detail.startswith(("no reply", "cannot write")):
+                self.live_layout = None          # the command may or may not have reached the graph: on air unknown
+            self._note_switch(target, "restart", False, ms, detail)
+            self.event("layout_switch_failed", layout=target, detail=detail, ms=ms, run=self.prefix)
+            self.request_restart(f"layout {target} (live switch failed: {detail})")
+            return "restart"
+
+    def _note_switch(self, layout, how, ok, ms, detail=None):
+        self.last_switch = {"t": iso(self._wall()), "layout": layout, "how": how, "ok": ok, "ms": ms, "detail": detail}
+--- existing music test, for style
+def test_optional_bgm_is_last_input_and_mixes_both_voice_paths(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    import scripts.streamer_director as sd
+    cfg = SimpleNamespace(streamer_dir=tmp_path, ffmpeg="ffmpeg", width=1280, height=720,
+                          pip_width=320, pip_height=180, fps=30, desktop_fps=5, stats_period=1,
+                          test_sources=False, test_seconds=None, encoder="libx264",
+                          audio_bitrate="128k", game_display=":99.0", desktop_display=":99.0",
+                          voice_fifo=tmp_path / "voice.raw")
+    monkeypatch.setattr(sd, "effective_layout", lambda layout, cam2: layout)
+    monkeypatch.setattr(sd, "build_filter_complex", lambda *args: "VIDEO")
+    monkeypatch.setattr(sd, "video_codec_args", lambda *args: [])
+    monkeypatch.setattr(sd, "output_args", lambda *args: ["out.mkv"])
+    baseline = {}
+    for voice in (True, False):
+        argv = sd.build_ffmpeg_argv(cfg, prefix="out", voice=voice)
+        baseline[voice] = argv
+        assert "-stream_loop" not in argv
+        graph = argv[argv.index("-filter_complex") + 1]
+        assert graph == ("VIDEO;[2:a]apad[aout]" if voice else "VIDEO")
+        assert argv[argv.index("-map", argv.index("-filter_complex") + 3) + 1] == ("[aout]" if voice else "2:a")
+    bgm = tmp_path / "music" / "bgm.mp3"
+    bgm.parent.mkdir()
+    bgm.write_bytes(b"test")
+    for voice in (True, False):
+        argv = sd.build_ffmpeg_argv(cfg, prefix="out", voice=voice)
+        fc = argv.index("-filter_complex")
+        old_fc = baseline[voice].index("-filter_complex")
+        assert argv[fc - 4:fc] == ["-stream_loop", "-1", "-i", str(bgm)]
+        assert argv[:fc - 4] == baseline[voice][:old_fc]
+        graph = argv[fc + 1]
+        assert ";[2:a]apad,asplit=2[voice][key];[3:a]aresample=48000" in graph
+        assert "volume=0.08[bgm];[bgm][key]sidechaincompress=" in graph
+        assert graph.endswith("[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]")
+        assert argv[argv.index("-map", fc + 3) + 1] == "[aout]"

@@ -1,0 +1,1278 @@
+{
+  "main": {
+    "status": "FAILED",
+    "performance": "NOT_ASSESSED",
+    "visual": "PENDING",
+    "scope": "controlled reconstruction hypothesis; frontal visible-scope only; no full-contact, backend-state/brain, 60fps, or owner acceptance",
+    "failures": [
+      {
+        "kind": "UNEXPLAINED_FAILURE",
+        "error": "Traceback (most recent call last):\n  File \"/opt/sub01/animation-visual-20261026-attempt05/tools/visual-supervisor.candidate.py\", line 615, in run\n    try:self.result['status']='PREPARING';self.prepare();self.execute()\n                                                         ^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt05/tools/visual-supervisor.candidate.py\", line 449, in execute\n    self.result['ddc_runtime']=ddc.runtime_log_proof(ddc_prefix);save(OUT/'ddc-runtime.json',self.result['ddc_runtime'])\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt05/tools/ddc_launch_checks.py\", line 108, in runtime_log_proof\n    need(len(parses)==1 and parses[0][1]==\"Parsing cache graph '\"+SAFEGRAPH+\"'...\",'graph parse missing/different/repeated')\n  File \"/opt/sub01/animation-visual-20261026-attempt05/tools/ddc_launch_checks.py\", line 26, in need\n    if not ok:raise ValueError('DDC evidence: '+reason)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: DDC evidence: graph parse missing/different/repeated\n"
+      },
+      {
+        "kind": "lifecycle",
+        "error": {
+          "reason": "Cleanup identity/wait failure",
+          "pid": 5515,
+          "error": "Block('Exact child not reaped')"
+        }
+      }
+    ],
+    "subreaper": {
+      "enabled": true,
+      "pid": 5493,
+      "ticks": 62085561,
+      "before_any_Popen": true
+    },
+    "ddc_access": {
+      "schema": "sub01.ddc-access.v1",
+      "uid": 1001,
+      "gid": 1001,
+      "groups": [],
+      "cache": {
+        "path": "/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache",
+        "dev": 66,
+        "ino": 4299679611,
+        "uid": 1001,
+        "gid": 1001,
+        "mode": 448
+      },
+      "read_ok": true,
+      "write_ok": true,
+      "cleanup_ok": true,
+      "readback_sha256": "3150b3de1e6da8c0736dc46285ef7ba7de9ab57d49336aacf52c60401d20e256",
+      "engine_pak": {
+        "path": "/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp",
+        "dev": 46,
+        "ino": 210981095,
+        "bytes": 1134102445,
+        "read_ok": true
+      },
+      "cvars_read_sha256": "30bb0984e74077d3dd73bb673ed6c2d5712b5e55e1cd00df35517d9583c0d441"
+    },
+    "sdk_prelaunch": {
+      "environment_delta": {
+        "UE_SKIP_UBT_SDK_SETUP": "1"
+      },
+      "source_module_receipts": {
+        "Source/Developer/TargetPlatform/Private/TargetPlatformManagerModule.cpp": {
+          "sha256": "1ab0fb6d8141ee06d80e0190883a30962552ccb0d96e39ca71d8f95f3979efa2",
+          "bytes": 59373
+        },
+        "Binaries/Linux/libUnrealEditor-TargetPlatform.so": {
+          "sha256": "daf409938b14e955c258defc5cf9ec22bcd42a023c803239b098d8ff3b70ee2a",
+          "bytes": 370072
+        },
+        "Build/Build.version": {
+          "sha256": "eab58750e84719489f3ee0d42d05a533ceb357eb3ee511777e9408d27a85f43c",
+          "bytes": 215
+        },
+        "Binaries/Linux/UnrealEditor.modules": {
+          "sha256": "9c60786f45b2ee850c5355706961b5933ee36effd2169d25459562e7bf6f62ba",
+          "bytes": 31321
+        },
+        "Source/Editor/TurnkeySupport/Private/TurnkeySupportModule.cpp": {
+          "sha256": "9637ec95f0ff582f5976530e45e84d40510e35196a8ffee8bec498759b019a99",
+          "bytes": 156547
+        }
+      },
+      "manual_sdk_env_absent": true,
+      "checked_monotonic_ns": 620860841146590,
+      "sdk_status": "ASSUMED_VALID_VALIDATION_SKIPPED_NOT_VERIFIED",
+      "scope": "observed guarded ValidatePlatforms route only; unapproved descendants remain fatal"
+    },
+    "ddc_prelaunch": {
+      "schema": "sub01.ddc-prelaunch.v1",
+      "cvar_proof_kind": "CONTROLLED_STARTUP_SETTER_DERIVATION_NOT_OBSERVED_FUTURE_STATE",
+      "expected_value": "(ProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp),InstalledProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp,Compressed=true),EnginePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp,Compressed=true),EnterprisePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp,Compressed=true),Local=(Type=FileSystem,Path=/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache,ReadOnly=false,UnusedFileAge=34,PromptIfMissing=true,Clean=false,Flush=false,DeleteUnused=false))",
+      "setter": "ConsoleVariablesIni",
+      "priority": 167772160,
+      "pins": {
+        "/workspace/sub01-private-recovered-engine/Engine/Config/BaseEngine.ini": {
+          "sha256": "fed41263defe21a22d74a779a9bf6e545c29c150c67ffad70800770c58156454",
+          "bytes": 258359,
+          "dev": 46,
+          "ino": 210500828
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Config/Linux/LinuxEngine.ini": {
+          "sha256": "6044ed2320517360ecd12226a015aa9028d553bd09a7c7aa6834a963667f047d",
+          "bytes": 950,
+          "dev": 46,
+          "ino": 210660284
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/DerivedDataCache.cpp": {
+          "sha256": "cb0d43bda3314957f1587c3f2c9fb7082913314196b8d3bd26bca0126051a793",
+          "bytes": 34333,
+          "dev": 46,
+          "ino": 684412713
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/DerivedDataCacheModule.cpp": {
+          "sha256": "30007afbcf1dc28d2695a3b38ae829448485acfb8e5d1d521ff846b102ed1190",
+          "bytes": 5136,
+          "dev": 46,
+          "ino": 684413463
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/Zen/Private/ZenServerInterface.cpp": {
+          "sha256": "3e93b433b94948d800a1d9189107e21d91f7118c73404484e2e2db0e81e775b1",
+          "bytes": 171767,
+          "dev": 46,
+          "ino": 39065465
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Engine/Private/ShaderCompiler/ShaderCompiler.cpp": {
+          "sha256": "5319dd99c453727c050fbac258443345e6879a083508a148e526c099b97f9ec4",
+          "bytes": 238264,
+          "dev": 46,
+          "ino": 684747040
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/DerivedDataBackends.cpp": {
+          "sha256": "8f334004e0a6cc90966f0e253d652b624f70d7e2b044dd43b174b2c6ec5fc222",
+          "bytes": 31573,
+          "dev": 46,
+          "ino": 684412602
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/DerivedDataConfig.cpp": {
+          "sha256": "880e5c30e641cbefa8a4f77026f1fb3ddd77190c8f0a36a5686eea2043d47d20",
+          "bytes": 15644,
+          "dev": 46,
+          "ino": 684412843
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Engine/Public/ShaderCompiler.h": {
+          "sha256": "6293e089c00cca65dcff879969614e6d07a1e6f481c5487f01ce5e8d1afa00c0",
+          "bytes": 65091,
+          "dev": 46,
+          "ino": 621574454
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Engine/Private/ShaderCompiler/ShaderCompilerPrivate.h": {
+          "sha256": "23532bc96b421b23780ef01fce1967138eca3ebc6502a64c08075bc644703f21",
+          "bytes": 1983,
+          "dev": 46,
+          "ino": 684746893
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/DerivedDataCacheStoreHierarchy.cpp": {
+          "sha256": "5addbc6922f127c19d0607ed621059746e8f2bc03755b4d88ac89b31278f6a20",
+          "bytes": 55961,
+          "dev": 46,
+          "ino": 684412609
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Engine/Private/ShaderCompiler/ShaderCompilerThreadRunnable.cpp": {
+          "sha256": "f3d07df1c03db050c683b43ac403b2085832ea34998fc54a71668a34d1be5bdd",
+          "bytes": 66361,
+          "dev": 46,
+          "ino": 684747056
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-DerivedDataCache.so": {
+          "sha256": "4405bb3e055b9c3e6f37c4ac13de7f38e27831f7f7e387447b753d83ef2d6da2",
+          "bytes": 5769896,
+          "dev": 46,
+          "ino": 683503633
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-Engine.so": {
+          "sha256": "f9aacc3fab64f0b3ece3c2ecff5f3621e5dadf553cedbc34131364ccebf06b14",
+          "bytes": 95814048,
+          "dev": 46,
+          "ino": 683505046
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp": {
+          "sha256": "9f4a9d61121067662dd880b6f60be3b2fffa64a8f89831bb9c3e1907057474e2",
+          "bytes": 1134102445,
+          "dev": 46,
+          "ino": 210981095
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/Logging/LogSuppressionInterface.cpp": {
+          "sha256": "6aacabef950c6b9117f2729800ef3e0d0fe7f85ea7fa58ac5c2bcad68d73462c",
+          "bytes": 23304,
+          "dev": 46,
+          "ino": 390032897
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/HAL/ConsoleManager.cpp": {
+          "sha256": "3f545c2883f604a5845901596fb42ec17c5e8eb7480e655e3b3a120ea2d5e4d1",
+          "bytes": 197153,
+          "dev": 46,
+          "ino": 684631561
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/Misc/ConfigUtilities.cpp": {
+          "sha256": "963f75029dc708a9840500734f0690ef0abe07937eadcd9da32f6859a0cb4955",
+          "bytes": 22722,
+          "dev": 46,
+          "ino": 315866868
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Launch/Private/LaunchEngineLoop.cpp": {
+          "sha256": "f23b201a530fb87af894aac9f76ce090fab42fe4dccc92267e044f5b6d6cae1d",
+          "bytes": 236996,
+          "dev": 46,
+          "ino": 620500463
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/Misc/ConfigCacheIni.cpp": {
+          "sha256": "905d5f4b568a7fe1007eb81932fd98bb14247190aa32bf0d8a51a3b02d26bc13",
+          "bytes": 252267,
+          "dev": 46,
+          "ino": 684638956
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/FileSystemCacheStore.cpp": {
+          "sha256": "8d56ee922bea53964034db9fc9b4d17b6eb797822b63d79460202883f79107b5",
+          "bytes": 103201,
+          "dev": 46,
+          "ino": 684412763
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/PakFileCacheStore.cpp": {
+          "sha256": "4f225dd18885515c2a94840cd18c72a05644cea4b60cf0afd102b66c53d40d24",
+          "bytes": 50424,
+          "dev": 46,
+          "ino": 684412692
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Public/HAL/IConsoleManager.h": {
+          "sha256": "c4420a8eec58d6f5ca3cde1713680a77163da2db0537f7a12edbdb07672552e1",
+          "bytes": 103132,
+          "dev": 46,
+          "ino": 684654166
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-Core.so": {
+          "sha256": "99a1a9ecf4d46b8bdf6560d47e5da842612ee56ceeec363e6ccbe5e747639b4e",
+          "bytes": 23857528,
+          "dev": 46,
+          "ino": 683502496
+        }
+      },
+      "cvars": {
+        "bytes": 1566,
+        "sha256": "30bb0984e74077d3dd73bb673ed6c2d5712b5e55e1cd00df35517d9583c0d441",
+        "dev": 66,
+        "ino": 2209152170
+      },
+      "cache": {
+        "path": "/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache",
+        "dev": 66,
+        "ino": 4299679611,
+        "uid": 1001,
+        "gid": 1001,
+        "mode": 448
+      },
+      "access_probe": {
+        "schema": "sub01.ddc-access.v1",
+        "uid": 1001,
+        "gid": 1001,
+        "groups": [],
+        "cache": {
+          "path": "/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache",
+          "dev": 66,
+          "ino": 4299679611,
+          "uid": 1001,
+          "gid": 1001,
+          "mode": 448
+        },
+        "read_ok": true,
+        "write_ok": true,
+        "cleanup_ok": true,
+        "readback_sha256": "3150b3de1e6da8c0736dc46285ef7ba7de9ab57d49336aacf52c60401d20e256",
+        "engine_pak": {
+          "path": "/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp",
+          "dev": 46,
+          "ino": 210981095,
+          "bytes": 1134102445,
+          "read_ok": true
+        },
+        "cvars_read_sha256": "30bb0984e74077d3dd73bb673ed6c2d5712b5e55e1cd00df35517d9583c0d441"
+      },
+      "optional_paks": {
+        "ProjectPak": {
+          "path": "/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp",
+          "state": "ABSENT"
+        },
+        "InstalledProjectPak": {
+          "path": "/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp",
+          "state": "ABSENT"
+        },
+        "EnterprisePak": {
+          "path": "/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp",
+          "state": "ABSENT"
+        }
+      },
+      "checked_monotonic_ns": 620863278272058
+    },
+    "accepted_actual_event_count": 0,
+    "control_workers_before_teardown": [],
+    "fifo_preservation_location": "/home/unreal/.sub01-private/animation-visual-reading-20261026-attempt05/fifo-evidence/preserved-original-fifo",
+    "lifecycle_cleanup": {
+      "pending": [],
+      "errors": [],
+      "outcomes": [
+        {
+          "pid": 5505,
+          "identity": {
+            "pid": 5505,
+            "ticks": 62086051,
+            "ppid": 5493,
+            "sid": 5505,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "python3"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5505,
+            "ticks": 62086051,
+            "ppid": 5493,
+            "sid": 5505,
+            "state": "R",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "5febaf13036b448ab808c97bf9b88ef03f99862d973eeed2f9e4e5cbb81117bd",
+            "comm": "python3"
+          },
+          "parent_identity": {
+            "pid": 5493,
+            "ticks": 62085561,
+            "ppid": 5488,
+            "sid": 5488,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "897f8e1ced44c80899c2b6565c4e52952b952462580b06a2559eb88aaad36311",
+            "comm": "python3"
+          },
+          "wait_status": 15,
+          "returncode": -15
+        },
+        {
+          "pid": 5510,
+          "identity": {
+            "pid": 5510,
+            "ticks": 62086070,
+            "ppid": 5493,
+            "sid": 5510,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "Xvfb"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5510,
+            "ticks": 62086070,
+            "ppid": 5493,
+            "sid": 5510,
+            "state": "R",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "27923af4f43855fa20b8bf35bdb746476375f28442b80dace47bb9dd014bc9fc",
+            "comm": "Xvfb"
+          },
+          "parent_identity": {
+            "pid": 5493,
+            "ticks": 62085561,
+            "ppid": 5488,
+            "sid": 5488,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "897f8e1ced44c80899c2b6565c4e52952b952462580b06a2559eb88aaad36311",
+            "comm": "python3"
+          },
+          "wait_status": 0,
+          "returncode": 0
+        },
+        {
+          "pid": 5515,
+          "identity": {
+            "pid": 5515,
+            "ticks": 62086327,
+            "ppid": 5493,
+            "sid": 5515,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "UnrealEditor-Cm"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5515,
+            "ticks": 62086327,
+            "ppid": 5493,
+            "sid": 5515,
+            "state": "S",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "8df06260c4eb1c0b8f7e0c8d0608382aed44d8a672ff7b2c8be1b7612ec8b154",
+            "comm": "UnrealEditor-Cm"
+          },
+          "parent_identity": {
+            "pid": 5493,
+            "ticks": 62085561,
+            "ppid": 5488,
+            "sid": 5488,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "897f8e1ced44c80899c2b6565c4e52952b952462580b06a2559eb88aaad36311",
+            "comm": "python3"
+          },
+          "wait_status": 36608,
+          "returncode": 143
+        }
+      ]
+    },
+    "workers": [
+      {
+        "name": "drain-xvfb",
+        "alive": false
+      },
+      {
+        "name": "drain-native",
+        "alive": false
+      }
+    ],
+    "drain_pipes": [
+      {
+        "name": "drain-xvfb",
+        "launch_identity": {
+          "pid": 5510,
+          "ticks": 62086070,
+          "sid": 5510,
+          "uid": 1001,
+          "state": "R"
+        },
+        "pipe_inode": 37082887
+      },
+      {
+        "name": "drain-native",
+        "launch_identity": {
+          "pid": 5515,
+          "ticks": 62086327,
+          "sid": 5515,
+          "uid": 1001,
+          "state": "S"
+        },
+        "pipe_inode": 37063600
+      }
+    ],
+    "access_barrier": "RESTORED_0710"
+  },
+  "latest": {
+    "schema": "sub01.visual-preservation-latest.v1",
+    "generation": "generation-0002",
+    "manifest_sha256": "037744c433f58f86a37a7cf06673fb51af13ddc4baa6dc758915f7e13f3486aa"
+  },
+  "barrier": [
+    [
+      "001-launch-locked.json",
+      {
+        "event": "launch-locked",
+        "state": "LOCKED",
+        "utc": 1793049163.1967072,
+        "monotonic_ns": 620855656134051,
+        "pid": 5493
+      }
+    ],
+    [
+      "002-pre-chmod.json",
+      {
+        "event": "pre-chmod",
+        "state": "LOCKED",
+        "utc": 1793049167.7188048,
+        "monotonic_ns": 620860178231325,
+        "ancestor": "/home/sub01-recovery-stage-20261026",
+        "expected": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 456,
+          "type": 16384
+        },
+        "original": {
+          "dev": 66,
+          "ino": 4631271,
+          "uid": 1001,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        },
+        "recovery": "Only exact quiescence+FD-bound identity allows restoring0710"
+      }
+    ],
+    [
+      "003-post-chmod.json",
+      {
+        "event": "post-chmod",
+        "state": "ACTIVE",
+        "utc": 1793049167.71946,
+        "monotonic_ns": 620860178886806,
+        "actual": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        },
+        "path": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        }
+      }
+    ],
+    [
+      "004-probe-active.json",
+      {
+        "event": "probe-active",
+        "state": "ACTIVE",
+        "utc": 1793049167.7342308,
+        "monotonic_ns": 620860193657391,
+        "probe": {
+          "uid": 1001,
+          "euid": 1001,
+          "gid": 1001,
+          "egid": 1001,
+          "groups": [],
+          "status": {
+            "Uid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "Gid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "CapEff": [
+              "0000000000000000"
+            ],
+            "CapPrm": [
+              "0000000000000000"
+            ],
+            "CapAmb": [
+              "0000000000000000"
+            ],
+            "NoNewPrivs": [
+              "1"
+            ]
+          },
+          "ancestor_access": {
+            "r": false,
+            "w": false,
+            "x": false
+          },
+          "descendant": {
+            "read": false,
+            "errno": 13
+          },
+          "positive_control": {
+            "read": true,
+            "errno": null
+          }
+        }
+      }
+    ],
+    [
+      "005-pre-restore.json",
+      {
+        "event": "pre-restore",
+        "state": "ACTIVE",
+        "utc": 1793049332.2786915,
+        "monotonic_ns": 621024738118266,
+        "actual": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        }
+      }
+    ],
+    [
+      "006-post-restore.json",
+      {
+        "event": "post-restore",
+        "state": "RESTORED",
+        "utc": 1793049332.2793539,
+        "monotonic_ns": 621024738780509,
+        "actual": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 456,
+          "type": 16384
+        },
+        "path": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 456,
+          "type": 16384
+        }
+      }
+    ],
+    [
+      "007-probe-restored.json",
+      {
+        "event": "probe-restored",
+        "state": "RESTORED",
+        "utc": 1793049332.2937236,
+        "monotonic_ns": 621024753150913,
+        "probe": {
+          "uid": 1001,
+          "euid": 1001,
+          "gid": 1001,
+          "egid": 1001,
+          "groups": [],
+          "status": {
+            "Uid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "Gid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "CapEff": [
+              "0000000000000000"
+            ],
+            "CapPrm": [
+              "0000000000000000"
+            ],
+            "CapAmb": [
+              "0000000000000000"
+            ],
+            "NoNewPrivs": [
+              "1"
+            ]
+          },
+          "ancestor_access": {
+            "r": false,
+            "w": false,
+            "x": true
+          },
+          "descendant": {
+            "read": true,
+            "errno": null
+          },
+          "positive_control": {
+            "read": true,
+            "errno": null
+          }
+        }
+      }
+    ]
+  ],
+  "ancestor": {
+    "dev": 66,
+    "ino": 2149578155,
+    "uid": 0,
+    "gid": 1001,
+    "mode": 456,
+    "type": 16384
+  },
+  "fifo": {
+    "dev": 66,
+    "ino": 4303368925,
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 384,
+    "type": 4096
+  },
+  "fifo_old": null,
+  "native_tail": [
+    "[2026.10.26-21.15.24:850][647]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 1 (  Trying 127.0.0.1:8832...)",
+    "[2026.10.26-21.15.24:850][647]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 2 (connect to 127.0.0.1 port 8832 from 127.0.0.1 port 39718 failed: Connection refused)",
+    "[2026.10.26-21.15.24:850][647]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 3 (Failed to connect to 127.0.0.1 port 8832 after 0 ms: Could not connect to server)",
+    "[2026.10.26-21.15.24:850][647]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 4 (closing connection #104)",
+    "[2026.10.26-21.15.24:850][647]LogHttp: Warning: 0x48eef244d00 GET http://127.0.0.1:8832/devices/state completed with reason 'ConnectionError' after 0.00s",
+    "[2026.10.26-21.15.25:003][656]LogHttp: Warning: 0x48eef244d00: request failed, libcurl error: 7 (Could not connect to server)",
+    "[2026.10.26-21.15.25:003][656]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 0 (Hostname 127.0.0.1 was found in DNS cache)",
+    "[2026.10.26-21.15.25:003][656]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 1 (  Trying 127.0.0.1:8832...)",
+    "[2026.10.26-21.15.25:003][656]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 2 (connect to 127.0.0.1 port 8832 from 127.0.0.1 port 39726 failed: Connection refused)",
+    "[2026.10.26-21.15.25:003][656]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 3 (Failed to connect to 127.0.0.1 port 8832 after 0 ms: Could not connect to server)",
+    "[2026.10.26-21.15.25:003][656]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 4 (closing connection #105)",
+    "[2026.10.26-21.15.25:003][657]LogHttp: Warning: 0x48eef244d00 GET http://127.0.0.1:8832/devices/state completed with reason 'ConnectionError' after 0.00s",
+    "[2026.10.26-21.15.25:033][658]LogHttp: Warning: 0x48eef244d00: request failed, libcurl error: 7 (Could not connect to server)",
+    "[2026.10.26-21.15.25:033][658]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 0 (Hostname 127.0.0.1 was found in DNS cache)",
+    "[2026.10.26-21.15.25:033][658]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 1 (  Trying 127.0.0.1:8831...)",
+    "[2026.10.26-21.15.25:033][658]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 2 (connect to 127.0.0.1 port 8831 from 127.0.0.1 port 51606 failed: Connection refused)",
+    "[2026.10.26-21.15.25:033][658]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 3 (Failed to connect to 127.0.0.1 port 8831 after 0 ms: Could not connect to server)",
+    "[2026.10.26-21.15.25:033][659]LogHttp: Warning: 0x48eef244d00: libcurl info message cache 4 (closing connection #106)",
+    "[2026.10.26-21.15.25:033][659]LogHttp: Warning: 0x48eef244d00 GET http://127.0.0.1:8831/home/state completed with reason 'ConnectionError' after 0.00s",
+    "FUnixPlatformMisc::RequestExitWithStatus",
+    "\u0000FUnixPlatformMisc::RequestExit",
+    "\u0000[2026.10.26-21.15.25:132][664]LogInit: Error: Fatal X11 IO Error: Lost connection to X Server",
+    "Ensure condition failed: false [File:./Runtime/ApplicationCore/Private/Linux/LinuxPlatformApplicationMisc.cpp] [Line: 316] ",
+    "",
+    "[2026.10.26-21.15.25:132][664]LogOutputDevice: Warning: ",
+    "",
+    "Script Stack (0 frames) :",
+    "",
+    "Failed to find symbol file, expected location:",
+    "\"/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd.sym\"",
+    "[2026.10.26-21.15.25:151][664]LogStats: FPlatformStackWalk::StackWalkAndDump -  0.019 s",
+    "[2026.10.26-21.15.25:151][664]LogOutputDevice: Error: === Handled ensure: ===",
+    "[2026.10.26-21.15.25:151][664]LogOutputDevice: Error: ",
+    "[2026.10.26-21.15.25:151][664]LogOutputDevice: Error: Ensure condition failed: false  [File:./Runtime/ApplicationCore/Private/Linux/LinuxPlatformApplicationMisc.cpp] [Line: 316] ",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: ",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: Stack: ",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000073328b9dcca3 libUnrealEditor-ApplicationCore.so!UnknownFunction(0x1dcca2)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000073325e22990c libX11.so.6!_XIOError(+0x6b)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000073325e22da7d libX11.so.6!_XEventsQueued(+0x8c)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000073325e208ae2 libX11.so.6!XCheckIfEvent(+0x231)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000073328bb7439b libUnrealEditor-ApplicationCore.so!X11_PumpEvents(+0xba)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000073328ba39afc libUnrealEditor-ApplicationCore.so!UnknownFunction(0x239afb)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000073328ba39e45 libUnrealEditor-ApplicationCore.so!SDL_WaitEventTimeoutNS(+0x2d4)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000073328b9d2988 libUnrealEditor-ApplicationCore.so!_ZN29FLinuxPlatformApplicationMisc12PumpMessagesEb(+0xa07)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000000000023870f UnrealEditor-Cmd!UnknownFunction(0x3870e)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000000000023d4d7 UnrealEditor-Cmd!UnknownFunction(0x3d4d6)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x0000733294ca1fbd libUnrealEditor-UnixCommonStartup.so!_Z14CommonUnixMainiPPcPFiPKDsEPFvvE(+0x62c)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x00007332872181ca libc.so.6!UnknownFunction(0x2a1c9)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x000073328721828b libc.so.6!__libc_start_main(+0x8a)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: [Callstack] 0x0000000000234dfa UnrealEditor-Cmd!_start(+0x29)",
+    "[2026.10.26-21.15.25:152][664]LogOutputDevice: Error: ",
+    "[2026.10.26-21.15.25:156][664]LogStats:                SubmitErrorReport -  0.000 s",
+    "[2026.10.26-21.15.25:161][664]LogStats:                    SendNewReport -  0.005 s",
+    "[2026.10.26-21.15.25:161][664]LogStats:             FDebug::EnsureFailed -  0.029 s",
+    "[2026.10.26-21.15.25:161][664]LogCore: FUnixPlatformMisc::RequestExit(1, <NoCallSiteInfo>)"
+  ],
+  "current_identities": [
+    {
+      "pid": 1,
+      "ticks": 54754026,
+      "ppid": 0,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "8668ab6a69aa0e0a4b04fafad70c6c8ad470a5c75c4763faa12fd877750f14af",
+      "comm": "docker-init"
+    },
+    {
+      "pid": 110,
+      "ticks": 54754071,
+      "ppid": 1,
+      "sid": 110,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "3cf42ddf90e572bc24bf6bbf5670308cfdca841f4623a5678c2681136e056cb9",
+      "comm": "sshd"
+    },
+    {
+      "pid": 115,
+      "ticks": 54754071,
+      "ppid": 57,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "comm": "start.sh"
+    },
+    {
+      "pid": 122,
+      "ticks": 54754071,
+      "ppid": 115,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "6174273fd7c922f2b4f088c4941d8a454a1bd3950a6b9892c457dbb21ac3784f",
+      "comm": "jupyter-lab"
+    },
+    {
+      "pid": 123,
+      "ticks": 54754071,
+      "ppid": 57,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "21e7b0eb0fbfc14a8eab229ae46632be62b33a26ffc0692960b9786c4008934b",
+      "comm": "sleep"
+    },
+    {
+      "pid": 5583,
+      "ticks": 62105668,
+      "ppid": 122,
+      "sid": 5583,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "81fb91746a5ba89dadaaa7aaf9553d63ec7c44b4a94db1ec602f61d8c304c668",
+      "comm": "bash"
+    },
+    {
+      "pid": 5588,
+      "ticks": 62105760,
+      "ppid": 5583,
+      "sid": 5583,
+      "state": "R",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "1aa9cf5c0bca8df239eca152d65c19745f1607b3f38766e7b7bef5f353d3c116",
+      "comm": "python3"
+    },
+    {
+      "pid": 57,
+      "ticks": 54754036,
+      "ppid": 1,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "comm": "start.sh"
+    },
+    {
+      "pid": 88,
+      "ticks": 54754037,
+      "ppid": 1,
+      "sid": 88,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "425d48232fe80cc4dd919c5cd3e209e5add5c55c52f0412ad15a3e2eae68a95c",
+      "comm": "nginx"
+    },
+    {
+      "pid": 89,
+      "ticks": 54754037,
+      "ppid": 88,
+      "sid": 88,
+      "state": "S",
+      "uids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "gids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "groups": [
+        "65534"
+      ],
+      "cap_eff": "0000000000000000",
+      "cap_prm": "0000000000000000",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "025bdf92f128055cd3537c294559b6e299388ef1da6a98c4f3118ddc71cb6fe0",
+      "comm": "nginx"
+    }
+  ],
+  "diagnostic_failures": [],
+  "lifecycle": [
+    [
+      "0045-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 621017643542831,
+        "pid": 5515,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ],
+    [
+      "0053-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 621017700642831,
+        "pid": 5515,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ],
+    [
+      "0057-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 621017754958575,
+        "pid": 5515,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ],
+    [
+      "0061-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 621017809091845,
+        "pid": 5515,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ],
+    [
+      "0065-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 621017862668251,
+        "pid": 5515,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ],
+    [
+      "0069-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 621017915993115,
+        "pid": 5515,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ],
+    [
+      "0073-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 621017969484400,
+        "pid": 5515,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ],
+    [
+      "0077-lifecycle-failure.json",
+      {
+        "error": "Block('Exact child not reaped')",
+        "label": "lifecycle-failure",
+        "monotonic_ns": 621018023113515,
+        "pid": 5515,
+        "reason": "Cleanup identity/wait failure"
+      }
+    ]
+  ]
+}

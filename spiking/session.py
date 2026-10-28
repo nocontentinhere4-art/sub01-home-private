@@ -35,6 +35,9 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from .threads import cap_threads
+
+cap_threads()                                # BLAS / OpenMP / torch: one thread unless OMP_NUM_THREADS asks for more
 from .choice import (READOUTS, ChoiceTask, LiveChooser, RewardSchedule, bandit_experiment, random_chooser,
                      replay_fit, summarize)
 from .config import Config

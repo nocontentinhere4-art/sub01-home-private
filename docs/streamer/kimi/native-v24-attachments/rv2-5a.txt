@@ -1,0 +1,27 @@
+void ASub01HomeCharacter::WriteStreamerVisualMainStatus(double Now){
+ // main.json next to the FIFO every 1.0 s (tmp + rename): the spec's fields first, then diagnostics.
+ FSub01MainTap& Tap=*StreamerVisualMainTap;const int64 Written=Tap.Written.load(),Captured=Tap.Captured.load();
+ if(StreamerVisualMainStatusWindowAt>0&&Now>StreamerVisualMainStatusWindowAt){const double Span=Now-StreamerVisualMainStatusWindowAt;
+  StreamerVisualMainFpsWritten=float(double(Written-StreamerVisualMainStatusBase[0])/Span);StreamerVisualMainFpsCaptured=float(double(Captured-StreamerVisualMainStatusBase[1])/Span);}
+ StreamerVisualMainStatusWindowAt=Now;StreamerVisualMainStatusBase[0]=Written;StreamerVisualMainStatusBase[1]=Captured;StreamerVisualMainStatusAt=Now+1.0;
+ auto Status=MakeShared<FJsonObject>();const FDateTime Utc=FDateTime::UtcNow();const int64 Last=Tap.LastWriteMs.load();
+ Status->SetNumberField(TEXT("sequence"),double(Tap.LastSeq.load()));Status->SetNumberField(TEXT("fps"),StreamerVisualMainFpsWritten);Status->SetNumberField(TEXT("written"),double(Written));
+ Status->SetNumberField(TEXT("dropped_slots"),double(Tap.DroppedSlots.load()));Status->SetNumberField(TEXT("dropped_encode"),double(Tap.DroppedEncode.load()));Status->SetNumberField(TEXT("dropped_queue"),double(Tap.DroppedQueue.load()));
+ Status->SetNumberField(TEXT("dropped_noreader"),double(Tap.DroppedNoReader.load()));Status->SetNumberField(TEXT("frames_discarded_midwrite"),double(Tap.DiscardedMidwrite.load()));
+ Status->SetNumberField(TEXT("pipe_size"),Tap.PipeSize.load());Status->SetNumberField(TEXT("last_write_utc"),Last>0?double(Last)/1000.:0.);
+ Status->SetStringField(TEXT("schema"),TEXT("sub01.streamer-main-status.v1"));Status->SetNumberField(TEXT("native_pid"),FPlatformProcess::GetCurrentProcessId());
+ Status->SetNumberField(TEXT("updated_utc"),double(Utc.ToUnixTimestamp())+Utc.GetMillisecond()/1000.);Status->SetStringField(TEXT("fifo"),Tap.FifoPath);
+ Status->SetStringField(TEXT("format"),TEXT("mjpeg: whole baseline JPEGs back to back, one COM \"seq=<n>\" each"));Status->SetBoolField(TEXT("on"),Tap.On.load()!=0);Status->SetStringField(TEXT("reason"),StreamerVisualMainReason);
+ Status->SetBoolField(TEXT("reader"),Tap.Reader.load());Status->SetStringField(TEXT("source"),Tap.Source.load()==0?TEXT("backbuffer-delegate"):TEXT("viewport-provider-command"));Status->SetBoolField(TEXT("offscreen"),StreamerVisualMainOffscreen);
+ Status->SetNumberField(TEXT("width"),FSub01MainTap::Width);Status->SetNumberField(TEXT("height"),FSub01MainTap::Height);Status->SetStringField(TEXT("pixel_format"),Sub01MainTap::KindName(Tap.LastKind.load()));
+ Status->SetNumberField(TEXT("quality"),Tap.Quality.load());Status->SetNumberField(TEXT("target_fps"),StreamerVisualMainFps);Status->SetNumberField(TEXT("capture_fps"),StreamerVisualMainFpsCaptured);
+ Status->SetNumberField(TEXT("captured"),double(Captured));Status->SetNumberField(TEXT("encoded"),double(Tap.Encoded.load()));Status->SetNumberField(TEXT("dropped_format"),double(Tap.DroppedFormat.load()));
+ Status->SetNumberField(TEXT("dropped_stalled"),double(Tap.DroppedStalled.load()));Status->SetNumberField(TEXT("rate_skipped"),double(Tap.RateSkipped.load()));Status->SetNumberField(TEXT("pipe_set"),Tap.PipeSet.load());
+ Status->SetNumberField(TEXT("open_errno"),Tap.OpenErrno.load());Status->SetStringField(TEXT("lock"),Tap.LockState.load()==1?TEXT("held"):Tap.LockState.load()==2?TEXT("busy"):Tap.LockState.load()==3?TEXT("error"):TEXT("released"));
+ const int64 Encoded=Tap.Encoded.load(),Copied=Tap.Copied.load();
+ Status->SetNumberField(TEXT("encode_ms"),Encoded?double(Tap.EncodeUs.load())/1000./double(Encoded):0.);Status->SetNumberField(TEXT("encode_max_ms"),double(Tap.EncodeMaxUs.load())/1000.);
+ Status->SetNumberField(TEXT("copy_ms"),Copied?double(Tap.CopyUs.load())/1000./double(Copied):0.);Status->SetNumberField(TEXT("kb_per_frame"),Written?double(Tap.Bytes.load())/1024./double(Written):0.);
+ Status->SetStringField(TEXT("go"),StreamerVisualMainVerdict);Status->SetStringField(TEXT("go_reason"),StreamerVisualMainWhy);
+ FString Result;FJsonSerializer::Serialize(Status,TJsonWriterFactory<>::Create(&Result));const FString Final=StreamerVisualCam2Dir+TEXT("/main.json"),Tmp=Final+TEXT(".tmp");
+ if(FFileHelper::SaveStringToFile(Result,*Tmp))std::rename(TCHAR_TO_UTF8(*Tmp),TCHAR_TO_UTF8(*Final));
+}

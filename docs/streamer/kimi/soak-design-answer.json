@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE — conditional 8h diagnostic design only.** Launch remains **BLOCKED** pending fresh credit/spend/headroom verification and offline MP4 decode. No promotion or acceptance-gate closure is implied.\n\n- ABBA execution, cleanup and restoration are satisfactory. B1/B2 achieved 59.998674/59.985369 unique FPS with zero listed defects and the same FFmpeg run within each leg. B’s ~4.296 ms versus A’s ~4.15 ms median GPU time gives a ~0.146 ms delta, but aggregate frame_ms/max-window data cannot close raw-frame-p95, aligned-hitch or sawtooth gates; the aggregate-drop denominator remains open.\n- RSS endpoints rose 253,092 KiB (~247 MiB): roughly 247 MiB per active-leg hour, or 234 MiB/h including settles. B-leg extrema show local dips, so say “upward overall,” not strictly monotonic. Flat FD counts and GPU memory neither identify the cause nor exclude a game-process leak. If linear, 8h adds ~1.9 GiB; the 20-GiB abort is therefore safety only. Report slope/plateau separately from FPS: neither an 8h FPS pass nor avoiding abort establishes memory stability.\n- Missing backend/device bridge limits coverage to the reduced native/game/director/FFmpeg configuration, including its connection-refused behaviour. Do not extrapolate to full-service memory, performance or stability; a representative full-service test remains necessary for such claims.\n- Preregistered windows, dip retention, separate OPEN ≤0.5% aggregate-drop reporting, aborts, cleanup and actual-disk monitoring are appropriate. Keep cam2, provenance, PC-voice and every other listed gate open. The $21.22 balance/waiver request is not launch authorization. Independent decode/docs/motion review may continue.",
+ "finish_reason": "stop",
+ "prompt_tokens": 3366,
+ "completion_tokens": 9096,
+ "reasoning_tokens": 8698,
+ "seconds": 198.0
+}

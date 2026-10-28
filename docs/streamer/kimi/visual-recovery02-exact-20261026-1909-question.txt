@@ -1,0 +1,1483 @@
+NEW ONE SHOT RECOVERY02 DESIGN+EXACT REVIEW: Request APPROVE ONE RECOVERY02 or concrete BLOCK. PreviousapprovalUSEDonce and NOTreused. Actualrecovery01 stopped beforeFIFO/modechange on exactnetworksetmismatch; all5640original/5643import+visual hashespassed. Originalbarrier0700andtwoFIFOidentitiesunchanged. Exactdifference atfailure wasnotrecorded, so ordinaryconnectionclosure is hypothesis NOTconfirmedcause. Proposal: permit ESTABLISHED tuples only todisappear, prohibit allnew/reappearingflows, keepUDP/listenersidentical; recordactualnetworkBEFOREreject. Sole trustedoperatortransportassumption unchanged, not inferredfromnetwork. Newfreshpaths, retainpreviousfailedgenerationincludinglate011record. Preventduplicateouterfailure recordafteralreadyfinalizedfailedreceiptwhenFDclosedandoriginalfaultrecorded. All other fullcredentialed8+2census, barrier/mount/FD checks, restoredUIDprobe, exactsource/assets hashes, nooverwriteFIFOrenames, controlFDfailureclosure remain unchanged. No application/native/FIFOread/providerAPI, no attempt03.
+
+Fullmodifiedsource+verifier+tests below. Reuseddeployedmodules exactsamebytepins as priorcompletedapprovedreview question96768B SHAddcce68080ed5ee93a375594bed1ea1c235391acd610f787ed89d220dd4d42b2. Their complete sources appear there; their unchanged bytes are sourcecoverage, NOT runtimepermission reuse. Reviewnewinvocation only.
+
+{
+  "http_status": 200,
+  "answer": "# APPROVE ONE RECOVERY\n\nApprove **exactly one foreground root execution** of the reviewed staging wrapper:\n\n- Wrapper SHA256: `9c8b4ce7544cdef8783387a79e094d1b0c35a6e2afad017d1fc2a4a83baff503`\n- Recovery source SHA256: `13971cd2eebd025874eba379b0ac965f54d808f09b65b82b5a07fcc0c96ed3a0`\n- Pins SHA256: `c5ae847a16ebed946c7c79d39ff8eef8910beb98322fd0a225eceb94d12f1887`\n\nThe three prior blockers are resolved:\n\n1. `Recovery.run()` now centrally catches completion-record and asynchronous alarm failures. Reclosure uses actual control-FD and visible-path metadata, does not depend on `self.restored`, verifies 0700, and never forces changed identity.\n2. The independent verifier requires the exact ORIGINAL baseline and baseline **plus all three actual assets** for IMPORT and VISUAL, rejecting missing, corrupt, or extra files.\n3. The verifier independently checks the staged source/pins hashes and raw baseline SHA before trusting their contents. Its postcheck now covers the previously required records, evidence, identities, census, access probe, and final labels.\n\nThis approval does **not** assert recovery success in advance. Any failed admission, execution failure, or failed independent postcheck means no retry under this approval. No application/native launch, FIFO read, provider call, historical rewrite, or attempt03 is authorized. Attempt02 remains **FAILED**; visual remains **PENDING/not accepted**; performance remains **NOT_ASSESSED**.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 27473,
+    "completion_tokens": 7205,
+    "total_tokens": 34678,
+    "completion_tokens_details": {
+      "reasoning_tokens": 6822
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 27392
+    }
+  },
+  "seconds": 236.66
+}
+
+
+ACTUAL RECOVERY01 EVIDENCE (processrows omitted only to avoid repeated10identities; originalJSON SHA71926bfab573c7627f81809b37fe4cb2a6eb9bdefe984e766d7308db1e9a3fdf)
+{
+  "records": [
+    {
+      "name": "001-begin.json",
+      "sha256": "8a619cee20f0b7c79d7ccc868d9504f402140d080aa947c8e17ffde3337c2a2f",
+      "data": {
+        "event": "begin",
+        "monotonic_ns": 613171011426178,
+        "pins_sha256": "c5ae847a16ebed946c7c79d39ff8eef8910beb98322fd0a225eceb94d12f1887",
+        "scope": "recovery only; attempt02 remains FAILED; visual PENDING/performance NOT_ASSESSED",
+        "utc": 1793041478.551999
+      }
+    },
+    {
+      "name": "002-source-bound.json",
+      "sha256": "47c9e5e08a54b4a732409c1fbc113da3de181247597130fd3537e0c9758cb319",
+      "data": {
+        "event": "source-bound",
+        "monotonic_ns": 613171018231491,
+        "parent_cmdline_sha256": "81fb91746a5ba89dadaaa7aaf9553d63ec7c44b4a94db1ec602f61d8c304c668",
+        "source_sha256": "13971cd2eebd025874eba379b0ac965f54d808f09b65b82b5a07fcc0c96ed3a0",
+        "utc": 1793041478.5588048
+      }
+    },
+    {
+      "name": "003-bound-launch-graph.json",
+      "sha256": "55969912b654f0194f3d8c8a363de09ecd579017bff33289c077ed37e29bd854",
+      "data": {
+        "event": "bound-launch-graph",
+        "monotonic_ns": 613171018954698,
+        "own": {
+          "exe": "/usr/bin/python3.12",
+          "exe_sha256": "1d3cf64f97cadc79fdc6fe2496a21b7b456cb94211978cfef5a65f616af74fd5",
+          "identity": {
+            "cap_amb": "0000000000000000",
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cmdline_sha256": "1aa9cf5c0bca8df239eca152d65c19745f1607b3f38766e7b7bef5f353d3c116",
+            "comm": "python3",
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "no_new_privs": 0,
+            "pid": 4818,
+            "ppid": 4813,
+            "sid": 4813,
+            "state": "R",
+            "ticks": 61317097,
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ]
+          }
+        },
+        "parent": {
+          "exe": "/usr/bin/bash",
+          "exe_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",
+          "identity": {
+            "cap_amb": "0000000000000000",
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cmdline_sha256": "81fb91746a5ba89dadaaa7aaf9553d63ec7c44b4a94db1ec602f61d8c304c668",
+            "comm": "bash",
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "no_new_privs": 0,
+            "pid": 4813,
+            "ppid": 122,
+            "sid": 4813,
+            "state": "S",
+            "ticks": 61316988,
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ]
+          }
+        },
+        "utc": 1793041478.559528
+      }
+    },
+    {
+      "name": "004-pre-recovery-0.json",
+      "sha256": "a134eb4642205b0f498605ec40ea60739e25bb3b00dd04b457311a059eb4ed3e",
+      "data": {
+        "event": "pre-recovery-0",
+        "monotonic_ns": 613171137351675,
+        "network": [
+          [
+            "tcp",
+            "00000000:0016",
+            "00000000:0000",
+            "0A",
+            "34441411"
+          ],
+          [
+            "tcp",
+            "00000000:0BB9",
+            "00000000:0000",
+            "0A",
+            "34425594"
+          ],
+          [
+            "tcp",
+            "00000000:1C66",
+            "00000000:0000",
+            "0A",
+            "34425598"
+          ],
+          [
+            "tcp",
+            "00000000:1EB5",
+            "00000000:0000",
+            "0A",
+            "34425595"
+          ],
+          [
+            "tcp",
+            "00000000:1F41",
+            "00000000:0000",
+            "0A",
+            "34425597"
+          ],
+          [
+            "tcp",
+            "00000000:1F91",
+            "00000000:0000",
+            "0A",
+            "34425596"
+          ],
+          [
+            "tcp",
+            "00000000:22B8",
+            "00000000:0000",
+            "0A",
+            "34448460"
+          ],
+          [
+            "tcp",
+            "00000000:2383",
+            "00000000:0000",
+            "0A",
+            "34425593"
+          ],
+          [
+            "tcp",
+            "020014AC:22B8",
+            "22014064:D5EA",
+            "01",
+            "36819235"
+          ],
+          [
+            "tcp",
+            "020014AC:22B8",
+            "23014064:7244",
+            "01",
+            "36819238"
+          ],
+          [
+            "tcp",
+            "0B00007F:934B",
+            "00000000:0000",
+            "0A",
+            "34422770"
+          ],
+          [
+            "tcp6",
+            "00000000000000000000000000000000:0016",
+            "00000000000000000000000000000000:0000",
+            "0A",
+            "34441413"
+          ],
+          [
+            "tcp6",
+            "00000000000000000000000000000000:22B8",
+            "00000000000000000000000000000000:0000",
+            "0A",
+            "34448461"
+          ],
+          [
+            "udp",
+            "0B00007F:911D",
+            "00000000:0000",
+            "07",
+            "34422769"
+          ]
+        ],
+        "utc": 1793041478.6779246
+      }
+    },
+    {
+      "name": "005-pre-recovery-1.json",
+      "sha256": "8a5f1a16912b25c16b25ba6516bd8b9fa45010fca3845db13d2996b49b882bb5",
+      "data": {
+        "event": "pre-recovery-1",
+        "monotonic_ns": 613171285981927,
+        "network": [
+          [
+            "tcp",
+            "00000000:0016",
+            "00000000:0000",
+            "0A",
+            "34441411"
+          ],
+          [
+            "tcp",
+            "00000000:0BB9",
+            "00000000:0000",
+            "0A",
+            "34425594"
+          ],
+          [
+            "tcp",
+            "00000000:1C66",
+            "00000000:0000",
+            "0A",
+            "34425598"
+          ],
+          [
+            "tcp",
+            "00000000:1EB5",
+            "00000000:0000",
+            "0A",
+            "34425595"
+          ],
+          [
+            "tcp",
+            "00000000:1F41",
+            "00000000:0000",
+            "0A",
+            "34425597"
+          ],
+          [
+            "tcp",
+            "00000000:1F91",
+            "00000000:0000",
+            "0A",
+            "34425596"
+          ],
+          [
+            "tcp",
+            "00000000:22B8",
+            "00000000:0000",
+            "0A",
+            "34448460"
+          ],
+          [
+            "tcp",
+            "00000000:2383",
+            "00000000:0000",
+            "0A",
+            "34425593"
+          ],
+          [
+            "tcp",
+            "020014AC:22B8",
+            "22014064:D5EA",
+            "01",
+            "36819235"
+          ],
+          [
+            "tcp",
+            "020014AC:22B8",
+            "23014064:7244",
+            "01",
+            "36819238"
+          ],
+          [
+            "tcp",
+            "0B00007F:934B",
+            "00000000:0000",
+            "0A",
+            "34422770"
+          ],
+          [
+            "tcp6",
+            "00000000000000000000000000000000:0016",
+            "00000000000000000000000000000000:0000",
+            "0A",
+            "34441413"
+          ],
+          [
+            "tcp6",
+            "00000000000000000000000000000000:22B8",
+            "00000000000000000000000000000000:0000",
+            "0A",
+            "34448461"
+          ],
+          [
+            "udp",
+            "0B00007F:911D",
+            "00000000:0000",
+            "07",
+            "34422769"
+          ]
+        ],
+        "utc": 1793041478.8265548
+      }
+    },
+    {
+      "name": "006-probe-active.json",
+      "sha256": "21113b5c6b6ac9c13a3227b45eed08405389522eb7a1fb677b03f8fa3e834ba5",
+      "data": {
+        "event": "probe-active",
+        "monotonic_ns": 613171300675926,
+        "probe": {
+          "ancestor_access": {
+            "r": false,
+            "w": false,
+            "x": false
+          },
+          "descendant": {
+            "errno": 13,
+            "read": false
+          },
+          "egid": 1001,
+          "euid": 1001,
+          "gid": 1001,
+          "groups": [],
+          "positive_control": {
+            "errno": null,
+            "read": true
+          },
+          "status": {
+            "CapAmb": [
+              "0000000000000000"
+            ],
+            "CapEff": [
+              "0000000000000000"
+            ],
+            "CapPrm": [
+              "0000000000000000"
+            ],
+            "Gid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "NoNewPrivs": [
+              "1"
+            ],
+            "Uid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ]
+          },
+          "uid": 1001
+        },
+        "utc": 1793041478.841249
+      }
+    },
+    {
+      "name": "007-post-active-probe-0.json",
+      "sha256": "f69e7422fb8e578ebb16bed0bf09e3697f46cae199fbbd3371e2438aea4bbe4d",
+      "data": {
+        "event": "post-active-probe-0",
+        "monotonic_ns": 613171345959889,
+        "network": [
+          [
+            "tcp",
+            "00000000:0016",
+            "00000000:0000",
+            "0A",
+            "34441411"
+          ],
+          [
+            "tcp",
+            "00000000:0BB9",
+            "00000000:0000",
+            "0A",
+            "34425594"
+          ],
+          [
+            "tcp",
+            "00000000:1C66",
+            "00000000:0000",
+            "0A",
+            "34425598"
+          ],
+          [
+            "tcp",
+            "00000000:1EB5",
+            "00000000:0000",
+            "0A",
+            "34425595"
+          ],
+          [
+            "tcp",
+            "00000000:1F41",
+            "00000000:0000",
+            "0A",
+            "34425597"
+          ],
+          [
+            "tcp",
+            "00000000:1F91",
+            "00000000:0000",
+            "0A",
+            "34425596"
+          ],
+          [
+            "tcp",
+            "00000000:22B8",
+            "00000000:0000",
+            "0A",
+            "34448460"
+          ],
+          [
+            "tcp",
+            "00000000:2383",
+            "00000000:0000",
+            "0A",
+            "34425593"
+          ],
+          [
+            "tcp",
+            "020014AC:22B8",
+            "22014064:D5EA",
+            "01",
+            "36819235"
+          ],
+          [
+            "tcp",
+            "020014AC:22B8",
+            "23014064:7244",
+            "01",
+            "36819238"
+          ],
+          [
+            "tcp",
+            "0B00007F:934B",
+            "00000000:0000",
+            "0A",
+            "34422770"
+          ],
+          [
+            "tcp6",
+            "00000000000000000000000000000000:0016",
+            "00000000000000000000000000000000:0000",
+            "0A",
+            "34441413"
+          ],
+          [
+            "tcp6",
+            "00000000000000000000000000000000:22B8",
+            "00000000000000000000000000000000:0000",
+            "0A",
+            "34448461"
+          ],
+          [
+            "udp",
+            "0B00007F:911D",
+            "00000000:0000",
+            "07",
+            "34422769"
+          ]
+        ],
+        "utc": 1793041478.8865323
+      }
+    },
+    {
+      "name": "008-post-active-probe-1.json",
+      "sha256": "9e38218500f9b9bf2af417b7bbcde8114db946c57fda5718b484e356abaff105",
+      "data": {
+        "event": "post-active-probe-1",
+        "monotonic_ns": 613171492444834,
+        "network": [
+          [
+            "tcp",
+            "00000000:0016",
+            "00000000:0000",
+            "0A",
+            "34441411"
+          ],
+          [
+            "tcp",
+            "00000000:0BB9",
+            "00000000:0000",
+            "0A",
+            "34425594"
+          ],
+          [
+            "tcp",
+            "00000000:1C66",
+            "00000000:0000",
+            "0A",
+            "34425598"
+          ],
+          [
+            "tcp",
+            "00000000:1EB5",
+            "00000000:0000",
+            "0A",
+            "34425595"
+          ],
+          [
+            "tcp",
+            "00000000:1F41",
+            "00000000:0000",
+            "0A",
+            "34425597"
+          ],
+          [
+            "tcp",
+            "00000000:1F91",
+            "00000000:0000",
+            "0A",
+            "34425596"
+          ],
+          [
+            "tcp",
+            "00000000:22B8",
+            "00000000:0000",
+            "0A",
+            "34448460"
+          ],
+          [
+            "tcp",
+            "00000000:2383",
+            "00000000:0000",
+            "0A",
+            "34425593"
+          ],
+          [
+            "tcp",
+            "020014AC:22B8",
+            "22014064:D5EA",
+            "01",
+            "36819235"
+          ],
+          [
+            "tcp",
+            "020014AC:22B8",
+            "23014064:7244",
+            "01",
+            "36819238"
+          ],
+          [
+            "tcp",
+            "0B00007F:934B",
+            "00000000:0000",
+            "0A",
+            "34422770"
+          ],
+          [
+            "tcp6",
+            "00000000000000000000000000000000:0016",
+            "00000000000000000000000000000000:0000",
+            "0A",
+            "34441413"
+          ],
+          [
+            "tcp6",
+            "00000000000000000000000000000000:22B8",
+            "00000000000000000000000000000000:0000",
+            "0A",
+            "34448461"
+          ],
+          [
+            "udp",
+            "0B00007F:911D",
+            "00000000:0000",
+            "07",
+            "34422769"
+          ]
+        ],
+        "utc": 1793041479.0330179
+      }
+    },
+    {
+      "name": "009-baseline-before.json",
+      "sha256": "2b3ef192789cc4096fd7bdd5dc6537628af85ca61eb90bc912a03d72576d8825",
+      "data": {
+        "event": "baseline-before",
+        "monotonic_ns": 613174357011945,
+        "projects": {
+          "/home/sub01-animation-reconstruction-20261026-attempt02/case-01/Sub01HomeLab": {
+            "baseline_files": 5640,
+            "files": 5643,
+            "match": true
+          },
+          "/home/sub01-animation-visual-20261026-attempt02/reading-face/Sub01HomeLab": {
+            "baseline_files": 5640,
+            "files": 5643,
+            "match": true
+          },
+          "/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab": {
+            "baseline_files": 5640,
+            "files": 5640,
+            "match": true
+          }
+        },
+        "utc": 1793041481.8975823
+      }
+    },
+    {
+      "name": "010-failure-reclose.json",
+      "sha256": "0fca5d910f7b1232261a6c87591fd22221ff7d2360e78b77cf494e9212196f91",
+      "data": {
+        "event": "failure-reclose",
+        "monotonic_ns": 613174404079275,
+        "original_error": "Traceback (most recent call last):\n  File \"/root/sub01-attempt02-recovery01-tools/recover_once.py\", line 205, in _run\n    self.quiescent('pre-fifo');self.record('pre-fifo-restore',fresh=meta(FIFO.lstat()),old=meta(OLD.lstat()),retired=str(RETIRED));restore_fifo();self.record('fifo-restored',canonical=meta(FIFO.lstat()),retired=meta(RETIRED.lstat()))\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub01-attempt02-recovery01-tools/recover_once.py\", line 85, in quiescent\n    else:need(network==self.network,'control clients/listeners changed')\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub01-attempt02-recovery01-tools/recover_once.py\", line 30, in need\n    if not ok:raise Block(msg)\n              ^^^^^^^^^^^^^^^^\nBlock: control clients/listeners changed\n",
+        "reclose": "verified0700",
+        "utc": 1793041481.9446523
+      }
+    },
+    {
+      "name": "011-failure-reclose.json",
+      "sha256": "26d65e382682733ecf0cfbbc6702712566ccc7af22d615a4494b5aea99e92527",
+      "data": {
+        "event": "failure-reclose",
+        "monotonic_ns": 613174723024859,
+        "original_error": "Traceback (most recent call last):\n  File \"/root/sub01-attempt02-recovery01-tools/recover_once.py\", line 154, in run\n    try:return self._run()\n               ^^^^^^^^^^^\n  File \"/root/sub01-attempt02-recovery01-tools/recover_once.py\", line 205, in _run\n    self.quiescent('pre-fifo');self.record('pre-fifo-restore',fresh=meta(FIFO.lstat()),old=meta(OLD.lstat()),retired=str(RETIRED));restore_fifo();self.record('fifo-restored',canonical=meta(FIFO.lstat()),retired=meta(RETIRED.lstat()))\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub01-attempt02-recovery01-tools/recover_once.py\", line 85, in quiescent\n    else:need(network==self.network,'control clients/listeners changed')\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub01-attempt02-recovery01-tools/recover_once.py\", line 30, in need\n    if not ok:raise Block(msg)\n              ^^^^^^^^^^^^^^^^\nBlock: control clients/listeners changed\n",
+        "reclose": "no_control_fd",
+        "utc": 1793041482.263598
+      }
+    },
+    {
+      "name": "RECOVERY-PRESERVATION-RECEIPT.json",
+      "sha256": "e9ccd62611c6542f72adcebd46ca68260091c7db88c66af6afed0dcd67236dcb",
+      "data": {
+        "attempt02_status": "FAILED",
+        "barrier_restored": false,
+        "excluded": [],
+        "historical_receipt_rewritten": false,
+        "performance": "NOT_ASSESSED",
+        "status": "BLOCKED",
+        "visual": "PENDING",
+        "files_count": 12
+      }
+    }
+  ],
+  "current_network": [
+    [
+      "tcp",
+      "00000000:0016",
+      "00000000:0000",
+      "0A",
+      "34441411"
+    ],
+    [
+      "tcp",
+      "00000000:0BB9",
+      "00000000:0000",
+      "0A",
+      "34425594"
+    ],
+    [
+      "tcp",
+      "00000000:1C66",
+      "00000000:0000",
+      "0A",
+      "34425598"
+    ],
+    [
+      "tcp",
+      "00000000:1EB5",
+      "00000000:0000",
+      "0A",
+      "34425595"
+    ],
+    [
+      "tcp",
+      "00000000:1F41",
+      "00000000:0000",
+      "0A",
+      "34425597"
+    ],
+    [
+      "tcp",
+      "00000000:1F91",
+      "00000000:0000",
+      "0A",
+      "34425596"
+    ],
+    [
+      "tcp",
+      "00000000:22B8",
+      "00000000:0000",
+      "0A",
+      "34448460"
+    ],
+    [
+      "tcp",
+      "00000000:2383",
+      "00000000:0000",
+      "0A",
+      "34425593"
+    ],
+    [
+      "tcp",
+      "020014AC:22B8",
+      "20014064:48BA",
+      "01",
+      "36806114"
+    ],
+    [
+      "tcp",
+      "020014AC:22B8",
+      "21014064:E82C",
+      "01",
+      "36804543"
+    ],
+    [
+      "tcp",
+      "0B00007F:934B",
+      "00000000:0000",
+      "0A",
+      "34422770"
+    ],
+    [
+      "tcp6",
+      "00000000000000000000000000000000:0016",
+      "00000000000000000000000000000000:0000",
+      "0A",
+      "34441413"
+    ],
+    [
+      "tcp6",
+      "00000000000000000000000000000000:22B8",
+      "00000000000000000000000000000000:0000",
+      "0A",
+      "34448461"
+    ],
+    [
+      "udp",
+      "0B00007F:911D",
+      "00000000:0000",
+      "07",
+      "34422769"
+    ]
+  ],
+  "metadata": {
+    "/home/sub01-recovery-stage-20261026": {
+      "dev": 66,
+      "ino": 2149578155,
+      "uid": 0,
+      "gid": 1001,
+      "mode": 448,
+      "type": 16384
+    },
+    "/home/unreal/.sub01-private/streamer/main.mjpeg": {
+      "dev": 66,
+      "ino": 8030385,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": 384,
+      "type": 4096
+    },
+    "/home/unreal/.sub01-private/animation-visual-reading-20261026-attempt02/fifo-evidence/preserved-original-fifo": {
+      "dev": 66,
+      "ino": 4303368925,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": 384,
+      "type": 4096
+    }
+  },
+  "root_volume_receipt_equal": true
+}
+
+FULL EXACT SOURCE work/attempt02-recovery02-candidate/recover_once.py bytes=30318 SHA256=421b5b2be0446a6f6800cb86e0d3bf0805ccf1745a9620506211739e4947b899
+"""OFFLINE PREPARED: requires exact review before one foreground root execution.
+No application launch, provider call, FIFO read, broad kill, or historical receipt rewrite.
+"""
+from pathlib import Path
+import ctypes,fcntl,hashlib,importlib.util,json,os,signal,stat,subprocess,sys,time,traceback
+TOOLS=Path('/opt/sub01/animation-visual-20261026-attempt02/tools')
+OBSERVER_SHA='e8d7355a0f2e21ebba8caedd1e10fc311333f324589b93ce20b6379c80582114'
+BARRIER_SHA='1e2dc671f3f8cce3a00ae37798fc2521fcbfebd81a87e0238f24bbb9a48b4f59'
+PINS_BYTES=b'{\n  "actual_assets": {\n    "Content/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.uasset": "c2d019ff57f55706a1e1493119bfca00afd39bf55e39111e7ec4aa25b46a78dc",\n    "Content/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.uasset": "119e322af180f132d0c645f9e3df4e8238cfbd58b32e76d34a0c9e24467407ca",\n    "Content/Sub01Hands/Cinematic20261022/Reach_c8accd7a0070407c8af117eed5df534d/AuthoredReach.uasset": "6515c6022ecc2573bb5f1632b68efaae8d6f20023cbb926e3dd93564c5634af1"\n  },\n  "approved_background": [\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "8668ab6a69aa0e0a4b04fafad70c6c8ad470a5c75c4763faa12fd877750f14af",\n        "comm": "docker-init",\n        "exe": "/usr/sbin/docker-init",\n        "exe_sha256": "348356457ca22d9f59443f18a4df20db041fe328de8fa5247ffc99922dfe1f32",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 1,\n        "ppid": 0,\n        "sid": 1,\n        "state": "S",\n        "ticks": 54754026,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing container init; trusted fixed process reaper, no FIFO consumer or experiment launcher."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",\n        "comm": "start.sh",\n        "exe": "/usr/bin/bash",\n        "exe_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 57,\n        "ppid": 1,\n        "sid": 1,\n        "state": "S",\n        "ticks": 54754036,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing startup shell; trusted idle service supervisor; no new jobs during closed experiment."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "425d48232fe80cc4dd919c5cd3e209e5add5c55c52f0412ad15a3e2eae68a95c",\n        "comm": "nginx",\n        "exe": "/usr/sbin/nginx",\n        "exe_sha256": "ef6248b1af773c51727468354447926be755e58ce6a1ab552e61e5494e5f3bde",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 88,\n        "ppid": 1,\n        "sid": 88,\n        "state": "S",\n        "ticks": 54754037,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing nginx master; fixed existing HTTP service only; no native private FIFO configuration or new workers allowed."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "0000000000000000",\n        "cap_prm": "0000000000000000",\n        "cmdline_sha256": "025bdf92f128055cd3537c294559b6e299388ef1da6a98c4f3118ddc71cb6fe0",\n        "comm": "nginx",\n        "exe": "/usr/sbin/nginx",\n        "exe_sha256": "ef6248b1af773c51727468354447926be755e58ce6a1ab552e61e5494e5f3bde",\n        "gids": [\n          "65534",\n          "65534",\n          "65534",\n          "65534"\n        ],\n        "groups": [\n          "65534"\n        ],\n        "no_new_privs": 0,\n        "pid": 89,\n        "ppid": 88,\n        "sid": 88,\n        "state": "S",\n        "ticks": 54754037,\n        "uids": [\n          "65534",\n          "65534",\n          "65534",\n          "65534"\n        ]\n      },\n      "reason": "Existing nginx worker UID65534; fixed HTTP service; no native private FIFO access; credentialed full FD census mandatory."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "3cf42ddf90e572bc24bf6bbf5670308cfdca841f4623a5678c2681136e056cb9",\n        "comm": "sshd",\n        "exe": "/usr/sbin/sshd",\n        "exe_sha256": "4cc983fa8f3a26626981dbbe79113348fb86cca3ec426f6af5fabd08215fd5e1",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [],\n        "no_new_privs": 0,\n        "pid": 110,\n        "ppid": 1,\n        "sid": 110,\n        "state": "S",\n        "ticks": 54754071,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing SSH listener; no new SSH sessions permitted during closed experiment."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",\n        "comm": "start.sh",\n        "exe": "/usr/bin/bash",\n        "exe_sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 115,\n        "ppid": 57,\n        "sid": 1,\n        "state": "S",\n        "ticks": 54754071,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing startup shell supervising Jupyter; trusted fixed behavior, no FIFO consumer."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "6174273fd7c922f2b4f088c4941d8a454a1bd3950a6b9892c457dbb21ac3784f",\n        "comm": "jupyter-lab",\n        "exe": "/usr/bin/python3.12",\n        "exe_sha256": "1d3cf64f97cadc79fdc6fe2496a21b7b456cb94211978cfef5a65f616af74fd5",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 122,\n        "ppid": 115,\n        "sid": 1,\n        "state": "S",\n        "ticks": 54754071,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing Jupyter server hosting sole foreground experiment session; no other cells/terminals/tasks permitted during closed experiment."\n    },\n    {\n      "identity": {\n        "cap_amb": "0000000000000000",\n        "cap_eff": "00000000a80425fb",\n        "cap_prm": "00000000a80425fb",\n        "cmdline_sha256": "21e7b0eb0fbfc14a8eab229ae46632be62b33a26ffc0692960b9786c4008934b",\n        "comm": "sleep",\n        "exe": "/usr/bin/sleep",\n        "exe_sha256": "06d3927480c7554337818dbf5d91d78689bc8321237280e3d452028d5d1c3f43",\n        "gids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ],\n        "groups": [\n          "0",\n          "44",\n          "993"\n        ],\n        "no_new_privs": 0,\n        "pid": 123,\n        "ppid": 57,\n        "sid": 1,\n        "state": "S",\n        "ticks": 54754071,\n        "uids": [\n          "0",\n          "0",\n          "0",\n          "0"\n        ]\n      },\n      "reason": "Existing long-lived sleep under startup shell; no IPC opener behavior."\n    }\n  ],\n  "baseline_sha256": "0a1765a1c0881b3b260bb43ac43f841a28c97fe30b92aeb159d3a24bf35386c5",\n  "executable_pins": {\n    "/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver": {\n      "bytes": 21032680,\n      "mode": "0o777",\n      "resolved": "/home/unreal/.config/Epic/UnrealEngine/Common/Zen/Install/zenserver",\n      "sha256": "5f9e518f5af8ca804c5479bcf12ce692bb6387a924cde6896c8fadf81d6af239",\n      "uid": 1001\n    },\n    "/usr/bin/Xvfb": {\n      "bytes": 2064864,\n      "mode": "0o755",\n      "resolved": "/usr/bin/Xvfb",\n      "sha256": "0081b27338b510ec5e2068a93c6db31480872de9bb082f347f3747ef1648e794",\n      "uid": 0\n    },\n    "/usr/bin/bash": {\n      "bytes": 1446024,\n      "mode": "0o755",\n      "resolved": "/usr/bin/bash",\n      "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1",\n      "uid": 0\n    },\n    "/usr/bin/python3.12": {\n      "bytes": 8021824,\n      "mode": "0o755",\n      "resolved": "/usr/bin/python3.12",\n      "sha256": "1d3cf64f97cadc79fdc6fe2496a21b7b456cb94211978cfef5a65f616af74fd5",\n      "uid": 0\n    },\n    "/usr/bin/sleep": {\n      "bytes": 35336,\n      "mode": "0o755",\n      "resolved": "/usr/bin/sleep",\n      "sha256": "06d3927480c7554337818dbf5d91d78689bc8321237280e3d452028d5d1c3f43",\n      "uid": 0\n    },\n    "/usr/sbin/docker-init": {\n      "bytes": 765072,\n      "mode": "0o755",\n      "resolved": "/usr/sbin/docker-init",\n      "sha256": "348356457ca22d9f59443f18a4df20db041fe328de8fa5247ffc99922dfe1f32",\n      "uid": 65534\n    },\n    "/usr/sbin/nginx": {\n      "bytes": 1313752,\n      "mode": "0o755",\n      "resolved": "/usr/sbin/nginx",\n      "sha256": "ef6248b1af773c51727468354447926be755e58ce6a1ab552e61e5494e5f3bde",\n      "uid": 0\n    },\n    "/usr/sbin/sshd": {\n      "bytes": 921416,\n      "mode": "0o755",\n      "resolved": "/usr/sbin/sshd",\n      "sha256": "4cc983fa8f3a26626981dbbe79113348fb86cca3ec426f6af5fabd08215fd5e1",\n      "uid": 0\n    },\n    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd": {\n      "bytes": 450848,\n      "mode": "0o777",\n      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd",\n      "sha256": "7e54a59c2740d66003656e7a8f33d11e7348bb97d33483e98f05fedd0784284a",\n      "uid": 0\n    },\n    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealTraceServer": {\n      "bytes": 1523816,\n      "mode": "0o777",\n      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealTraceServer",\n      "sha256": "aadf17081e53c29a02a413449ca3b3dab9032ba3466ddf37ec9f909f59313461",\n      "uid": 0\n    },\n    "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/zenserver": {\n      "bytes": 21032680,\n      "mode": "0o777",\n      "resolved": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/zenserver",\n      "sha256": "5f9e518f5af8ca804c5479bcf12ce692bb6387a924cde6896c8fadf81d6af239",\n      "uid": 0\n    }\n  },\n  "expected_pre_chmod": {\n    "ancestor": "/home/sub01-recovery-stage-20261026",\n    "event": "pre-chmod",\n    "expected": {\n      "dev": 66,\n      "gid": 1001,\n      "ino": 2149578155,\n      "mode": 456,\n      "type": 16384,\n      "uid": 0\n    },\n    "monotonic_ns": 611137347563337,\n    "original": {\n      "dev": 66,\n      "gid": 1001,\n      "ino": 4631271,\n      "mode": 448,\n      "type": 16384,\n      "uid": 1001\n    },\n    "recovery": "Only exact quiescence+FD-bound identity allows restoring0710",\n    "state": "LOCKED",\n    "utc": 1793039444.8881364\n  }\n}\n'
+PINS_SHA='c5ae847a16ebed946c7c79d39ff8eef8910beb98322fd0a225eceb94d12f1887'
+ANCESTOR=Path('/home/sub01-recovery-stage-20261026')
+ORIGINAL=ANCESTOR/'native/cinematic-source-v3-final/Sub01HomeLab'
+IMPORT=Path('/home/sub01-animation-reconstruction-20261026-attempt02/case-01/Sub01HomeLab')
+VISUAL=Path('/home/sub01-animation-visual-20261026-attempt02/reading-face/Sub01HomeLab')
+BASELINE=Path('/workspace/sub01-animation-reconstruction-20261026-attempt02/metadata/baseline-manifest.json')
+OUT=Path('/home/unreal/.sub01-private/animation-visual-reading-20261026-attempt02')
+PERSIST=Path('/workspace/sub01-animation-visual-reading-20261026-attempt02')
+ROOT_RECORDS=Path('/root/sub01-animation-visual-20261026-attempt02-barrier')
+RECOVERY=Path('/root/sub01-animation-visual-attempt02-recovery02')
+VOLUME=Path('/workspace/sub01-animation-visual-attempt02-recovery02')
+PREVIOUS_RECOVERY=Path('/root/sub01-animation-visual-attempt02-recovery01')
+PREVIOUS_VOLUME=Path('/workspace/sub01-animation-visual-attempt02-recovery01')
+FIFO=Path('/home/unreal/.sub01-private/streamer/main.mjpeg')
+OLD=OUT/'fifo-evidence/preserved-original-fifo'
+RETIRED=OUT/'fifo-evidence/retired-fresh-fifo-recovery02'
+STOP=Path('/home/unreal/.sub01-private/streamer/STOP')
+EXPECTED_BARRIER=dict(dev=66,ino=2149578155,uid=0,gid=1001,mode=0o700,type=stat.S_IFDIR)
+EXPECTED_FRESH=dict(dev=66,ino=8030385,uid=1001,gid=1001,mode=0o600,type=stat.S_IFIFO)
+EXPECTED_OLD=dict(dev=66,ino=4303368925,uid=1001,gid=1001,mode=0o600,type=stat.S_IFIFO)
+class Block(RuntimeError):pass
+def need(ok,msg):
+ if not ok:raise Block(msg)
+def digest(p):
+ h=hashlib.sha256()
+ fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+ with os.fdopen(fd,'rb')as f:
+  need(stat.S_ISREG(os.fstat(f.fileno()).st_mode),'not regular: '+str(p))
+  for b in iter(lambda:f.read(1024*1024),b''):h.update(b)
+ return h.hexdigest()
+def meta(s):return dict(dev=s.st_dev,ino=s.st_ino,uid=s.st_uid,gid=s.st_gid,mode=stat.S_IMODE(s.st_mode),type=stat.S_IFMT(s.st_mode))
+def exact(p,want):need(meta(p.lstat())==want,'identity/metadata mismatch: '+str(p))
+def no_replace(src,dst):
+ # Atomic Linux renameat2 RENAME_NOREPLACE: never overwrite an unexpected inode.
+ libc=ctypes.CDLL(None,use_errno=True);fn=libc.renameat2;fn.argtypes=[ctypes.c_int,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_uint]
+ need(fn(-100,os.fsencode(src),-100,os.fsencode(dst),1)==0,'renameat2 no-replace failed errno='+str(ctypes.get_errno()))
+def restore_fifo():
+ exact(FIFO,EXPECTED_FRESH);exact(OLD,EXPECTED_OLD)
+ need(not RETIRED.exists() and not RETIRED.is_symlink(),'retired path collision')
+ no_replace(FIFO,RETIRED);exact(RETIRED,EXPECTED_FRESH)
+ no_replace(OLD,FIFO);exact(FIFO,EXPECTED_OLD)
+ # Failed second rename leaves both originals preserved, barrier stays0700; no forced retry.
+def load(name,sha):
+ p=TOOLS/(name+'.py');need(digest(p)==sha,'deployed module pin: '+name)
+ spec=importlib.util.spec_from_file_location('recovery_'+name,p);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+def audit_rows(rows,allowed,observer,barrier,me):
+ need({r['identity']['pid']for r in rows}==set(allowed),'unexpected/missing process')
+ for row in rows:
+  i=row['identity'];a=allowed[i['pid']]
+  need(observer.stable(a['identity'],i),'identity/credential drift')
+  need(i['cmdline_sha256']==a['identity']['cmdline_sha256'] and i['comm']==a['identity']['comm'],'argv/comm drift')
+  need(row['exe']==a['exe'] and row['exe_sha256']==a['exe_sha256'],'executable drift')
+  need(not(set(i['uids'])&{'1001','1002'}),'native/import UID remains')
+  for f in row['fds']:need((f['dev'],f['ino'])not in {(66,8030385),(66,4303368925)},'old/fresh FIFO opener')
+ barrier.audit(rows,True) # full FD/CWD/root + aliases; only own exact control FD is exempt
+class Recovery:
+ def __init__(self):self.counter=0;self.lockfd=None;self.barrier=None;self.allowed={};self.network=None;self.restored=False;self.status='BLOCKED';self.first_error=None;self.failure_events=[]
+ def record(self,event,**data):
+  self.counter+=1;p=RECOVERY/f'{self.counter:03d}-{event}.json';b=(json.dumps(dict(event=event,utc=time.time(),monotonic_ns=time.monotonic_ns(),**data),sort_keys=True,indent=2)+'\n').encode()
+  with p.open('xb')as f:f.write(b);f.flush();os.fsync(f.fileno())
+ def network_snapshot(self):
+  rows=[]
+  for n in ('tcp','tcp6','udp','udp6'):
+   for line in (Path('/proc/net')/n).read_text().splitlines()[1:]:
+    f=line.split()
+    if n.startswith('udp')or f[3]in ('01','0A'):rows.append((n,f[1],f[2],f[3],f[9]))
+  return sorted(rows)
+ def record_network(self,label,rows,network):
+  # Fixed listeners/UDP; established socket tuples (including inode) only shrink.
+  current={tuple(r) for r in network}
+  previous=None if self.network is None else {tuple(r) for r in self.network}
+  fixed=lambda rs:{r for r in rs if r[0].startswith('udp') or r[3]=='0A'}
+  established=lambda rs:{r for r in rs if r[0].startswith('tcp') and r[3]=='01'}
+  valid=previous is None or (fixed(current)==fixed(previous) and established(current)<=established(previous))
+  delta={'initial':previous is None,'added':sorted(current-(previous or set())),
+         'removed':sorted((previous or set())-current),'allowed':valid,
+         'policy':'fixed listeners and UDP; established monotonic subset of previous snapshot'}
+  # Persist the actual rejected snapshot and delta BEFORE raising.
+  self.record(label,processes=rows,network=network,network_delta=delta)
+  need(valid,'control clients/listeners changed outside monotonic closure policy')
+  self.network=network
+ def quiescent(self,label):
+  for n in range(2):
+   need(not Path('/tmp/sub01-share/MEASURING').exists(),'measurement active')
+   need(STOP.is_file() and digest(STOP)==self.stop_hash,'STOP changed')
+   need({int(p.name)for p in Path('/proc').iterdir()if p.name.isdigit()}==set(self.allowed),'unexpected process before census')
+   rows=self.observer.census() # deliberately NOT Observer.corroborate/register_descendants
+   need({int(p.name)for p in Path('/proc').iterdir()if p.name.isdigit()}==set(self.allowed),'unexpected process after census')
+   audit_rows(rows,self.allowed,self.observer,self.barrier,os.getpid())
+   network=self.network_snapshot()
+   self.record_network(label+'-'+str(n),rows,network)
+   if n==0:time.sleep(.1)
+ def hash_projects(self,label):
+  expected=dict(self.baseline);extended=dict(expected,**self.pins['actual_assets']);results={}
+  for root,wanted in ((ORIGINAL,expected),(IMPORT,extended),(VISUAL,extended)):
+   got={}
+   for p in sorted(root.rglob('*')):
+    rel=p.relative_to(root)
+    if rel.parts[0]in {'Saved','Intermediate','DerivedDataCache'}:continue
+    s=p.lstat();need(not stat.S_ISLNK(s.st_mode),'project symlink')
+    if stat.S_ISREG(s.st_mode):need(s.st_nlink==1,'project hardlink');got[str(rel)]=digest(p)
+    else:need(stat.S_ISDIR(s.st_mode),'unexpected project special file')
+   need(got==wanted,'project baseline/asset mismatch: '+str(root));results[str(root)]={'files':len(got),'baseline_files':len(expected),'match':True}
+  self.record(label,projects=results)
+ def copy_evidence(self):
+  inventory={};excluded=[]
+  for source,label in ((OUT,'current-root-output'),(ROOT_RECORDS,'original-barrier-records')):
+   for p in sorted(source.rglob('*')):
+    rel=p.relative_to(source);s=p.lstat()
+    if 'xauthority' in p.name.lower():excluded.append(str(p));continue
+    need(not stat.S_ISLNK(s.st_mode),'evidence symlink')
+    if stat.S_ISDIR(s.st_mode):continue
+    if stat.S_ISFIFO(s.st_mode):
+     need(p==RETIRED and meta(s)==EXPECTED_FRESH,'unexpected evidence FIFO');excluded.append(str(p));continue
+    need(stat.S_ISREG(s.st_mode),'evidence special file');self.copy_regular(p,VOLUME/label/rel,inventory)
+  for name in ('PRESERVATION-RECEIPT.json','main.json'):
+   self.copy_regular(PERSIST/name,VOLUME/'historical-volume'/name,inventory)
+  self.record('current-vs-historical-main',current_sha256=digest(OUT/'main.json'),historical_volume_sha256=digest(PERSIST/'main.json'),historical_receipt_sha256=digest(PERSIST/'PRESERVATION-RECEIPT.json'),historical_receipt_untouched=True)
+  self.copy_previous_recovery(inventory)
+  self.inventory=inventory;self.excluded=excluded
+ def copy_previous_recovery(self,inventory):
+  # Include late root records absent from recovery01's already-written receipt.
+  need(PREVIOUS_RECOVERY.is_dir(),'missing failed recovery01 root evidence')
+  for p in sorted(PREVIOUS_RECOVERY.rglob('*')):
+   s=p.lstat();need(not stat.S_ISLNK(s.st_mode),'previous recovery symlink')
+   if stat.S_ISDIR(s.st_mode):continue
+   need(stat.S_ISREG(s.st_mode),'previous recovery special file')
+   self.copy_regular(p,VOLUME/'prior-recovery01-root'/p.relative_to(PREVIOUS_RECOVERY),inventory)
+  self.copy_regular(PREVIOUS_VOLUME/'RECOVERY-PRESERVATION-RECEIPT.json',VOLUME/'prior-recovery01-volume'/'RECOVERY-PRESERVATION-RECEIPT.json',inventory)
+ def copy_regular(self,src,dst,inventory):
+  s=src.lstat();need(stat.S_ISREG(s.st_mode) and s.st_size<64*1024*1024,'regular evidence bound');before=digest(src)
+  dst.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+  with src.open('rb')as a,dst.open('xb')as b:
+   while True:
+    data=a.read(1024*1024)
+    if not data:break
+    b.write(data)
+   b.flush();os.fsync(b.fileno())
+  need(meta(src.lstat())==meta(s) and digest(src)==before==digest(dst),'copy/readback mismatch')
+  inventory[str(dst.relative_to(VOLUME))]={'bytes':dst.stat().st_size,'sha256':before}
+ def fail_closed(self,error_text):
+  """Never mask the initiating error; never trust restored flag for actual mode.
+  The control FD and visible path must BOTH match the fixed admitted instance.
+  Failure diagnostics are best effort: safety reclosure precedes file writes.
+  """
+  if self.first_error is None:self.first_error=sys.exc_info()
+  self.status='BLOCKED';outcome={'original_error':error_text,'reclose':'not_attempted'}
+  try:
+   if self.barrier is not None and self.barrier.fd is not None:
+    actual=meta(os.fstat(self.barrier.fd));visible=meta(ANCESTOR.lstat())
+    need(actual==visible and actual in (EXPECTED_BARRIER,dict(EXPECTED_BARRIER,mode=0o710)),'reclose identity/owner/mode changed')
+    if actual['mode']==0o710:os.fchmod(self.barrier.fd,0o700)
+    need(meta(os.fstat(self.barrier.fd))==meta(ANCESTOR.lstat())==EXPECTED_BARRIER,'reclose verification failed')
+    self.restored=False;outcome['reclose']='verified0700'
+   else:outcome['reclose']='no_control_fd'
+  except BaseException:
+   outcome['reclose']='BLOCKED_no_force';outcome['reclose_error']=traceback.format_exc()
+  self.failure_events.append(outcome)
+  try:self.record('failure-reclose',**outcome)
+  except BaseException:
+   outcome['record_error']=traceback.format_exc()
+   # Distinct exclusive root evidence when normal numbered event recording fails.
+   try:
+    p=RECOVERY/('FAILURE-FALLBACK-'+str(len(self.failure_events))+'.json')
+    with p.open('xb')as f:
+     f.write((json.dumps(outcome,sort_keys=True)+'\n').encode());f.flush();os.fsync(f.fileno())
+   except BaseException:pass # original exception still propagates; never claim success
+ def run(self):
+  try:return self._run()
+  except BaseException:
+   # Catches failures outside inner handlers too, including completion reporting.
+   if self.first_error is None or (self.barrier is not None and self.barrier.fd is not None):
+    self.fail_closed(traceback.format_exc())
+   first=self.first_error
+   if first and first[1] is not None:raise first[1].with_traceback(first[2])
+   raise
+ def _run(self):
+  need(sys.platform=='linux' and os.geteuid()==0,'root Linux only');os.chdir('/')
+  os.sched_setaffinity(0,set(sorted(os.sched_getaffinity(0))[:2]))
+  self.observer=load('fifo_observer_collector',OBSERVER_SHA);B=load('access_barrier',BARRIER_SHA)
+  need(hashlib.sha256(PINS_BYTES).hexdigest()==PINS_SHA,'recovery pins');self.pins=json.loads(PINS_BYTES)
+  need(not RECOVERY.exists() and not VOLUME.exists(),'one-shot output collision')
+  self.lockfd=os.open(B.LOCK,os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC)
+  s=os.fstat(self.lockfd);need(stat.S_ISREG(s.st_mode) and s.st_uid==0 and stat.S_IMODE(s.st_mode)==0o600 and (s.st_dev,s.st_ino)==(66,7741078),'existing lock identity')
+  fcntl.flock(self.lockfd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  RECOVERY.mkdir(mode=0o700);VOLUME.mkdir(mode=0o700)
+  try:
+   self.record('begin',scope='recovery only; attempt02 remains FAILED; visual PENDING/performance NOT_ASSESSED',pins_sha256=PINS_SHA)
+   for a in self.pins['approved_background']:
+    i=a['identity'];self.allowed[i['pid']]={'identity':i,'exe':i['exe'],'exe_sha256':i['exe_sha256']}
+   need(len(self.allowed)==8,'background count')
+   me=self.observer.executable_one(os.getpid());parent=self.observer.executable_one(me['identity']['ppid'])
+   need(parent['identity']['ppid']==122 and parent['exe']=='/usr/bin/bash' and parent['identity']['state']=='S','waiting bash must be direct Jupyter122 child')
+   need(me['exe']=='/usr/bin/python3.12','recovery Python')
+   own_argv=(Path('/proc')/str(os.getpid())/'cmdline').read_bytes().split(b'\0');need(own_argv==[b'python3',b'-',b''],'stdin Python argv')
+   source_path=Path(__file__);need(source_path==Path('/root/sub01-attempt02-recovery02-tools/recover_once.py'),'exact staged source path')
+   for p in (source_path,source_path.with_name('recovery-pins.json')):
+    st=p.lstat();need(stat.S_ISREG(st.st_mode) and st.st_uid==0 and not(st.st_mode&0o022),'root staged source metadata')
+   need(digest(source_path.with_name('recovery-pins.json'))==PINS_SHA,'staged pins mismatch')
+   self.record('source-bound',source_sha256=digest(source_path),parent_cmdline_sha256=parent['identity']['cmdline_sha256'])
+   (RECOVERY/'recover_once.py').write_bytes(source_path.read_bytes());(RECOVERY/'recovery-pins.json').write_bytes(PINS_BYTES)
+   for row in (me,parent):
+    i=row['identity'];need(set(i['uids'])=={'0'} and set(i['gids'])=={'0'},'root recovery controller credentials')
+    need(row['exe_sha256']==self.pins['executable_pins'][row['exe']]['sha256'],'controller exe pin');self.allowed[i['pid']]=row
+   need(len(self.allowed)==10,'controller collision');self.record('bound-launch-graph',own=me,parent=parent)
+   pre=ROOT_RECORDS/'002-pre-chmod.json';s=pre.lstat();need(s.st_uid==0 and stat.S_ISREG(s.st_mode) and not(s.st_mode&0o022),'recovery record owner/type')
+   need(json.loads(pre.read_text())==self.pins['expected_pre_chmod'],'pre-chmod record differs')
+   exact(ANCESTOR,EXPECTED_BARRIER)
+   self.barrier=B.AccessBarrier(ORIGINAL,VISUAL/'Sub01HomeLab.uproject')
+   self.barrier.fd=os.open(ANCESTOR,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+   self.barrier.expected=dict(EXPECTED_BARRIER,mode=0o710);self.barrier.original_identity=self.pins['expected_pre_chmod']['original'];self.barrier.record=lambda e,**d:self.record(e,**d)
+   self.barrier.protected_inodes=set()
+   for p in [ANCESTOR,ORIGINAL,*ORIGINAL.rglob('*')]:
+    s=p.lstat();need(not stat.S_ISLNK(s.st_mode),'protected symlink')
+    if stat.S_ISREG(s.st_mode):need(s.st_nlink==1,'protected hardlink')
+    self.barrier.protected_inodes.add((s.st_dev,s.st_ino))
+   self.barrier.device='0:66';self.barrier.verify(0o700)
+   self.stop_hash=digest(STOP);need(not Path('/tmp/sub01-share/MEASURING').exists(),'measurement active')
+   need(digest(BASELINE)==self.pins['baseline_sha256'],'baseline hash');self.baseline=json.loads(BASELINE.read_text());need(len(self.baseline)==5640,'baseline count')
+   self.quiescent('pre-recovery');self.barrier.probe(True);self.quiescent('post-active-probe');self.hash_projects('baseline-before')
+   self.quiescent('pre-fifo');self.record('pre-fifo-restore',fresh=meta(FIFO.lstat()),old=meta(OLD.lstat()),retired=str(RETIRED));restore_fifo();self.record('fifo-restored',canonical=meta(FIFO.lstat()),retired=meta(RETIRED.lstat()))
+   self.quiescent('post-fifo');self.hash_projects('baseline-final');self.copy_evidence()
+   self.quiescent('immediate-pre-mode-restore');self.barrier.verify(0o700);self.record('pre-mode-restore',actual=meta(os.fstat(self.barrier.fd)))
+   os.fchmod(self.barrier.fd,0o710);self.restored=True
+   self.barrier.verify(0o710);self.barrier.probe(False);self.quiescent('post-mode-probe');self.barrier.verify(0o710)
+   self.status='RECOVERED_NOT_VISUALLY_ACCEPTED';self.record('complete',status=self.status,barrier=meta(os.fstat(self.barrier.fd)),canonical_fifo=meta(FIFO.lstat()),retired_fifo=meta(RETIRED.lstat()))
+  except BaseException:
+   self.fail_closed(traceback.format_exc())
+   raise
+  finally:
+   # Preserve NEW records without overwriting historical receipt/current failed status.
+   inventory=getattr(self,'inventory',{})
+   try:
+    for p in sorted(RECOVERY.glob('*.json')):self.copy_regular(p,VOLUME/'recovery-records'/p.name,inventory)
+    for p in (RECOVERY/'recover_once.py',):
+     if p.exists():self.copy_regular(p,VOLUME/'recovery-source'/p.name,inventory)
+    receipt=dict(status=self.status,attempt02_status='FAILED',visual='PENDING',performance='NOT_ASSESSED',barrier_restored=self.restored,files=inventory,excluded=getattr(self,'excluded',[]),historical_receipt_rewritten=False)
+    data=(json.dumps(receipt,sort_keys=True,indent=2)+'\n').encode()
+    for root in (RECOVERY,VOLUME):
+     p=root/'RECOVERY-PRESERVATION-RECEIPT.json'
+     with p.open('xb')as f:f.write(data);f.flush();os.fsync(f.fileno())
+     need(p.read_bytes()==data,'new receipt readback')
+   except BaseException:
+    self.fail_closed(traceback.format_exc())
+    raise
+   finally:
+    # All potentially failing evidence/probe work has finished or been handled.
+    # Cancel the work alarm before releasing the last verified control descriptor.
+    signal.alarm(0)
+    if self.lockfd is not None:fcntl.flock(self.lockfd,fcntl.LOCK_UN);os.close(self.lockfd);self.lockfd=None
+    if self.barrier and self.barrier.fd is not None:os.close(self.barrier.fd);self.barrier.fd=None
+if __name__=='__main__':
+ def timeout(*a):raise Block('180second recovery deadline')
+ signal.signal(signal.SIGALRM,timeout);signal.alarm(180)
+ r=Recovery();r.run();signal.alarm(0);print(json.dumps({'status':r.status,'recovery_records':str(RECOVERY),'volume':str(VOLUME)}))
+
+
+FULL EXACT SOURCE work/attempt02-recovery02-candidate/test_recovery.py bytes=10549 SHA256=c826f1cd0cb02ef9dfeacfe2ffdf08ed70398a6e623aca1113f29368239e35c2
+"""Offline safety decisions; never invokes recovery.run(), real census or chmod."""
+import importlib.util,json,stat,tempfile,unittest
+from pathlib import Path
+from unittest.mock import patch
+spec=importlib.util.spec_from_file_location('recovery',Path(__file__).with_name('recover_once.py'));m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+class Tests(unittest.TestCase):
+ def test_pins_actual_relative_manifest_contract(self):
+  import hashlib
+  p=json.loads(m.PINS_BYTES);self.assertEqual(hashlib.sha256(m.PINS_BYTES).hexdigest(),m.PINS_SHA)
+  self.assertEqual(len(p['approved_background']),8);self.assertEqual(p['baseline_sha256'],'0a1765a1c0881b3b260bb43ac43f841a28c97fe30b92aeb159d3a24bf35386c5')
+  # Actual preserved admission paths are root-relative project paths, no leading project prefix.
+  for key in p['actual_assets']:self.assertTrue(key.startswith('Content/'));self.assertFalse(Path(key).is_absolute())
+  self.assertEqual(p['expected_pre_chmod']['expected']['mode'],0o710)
+ def test_fifo_restore_order_and_no_unlink(self):
+  calls=[]
+  with patch.object(m,'exact',side_effect=lambda p,e:calls.append(('check',p))),patch.object(m.Path,'exists',return_value=False),patch.object(m.Path,'is_symlink',return_value=False),patch.object(m,'no_replace',side_effect=lambda a,b:calls.append(('rename',a,b))),patch.object(m.os,'unlink')as unlink:
+   m.restore_fifo();unlink.assert_not_called()
+  self.assertEqual([r for r in calls if r[0]=='rename'],[('rename',m.FIFO,m.RETIRED),('rename',m.OLD,m.FIFO)])
+ def test_foreign_fifo_stops_before_mutation(self):
+  with patch.object(m,'exact',side_effect=m.Block('foreign')),patch.object(m,'no_replace')as rename:
+   with self.assertRaises(m.Block):m.restore_fifo()
+   rename.assert_not_called()
+ def test_retired_collision_no_rename(self):
+  with patch.object(m,'exact'),patch.object(m.Path,'exists',return_value=True),patch.object(m,'no_replace')as rename:
+   with self.assertRaises(m.Block):m.restore_fifo()
+   rename.assert_not_called()
+ def test_second_rename_failure_retains_both_instances(self):
+  calls=[]
+  def rename(a,b):
+   calls.append((a,b))
+   if len(calls)==2:raise m.Block('collision')
+  with patch.object(m,'exact'),patch.object(m.Path,'exists',return_value=False),patch.object(m.Path,'is_symlink',return_value=False),patch.object(m,'no_replace',side_effect=rename),patch.object(m.os,'unlink')as unlink:
+   with self.assertRaises(m.Block):m.restore_fifo()
+   unlink.assert_not_called();self.assertEqual(len(calls),2)
+ def rows(self):
+  i={'pid':1,'cmdline_sha256':'cmd','comm':'x','uids':['0']*4};r={'identity':i,'exe':'/x','exe_sha256':'sha','fds':[]};return [r],{1:r}
+ def test_census_rejects_extra_uid_and_fifo_openers(self):
+  from types import SimpleNamespace
+  observer=SimpleNamespace(stable=lambda a,b:a==b);barrier=SimpleNamespace(audit=lambda *a:None)
+  for mode in ('extra','uid','fifo','exe'):
+   rows,allowed=self.rows();rows=json.loads(json.dumps(rows))
+   if mode=='extra':rows.append(dict(rows[0],identity=dict(rows[0]['identity'],pid=2)))
+   elif mode=='uid':rows[0]['identity']['uids']=['1001']*4
+   elif mode=='fifo':rows[0]['fds']=[{'dev':66,'ino':8030385}]
+   else:rows[0]['exe_sha256']='changed'
+   with self.subTest(mode=mode),self.assertRaises(m.Block):m.audit_rows(rows,allowed,observer,barrier,999)
+ def test_protected_route_failure_propagates(self):
+  from types import SimpleNamespace
+  rows,allowed=self.rows();observer=SimpleNamespace(stable=lambda a,b:a==b)
+  def reject(*a):raise m.Block('cwd/protected route')
+  with self.assertRaises(m.Block):m.audit_rows(rows,allowed,observer,SimpleNamespace(audit=reject),999)
+ def test_evidence_copy_never_overwrites(self):
+  with tempfile.TemporaryDirectory()as d:
+   p=Path(d);src=p/'source';src.write_bytes(b'current');dst=p/'volume'/'copy';dst.parent.mkdir();dst.write_bytes(b'historical')
+   with patch.object(m,'VOLUME',dst.parent):
+    with self.assertRaises(FileExistsError):m.Recovery().copy_regular(src,dst,{})
+   self.assertEqual(dst.read_bytes(),b'historical')
+class FailureReclose(unittest.TestCase):
+ def setUp(self):
+  from types import SimpleNamespace
+  self.r=m.Recovery();self.r.barrier=SimpleNamespace(fd=17);self.mode=0o700;self.foreign=False;self.chmods=[];self.records=[]
+ def metadata(self,_):return dict(m.EXPECTED_BARRIER,mode=self.mode,ino=999 if self.foreign else m.EXPECTED_BARRIER['ino'])
+ def change(self,fd,mode):self.chmods.append(mode);self.mode=mode
+ def guards(self):
+  from contextlib import ExitStack
+  st=ExitStack();st.enter_context(patch.object(m,'meta',side_effect=self.metadata));st.enter_context(patch.object(m.os,'fstat',return_value=object()));st.enter_context(patch.object(m.Path,'lstat',return_value=object()));st.enter_context(patch.object(m.os,'fchmod',side_effect=self.change));return st
+ def test_complete_record_failure_recloses(self):
+  def record(label,**data):
+   if label=='complete':raise OSError('complete record injected')
+   self.records.append((label,data))
+  self.r.record=record
+  def body():
+   m.os.fchmod(17,0o710);self.r.restored=True;self.r.status='RECOVERED_NOT_VISUALLY_ACCEPTED';self.r.record('complete')
+  self.r._run=body
+  with self.guards(),self.assertRaisesRegex(OSError,'complete record injected'):self.r.run()
+  self.assertEqual(self.chmods,[0o710,0o700]);self.assertFalse(self.r.restored);self.assertEqual(self.r.status,'BLOCKED');self.assertEqual(self.records[0][1]['reclose'],'verified0700')
+ def test_alarm_after_fchmod_before_flag_recloses(self):
+  self.r.record=lambda label,**data:self.records.append((label,data))
+  def body():
+   m.os.fchmod(17,0o710)
+   raise m.Block('180second recovery deadline injected before flag')
+  self.r._run=body
+  with self.guards(),self.assertRaisesRegex(m.Block,'before flag'):self.r.run()
+  self.assertEqual(self.chmods,[0o710,0o700]);self.assertEqual(self.mode,0o700);self.assertFalse(self.r.restored)
+ def test_changed_identity_never_forced_and_original_error_preserved(self):
+  self.r.record=lambda *a,**k:None
+  def body():self.mode=0o710;self.foreign=True;raise ValueError('original failure')
+  self.r._run=body
+  with self.guards(),self.assertRaisesRegex(ValueError,'original failure'):self.r.run()
+  self.assertEqual(self.chmods,[]);self.assertEqual(self.r.failure_events[0]['reclose'],'BLOCKED_no_force')
+ def test_final_preservation_error_does_not_replace_primary(self):
+  self.r.record=lambda *a,**k:None
+  def body():
+   self.mode=0o710
+   try:raise ValueError('primary complete failure')
+   except BaseException:self.r.fail_closed('primary complete failure')
+   raise OSError('secondary preservation failure')
+  self.r._run=body
+  with self.guards(),self.assertRaisesRegex(ValueError,'primary complete failure'):self.r.run()
+  self.assertEqual(self.mode,0o700);self.assertEqual(self.chmods,[0o700])
+ def test_failure_record_failure_cannot_prevent_reclose(self):
+  def record(*a,**k):raise OSError('record disk failure')
+  self.r.record=record
+  def body():self.mode=0o710;raise ValueError('original failure')
+  self.r._run=body
+  with tempfile.TemporaryDirectory()as d,patch.object(m,'RECOVERY',Path(d)),self.guards(),self.assertRaisesRegex(ValueError,'original failure'):
+   self.r.run()
+  self.assertEqual(self.mode,0o700);self.assertIn('record_error',self.r.failure_events[0])
+class NetworkAndPreservation(unittest.TestCase):
+ def setUp(self):
+  self.r=m.Recovery();self.records=[];self.r.record=lambda label,**data:self.records.append((label,data))
+  self.listener=('tcp','local','zero','0A','10');self.flow=('tcp','local','peer','01','11');self.udp=('udp','dns','zero','07','12')
+  self.initial=[self.listener,self.flow,self.udp]
+ def test_closed_flow_allowed_and_recorded(self):
+  self.r.record_network('initial',[],self.initial);self.r.record_network('closed',[],[self.listener,self.udp])
+  self.assertEqual(self.records[-1][1]['network_delta']['removed'],[self.flow]);self.assertTrue(self.records[-1][1]['network_delta']['allowed'])
+ def test_new_flow_rejected_after_record(self):
+  self.r.record_network('initial',[],self.initial);new=('tcp','local','other','01','99')
+  with self.assertRaises(m.Block):self.r.record_network('new',[],self.initial+[new])
+  self.assertEqual(self.records[-1][1]['network_delta']['added'],[new]);self.assertFalse(self.records[-1][1]['network_delta']['allowed'])
+ def test_disappeared_flow_cannot_reappear(self):
+  self.r.record_network('initial',[],self.initial);self.r.record_network('closed',[],[self.listener,self.udp])
+  with self.assertRaises(m.Block):self.r.record_network('reappeared',[],self.initial)
+  self.assertEqual(self.records[-1][1]['network_delta']['added'],[self.flow])
+ def test_listener_and_udp_changes_rejected(self):
+  for missing in (self.listener,self.udp):
+   self.r.network=self.initial
+   with self.subTest(missing=missing),self.assertRaises(m.Block):self.r.record_network('changed',[],[x for x in self.initial if x!=missing])
+ def test_outer_closed_fd_does_not_append_after_final_receipt(self):
+  from types import SimpleNamespace
+  self.r.barrier=SimpleNamespace(fd=None)
+  def body():
+   try:raise ValueError('handled original')
+   except ValueError:
+    import sys
+    self.r.first_error=sys.exc_info()
+    raise
+  self.r._run=body
+  with self.assertRaisesRegex(ValueError,'handled original'):self.r.run()
+  self.assertEqual(self.records,[])
+ def test_previous_root_late_record_and_volume_receipt_preserved(self):
+  with tempfile.TemporaryDirectory()as d:
+   root=Path(d);oldroot=root/'oldroot';oldvolume=root/'oldvolume';newvolume=root/'newvolume'
+   oldroot.mkdir();oldvolume.mkdir();newvolume.mkdir()
+   for name,data in [('010-failure-reclose.json',b'first'),('011-failure-reclose.json',b'late'),('recover_once.py',b'old source'),('RECOVERY-PRESERVATION-RECEIPT.json',b'old root receipt')]: (oldroot/name).write_bytes(data)
+   (oldvolume/'RECOVERY-PRESERVATION-RECEIPT.json').write_bytes(b'old volume receipt')
+   before={str(p):p.read_bytes() for p in list(oldroot.iterdir())+list(oldvolume.iterdir())};inventory={}
+   with patch.object(m,'PREVIOUS_RECOVERY',oldroot),patch.object(m,'PREVIOUS_VOLUME',oldvolume),patch.object(m,'VOLUME',newvolume):self.r.copy_previous_recovery(inventory)
+   self.assertEqual((newvolume/'prior-recovery01-root/011-failure-reclose.json').read_bytes(),b'late')
+   self.assertEqual((newvolume/'prior-recovery01-volume/RECOVERY-PRESERVATION-RECEIPT.json').read_bytes(),b'old volume receipt')
+   self.assertEqual(len(inventory),5)
+   for name,data in before.items():self.assertEqual(Path(name).read_bytes(),data)
+if __name__=='__main__':unittest.main(verbosity=2)
+
+
+
+FULL EXACT SOURCE work/verify_attempt02_recovery_v3.py bytes=9574 SHA256=6782cc92219c67a7f4c77708ac446c0f35919fb9d272761f75676ef4e00085ad
+"""One read-only independent verification; no application, FIFO read or evidence write."""
+from pathlib import Path
+import hashlib,importlib.util,json,os,stat,time
+os.chdir('/')
+V=Path('/workspace/sub01-animation-visual-attempt02-recovery02');R=Path('/root/sub01-animation-visual-attempt02-recovery02');T=Path('/root/sub01-attempt02-recovery02-tools')
+PINS_SHA='c5ae847a16ebed946c7c79d39ff8eef8910beb98322fd0a225eceb94d12f1887'
+SOURCE_SHA='421b5b2be0446a6f6800cb86e0d3bf0805ccf1745a9620506211739e4947b899'
+BASELINE_SHA='0a1765a1c0881b3b260bb43ac43f841a28c97fe30b92aeb159d3a24bf35386c5'
+ancestor=Path('/home/sub01-recovery-stage-20261026');original=ancestor/'native/cinematic-source-v3-final/Sub01HomeLab'
+imported=Path('/home/sub01-animation-reconstruction-20261026-attempt02/case-01/Sub01HomeLab');visual=Path('/home/sub01-animation-visual-20261026-attempt02/reading-face/Sub01HomeLab')
+private=Path('/home/unreal/.sub01-private');out=private/'animation-visual-reading-20261026-attempt02';historical=Path('/workspace/sub01-animation-visual-reading-20261026-attempt02')
+fifo=private/'streamer/main.mjpeg';retired=out/'fifo-evidence/retired-fresh-fifo-recovery02'
+def sha(p):
+ h=hashlib.sha256();fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+ with os.fdopen(fd,'rb')as f:
+  assert stat.S_ISREG(os.fstat(f.fileno()).st_mode)
+  for b in iter(lambda:f.read(1048576),b''):h.update(b)
+ return h.hexdigest()
+def met(s):return dict(dev=s.st_dev,ino=s.st_ino,uid=s.st_uid,gid=s.st_gid,mode=stat.S_IMODE(s.st_mode),type=stat.S_IFMT(s.st_mode))
+def meta(p):return met(p.lstat())
+def absent(p):
+ try:p.lstat()
+ except FileNotFoundError:return True
+ return False
+
+def manifest(root):
+ result={}
+ for p in sorted(root.rglob('*')):
+  rel=p.relative_to(root)
+  if rel.parts[0] in {'Saved','Intermediate','DerivedDataCache'}:continue
+  s=p.lstat();assert not stat.S_ISLNK(s.st_mode)
+  if stat.S_ISREG(s.st_mode):assert s.st_nlink==1;result[str(rel)]=sha(p)
+  else:assert stat.S_ISDIR(s.st_mode)
+ return result
+
+def load(name,digest):
+ p=Path('/opt/sub01/animation-visual-20261026-attempt02/tools')/(name+'.py');assert sha(p)==digest
+ spec=importlib.util.spec_from_file_location('verified_'+name,p);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+assert os.geteuid()==0 and sha(T/'recovery-pins.json')==PINS_SHA and sha(T/'recover_once.py')==SOURCE_SHA
+pins=json.loads((T/'recovery-pins.json').read_text())
+receipt=json.loads((V/'RECOVERY-PRESERVATION-RECEIPT.json').read_text());assert (R/'RECOVERY-PRESERVATION-RECEIPT.json').read_bytes()==(V/'RECOVERY-PRESERVATION-RECEIPT.json').read_bytes()
+assert receipt['status']=='RECOVERED_NOT_VISUALLY_ACCEPTED' and receipt['barrier_restored'] and not receipt['historical_receipt_rewritten']
+assert receipt['attempt02_status']=='FAILED' and receipt['visual']=='PENDING' and receipt['performance']=='NOT_ASSESSED'
+for rel,row in receipt['files'].items():
+ assert not Path(rel).is_absolute() and '..' not in Path(rel).parts
+ p=V/rel;assert p.is_file() and not p.is_symlink() and p.stat().st_size==row['bytes'] and sha(p)==row['sha256'],rel
+for p in sorted(R.glob('*.json')):
+ if p.name=='RECOVERY-PRESERVATION-RECEIPT.json':continue
+ target=V/'recovery-records'/p.name;assert target.is_file() and p.read_bytes()==target.read_bytes()
+assert sha(V/'recovery-source/recover_once.py')==SOURCE_SHA and sha(R/'recover_once.py')==SOURCE_SHA
+assert sha(V/'recovery-records/recovery-pins.json')==PINS_SHA and sha(R/'recovery-pins.json')==PINS_SHA
+record_paths=sorted(R.glob('[0-9][0-9][0-9]-*.json'));records=[json.loads(p.read_text())for p in record_paths]
+expected=['begin','source-bound','bound-launch-graph','pre-recovery-0','pre-recovery-1','probe-active','post-active-probe-0','post-active-probe-1','baseline-before','pre-fifo-0','pre-fifo-1','pre-fifo-restore','fifo-restored','post-fifo-0','post-fifo-1','baseline-final','current-vs-historical-main','immediate-pre-mode-restore-0','immediate-pre-mode-restore-1','pre-mode-restore','probe-restored','post-mode-probe-0','post-mode-probe-1','complete']
+assert [r['event']for r in records]==expected
+assert [int(p.name[:3])for p in record_paths]==list(range(1,len(records)+1))
+assert records[-1]['status']=='RECOVERED_NOT_VISUALLY_ACCEPTED'
+network_records=[{tuple(x)for x in r['network']}for r in records if 'network'in r]
+assert network_records
+for before,after in zip(network_records,network_records[1:]):
+ fixed_before={x for x in before if x[0].startswith('udp')or x[3]=='0A'}
+ fixed_after={x for x in after if x[0].startswith('udp')or x[3]=='0A'}
+ established_before={x for x in before if x[0].startswith('tcp')and x[3]=='01'}
+ established_after={x for x in after if x[0].startswith('tcp')and x[3]=='01'}
+ assert fixed_before==fixed_after and established_after<=established_before
+
+source_record=next(r for r in records if r['event']=='source-bound');assert source_record['source_sha256']==SOURCE_SHA
+comparison=next(r for r in records if r['event']=='current-vs-historical-main')
+assert sha(historical/'PRESERVATION-RECEIPT.json')==comparison['historical_receipt_sha256']==sha(V/'historical-volume/PRESERVATION-RECEIPT.json')
+assert sha(historical/'main.json')==comparison['historical_volume_sha256']==sha(V/'historical-volume/main.json')
+assert sha(out/'main.json')==comparison['current_sha256']==sha(V/'current-root-output/main.json')
+assert json.loads((out/'main.json').read_text())['status']=='FAILED'
+
+# Earlier failed recovery remains immutable; its late failure record is now preserved.
+prior_root=Path('/root/sub01-animation-visual-attempt02-recovery01')
+prior_volume=Path('/workspace/sub01-animation-visual-attempt02-recovery01')
+assert sha(prior_root/'RECOVERY-PRESERVATION-RECEIPT.json')=='e9ccd62611c6542f72adcebd46ca68260091c7db88c66af6afed0dcd67236dcb'==sha(prior_volume/'RECOVERY-PRESERVATION-RECEIPT.json')
+assert sha(prior_root/'011-failure-reclose.json')=='26d65e382682733ecf0cfbbc6702712566ccc7af22d615a4494b5aea99e92527'
+for p in sorted(prior_root.rglob('*')):
+ if p.is_dir():continue
+ assert p.is_file() and not p.is_symlink()
+ assert sha(p)==sha(V/'prior-recovery01-root'/p.relative_to(prior_root))
+assert sha(V/'prior-recovery01-volume/RECOVERY-PRESERVATION-RECEIPT.json')=='e9ccd62611c6542f72adcebd46ca68260091c7db88c66af6afed0dcd67236dcb'
+
+assert meta(ancestor)==dict(dev=66,ino=2149578155,uid=0,gid=1001,mode=0o710,type=stat.S_IFDIR)
+assert meta(fifo)==dict(dev=66,ino=4303368925,uid=1001,gid=1001,mode=0o600,type=stat.S_IFIFO)
+assert meta(retired)==dict(dev=66,ino=8030385,uid=1001,gid=1001,mode=0o600,type=stat.S_IFIFO)
+assert absent(out/'fifo-evidence/preserved-original-fifo')
+bp=Path('/workspace/sub01-animation-reconstruction-20261026-attempt02/metadata/baseline-manifest.json');assert sha(bp)==BASELINE_SHA==pins['baseline_sha256']
+baseline=json.loads(bp.read_text());assert len(baseline)==5640;extended=dict(baseline,**pins['actual_assets']);assert len(extended)==5643
+checks={}
+for root,wanted in ((original,baseline),(imported,extended),(visual,extended)):
+ assert manifest(root)==wanted,str(root);checks[str(root)]=len(wanted)
+obs=load('fifo_observer_collector','e8d7355a0f2e21ebba8caedd1e10fc311333f324589b93ce20b6379c80582114')
+B=load('access_barrier','1e2dc671f3f8cce3a00ae37798fc2521fcbfebd81a87e0238f24bbb9a48b4f59')
+allowed={r['identity']['pid']:r['identity']for r in pins['approved_background']};assert len(allowed)==8
+me=obs.executable_one(os.getpid());parent=obs.executable_one(os.getppid());assert me['exe']=='/usr/bin/python3.12' and parent['exe']=='/usr/bin/bash' and parent['identity']['ppid']==122
+for r in (me,parent):
+ i=r['identity'];assert set(i['uids'])=={'0'} and set(i['gids'])=={'0'} and r['exe_sha256']==pins['executable_pins'][r['exe']]['sha256'];allowed[i['pid']]=dict(i,exe=r['exe'],exe_sha256=r['exe_sha256'])
+assert len(allowed)==10
+barrier=B.AccessBarrier(original,visual/'Sub01HomeLab.uproject');barrier.fd=os.open(ancestor,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+try:
+ barrier.expected=pins['expected_pre_chmod']['expected'];barrier.original_identity=pins['expected_pre_chmod']['original'];barrier.device='0:66';barrier.protected_inodes=set()
+ for p in [ancestor,original,*original.rglob('*')]:
+  s=p.lstat();assert not stat.S_ISLNK(s.st_mode)
+  if stat.S_ISREG(s.st_mode):assert s.st_nlink==1
+  barrier.protected_inodes.add((s.st_dev,s.st_ino))
+ barrier.record=lambda *args,**kwargs:None # Read-only verification: probe data returned in memory only.
+ def census():
+  barrier.verify(0o710);rows=obs.census();assert {r['identity']['pid']for r in rows}==set(allowed)
+  for r in rows:
+   i=r['identity'];a=allowed[i['pid']];assert obs.stable(i,a) and i['cmdline_sha256']==a['cmdline_sha256'] and r['exe']==a['exe'] and r['exe_sha256']==a['exe_sha256'];assert not(set(i['uids'])&{'1001','1002'})
+   for f in r['fds']:assert(f['dev'],f['ino'])not in {(66,8030385),(66,4303368925)}
+  barrier.audit(rows,True);assert (private/'streamer/STOP').is_file() and absent(Path('/tmp/sub01-share/MEASURING'));return rows
+ census();probe=barrier.probe(False);rows=census();time.sleep(.1);rows=census()
+finally:os.close(barrier.fd)
+print(json.dumps(dict(utc=time.time(),status='RECOVERY_INDEPENDENTLY_VERIFIED',preserved_file_count=len(receipt['files']),successful_recovery_events=expected,barrier=meta(ancestor),canonical_fifo=meta(fifo),retired_fifo=meta(retired),baseline_count=len(baseline),project_files=checks,process_identities=[r['identity']for r in rows],restored_access_probe=probe,stop=True,measuring=False,attempt02='FAILED',visual='NOT_ACCEPTED',performance='NOT_ASSESSED'),indent=2))
+
+
+FULL EXACT SOURCE work/pod_script.py bytes=572 SHA256=af6b6a5dc0d623c80528d6466414d84b7d68c890fd1c546e9a12f236dc9fd28b
+from pathlib import Path
+import sys,runpy,base64
+source=Path(sys.argv[1]).read_bytes();timeout=sys.argv[2] if len(sys.argv)>2 else '60'
+b=base64.b64encode(source).decode()
+command="python3 - <<'SUB01_BOUNDED_SCRIPT'\nimport base64\nexec(base64.b64decode(\n"+'\n'.join(repr(b[i:i+2000]) for i in range(0,len(b),2000))+"\n))\nSUB01_BOUNDED_SCRIPT"
+sys.argv=['podterm.py',str(Path.home()/'.sub01/pods.json'),'505jw5ph3dt7ed',command,timeout]
+runpy.run_path('/Users/cn/Documents/Codex/2026-10-06/h/work/sub01-codex-takeover-20261025/tools/pod/podterm.py',run_name='__main__')
+
+
+EXACT RECOVERY SOURCE DELTA
+--- 
++++ 
+@@ -16,11 +16,13 @@
+ OUT=Path('/home/unreal/.sub01-private/animation-visual-reading-20261026-attempt02')
+ PERSIST=Path('/workspace/sub01-animation-visual-reading-20261026-attempt02')
+ ROOT_RECORDS=Path('/root/sub01-animation-visual-20261026-attempt02-barrier')
+-RECOVERY=Path('/root/sub01-animation-visual-attempt02-recovery01')
+-VOLUME=Path('/workspace/sub01-animation-visual-attempt02-recovery01')
++RECOVERY=Path('/root/sub01-animation-visual-attempt02-recovery02')
++VOLUME=Path('/workspace/sub01-animation-visual-attempt02-recovery02')
++PREVIOUS_RECOVERY=Path('/root/sub01-animation-visual-attempt02-recovery01')
++PREVIOUS_VOLUME=Path('/workspace/sub01-animation-visual-attempt02-recovery01')
+ FIFO=Path('/home/unreal/.sub01-private/streamer/main.mjpeg')
+ OLD=OUT/'fifo-evidence/preserved-original-fifo'
+-RETIRED=OUT/'fifo-evidence/retired-fresh-fifo-recovery01'
++RETIRED=OUT/'fifo-evidence/retired-fresh-fifo-recovery02'
+ STOP=Path('/home/unreal/.sub01-private/streamer/STOP')
+ EXPECTED_BARRIER=dict(dev=66,ino=2149578155,uid=0,gid=1001,mode=0o700,type=stat.S_IFDIR)
+ EXPECTED_FRESH=dict(dev=66,ino=8030385,uid=1001,gid=1001,mode=0o600,type=stat.S_IFIFO)
+@@ -72,6 +74,20 @@
+     f=line.split()
+     if n.startswith('udp')or f[3]in ('01','0A'):rows.append((n,f[1],f[2],f[3],f[9]))
+   return sorted(rows)
++ def record_network(self,label,rows,network):
++  # Fixed listeners/UDP; established socket tuples (including inode) only shrink.
++  current={tuple(r) for r in network}
++  previous=None if self.network is None else {tuple(r) for r in self.network}
++  fixed=lambda rs:{r for r in rs if r[0].startswith('udp') or r[3]=='0A'}
++  established=lambda rs:{r for r in rs if r[0].startswith('tcp') and r[3]=='01'}
++  valid=previous is None or (fixed(current)==fixed(previous) and established(current)<=established(previous))
++  delta={'initial':previous is None,'added':sorted(current-(previous or set())),
++         'removed':sorted((previous or set())-current),'allowed':valid,
++         'policy':'fixed listeners and UDP; established monotonic subset of previous snapshot'}
++  # Persist the actual rejected snapshot and delta BEFORE raising.
++  self.record(label,processes=rows,network=network,network_delta=delta)
++  need(valid,'control clients/listeners changed outside monotonic closure policy')
++  self.network=network
+  def quiescent(self,label):
+   for n in range(2):
+    need(not Path('/tmp/sub01-share/MEASURING').exists(),'measurement active')
+@@ -81,9 +97,7 @@
+    need({int(p.name)for p in Path('/proc').iterdir()if p.name.isdigit()}==set(self.allowed),'unexpected process after census')
+    audit_rows(rows,self.allowed,self.observer,self.barrier,os.getpid())
+    network=self.network_snapshot()
+-   if self.network is None:self.network=network
+-   else:need(network==self.network,'control clients/listeners changed')
+-   self.record(label+'-'+str(n),processes=rows,network=network)
++   self.record_network(label+'-'+str(n),rows,network)
+    if n==0:time.sleep(.1)
+  def hash_projects(self,label):
+   expected=dict(self.baseline);extended=dict(expected,**self.pins['actual_assets']);results={}
+@@ -111,7 +125,17 @@
+   for name in ('PRESERVATION-RECEIPT.json','main.json'):
+    self.copy_regular(PERSIST/name,VOLUME/'historical-volume'/name,inventory)
+   self.record('current-vs-historical-main',current_sha256=digest(OUT/'main.json'),historical_volume_sha256=digest(PERSIST/'main.json'),historical_receipt_sha256=digest(PERSIST/'PRESERVATION-RECEIPT.json'),historical_receipt_untouched=True)
++  self.copy_previous_recovery(inventory)
+   self.inventory=inventory;self.excluded=excluded
++ def copy_previous_recovery(self,inventory):
++  # Include late root records absent from recovery01's already-written receipt.
++  need(PREVIOUS_RECOVERY.is_dir(),'missing failed recovery01 root evidence')
++  for p in sorted(PREVIOUS_RECOVERY.rglob('*')):
++   s=p.lstat();need(not stat.S_ISLNK(s.st_mode),'previous recovery symlink')
++   if stat.S_ISDIR(s.st_mode):continue
++   need(stat.S_ISREG(s.st_mode),'previous recovery special file')
++   self.copy_regular(p,VOLUME/'prior-recovery01-root'/p.relative_to(PREVIOUS_RECOVERY),inventory)
++  self.copy_regular(PREVIOUS_VOLUME/'RECOVERY-PRESERVATION-RECEIPT.json',VOLUME/'prior-recovery01-volume'/'RECOVERY-PRESERVATION-RECEIPT.json',inventory)
+  def copy_regular(self,src,dst,inventory):
+   s=src.lstat();need(stat.S_ISREG(s.st_mode) and s.st_size<64*1024*1024,'regular evidence bound');before=digest(src)
+   dst.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+@@ -154,7 +178,8 @@
+   try:return self._run()
+   except BaseException:
+    # Catches failures outside inner handlers too, including completion reporting.
+-   self.fail_closed(traceback.format_exc())
++   if self.first_error is None or (self.barrier is not None and self.barrier.fd is not None):
++    self.fail_closed(traceback.format_exc())
+    first=self.first_error
+    if first and first[1] is not None:raise first[1].with_traceback(first[2])
+    raise
+@@ -177,7 +202,7 @@
+    need(parent['identity']['ppid']==122 and parent['exe']=='/usr/bin/bash' and parent['identity']['state']=='S','waiting bash must be direct Jupyter122 child')
+    need(me['exe']=='/usr/bin/python3.12','recovery Python')
+    own_argv=(Path('/proc')/str(os.getpid())/'cmdline').read_bytes().split(b'\0');need(own_argv==[b'python3',b'-',b''],'stdin Python argv')
+-   source_path=Path(__file__);need(source_path==Path('/root/sub01-attempt02-recovery01-tools/recover_once.py'),'exact staged source path')
++   source_path=Path(__file__);need(source_path==Path('/root/sub01-attempt02-recovery02-tools/recover_once.py'),'exact staged source path')
+    for p in (source_path,source_path.with_name('recovery-pins.json')):
+     st=p.lstat();need(stat.S_ISREG(st.st_mode) and st.st_uid==0 and not(st.st_mode&0o022),'root staged source metadata')
+    need(digest(source_path.with_name('recovery-pins.json'))==PINS_SHA,'staged pins mismatch')
+
+
+WRAPPER CONTROLFLOW work/attempt02-recovery02-candidate/stage_and_recover_stdin.py fullbytes=56616 fullSHA256=d281c71b6964f86e4ec2700c6737e49debf799f7fabbdbc4a37e4e56b3eb8927
+# Reviewed same-process stdin staging; no subprocess or extra shell.
+from pathlib import Path
+import base64,hashlib,os,stat
+assert os.geteuid()==0
+os.chdir('/')
+d=Path('/root/sub01-attempt02-recovery02-tools')
+for parent in d.parents:
+ s=parent.lstat();assert stat.S_ISDIR(s.st_mode) and s.st_uid==0 and not(s.st_mode&0o022)
+d.mkdir(mode=0o700)
+files = EXACT_EMBEDDED_BASE64_OF_FULL_SOURCE_ABOVE_AND_PINS_BYTES_LITERAL_WITHIN_IT # ASTverified
+for name,row in files.items():
+ raw=base64.b64decode(row['base64'],validate=True);assert hashlib.sha256(raw).hexdigest()==row['sha256']
+ fd=os.open(d/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o400)
+ with os.fdopen(fd,'wb')as f:f.write(raw);f.flush();os.fsync(f.fileno())
+ assert hashlib.sha256((d/name).read_bytes()).hexdigest()==row['sha256']
+source=d/'recover_once.py'
+exec(compile(source.read_bytes(),str(source),'exec'),{'__name__':'__main__','__file__':str(source)})
+
+{
+  "recover_once.py": {
+    "sha256": "421b5b2be0446a6f6800cb86e0d3bf0805ccf1745a9620506211739e4947b899",
+    "decoded_bytes": 30318
+  },
+  "recovery-pins.json": {
+    "sha256": "c5ae847a16ebed946c7c79d39ff8eef8910beb98322fd0a225eceb94d12f1887",
+    "decoded_bytes": 11345
+  }
+}
+
+UNCHANGED REUSED MODULES: fifo_observer_collector e8d7355a0f2e21ebba8caedd1e10fc311333f324589b93ce20b6379c80582114; access_barrier 1e2dc671f3f8cce3a00ae37798fc2521fcbfebd81a87e0238f24bbb9a48b4f59. Only standalone census/metadata/probes called; no reconcile_descendants. 19recoverytestsPASS; prior4verifiermanifestregressionsunchangedPASS. Successful24eventsequenceunchanged; independentverifier additionallychecks monotonicnetworkrecords and priorfailedreceipthash+late011preservation.

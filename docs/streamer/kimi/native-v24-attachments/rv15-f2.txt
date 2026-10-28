@@ -1,0 +1,42 @@
+def open_save_dir(directory: Path) -> int:
+    """-> a descriptor of the --save directory (created 0700 when absent), opened O_DIRECTORY|O_NOFOLLOW: every frame is then written
+    through this held descriptor, so the path cannot be swapped for a link afterwards. Raises OSError for anything else."""
+    try:
+        directory.mkdir(mode=0o700, parents=True)
+    except FileExistsError:
+        pass   # an existing directory is used; anything else fails the O_DIRECTORY open below
+    return os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+
+
+def save_frame(dir_fd: int, name: str, frame: bytes) -> str | None:
+    """Write one frame in the held directory without following a link and without replacing anything (-> name, or None if it exists)."""
+    try:
+        fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC, 0o644, dir_fd=dir_fd)
+    except FileExistsError:
+        return None
+    with os.fdopen(fd, 'wb') as handle:
+        handle.write(frame)
+    return name
+
+
+
+# main(): the --save part
+    save = None
+    if args.save is not None:
+        try:
+            save = (open_save_dir(args.save), str(args.save))
+        except OSError as exc:
+            print(json.dumps({'schema': 'sub01.main-fifo-probe.v1', 'status': 'refused',
+                              'reason': f'--save {args.save} is not a usable plain directory ({os.strerror(exc.errno) if exc.errno else exc})'}))
+            return 2
+    try:
+        report = probe(args.fifo, args.seconds, args.contract, save, args.save_count, args.force)
+    except SystemExit as stop:
+        print(json.dumps({'schema': 'sub01.main-fifo-probe.v1', 'status': 'refused', 'reason': str(stop)}))
+        return 2
+    except FileNotFoundError:
+        print(json.dumps({'schema': 'sub01.main-fifo-probe.v1', 'status': 'refused', 'reason': f'{args.fifo} does not exist'}))
+        return 2
+    finally:
+        if save is not None:
+            os.close(save[0])

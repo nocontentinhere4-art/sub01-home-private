@@ -1,0 +1,85 @@
+{
+  "inputs": [
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/captured-animation-only.fbx",
+      "exists": true,
+      "expected": "d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d",
+      "bytes": 22828380,
+      "sha256": "d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze.glb",
+      "exists": true,
+      "expected": "1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363",
+      "bytes": 55837140,
+      "sha256": "1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/animation-conversion-proof.json",
+      "exists": true,
+      "expected": "0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35",
+      "bytes": 1163,
+      "sha256": "0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/captured-animation-only.fbx",
+      "exists": true,
+      "expected": "ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8",
+      "bytes": 22828732,
+      "sha256": "ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean.glb",
+      "exists": true,
+      "expected": "6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce",
+      "bytes": 55830696,
+      "sha256": "6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/animation-conversion-proof.json",
+      "exists": true,
+      "expected": "a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492",
+      "bytes": 1175,
+      "sha256": "a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/captured-animation-only.fbx",
+      "exists": true,
+      "expected": "d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e",
+      "bytes": 22510796,
+      "sha256": "d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/Reach.glb",
+      "exists": true,
+      "expected": "b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438",
+      "bytes": 55045220,
+      "sha256": "b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/animation-conversion-proof.json",
+      "exists": true,
+      "expected": "b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b",
+      "bytes": 1176,
+      "sha256": "b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/community-demo/bed-supported-candidate8/unreal_supported_bed_candidate8_cinematic_import.py",
+      "exists": true,
+      "expected": "7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad",
+      "bytes": 11880,
+      "sha256": "7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad",
+      "matches": true
+    }
+  ],
+  "all_match": true
+}

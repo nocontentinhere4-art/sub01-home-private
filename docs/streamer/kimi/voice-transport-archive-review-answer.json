@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "BLOCK — documentation-only corrections; do not alter the pinned scripts or historical result JSON.\n\n1. **Correct the README’s MP4 duration and speech claim.**  \n   `93.994667` seconds is the **decoded PCM duration** (`4,511,744 / 48,000`), not the MP4 duration. The recorded durations are:\n   - MP4 container: **94.033333 s**\n   - Video stream: **94.000000 s**\n   - Audio stream: **94.006667 s**\n   - Extracted PCM: **93.994667 s**\n\n   Replace the relevant sentence with:\n\n   > The final MP4 has a container duration of 94.033333 seconds and yielded 93.994667 seconds of decoded PCM. The single 2.52-second source utterance matched that PCM at offset 17.081333 seconds with normalized correlation 0.99815169; both MP4s fully decoded without reported errors.\n\n   This also removes “only 2.52 seconds of speech,” which is stronger than the performed gates: they establish one uncut source utterance and its waveform match, not a general speech-activity/exclusivity analysis.\n\n2. **Add a README erratum for two stale supervisor comments.**  \n   In `supervise-voice-transport-analysis.py`, the docstring’s **“30s”** should read **300 s**, and the comment’s **“26s”** should read **296 s**. The executable limits are ordinary monitoring until 296 s, cleanup until 299 s, and the hard alarm at 300 s. Preserve the historical file unchanged and document these as comment errata.\n\nAfter editing only `README.txt`, recompute its entry in `ARCHIVE-SHA256.json`. The waveform-pass/full-transport-false distinction and the OPEN timing, lipsync, perceptual-quality, and owner-acceptance limits are otherwise consistently recorded.",
+ "finish_reason": "stop",
+ "prompt_tokens": 25522,
+ "completion_tokens": 13623,
+ "reasoning_tokens": 13215,
+ "seconds": 421.0
+}

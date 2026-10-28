@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE — one bounded standalone diagnostic on EURO1 only.**\n\nIt appropriately tests the already-reviewed fallback and answers the narrow functionality/throughput question. It proves nothing about director capture/filter/tee workload, native animation recovery, visual quality, NVENC, or synthetic-to-real performance equivalence.\n\nKeep STOP and service/game states unchanged; do not touch the US node, provision/migrate, alter drivers/security, or publish artifacts. Preserve existing evidence and write only to a new private diagnostic directory.\n\nRun `/usr/bin/ffmpeg` once, with a **180-second hard timeout**: `testsrc2`, 1920×1080 at 60 fps for 60 seconds; `libx264`, `veryfast`, CRF 23, `yuv420p`, `-r 60 -g 120 -threads 4`; under `taskset -c 6-13`. No retries or tuning. Retain the exact command, ffmpeg build, node/volume provenance, UTC timestamps, complete logs, wall/user/system time, maximum RSS, and MP4 checksum.\n\nFully decode the result and run `ffprobe -count_frames`. Require error-free decoding, MP4/H.264, 1920×1080, `yuv420p`, 60 fps, 60-second duration, and exactly **3,600 frames**. The performance gate is **wall time <40 seconds** (>1.5× real time), with CPU/RSS reviewed and no OOM, swapping, or resource anomaly.\n\nA pass only justifies proposing the actual-director/native-candidate test under separate acceptance/reconstruction review. Failure or ambiguity means stop: no preset/CRF weakening or resource loop.",
+ "finish_reason": "stop",
+ "prompt_tokens": 925,
+ "completion_tokens": 4817,
+ "reasoning_tokens": 4457,
+ "seconds": 115.3
+}

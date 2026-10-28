@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "BLOCK — stale geometry can still be committed.\n\n`OnFinalized()` refreshes `FinalizedFrame`, `FinalizedSerial`, and `FinalizedBodyWorld` before returning for `SelectedSerial==0`, but does not clear `SnapshotReady`. `Select(0)` is publicly accepted. Therefore:\n\n1. A finalization copies a sample, leaving `SnapshotReady=true`.\n2. `Select(0)` causes `OnEndFrame()` to return without clearing it.\n3. On a later frame, an unselected finalization refreshes all gate fields but returns before copying.\n4. Selecting the current serial afterward lets `OnEndFrame()` pass its checks and increment `Count`, committing the older `Samples[Count]`; stored `S.Frame`/`S.Serial` are never checked.\n\nAlso, ordinary nonzero selection after finalization—apparently permitted by “Selection must precede OnEndFrame”—aborts because no snapshot was copied.\n\nClear `SnapshotReady` at the start of every finalization and on unselected end frames. Before commit, additionally require the stored sample’s frame, finalized-frame, and serial to match the current frame/publication. Define or reject `Select(0)`. Finally, either snapshot before selection or explicitly require selection before `OnBoneTransformsFinalized`; the current comment states an insufficient ordering contract.",
+ "finish_reason": "stop",
+ "prompt_tokens": 6769,
+ "completion_tokens": 9729,
+ "reasoning_tokens": 9445,
+ "seconds": 294.7
+}

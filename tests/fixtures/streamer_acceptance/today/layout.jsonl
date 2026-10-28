@@ -1,0 +1,4 @@
+{"t":"2026-10-24T14:05:43Z","unix":1792850743.994,"layout":"room","previous":"webcam_only","run":"sub01-20261024-133225","offset_s":1998.74,"recording":true,"nonce":"4abfac9c708e"}
+{"t":"2026-10-24T14:06:00Z","unix":1792850760.568,"layout":"webcam_only","previous":"room","run":"sub01-20261024-140545","offset_s":15.04,"recording":true,"nonce":"9617d9bf5700"}
+{"t":"2026-10-24T14:06:19Z","unix":1792850779.006,"layout":"room","previous":"webcam_only","run":"sub01-20261024-140545","offset_s":33.48,"recording":true,"nonce":"fd4d353e51b1"}
+{"t":"2026-10-24T14:06:35Z","unix":1792850795.856,"layout":"webcam_only","previous":"room","run":"sub01-20261024-140545","offset_s":50.33,"recording":true,"nonce":"fb6d8849fd87"}

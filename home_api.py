@@ -60,6 +60,7 @@ def add_home_routes(app, live, admin_ok):
         if private():
             view = {"ready": False, "paused": True, "status": "private", "output": "",
                     "last_command": None, "revision": None, "privacy": True,
+                    "summary": "Bathroom privacy is active", "error": "", "hint": "",
                     "display": {"kind": "private", "available": False}}
         return view
 
@@ -117,6 +118,7 @@ def add_home_routes(app, live, admin_ok):
             minecraft = {"enabled": bool(minecraft.get('enabled')), "status": "private",
                          "active": False, "has_frame": False, "observation": None,
                          "events": [], "last_action": None, "privacy": True}
+        life = {"privacy": True} if hidden else live.life.snapshot()
         return web.json_response(
             {
                 "home": home,
@@ -125,8 +127,9 @@ def add_home_routes(app, live, admin_ok):
                 "browser_screen": screen('desk'),
                 "phone_browser_screen": screen('phone'),
                 "phone_screen": None if hidden else home_phone.status(home_phone.snapshot(live.home, screen('phone'))),
+                "phone_view": None if hidden else home_phone.view_of(live, life, screen('phone')),
                 "minecraft": minecraft,
-                "life": {"privacy": True} if hidden else live.life.snapshot(),
+                "life": life,
                 "stage": None if hidden else live.engine.stage,
                 "time": live.clock.now(),
             },
@@ -148,7 +151,14 @@ def add_home_routes(app, live, admin_ok):
             raise web.HTTPBadRequest(text="Input too long")
         if private():
             raise web.HTTPConflict(text="Bathroom privacy is active")
-        return web.json_response({"ok": await live.computer.input(text + "\n")})
+        if await live.computer.input(text + "\n"):
+            return web.json_response({"ok": True})
+        # Not ready: say why (guest not installed, booting, worker exited), so the
+        # operator is not left with a bare "not ready".
+        view = computer_view()
+        return web.json_response({"ok": False, "status": view.get("status"),
+                                  "error": view.get("error") or view.get("summary") or "",
+                                  "hint": view.get("hint") or ""})
 
     async def navigate(request):
         enabled()
@@ -317,8 +327,15 @@ def add_home_routes(app, live, admin_ok):
         chosen = data.get("game")
         if chosen not in ("pong", "chess", "minecraft"):
             raise web.HTTPBadRequest(text="Unknown console game")
-        if chosen == "minecraft" and not (getattr(live, "minecraft", None) and live.minecraft.enabled):
-            raise web.HTTPConflict(text="Minecraft is not configured")
+        if chosen == "minecraft":
+            console = getattr(live, "minecraft", None)
+            if not (console and console.enabled):
+                raise web.HTTPConflict(text="Minecraft is not configured")
+            # An offline console (runtime missing, EULA, crashed) is refused with its reason, so the
+            # TV is never switched to a game that cannot show anything.
+            reason = console.offline_reason() if callable(getattr(console, "offline_reason", None)) else None
+            if reason:
+                raise web.HTTPConflict(text=f"Minecraft console offline: {reason}")
         live.home.console_game = chosen
         if getattr(live, 'life', None):
             live.life.console_wish = None

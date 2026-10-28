@@ -1,0 +1,98 @@
+// (1) Collect (render thread) and the encoder loop, after the fix
+ void Collect(){
+  // finished copies, OLDEST first (a newer one never overtakes an older one), every one of them; the fence is polled, never waited on
+  for(;;){
+   int32 S=-1;for(int32 K=0;K<Slots;++K)if(Pending[K]&&(S<0||SlotOrder[K]<SlotOrder[S]))S=K;
+   if(S<0||!Readback[S]->IsReady())return;
+   const bool Live=Reader.load(); // read once: the in-flight bound below must hold for every job queued
+   if(!SlotProbe[S]&&Live&&EncodeInFlight.load()>=Encoders)return; // no place free: it stays pending (in order); a full ring drops the NEWEST capture
+   Pending[S]=false;
+   if(SlotProbe[S]){if(EncodeInFlight.load()>0)continue;} // a diagnostic copy never delays the stream
+   else if(!Live){++DroppedNoReader;continue;} // the reader left during the copy
+   const double C0=FPlatformTime::Seconds();int32 Pitch=0,Rows=0; // Lock: the row pitch in PIXELS
+   const uint8* Mapped=static_cast<const uint8*>(Readback[S]->Lock(Pitch,&Rows));LastPitch.store(Pitch);LastRows.store(Rows);
+   if(!Mapped||Pitch<Width||Rows<Height){if(Mapped)Readback[S]->Unlock();if(!SlotProbe[S])++DroppedFormat;continue;}
+   FSub01MainJob Job;Job.Seq=SlotSeq[S];Job.Session=SlotSession[S];Job.Probe=SlotProbe[S];Job.Kind=RingKind;Job.Width=Width;Job.Height=Height;Job.CapturedAt=SlotAt[S];Job.Pixels=TakeBuffer();
+   Job.Pixels.SetNumUninitialized(int64(Width)*Height*4);
+   for(int32 Y=0;Y<Height;++Y)FMemory::Memcpy(Job.Pixels.GetData()+int64(Y)*Width*4,Mapped+int64(Y)*Pitch*4,size_t(Width)*4);
+   Readback[S]->Unlock();++Copied;CopyUs+=int64((FPlatformTime::Seconds()-C0)*1e6);
+   {std::lock_guard<std::mutex> Lock(Mutex);if(!Job.Probe){EncodeInFlight.fetch_add(1);Outstanding.push_back(Job.Seq);}Jobs.push_back(MoveTemp(Job));}
+   JobCv.notify_one();
+  }
+ }
+ void EncodeLoop(){
+  for(;;){
+   FSub01MainJob Job;
+   {std::unique_lock<std::mutex> Lock(Mutex);JobCv.wait(Lock,[this](){return Stop.load()||!Jobs.empty();});if(Stop.load())return;Job=MoveTemp(Jobs.front());Jobs.pop_front();}
+   const double T0=FPlatformTime::Seconds();uint8* Pixels=Job.Pixels.GetData();
+   Sub01MainTap::ToBgra8(Pixels,int64(Job.Width)*Job.Height,Job.Kind);
+   int32 Max=0;const uint64 Sum=Sub01MainTap::Checksum(Pixels,Job.Width,Job.Height,Max);LastChecksum.store(Sum);MaxChannel.store(Max);if(Max>16)NonBlack.store(true);
+   TArray64<uint8> Jpeg,Stamped;int32 JpegWidth=0,JpegHeight=0;
+   const bool Ok=Images&&Images->CompressImage(Jpeg,EImageFormat::JPEG,FImageView(reinterpret_cast<const FColor*>(Pixels),Job.Width,Job.Height),Quality.load())&&Jpeg.Num()>0
+    &&Sub01MainTap::Stamp(Jpeg.GetData(),Jpeg.Num(),Job.Seq,Stamped,JpegWidth,JpegHeight)&&JpegWidth==Width&&JpegHeight==Height;
+   LastJpegWidth.store(JpegWidth);LastJpegHeight.store(JpegHeight);if(Ok)JpegOk.store(true);
+   const int64 Us=int64((FPlatformTime::Seconds()-T0)*1e6);if(!Job.Probe){EncodeUs+=Us;if(Us>EncodeMaxUs.load())EncodeMaxUs.store(Us);}
+   std::lock_guard<std::mutex> Lock(Mutex);
+   if(int32(Pool.size())<PoolMax)Pool.push_back(MoveTemp(Job.Pixels));
+   if(Job.Probe){if(Ok)++ProbeJpegs;continue;}
+   if(Ok){++Encoded;}else ++DroppedEncode;
+   FSub01MainFrame Frame;Frame.Seq=Job.Seq;Frame.Session=Job.Session;if(Ok)Frame.Jpeg=MoveTemp(Stamped);Done.push_back(MoveTemp(Frame));
+   // the reorder buffer: release in sequence order (a failed encode releases its place with an empty frame). A sequence's place in
+   // EncodeInFlight frees only at its RELEASE, so an early finisher never lets more work overtake a stalled encode: at most
+   // Encoders sequences are unreleased, Done never holds more than Encoders-1 frames, and no frame is ever dropped from it.
+   while(!Outstanding.empty()){
+    int32 Found=-1;for(int32 K=0;K<int32(Done.size());++K)if(Done[size_t(K)].Seq==Outstanding.front()){Found=K;break;}
+    if(Found<0)break;
+    FSub01MainFrame Next=MoveTemp(Done[size_t(Found)]);Done.erase(Done.begin()+Found);Outstanding.pop_front();EncodeInFlight.fetch_sub(1);
+    if(Next.Jpeg.Num()<=0)continue;
+    if(int32(Out.size())>=QueueMax){Out.pop_front();++DroppedQueue;} // full: the OLDEST goes (latency stays bounded)
+    Out.push_back(MoveTemp(Next));OutCv.notify_one();
+   }
+  }
+ }
+ static_assert(ReorderMax>=Encoders,"the reorder buffer holds every unreleased sequence");
+
+// (2) the writer loop, main_tap 0 branch
+   if(!Want){CloseFifo();ReleaseLock();DropQueued();NextLockAt=NextProbeAt=0;WaitIdle();continue;} // main_tap 0: the director sees EOF, another game may take the lock (switched on again: both are tried at once)
+
+// (3) WriteWhole, after the fix
+ bool WriteWhole(const FSub01MainFrame& Frame){
+  const uint8* Data=Frame.Jpeg.GetData();const int64 Size=Frame.Jpeg.Num();int64 Sent=0;int32 Why=0; // 1 no reader, 2 error, 3 deadline, 4 stop
+  const double Deadline=FPlatformTime::Seconds()+0.5;
+  while(Sent<Size){
+   if(Stop.load()){Why=4;break;}
+   double Left=Deadline-FPlatformTime::Seconds();if(Left<=0){Why=3;break;} // the deadline bounds the whole frame, a slow trickle of partial writes too
+   const ssize_t N=::write(Fd,Data+Sent,size_t(Size-Sent));
+   if(N>0){Sent+=int64(N);continue;}
+   if(N<0&&errno==EINTR)continue;
+   if(N<0&&(errno==EAGAIN||errno==EWOULDBLOCK)){
+    Left=Deadline-FPlatformTime::Seconds();if(Left<=0){Why=3;break;}
+    struct pollfd P;P.fd=Fd;P.events=POLLOUT;P.revents=0;
+    const int Ready=::poll(&P,1,int(FMath::Clamp(Left*1000.,1.,double(20))));
+    if(Ready<0&&errno!=EINTR){Why=2;break;}
+    if(Ready>0&&(P.revents&(POLLERR|POLLHUP|POLLNVAL))){Why=1;break;}
+    continue;
+   }
+   Why=N<0&&errno==EPIPE?1:2;break;
+  }
+  if(Sent>=Size){++Written;Bytes+=Size;LastSeq.store(Frame.Seq);const FDateTime Utc=FDateTime::UtcNow();LastWriteMs.store(Utc.ToUnixTimestamp()*1000+Utc.GetMillisecond());return true;}
+  // the WHOLE frame is discarded and the descriptor closed: its tail is never resumed on a new fd; the reader resyncs on the next SOI
+  if(Sent>0)++DiscardedMidwrite;else if(Why==3)++DroppedStalled;else ++DroppedNoReader;
+  ++Cuts;CloseFifo();Sub01MainTap::ConsumeSigpipe();
+  const double Now=FPlatformTime::Seconds();
+  if(Now>=CutLogAt){CutLogAt=Now+5.0;
+   UE_LOG(LogTemp,Display,TEXT("SUB01_STREAMER_VISUAL_MAIN_TAP_CUT why=%s seq=%llu sent=%lld of=%lld cuts=%lld suppressed=%lld"),Why==1?TEXT("no reader"):Why==3?TEXT("deadline"):Why==4?TEXT("stop"):TEXT("write error"),
+    static_cast<unsigned long long>(Frame.Seq),static_cast<long long>(Sent),static_cast<long long>(Size),static_cast<long long>(Cuts.load()),static_cast<long long>(CutsSuppressed));CutsSuppressed=0;}
+  else ++CutsSuppressed;
+  return false;
+ }
+
+// (4) the destructor
+ ~FSub01MainTap(){
+  // Never concurrent with OnBackBuffer/Pump: the delegate's SP binding pins the tap for each call (TBaseSPMethodDelegateInstance::
+  // ExecuteIfSafe) and the main_source 1 command holds a reference, so this may run on the render thread when that was the last one; a
+  // binding left behind (engine exit) only finds an expired weak pointer. One-shot: StopThreads runs here only, the threads never restart.
+  StopThreads();
+  if(Fd>=0)::close(Fd);if(LockFd>=0)::close(LockFd); // closing the lock's descriptor releases the flock
+  if(Bound&&IsInGameThread()&&!IsEngineExitRequested()&&FSlateApplication::IsInitialized())if(FSlateRenderer* Renderer=FSlateApplication::Get().GetRenderer())Renderer->OnBackBufferReadyToPresent().Remove(Handle);
+ }

@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "Yes—run the single-flag `--desktop-fps30` A/B next; leave the native rate gate unchanged. It preserves cap60, native pacing, and output60 while testing director/desktop capture’s contribution to backpressure. Cap61 cannot isolate that because drops already occurred at cap60.\n\nAfter the lease and repeated baseline finish, use identical warmup and collect one 120-second window. Compare against the immediately preceding baseline: loss, queueDrops/rateSkipped, unique-frame main fps, and ffmpeg CPU on cores 6–9.\n\n**Stop and revert:** GO loss, any new encoder/format error, or rolling 30-second loss exceeding 1% after warmup.\n\n**Keep only for a confirmation run:** completed-window loss ≤0.5%, unique main fps ≥59.5, queueDrops at least 50% below the paired baseline, and no main-fps regression greater than 0.2 fps. Otherwise restore the original arguments. Reduced ffmpeg CPU without reduced loss is informative, but not a keep.\n\nRepeat the 30/60 comparison before retaining the flag. Even a passing window remains diagnostic, not final acceptance.",
+ "finish_reason": "stop",
+ "prompt_tokens": 512,
+ "completion_tokens": 9726,
+ "reasoning_tokens": 9482,
+ "seconds": 198.3
+}

@@ -1,0 +1,59 @@
+    return module
+
+
+v23 = _load('sub01_streamer_visual_v2_v23', 'install_v23.py')
+v22 = _load('sub01_streamer_visual_v2_v22', 'install_v22.py')
+v21, cam2, streampass = v23.v21, v23.cam2, v23.streampass
+seatfix, v2, Refused = streampass.seatfix, streampass.v2, streampass.Refused
+_f = streampass._f
+
+MARKER = '// SUB01_STREAMER_VISUAL_V2_V24'
+FILES = {'header': 'Sub01HomeLab.h', 'cpp': 'Sub01HomeLab.cpp'}
+SCHEMA = 'sub01.native-streamer-visual-v2-v24-install.v1'
+
+FIFO_NAME, LOCK_NAME, STATUS_NAME = 'main.mjpeg', 'main.mjpeg.lock', 'main.json'   # the contract with the director (spec step 3)
+STATUS_SCHEMA = 'sub01.streamer-main-status.v1'
+COM_PREFIX = 'seq='                                  # the one COM segment of every frame: `seq=<n>` in ASCII
+WIDTH, HEIGHT = 1920, 1080
+SLOTS, ENCODERS, REORDER_MAX, QUEUE_MAX = 3, 2, 2, 2   # spec: readback slots 3, encodes in flight 2, reorder buffer 2, output queue 2
+POOL_MAX = 4                                          # pooled 8.3 MB pixel buffers (no page faults per frame)
+DEADLINE_S, SLICE_MS = 0.5, 20                        # per-frame write deadline; poll slices (the stop flag is checked between them)
+PROBE_S, LOCK_RETRY_S, IDLE_MS = 1.0, 5.0, 100        # reader probe; lock retry; the writer's idle wait
+PIPE_FALLBACK = 1 << 20                               # F_SETPIPE_SZ request when /proc/sys/fs/pipe-max-size cannot be read
+PIPE_CAP = 16 << 20
+STATUS_S, LOG_S, DIAG_S = 1.0, 10.0, 1.0
+MAIN_TAP_AUTO, MAIN_FPS, MAIN_QUALITY, MAIN_SOURCE = -1, 60.0, 85.0, 0
+GONOGO_FRAMES, GONOGO_TIMEOUT_S, NO_CALLS_S = 600, 120.0, 30.0
+FIRE_TOLERANCE = (0.95, 1.05)
+DUP_MAX, MISS_MAX = 0.01, 0.05                         # independent go/no-go limits: duplicate calls <= 1 %, missed render frames <= 5 % of the window
+NONBLACK_MIN = 16                                     # a sampled 8-bit channel above this = not black
+CUT_LOG_S = 5.0                                       # at most one cut line per this many seconds (the rest counted)
+TUNING_LIMITS = {'main_tap': (0, 1), 'main_fps': (1, 60), 'main_quality': (40, 95), 'main_source': (0, 1)}
+TUNING_FIELDS = {'main_tap': 'StreamerVisualMainTapOn', 'main_fps': 'StreamerVisualMainFps', 'main_quality': 'StreamerVisualMainQuality',
+                 'main_source': 'StreamerVisualMainSource'}
+assert set(TUNING_FIELDS) == set(TUNING_LIMITS) and SLOTS == 3 and REORDER_MAX >= ENCODERS
+STATUS_FIELDS = ('sequence', 'fps', 'written', 'dropped_slots', 'dropped_encode', 'dropped_queue', 'dropped_noreader',
+                 'frames_discarded_midwrite', 'pipe_size', 'last_write_utc')   # spec step 3, verbatim
+
+
+def _fill(text: str, **values) -> str:
+    """C++ blocks carry @@NAME@@ placeholders (no f-string brace doubling); every placeholder must be filled."""
+    for key, value in values.items():
+        text = text.replace(f'@@{key}@@', value if isinstance(value, str) else _num(value))
+    assert '@@' not in text, text[text.index('@@') - 60:text.index('@@') + 60]
+    return text
+
+
+def _num(value) -> str:
+    return str(value) if isinstance(value, int) else repr(float(value))
+
+
+COMMON = dict(FIFO=FIFO_NAME, LOCK=LOCK_NAME, STATUS=STATUS_NAME, STATUS_SCHEMA=STATUS_SCHEMA, COM=COM_PREFIX, W=WIDTH, H=HEIGHT,
+              SLOTS=SLOTS, ENCODERS=ENCODERS, REORDER=REORDER_MAX, QUEUE=QUEUE_MAX, POOL=POOL_MAX, DEADLINE=DEADLINE_S, SLICE=SLICE_MS,
+              PROBE=PROBE_S, LOCK_RETRY=LOCK_RETRY_S, IDLE=IDLE_MS, PIPE_FALLBACK=PIPE_FALLBACK, PIPE_CAP=PIPE_CAP, STATUS_S=STATUS_S,
+              LOG=LOG_S, DIAG=DIAG_S, GONOGO_FRAMES=GONOGO_FRAMES, GONOGO_TIMEOUT=GONOGO_TIMEOUT_S, NO_CALLS=NO_CALLS_S,
+              FIRE_LO=FIRE_TOLERANCE[0], FIRE_HI=FIRE_TOLERANCE[1], NONBLACK=NONBLACK_MIN, CUT_LOG=CUT_LOG_S, DUP_DIV=round(1 / DUP_MAX),
+              MISS_DIV=round(1 / MISS_MAX))
+
+# ------------------------------------------------------------------------------------------------ Sub01HomeLab.h
+HEADER_V22_END = ' // SUB01_STREAMER_VISUAL_V2_V22 END\n'

@@ -1,0 +1,3642 @@
+{
+  "files": [
+    {
+      "path": "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Unix/UnixCommonStartup/Private/UnixCommonStartup.cpp",
+      "exists": true,
+      "bytes": 10821,
+      "sha256": "53e89a54d15eda5cbb8dfacc11f77bad4ed5f9d228790fb5309be940df3e1084",
+      "lines": [
+        {
+          "line": 10,
+          "text": "#include \"HAL/ExceptionHandling.h\""
+        },
+        {
+          "line": 11,
+          "text": "#include \"Unix/UnixPlatformCrashContext.h\""
+        },
+        {
+          "line": 12,
+          "text": "#include \"Modules/ModuleInterface.h\""
+        },
+        {
+          "line": 13,
+          "text": "#include \"Modules/ModuleManager.h\""
+        },
+        {
+          "line": 14,
+          "text": "#include \"Misc/EngineVersion.h\""
+        },
+        {
+          "line": 15,
+          "text": "#include \"HAL/PlatformApplicationMisc.h\""
+        },
+        {
+          "line": 16,
+          "text": ""
+        },
+        {
+          "line": 17,
+          "text": "#include <locale.h>"
+        },
+        {
+          "line": 18,
+          "text": "#include <sys/resource.h>"
+        },
+        {
+          "line": 19,
+          "text": ""
+        },
+        {
+          "line": 20,
+          "text": "static FString GSavedCommandLine;"
+        },
+        {
+          "line": 21,
+          "text": "extern int32 GuardedMain( const TCHAR* CmdLine );"
+        },
+        {
+          "line": 22,
+          "text": "extern void LaunchStaticShutdownAfterError();"
+        },
+        {
+          "line": 23,
+          "text": ""
+        },
+        {
+          "line": 24,
+          "text": "#if !UE_BUILD_SHIPPING && WITH_ENGINE"
+        },
+        {
+          "line": 25,
+          "text": "namespace UnixStdinTerminal"
+        },
+        {
+          "line": 26,
+          "text": "{"
+        },
+        {
+          "line": 27,
+          "text": "\tFTSTicker::FDelegateHandle CurrentTicker;"
+        },
+        {
+          "line": 28,
+          "text": ""
+        },
+        {
+          "line": 29,
+          "text": "\tbool Tick(float DeltaTime)"
+        },
+        {
+          "line": 30,
+          "text": "\t{"
+        },
+        {
+          "line": 31,
+          "text": "\t\tstatic bool bInited = false;"
+        },
+        {
+          "line": 32,
+          "text": ""
+        },
+        {
+          "line": 33,
+          "text": "\t\tif (!bInited)"
+        },
+        {
+          "line": 34,
+          "text": "\t\t{"
+        },
+        {
+          "line": 35,
+          "text": "\t\t\tbInited = true;"
+        },
+        {
+          "line": 36,
+          "text": "\t\t\tint flags = fcntl(STDIN_FILENO, F_GETFL);"
+        },
+        {
+          "line": 37,
+          "text": "\t\t\tflags |= O_NONBLOCK;"
+        },
+        {
+          "line": 38,
+          "text": "\t\t\tfcntl(STDIN_FILENO, F_SETFL, flags);"
+        },
+        {
+          "line": 39,
+          "text": "\t\t}"
+        },
+        {
+          "line": 40,
+          "text": ""
+        },
+        {
+          "line": 41,
+          "text": "\t\tint c = getchar();"
+        },
+        {
+          "line": 42,
+          "text": "\t\tif (c != EOF)"
+        },
+        {
+          "line": 43,
+          "text": "\t\t{"
+        },
+        {
+          "line": 44,
+          "text": "\t\t\tint CmdBufferLen = 0;"
+        },
+        {
+          "line": 45,
+          "text": "\t\t\tchar CmdBuffer[4096];"
+        },
+        {
+          "line": 46,
+          "text": ""
+        },
+        {
+          "line": 47,
+          "text": "\t\t\tCmdBuffer[CmdBufferLen++] = c;"
+        },
+        {
+          "line": 48,
+          "text": "\t\t\twhile (((c = getchar()) != EOF) && (CmdBufferLen < 4094))"
+        },
+        {
+          "line": 49,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 50,
+          "text": "\t\t\t\tif (c == '\\n' || c == '\\r')"
+        },
+        {
+          "line": 51,
+          "text": "\t\t\t\t\tbreak;"
+        },
+        {
+          "line": 52,
+          "text": ""
+        },
+        {
+          "line": 53,
+          "text": "\t\t\t\tCmdBuffer[CmdBufferLen++] = c;"
+        },
+        {
+          "line": 54,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 156,
+          "text": "\tif (getrlimit(Resource, &Limit) != 0)"
+        },
+        {
+          "line": 157,
+          "text": "\t{"
+        },
+        {
+          "line": 158,
+          "text": "\t\tfprintf(stderr, \"getrlimit() failed with error %d (%s)\\n\", errno, strerror(errno));"
+        },
+        {
+          "line": 159,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 160,
+          "text": "\t}"
+        },
+        {
+          "line": 161,
+          "text": ""
+        },
+        {
+          "line": 162,
+          "text": "\treturn SetResourceLimit(Resource, Limit.rlim_max, true);"
+        },
+        {
+          "line": 163,
+          "text": "}"
+        },
+        {
+          "line": 164,
+          "text": ""
+        },
+        {
+          "line": 165,
+          "text": "/**"
+        },
+        {
+          "line": 166,
+          "text": " * Expects GSavedCommandLine to be set up. Increases limit on"
+        },
+        {
+          "line": 167,
+          "text": " *  - number of open files to be no less than desired (if specified on command line, otherwise left alone)"
+        },
+        {
+          "line": 168,
+          "text": " *  - size of core file, so core gets dumped and we can debug crashed builds (unless overridden with -nocore)"
+        },
+        {
+          "line": 169,
+          "text": " *"
+        },
+        {
+          "line": 170,
+          "text": " */"
+        },
+        {
+          "line": 171,
+          "text": "static bool IncreasePerProcessLimits()"
+        },
+        {
+          "line": 172,
+          "text": "{"
+        },
+        {
+          "line": 173,
+          "text": "\t// honor the parameter if given, else change the limit of open files to the max hard limit allowed"
+        },
+        {
+          "line": 174,
+          "text": "\tint32 FileHandlesToReserve = -1;"
+        },
+        {
+          "line": 175,
+          "text": "\tif (FParse::Value(*GSavedCommandLine, TEXT(\"numopenfiles=\"), FileHandlesToReserve) && FileHandlesToReserve > 0)"
+        },
+        {
+          "line": 176,
+          "text": "\t{"
+        },
+        {
+          "line": 177,
+          "text": "\t\tif (!UE_BUILD_SHIPPING)"
+        },
+        {
+          "line": 178,
+          "text": "\t\t{"
+        },
+        {
+          "line": 179,
+          "text": "\t\t\tprintf(\"Increasing per-process limit of open file handles to %d\\n\", FileHandlesToReserve);"
+        },
+        {
+          "line": 180,
+          "text": "\t\t}"
+        },
+        {
+          "line": 181,
+          "text": ""
+        },
+        {
+          "line": 182,
+          "text": "\t\tif (!SetResourceLimit(RLIMIT_NOFILE, FileHandlesToReserve, true))"
+        },
+        {
+          "line": 183,
+          "text": "\t\t{"
+        },
+        {
+          "line": 184,
+          "text": "\t\t\tfprintf(stderr, \"Could not adjust number of file handles, consider changing \\\"nofile\\\" in /etc/security/limits.conf and relogin.\\nerror(%d): %s\\n\", errno, strerror(errno));"
+        },
+        {
+          "line": 185,
+          "text": "\t\t\treturn false;"
+        },
+        {
+          "line": 186,
+          "text": "\t\t}"
+        },
+        {
+          "line": 187,
+          "text": "\t}"
+        },
+        {
+          "line": 188,
+          "text": "\telse"
+        },
+        {
+          "line": 189,
+          "text": "\t{"
+        },
+        {
+          "line": 190,
+          "text": "\t\t// Set the highest value we can for number of files open"
+        },
+        {
+          "line": 191,
+          "text": "\t\tSetResourceMaxHardLimit(RLIMIT_NOFILE);"
+        },
+        {
+          "line": 192,
+          "text": "\t}"
+        },
+        {
+          "line": 193,
+          "text": ""
+        },
+        {
+          "line": 194,
+          "text": "\t// core dump policy:"
+        },
+        {
+          "line": 195,
+          "text": "\t// - Shipping disables it by default (unless -core is passed)"
+        },
+        {
+          "line": 196,
+          "text": "\t// - The rest set it to infinity unless -nocore is passed"
+        },
+        {
+          "line": 197,
+          "text": "\t// (in all scenarios user wish as expressed with -core or -nocore takes priority)"
+        },
+        {
+          "line": 198,
+          "text": "\t// Note that we used to have Test disable cores by default too. This has been changed around UE 4.15."
+        },
+        {
+          "line": 199,
+          "text": "\t// Since 4.20, inability to change the limit is no longer a failure unless switches were used"
+        },
+        {
+          "line": 200,
+          "text": "\tbool bFailIfUnableToChange = false;"
+        },
+        {
+          "line": 201,
+          "text": "\tbool bDisableCore = (UE_BUILD_SHIPPING != 0);"
+        },
+        {
+          "line": 202,
+          "text": "\tif (FParse::Param(*GSavedCommandLine, TEXT(\"nocore\")))"
+        },
+        {
+          "line": 203,
+          "text": "\t{"
+        },
+        {
+          "line": 204,
+          "text": "\t\tbDisableCore = true;"
+        },
+        {
+          "line": 205,
+          "text": "\t\tbFailIfUnableToChange = true;"
+        },
+        {
+          "line": 206,
+          "text": "\t}"
+        },
+        {
+          "line": 207,
+          "text": "\tif (FParse::Param(*GSavedCommandLine, TEXT(\"core\")))"
+        },
+        {
+          "line": 208,
+          "text": "\t{"
+        },
+        {
+          "line": 209,
+          "text": "\t\tbDisableCore = false;"
+        },
+        {
+          "line": 210,
+          "text": "\t\tbFailIfUnableToChange = true;"
+        },
+        {
+          "line": 211,
+          "text": "\t}"
+        },
+        {
+          "line": 212,
+          "text": ""
+        },
+        {
+          "line": 213,
+          "text": "\tif (bDisableCore)"
+        },
+        {
+          "line": 214,
+          "text": "\t{"
+        },
+        {
+          "line": 215,
+          "text": "\t\tprintf(\"Disabling core dumps.\\n\");"
+        },
+        {
+          "line": 216,
+          "text": "\t\tif (!SetResourceLimit(RLIMIT_CORE, 0, false) && bFailIfUnableToChange)"
+        },
+        {
+          "line": 217,
+          "text": "\t\t{"
+        },
+        {
+          "line": 218,
+          "text": "\t\t\tfprintf(stderr, \"Could not set core file size to 0, error(%d): %s\\n\", errno, strerror(errno));"
+        },
+        {
+          "line": 219,
+          "text": "\t\t\treturn false;"
+        },
+        {
+          "line": 220,
+          "text": "\t\t}"
+        },
+        {
+          "line": 221,
+          "text": "\t}"
+        },
+        {
+          "line": 222,
+          "text": "\telse"
+        },
+        {
+          "line": 223,
+          "text": "\t{"
+        },
+        {
+          "line": 224,
+          "text": "\t\tprintf(\"Increasing per-process limit of core file size to infinity.\\n\");"
+        },
+        {
+          "line": 225,
+          "text": "\t\tif (!SetResourceLimit(RLIMIT_CORE, RLIM_INFINITY, true) && bFailIfUnableToChange)"
+        },
+        {
+          "line": 226,
+          "text": "\t\t{"
+        },
+        {
+          "line": 227,
+          "text": "\t\t\tfprintf(stderr, \"Could not adjust core file size, consider changing \\\"core\\\" in /etc/security/limits.conf and relogin.\\nerror(%d): %s\\n\", errno, strerror(errno));"
+        },
+        {
+          "line": 228,
+          "text": "\t\t\tfprintf(stderr, \"Alternatively, pass -nocore if you are unable or unwilling to do that.\\n\");"
+        },
+        {
+          "line": 229,
+          "text": "\t\t\treturn false;"
+        },
+        {
+          "line": 230,
+          "text": "\t\t}"
+        },
+        {
+          "line": 231,
+          "text": "\t}"
+        },
+        {
+          "line": 232,
+          "text": ""
+        },
+        {
+          "line": 233,
+          "text": "\tif constexpr (WITH_PROCESS_PRIORITY_CONTROL)"
+        },
+        {
+          "line": 234,
+          "text": "\t{"
+        },
+        {
+          "line": 235,
+          "text": "\t\tprintf(\"Increasing per-process limit for scheduling priority.\\n\");"
+        },
+        {
+          "line": 236,
+          "text": "\t\tSetResourceMaxHardLimit(RLIMIT_NICE);"
+        },
+        {
+          "line": 237,
+          "text": "\t}"
+        },
+        {
+          "line": 238,
+          "text": ""
+        },
+        {
+          "line": 239,
+          "text": "\treturn true;"
+        },
+        {
+          "line": 240,
+          "text": "}"
+        },
+        {
+          "line": 241,
+          "text": ""
+        },
+        {
+          "line": 242,
+          "text": "int CommonUnixMain(int argc, char *argv[], int (*RealMain)(const TCHAR * CommandLine), void (*AppExitCallback)())"
+        },
+        {
+          "line": 243,
+          "text": "{"
+        },
+        {
+          "line": 244,
+          "text": "\tFString EarlyInitCommandLine;"
+        },
+        {
+          "line": 245,
+          "text": "\tFPlatformApplicationMisc::EarlyUnixInitialization(EarlyInitCommandLine);"
+        },
+        {
+          "line": 246,
+          "text": "\tGSavedCommandLine += EarlyInitCommandLine;"
+        },
+        {
+          "line": 247,
+          "text": ""
+        },
+        {
+          "line": 248,
+          "text": "\tFPlatformMisc::SetGracefulTerminationHandler();"
+        },
+        {
+          "line": 249,
+          "text": ""
+        },
+        {
+          "line": 250,
+          "text": "\tif (UE_BUILD_SHIPPING)"
+        },
+        {
+          "line": 251,
+          "text": "\t{"
+        },
+        {
+          "line": 252,
+          "text": "\t\t// only printed in shipping"
+        },
+        {
+          "line": 253,
+          "text": "\t\tprintf(\"%s %d %d\\n\", StringCast<ANSICHAR>(*FEngineVersion::Current().ToString()).Get(), GPackageFileUEVersion.ToValue(), GPackageFileLicenseeUEVersion);"
+        },
+        {
+          "line": 254,
+          "text": "\t}"
+        },
+        {
+          "line": 255,
+          "text": ""
+        },
+        {
+          "line": 256,
+          "text": "\tint ErrorLevel = 0;"
+        },
+        {
+          "line": 257,
+          "text": ""
+        },
+        {
+          "line": 258,
+          "text": "\tif (setenv(\"LC_NUMERIC\", \"en_US\", 1) != 0)"
+        },
+        {
+          "line": 259,
+          "text": "\t{"
+        },
+        {
+          "line": 260,
+          "text": "\t\tint ErrNo = errno;"
+        },
+        {
+          "line": 261,
+          "text": "\t\tfprintf(stderr, \"Unable to setenv(LC_NUMERIC): errno=%d (%s)\", ErrNo, strerror(ErrNo));"
+        },
+        {
+          "line": 262,
+          "text": "\t}"
+        },
+        {
+          "line": 263,
+          "text": ""
+        },
+        {
+          "line": 264,
+          "text": "\tfor (int32 Option = 1; Option < argc; Option++)"
+        },
+        {
+          "line": 265,
+          "text": "\t{"
+        },
+        {
+          "line": 266,
+          "text": "\t\tGSavedCommandLine += TEXT(\" \");"
+        },
+        {
+          "line": 267,
+          "text": "\t\t// we need to quote stuff that has spaces in it because something somewhere is removing quotation marks before they arrive here"
+        },
+        {
+          "line": 268,
+          "text": "\t\tFString Temp = UTF8_TO_TCHAR(argv[Option]);"
+        },
+        {
+          "line": 269,
+          "text": "\t\tif (Temp.Contains(TEXT(\" \")))"
+        },
+        {
+          "line": 270,
+          "text": "\t\t{"
+        },
+        {
+          "line": 271,
+          "text": "\t\t\tint32 Quote = 0;"
+        },
+        {
+          "line": 272,
+          "text": "\t\t\tif(Temp.StartsWith(TEXT(\"-\")))"
+        },
+        {
+          "line": 273,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 274,
+          "text": "\t\t\t\tint32 Separator;"
+        },
+        {
+          "line": 275,
+          "text": "\t\t\t\tif (Temp.FindChar('=', Separator))"
+        },
+        {
+          "line": 276,
+          "text": "\t\t\t\t{"
+        },
+        {
+          "line": 277,
+          "text": "\t\t\t\t\tQuote = Separator + 1;"
+        },
+        {
+          "line": 278,
+          "text": "\t\t\t\t}"
+        },
+        {
+          "line": 279,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 280,
+          "text": "\t\t\tTemp = Temp.Left(Quote) + TEXT(\"\\\"\") + Temp.Mid(Quote) + TEXT(\"\\\"\");"
+        },
+        {
+          "line": 281,
+          "text": "\t\t}"
+        },
+        {
+          "line": 282,
+          "text": "\t\tGSavedCommandLine += Temp; \t// note: technically it depends on locale"
+        },
+        {
+          "line": 283,
+          "text": "\t}"
+        },
+        {
+          "line": 284,
+          "text": ""
+        },
+        {
+          "line": 285,
+          "text": "\tif (!UE_BUILD_SHIPPING)"
+        },
+        {
+          "line": 286,
+          "text": "\t{"
+        },
+        {
+          "line": 287,
+          "text": "\t\tGAlwaysReportCrash = true;\t// set by default and reverse the behavior"
+        },
+        {
+          "line": 288,
+          "text": "\t\tif ( FParse::Param( *GSavedCommandLine,TEXT(\"nocrashreports\") ) || FParse::Param( *GSavedCommandLine,TEXT(\"no-crashreports\") ) )"
+        },
+        {
+          "line": 289,
+          "text": "\t\t{"
+        },
+        {
+          "line": 290,
+          "text": "\t\t\tGAlwaysReportCrash = false;"
+        },
+        {
+          "line": 291,
+          "text": "\t\t}"
+        },
+        {
+          "line": 292,
+          "text": "\t}"
+        },
+        {
+          "line": 293,
+          "text": ""
+        },
+        {
+          "line": 294,
+          "text": "\tif (FPlatformApplicationMisc::ShouldIncreaseProcessLimits() && !IncreasePerProcessLimits())"
+        },
+        {
+          "line": 295,
+          "text": "\t{"
+        },
+        {
+          "line": 296,
+          "text": "\t\tfprintf(stderr, \"Could not set desired per-process limits, consider changing system limits.\\n\");"
+        },
+        {
+          "line": 297,
+          "text": "\t\tErrorLevel = 1;"
+        },
+        {
+          "line": 298,
+          "text": "\t}"
+        },
+        {
+          "line": 299,
+          "text": "\telse"
+        },
+        {
+          "line": 300,
+          "text": "\t{"
+        },
+        {
+          "line": 301,
+          "text": "#if UE_BUILD_DEBUG"
+        },
+        {
+          "line": 302,
+          "text": "\t\tif( true && !GAlwaysReportCrash )"
+        },
+        {
+          "line": 303,
+          "text": "#else"
+        },
+        {
+          "line": 304,
+          "text": "\t\tif( FPlatformMisc::IsDebuggerPresent() && !GAlwaysReportCrash )"
+        },
+        {
+          "line": 305,
+          "text": "#endif"
+        },
+        {
+          "line": 306,
+          "text": "\t\t{"
+        },
+        {
+          "line": 307,
+          "text": "\t\t\t// Don't use exception handling when a debugger is attached to exactly trap the crash. This does NOT check"
+        },
+        {
+          "line": 308,
+          "text": "\t\t\t// whether we are the first instance or not!"
+        },
+        {
+          "line": 309,
+          "text": "\t\t\tErrorLevel = RealMain( *GSavedCommandLine );"
+        },
+        {
+          "line": 310,
+          "text": "\t\t}"
+        },
+        {
+          "line": 311,
+          "text": "\t\telse"
+        },
+        {
+          "line": 312,
+          "text": "\t\t{"
+        },
+        {
+          "line": 313,
+          "text": "#if !UE_BUILD_SHIPPING && WITH_ENGINE"
+        },
+        {
+          "line": 314,
+          "text": "\t\t\tbool bReadCommandsFromStdin = FParse::Param(*GSavedCommandLine, TEXT(\"cmdstdin\"));"
+        },
+        {
+          "line": 315,
+          "text": "\t\t\tif (bReadCommandsFromStdin)"
+        },
+        {
+          "line": 316,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 317,
+          "text": "\t\t\t\tUnixStdinTerminal::CurrentTicker = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateStatic(&UnixStdinTerminal::Tick), 1.0f);"
+        },
+        {
+          "line": 318,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 319,
+          "text": "#endif"
+        },
+        {
+          "line": 320,
+          "text": ""
+        },
+        {
+          "line": 321,
+          "text": "\t\t\tFPlatformMisc::SetCrashHandler(CommonUnixCrashHandler);"
+        },
+        {
+          "line": 322,
+          "text": "\t\t\tGIsGuarded = 1;"
+        },
+        {
+          "line": 323,
+          "text": "\t\t\t// Run the guarded code."
+        },
+        {
+          "line": 324,
+          "text": "\t\t\tErrorLevel = RealMain( *GSavedCommandLine );"
+        },
+        {
+          "line": 325,
+          "text": "\t\t\tGIsGuarded = 0;"
+        },
+        {
+          "line": 326,
+          "text": ""
+        },
+        {
+          "line": 327,
+          "text": "#if !UE_BUILD_SHIPPING && WITH_ENGINE"
+        },
+        {
+          "line": 328,
+          "text": "\t\t\tif (bReadCommandsFromStdin)"
+        },
+        {
+          "line": 329,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 330,
+          "text": "\t\t\t\tFTSTicker::RemoveTicker(UnixStdinTerminal::CurrentTicker);"
+        },
+        {
+          "line": 331,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 332,
+          "text": "#endif"
+        },
+        {
+          "line": 333,
+          "text": "\t\t}"
+        },
+        {
+          "line": 334,
+          "text": "\t}"
+        },
+        {
+          "line": 335,
+          "text": ""
+        },
+        {
+          "line": 336,
+          "text": "\t// Final shut down."
+        },
+        {
+          "line": 337,
+          "text": "\tif (AppExitCallback)"
+        },
+        {
+          "line": 338,
+          "text": "\t{"
+        },
+        {
+          "line": 339,
+          "text": "\t\t// Workaround function to avoid circular dependencies between Launch and CommonUnixStartup modules."
+        },
+        {
+          "line": 340,
+          "text": ""
+        },
+        {
+          "line": 341,
+          "text": "\t\t// Other platforms call FEngineLoop::AppExit() in their main() (removed by preprocessor if compiled without engine), "
+        },
+        {
+          "line": 342,
+          "text": "\t\t// but on Unix we want to share a common main() in CommonUnixStartup module, so not just the engine but all the programs "
+        },
+        {
+          "line": 343,
+          "text": "\t\t// could share this logic. Unfortunately, AppExit() practice breaks this nice approach since FEngineLoop cannot be moved outside of "
+        },
+        {
+          "line": 344,
+          "text": "\t\t// Launch module without making too many changes. Hence CommonUnixMain will call it through this function if provided."
+        },
+        {
+          "line": 345,
+          "text": ""
+        },
+        {
+          "line": 346,
+          "text": "\t\tAppExitCallback();"
+        },
+        {
+          "line": 347,
+          "text": "\t}"
+        },
+        {
+          "line": 348,
+          "text": ""
+        },
+        {
+          "line": 349,
+          "text": "\t// check if a specific return code has been set"
+        },
+        {
+          "line": 350,
+          "text": "\tuint8 OverriddenErrorLevel = 0;"
+        },
+        {
+          "line": 351,
+          "text": "\tif (FPlatformMisc::HasOverriddenReturnCode(&OverriddenErrorLevel))"
+        },
+        {
+          "line": 352,
+          "text": "\t{"
+        },
+        {
+          "line": 353,
+          "text": "\t\tErrorLevel = OverriddenErrorLevel;"
+        },
+        {
+          "line": 354,
+          "text": "\t}"
+        },
+        {
+          "line": 355,
+          "text": ""
+        },
+        {
+          "line": 356,
+          "text": "\tif (ErrorLevel)"
+        },
+        {
+          "line": 357,
+          "text": "\t{"
+        },
+        {
+          "line": 358,
+          "text": "\t\tprintf(\"Exiting abnormally (error code: %d)\\n\", ErrorLevel);"
+        }
+      ]
+    },
+    {
+      "path": "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/Misc/Parse.cpp",
+      "exists": true,
+      "bytes": 47381,
+      "sha256": "bfc0a1f19e2318a83b1444728da61ed4c09037ffd3c1531f1ae99f97c01b6bd4",
+      "lines": [
+        {
+          "line": 232,
+          "text": "\t\tAr.Logf(TEXT(\"ERROR: The function was supposed to only find matching commands but not have any side effect.\"));"
+        },
+        {
+          "line": 233,
+          "text": "\t\tAr.Logf(TEXT(\"However Exec() returned true which means we either executed a command or the command parsing returned true where it shouldn't.\"));"
+        },
+        {
+          "line": 234,
+          "text": "\t}"
+        },
+        {
+          "line": 235,
+          "text": "*/"
+        },
+        {
+          "line": 236,
+          "text": "}"
+        },
+        {
+          "line": 237,
+          "text": "#endif // UE_BUILD_SHIPPING"
+        },
+        {
+          "line": 238,
+          "text": ""
+        },
+        {
+          "line": 239,
+          "text": "//"
+        },
+        {
+          "line": 240,
+          "text": "// Get a string from a text string."
+        },
+        {
+          "line": 241,
+          "text": "//"
+        },
+        {
+          "line": 242,
+          "text": "bool FParse::Value("
+        },
+        {
+          "line": 243,
+          "text": "\tconst TCHAR*\tStream,"
+        },
+        {
+          "line": 244,
+          "text": "\tconst TCHAR*\tMatch,"
+        },
+        {
+          "line": 245,
+          "text": "\tTCHAR*\t\t\tValue,"
+        },
+        {
+          "line": 246,
+          "text": "\tint32\t\t\tMaxLen,"
+        },
+        {
+          "line": 247,
+          "text": "\tbool\t\t\tbShouldStopOnSeparator,"
+        },
+        {
+          "line": 248,
+          "text": "\tconst TCHAR**\tOptStreamGotTo"
+        },
+        {
+          "line": 249,
+          "text": ")"
+        },
+        {
+          "line": 250,
+          "text": "{"
+        },
+        {
+          "line": 251,
+          "text": "\tif (MaxLen == 0)"
+        },
+        {
+          "line": 252,
+          "text": "\t{"
+        },
+        {
+          "line": 253,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 254,
+          "text": "\t}"
+        },
+        {
+          "line": 255,
+          "text": "\tcheck(Value && MaxLen > 0);"
+        },
+        {
+          "line": 256,
+          "text": ""
+        },
+        {
+          "line": 257,
+          "text": "\tbool bSuccess = false;"
+        },
+        {
+          "line": 258,
+          "text": "\tint32 MatchLen = FCString::Strlen(Match);"
+        },
+        {
+          "line": 259,
+          "text": ""
+        },
+        {
+          "line": 260,
+          "text": "\tif (OptStreamGotTo)"
+        },
+        {
+          "line": 261,
+          "text": "\t{"
+        },
+        {
+          "line": 262,
+          "text": "\t\t*OptStreamGotTo = nullptr;"
+        },
+        {
+          "line": 263,
+          "text": "\t}"
+        },
+        {
+          "line": 264,
+          "text": ""
+        },
+        {
+          "line": 265,
+          "text": "\tconst TCHAR* FoundInStream = FCString::Strifind(Stream, Match, true);"
+        },
+        {
+          "line": 266,
+          "text": "\tif (FoundInStream == nullptr)"
+        },
+        {
+          "line": 267,
+          "text": "\t{"
+        },
+        {
+          "line": 268,
+          "text": "\t\tValue[0] = TCHAR('\\0');"
+        },
+        {
+          "line": 269,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 270,
+          "text": "\t}"
+        },
+        {
+          "line": 271,
+          "text": ""
+        },
+        {
+          "line": 272,
+          "text": "\tconst TCHAR* ValueStartInStream = FoundInStream + MatchLen;"
+        },
+        {
+          "line": 273,
+          "text": "\tconst TCHAR* ValueEndInStream;"
+        },
+        {
+          "line": 274,
+          "text": ""
+        },
+        {
+          "line": 275,
+          "text": "\t// Check for quoted arguments' string with spaces"
+        },
+        {
+          "line": 276,
+          "text": "\t// -Option=\"Value1 Value2\""
+        },
+        {
+          "line": 277,
+          "text": "\t//         ^~~~Start"
+        },
+        {
+          "line": 278,
+          "text": "\tconst bool bArgumentsQuoted = *ValueStartInStream == '\"';"
+        },
+        {
+          "line": 279,
+          "text": ""
+        },
+        {
+          "line": 280,
+          "text": "\tif (bArgumentsQuoted)"
+        },
+        {
+          "line": 281,
+          "text": "\t{"
+        },
+        {
+          "line": 289,
+          "text": "\t\t\tValueEndInStream = FoundInStream + FCString::Strlen(FoundInStream);"
+        },
+        {
+          "line": 290,
+          "text": "\t\t}"
+        },
+        {
+          "line": 291,
+          "text": "\t}"
+        },
+        {
+          "line": 292,
+          "text": "\telse"
+        },
+        {
+          "line": 293,
+          "text": "\t{"
+        },
+        {
+          "line": 294,
+          "text": "\t\t// Skip initial whitespace"
+        },
+        {
+          "line": 295,
+          "text": "\t\tconst TCHAR* WhiteSpaceChars = TEXT(\" \\r\\n\\t\");"
+        },
+        {
+          "line": 296,
+          "text": "\t\tValueStartInStream += FCString::Strspn(ValueStartInStream, WhiteSpaceChars);"
+        },
+        {
+          "line": 297,
+          "text": ""
+        },
+        {
+          "line": 298,
+          "text": "\t\t// Non-quoted string without spaces."
+        },
+        {
+          "line": 299,
+          "text": "\t\tconst TCHAR* TerminatingChars = bShouldStopOnSeparator ? TEXT(\",) \\r\\n\\t\") : WhiteSpaceChars;"
+        },
+        {
+          "line": 300,
+          "text": "\t\tValueEndInStream = ValueStartInStream + FCString::Strcspn(ValueStartInStream, TerminatingChars);"
+        },
+        {
+          "line": 301,
+          "text": "\t}"
+        },
+        {
+          "line": 302,
+          "text": ""
+        },
+        {
+          "line": 303,
+          "text": "\tint32 ValueLength = FMath::Min<int32>(MaxLen - 1, UE_PTRDIFF_TO_INT32(ValueEndInStream - ValueStartInStream));"
+        },
+        {
+          "line": 304,
+          "text": "\t// It is possible for ValueLength to be 0."
+        },
+        {
+          "line": 305,
+          "text": "\t// FCString::Strncpy asserts that its copying at least 1 char, memcpy has no such constraint."
+        },
+        {
+          "line": 306,
+          "text": "\tFMemory::Memcpy(Value, ValueStartInStream, sizeof(Value[0]) * ValueLength);"
+        },
+        {
+          "line": 307,
+          "text": "\tValue[ValueLength] = TCHAR('\\0');"
+        },
+        {
+          "line": 308,
+          "text": ""
+        },
+        {
+          "line": 309,
+          "text": "\tif (OptStreamGotTo)"
+        },
+        {
+          "line": 310,
+          "text": "\t{"
+        },
+        {
+          "line": 311,
+          "text": "\t\tif (bArgumentsQuoted && *ValueEndInStream == '\"')"
+        },
+        {
+          "line": 312,
+          "text": "\t\t{"
+        },
+        {
+          "line": 313,
+          "text": "\t\t\t++ValueEndInStream;"
+        },
+        {
+          "line": 314,
+          "text": "\t\t}"
+        },
+        {
+          "line": 315,
+          "text": ""
+        },
+        {
+          "line": 316,
+          "text": "\t\t*OptStreamGotTo = ValueEndInStream;"
+        },
+        {
+          "line": 317,
+          "text": "\t}"
+        },
+        {
+          "line": 318,
+          "text": ""
+        },
+        {
+          "line": 319,
+          "text": "\treturn true;"
+        },
+        {
+          "line": 320,
+          "text": "}"
+        },
+        {
+          "line": 321,
+          "text": ""
+        },
+        {
+          "line": 322,
+          "text": "//"
+        },
+        {
+          "line": 323,
+          "text": "// Checks if a command-line parameter exists in the stream."
+        },
+        {
+          "line": 324,
+          "text": "//"
+        },
+        {
+          "line": 325,
+          "text": "bool FParse::Param( const TCHAR* Stream, const TCHAR* Param )"
+        },
+        {
+          "line": 326,
+          "text": "{"
+        },
+        {
+          "line": 327,
+          "text": "\tif (*Param == '-' || *Param == '/')"
+        },
+        {
+          "line": 328,
+          "text": "\t{"
+        },
+        {
+          "line": 329,
+          "text": "\t\t++Param;"
+        },
+        {
+          "line": 330,
+          "text": "\t}"
+        },
+        {
+          "line": 331,
+          "text": ""
+        },
+        {
+          "line": 332,
+          "text": "\tconst TCHAR* Start = Stream;"
+        },
+        {
+          "line": 333,
+          "text": "\tif( *Stream )"
+        },
+        {
+          "line": 346,
+          "text": ""
+        },
+        {
+          "line": 347,
+          "text": "\t\t\tStart++;"
+        },
+        {
+          "line": 348,
+          "text": "\t\t}"
+        },
+        {
+          "line": 349,
+          "text": "\t}"
+        },
+        {
+          "line": 350,
+          "text": "\treturn false;"
+        },
+        {
+          "line": 351,
+          "text": "}"
+        },
+        {
+          "line": 352,
+          "text": ""
+        },
+        {
+          "line": 353,
+          "text": "// "
+        },
+        {
+          "line": 354,
+          "text": "// Parse a string."
+        },
+        {
+          "line": 355,
+          "text": "//"
+        },
+        {
+          "line": 356,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, FString& Value, bool bShouldStopOnSeparator, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 357,
+          "text": "{"
+        },
+        {
+          "line": 358,
+          "text": "\tif (!Stream)"
+        },
+        {
+          "line": 359,
+          "text": "\t{"
+        },
+        {
+          "line": 360,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 361,
+          "text": "\t}"
+        },
+        {
+          "line": 362,
+          "text": ""
+        },
+        {
+          "line": 363,
+          "text": "\tint32 StreamLen = FCString::Strlen(Stream);"
+        },
+        {
+          "line": 364,
+          "text": "\tif (StreamLen > 0)"
+        },
+        {
+          "line": 365,
+          "text": "\t{"
+        },
+        {
+          "line": 366,
+          "text": "\t\tTArray<TCHAR, TInlineAllocator<4096>> ValueCharArray;"
+        },
+        {
+          "line": 367,
+          "text": "\t\tValueCharArray.AddUninitialized(StreamLen + 1);"
+        },
+        {
+          "line": 368,
+          "text": "\t\tValueCharArray[0] = TCHAR('\\0');"
+        },
+        {
+          "line": 369,
+          "text": ""
+        },
+        {
+          "line": 370,
+          "text": "\t\tif( FParse::Value(Stream, Match, ValueCharArray.GetData(), ValueCharArray.Num(), bShouldStopOnSeparator, OptStreamGotTo) )"
+        },
+        {
+          "line": 371,
+          "text": "\t\t{"
+        },
+        {
+          "line": 372,
+          "text": "\t\t\tValue = FString(ValueCharArray.GetData());"
+        },
+        {
+          "line": 373,
+          "text": "\t\t\treturn true;"
+        },
+        {
+          "line": 374,
+          "text": "\t\t}"
+        },
+        {
+          "line": 375,
+          "text": "\t}"
+        },
+        {
+          "line": 376,
+          "text": ""
+        },
+        {
+          "line": 377,
+          "text": "\treturn false;"
+        },
+        {
+          "line": 378,
+          "text": "}"
+        },
+        {
+          "line": 379,
+          "text": ""
+        },
+        {
+          "line": 380,
+          "text": "template<class T>"
+        },
+        {
+          "line": 381,
+          "text": "bool ParseQuotedString( const TCHAR* Buffer, T& Value, int32* OutNumCharsRead)"
+        },
+        {
+          "line": 382,
+          "text": "{"
+        },
+        {
+          "line": 383,
+          "text": "\tif (OutNumCharsRead)"
+        },
+        {
+          "line": 384,
+          "text": "\t{"
+        },
+        {
+          "line": 385,
+          "text": "\t\t*OutNumCharsRead = 0;"
+        },
+        {
+          "line": 386,
+          "text": "\t}"
+        },
+        {
+          "line": 387,
+          "text": ""
+        },
+        {
+          "line": 388,
+          "text": "\tconst TCHAR* Start = Buffer;"
+        },
+        {
+          "line": 389,
+          "text": ""
+        },
+        {
+          "line": 390,
+          "text": "\t// Require opening quote"
+        },
+        {
+          "line": 391,
+          "text": "\tif (*Buffer++ != TCHAR('\"'))"
+        },
+        {
+          "line": 392,
+          "text": "\t{"
+        },
+        {
+          "line": 393,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 394,
+          "text": "\t}"
+        },
+        {
+          "line": 395,
+          "text": ""
+        },
+        {
+          "line": 396,
+          "text": "\tconstexpr FAsciiSet StopCharacters = FAsciiSet(\"\\\"\\n\\r\") + '\\0';"
+        },
+        {
+          "line": 397,
+          "text": "\tconstexpr FAsciiSet StopAndEscapeCharacters = StopCharacters + '\\\\';"
+        },
+        {
+          "line": 398,
+          "text": "\tauto ShouldParse = [=](const TCHAR Ch) { return StopCharacters.Test(Ch) == 0; };"
+        },
+        {
+          "line": 399,
+          "text": "\t"
+        },
+        {
+          "line": 400,
+          "text": "\twhile (true)"
+        },
+        {
+          "line": 401,
+          "text": "\t{"
+        },
+        {
+          "line": 402,
+          "text": "\t\t// Append unescaped substring"
+        },
+        {
+          "line": 403,
+          "text": "\t\tconst TCHAR* UnescapedEnd = FAsciiSet::FindFirstOrEnd(Buffer, StopAndEscapeCharacters);"
+        },
+        {
+          "line": 404,
+          "text": "\t\tFStringView UnescapedSubstring(Buffer, int32(UnescapedEnd - Buffer));"
+        },
+        {
+          "line": 526,
+          "text": "//"
+        },
+        {
+          "line": 527,
+          "text": "bool FParse::Text( const TCHAR* Buffer, FText& Value, const TCHAR* Namespace )"
+        },
+        {
+          "line": 528,
+          "text": "{"
+        },
+        {
+          "line": 529,
+          "text": "\treturn FTextStringHelper::ReadFromBuffer(Buffer, Value, Namespace) != nullptr;"
+        },
+        {
+          "line": 530,
+          "text": "}"
+        },
+        {
+          "line": 531,
+          "text": ""
+        },
+        {
+          "line": 532,
+          "text": "// "
+        },
+        {
+          "line": 533,
+          "text": "// Parse an Text."
+        },
+        {
+          "line": 534,
+          "text": "// This is expected to in the form NSLOCTEXT(\"Namespace\",\"Key\",\"SourceString\") or LOCTEXT(\"Key\",\"SourceString\")"
+        },
+        {
+          "line": 535,
+          "text": "//"
+        },
+        {
+          "line": 536,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, FText& Value, const TCHAR* Namespace)"
+        },
+        {
+          "line": 537,
+          "text": "{"
+        },
+        {
+          "line": 538,
+          "text": "\t// The FText "
+        },
+        {
+          "line": 539,
+          "text": "\tStream = FCString::Strifind( Stream, Match );"
+        },
+        {
+          "line": 540,
+          "text": "\tif( Stream )"
+        },
+        {
+          "line": 541,
+          "text": "\t{"
+        },
+        {
+          "line": 542,
+          "text": "\t\tStream += FCString::Strlen( Match );"
+        },
+        {
+          "line": 543,
+          "text": "\t\treturn FParse::Text( Stream, Value, Namespace );"
+        },
+        {
+          "line": 544,
+          "text": "\t}"
+        },
+        {
+          "line": 545,
+          "text": ""
+        },
+        {
+          "line": 546,
+          "text": "\treturn false;"
+        },
+        {
+          "line": 547,
+          "text": "}"
+        },
+        {
+          "line": 548,
+          "text": ""
+        },
+        {
+          "line": 549,
+          "text": "//"
+        },
+        {
+          "line": 550,
+          "text": "// Parse a quadword."
+        },
+        {
+          "line": 551,
+          "text": "//"
+        },
+        {
+          "line": 552,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, uint64& Value, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 553,
+          "text": "{"
+        },
+        {
+          "line": 554,
+          "text": "\treturn FParse::Value( Stream, Match, *(int64*)&Value, OptStreamGotTo);"
+        },
+        {
+          "line": 555,
+          "text": "}"
+        },
+        {
+          "line": 556,
+          "text": ""
+        },
+        {
+          "line": 557,
+          "text": "//"
+        },
+        {
+          "line": 558,
+          "text": "// Parse a signed quadword."
+        },
+        {
+          "line": 559,
+          "text": "//"
+        },
+        {
+          "line": 560,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, int64& Value, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 561,
+          "text": "{"
+        },
+        {
+          "line": 562,
+          "text": "\tTCHAR Temp[4096] = {};"
+        },
+        {
+          "line": 563,
+          "text": "\tTCHAR* Ptr = Temp;"
+        },
+        {
+          "line": 564,
+          "text": "\tif (FParse::Value( Stream, Match, Temp, UE_ARRAY_COUNT(Temp), true, OptStreamGotTo))"
+        },
+        {
+          "line": 565,
+          "text": "\t{"
+        },
+        {
+          "line": 566,
+          "text": "\t\tValue = 0;"
+        },
+        {
+          "line": 567,
+          "text": "\t\tbool Negative = (*Ptr=='-');"
+        },
+        {
+          "line": 568,
+          "text": "\t\tPtr += Negative;"
+        },
+        {
+          "line": 569,
+          "text": "\t\twhile( *Ptr>='0' && *Ptr<='9' )"
+        },
+        {
+          "line": 570,
+          "text": "\t\t\tValue = Value*10 + *Ptr++ - '0';"
+        },
+        {
+          "line": 571,
+          "text": "\t\tif( Negative )"
+        },
+        {
+          "line": 572,
+          "text": "\t\t\tValue = -Value;"
+        },
+        {
+          "line": 573,
+          "text": "\t\treturn true;"
+        },
+        {
+          "line": 574,
+          "text": "\t}"
+        },
+        {
+          "line": 575,
+          "text": "\telse"
+        },
+        {
+          "line": 576,
+          "text": "\t{"
+        },
+        {
+          "line": 577,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 578,
+          "text": "\t}"
+        },
+        {
+          "line": 579,
+          "text": "}"
+        },
+        {
+          "line": 580,
+          "text": ""
+        },
+        {
+          "line": 581,
+          "text": "//"
+        },
+        {
+          "line": 582,
+          "text": "// Get a name."
+        },
+        {
+          "line": 583,
+          "text": "//"
+        },
+        {
+          "line": 584,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, FName& Name, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 585,
+          "text": "{"
+        },
+        {
+          "line": 586,
+          "text": "\tTCHAR TempStr[NAME_SIZE];"
+        },
+        {
+          "line": 587,
+          "text": ""
+        },
+        {
+          "line": 588,
+          "text": "\tif (!FParse::Value(Stream, Match, TempStr, NAME_SIZE, true, OptStreamGotTo))"
+        },
+        {
+          "line": 589,
+          "text": "\t{"
+        },
+        {
+          "line": 590,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 591,
+          "text": "\t}"
+        },
+        {
+          "line": 592,
+          "text": ""
+        },
+        {
+          "line": 593,
+          "text": "\tName = FName(TempStr);"
+        },
+        {
+          "line": 594,
+          "text": ""
+        },
+        {
+          "line": 595,
+          "text": "\treturn true;"
+        },
+        {
+          "line": 596,
+          "text": "}"
+        },
+        {
+          "line": 597,
+          "text": ""
+        },
+        {
+          "line": 598,
+          "text": "//"
+        },
+        {
+          "line": 599,
+          "text": "// Get a uint32."
+        },
+        {
+          "line": 600,
+          "text": "//"
+        },
+        {
+          "line": 601,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, uint32& Value, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 602,
+          "text": "{"
+        },
+        {
+          "line": 603,
+          "text": "\tTCHAR Temp[256];"
+        },
+        {
+          "line": 604,
+          "text": "\tif (!FParse::Value(Stream, Match, Temp, UE_ARRAY_COUNT(Temp), true, OptStreamGotTo))"
+        },
+        {
+          "line": 605,
+          "text": "\t{"
+        },
+        {
+          "line": 606,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 607,
+          "text": "\t}"
+        },
+        {
+          "line": 608,
+          "text": "\tTCHAR* End_NotUsed;"
+        },
+        {
+          "line": 609,
+          "text": ""
+        },
+        {
+          "line": 610,
+          "text": "\tValue = FCString::Strtoi(Temp, &End_NotUsed, 10 );"
+        },
+        {
+          "line": 611,
+          "text": ""
+        },
+        {
+          "line": 612,
+          "text": "\treturn true;"
+        },
+        {
+          "line": 613,
+          "text": "}"
+        },
+        {
+          "line": 614,
+          "text": ""
+        },
+        {
+          "line": 615,
+          "text": "//"
+        },
+        {
+          "line": 616,
+          "text": "// Get a byte."
+        },
+        {
+          "line": 617,
+          "text": "//"
+        },
+        {
+          "line": 618,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, uint8& Value, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 619,
+          "text": "{"
+        },
+        {
+          "line": 620,
+          "text": "\tTCHAR Temp[256];"
+        },
+        {
+          "line": 621,
+          "text": "\tif (!FParse::Value(Stream, Match, Temp, UE_ARRAY_COUNT(Temp), true, OptStreamGotTo))"
+        },
+        {
+          "line": 622,
+          "text": "\t{"
+        },
+        {
+          "line": 623,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 624,
+          "text": "\t}"
+        },
+        {
+          "line": 625,
+          "text": ""
+        },
+        {
+          "line": 626,
+          "text": "\tValue = (uint8)FCString::Atoi( Temp );"
+        },
+        {
+          "line": 627,
+          "text": "\treturn Value!=0 || FChar::IsDigit(Temp[0]);"
+        },
+        {
+          "line": 628,
+          "text": "}"
+        },
+        {
+          "line": 629,
+          "text": ""
+        },
+        {
+          "line": 630,
+          "text": "//"
+        },
+        {
+          "line": 631,
+          "text": "// Get a signed byte."
+        },
+        {
+          "line": 632,
+          "text": "//"
+        },
+        {
+          "line": 633,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, int8& Value, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 634,
+          "text": "{"
+        },
+        {
+          "line": 635,
+          "text": "\tTCHAR Temp[256];"
+        },
+        {
+          "line": 636,
+          "text": "\tif (!FParse::Value(Stream, Match, Temp, UE_ARRAY_COUNT(Temp), true, OptStreamGotTo))"
+        },
+        {
+          "line": 637,
+          "text": "\t{"
+        },
+        {
+          "line": 638,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 639,
+          "text": "\t}"
+        },
+        {
+          "line": 640,
+          "text": ""
+        },
+        {
+          "line": 641,
+          "text": "\tValue = (int8)FCString::Atoi( Temp );"
+        },
+        {
+          "line": 642,
+          "text": "\treturn Value!=0 || FChar::IsDigit(Temp[0]);"
+        },
+        {
+          "line": 643,
+          "text": "}"
+        },
+        {
+          "line": 644,
+          "text": ""
+        },
+        {
+          "line": 645,
+          "text": "//"
+        },
+        {
+          "line": 646,
+          "text": "// Get a word."
+        },
+        {
+          "line": 647,
+          "text": "//"
+        },
+        {
+          "line": 648,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, uint16& Value, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 649,
+          "text": "{"
+        },
+        {
+          "line": 650,
+          "text": "\tTCHAR Temp[256];"
+        },
+        {
+          "line": 651,
+          "text": "\tif (!FParse::Value(Stream, Match, Temp, UE_ARRAY_COUNT(Temp), true, OptStreamGotTo))"
+        },
+        {
+          "line": 652,
+          "text": "\t{"
+        },
+        {
+          "line": 653,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 654,
+          "text": "\t}"
+        },
+        {
+          "line": 655,
+          "text": ""
+        },
+        {
+          "line": 656,
+          "text": "\tValue = (uint16)FCString::Atoi( Temp );"
+        },
+        {
+          "line": 657,
+          "text": "\treturn Value!=0 || FChar::IsDigit(Temp[0]);"
+        },
+        {
+          "line": 658,
+          "text": "}"
+        },
+        {
+          "line": 659,
+          "text": ""
+        },
+        {
+          "line": 660,
+          "text": "//"
+        },
+        {
+          "line": 661,
+          "text": "// Get a signed word."
+        },
+        {
+          "line": 662,
+          "text": "//"
+        },
+        {
+          "line": 663,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, int16& Value, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 664,
+          "text": "{"
+        },
+        {
+          "line": 665,
+          "text": "\tTCHAR Temp[256];"
+        },
+        {
+          "line": 666,
+          "text": "\tif (!FParse::Value(Stream, Match, Temp, UE_ARRAY_COUNT(Temp), true, OptStreamGotTo))"
+        },
+        {
+          "line": 667,
+          "text": "\t{"
+        },
+        {
+          "line": 668,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 669,
+          "text": "\t}"
+        },
+        {
+          "line": 670,
+          "text": ""
+        },
+        {
+          "line": 671,
+          "text": "\tValue = (int16)FCString::Atoi( Temp );"
+        },
+        {
+          "line": 672,
+          "text": "\treturn Value!=0 || FChar::IsDigit(Temp[0]);"
+        },
+        {
+          "line": 673,
+          "text": "}"
+        },
+        {
+          "line": 674,
+          "text": ""
+        },
+        {
+          "line": 675,
+          "text": "//"
+        },
+        {
+          "line": 676,
+          "text": "// Get a floating-point number."
+        },
+        {
+          "line": 677,
+          "text": "//"
+        },
+        {
+          "line": 678,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, float& Value, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 679,
+          "text": "{"
+        },
+        {
+          "line": 680,
+          "text": "\tTCHAR Temp[256];"
+        },
+        {
+          "line": 681,
+          "text": "\tif (!FParse::Value(Stream, Match, Temp, UE_ARRAY_COUNT(Temp), true, OptStreamGotTo))"
+        },
+        {
+          "line": 682,
+          "text": "\t{"
+        },
+        {
+          "line": 683,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 684,
+          "text": "\t}"
+        },
+        {
+          "line": 685,
+          "text": ""
+        },
+        {
+          "line": 686,
+          "text": "\tValue = FCString::Atof( Temp );"
+        },
+        {
+          "line": 687,
+          "text": "\treturn true;"
+        },
+        {
+          "line": 688,
+          "text": "}"
+        },
+        {
+          "line": 689,
+          "text": ""
+        },
+        {
+          "line": 690,
+          "text": "//"
+        },
+        {
+          "line": 691,
+          "text": "// Get a double precision floating-point number."
+        },
+        {
+          "line": 692,
+          "text": "//"
+        },
+        {
+          "line": 693,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, double& Value, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 694,
+          "text": "{"
+        },
+        {
+          "line": 695,
+          "text": "\tTCHAR Temp[256];"
+        },
+        {
+          "line": 696,
+          "text": "\tif (!FParse::Value(Stream, Match, Temp, UE_ARRAY_COUNT(Temp), true, OptStreamGotTo))"
+        },
+        {
+          "line": 697,
+          "text": "\t{"
+        },
+        {
+          "line": 698,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 699,
+          "text": "\t}"
+        },
+        {
+          "line": 700,
+          "text": ""
+        },
+        {
+          "line": 701,
+          "text": "\tValue = FCString::Atod(Temp);"
+        },
+        {
+          "line": 702,
+          "text": "\treturn true;"
+        },
+        {
+          "line": 703,
+          "text": "}"
+        },
+        {
+          "line": 704,
+          "text": ""
+        },
+        {
+          "line": 705,
+          "text": ""
+        },
+        {
+          "line": 706,
+          "text": "//"
+        },
+        {
+          "line": 707,
+          "text": "// Get a signed double word."
+        },
+        {
+          "line": 708,
+          "text": "//"
+        },
+        {
+          "line": 709,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, int32& Value, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 710,
+          "text": "{"
+        },
+        {
+          "line": 711,
+          "text": "\tTCHAR Temp[256];"
+        },
+        {
+          "line": 712,
+          "text": "\tif (!FParse::Value(Stream, Match, Temp, UE_ARRAY_COUNT(Temp), true, OptStreamGotTo))"
+        },
+        {
+          "line": 713,
+          "text": "\t{"
+        },
+        {
+          "line": 714,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 715,
+          "text": "\t}"
+        },
+        {
+          "line": 716,
+          "text": ""
+        },
+        {
+          "line": 717,
+          "text": "\tValue = FCString::Atoi( Temp );"
+        },
+        {
+          "line": 718,
+          "text": "\treturn true;"
+        },
+        {
+          "line": 719,
+          "text": "}"
+        },
+        {
+          "line": 720,
+          "text": ""
+        },
+        {
+          "line": 721,
+          "text": "//"
+        },
+        {
+          "line": 722,
+          "text": "// Get a boolean value."
+        },
+        {
+          "line": 723,
+          "text": "//"
+        },
+        {
+          "line": 724,
+          "text": "bool FParse::Bool(const TCHAR* Stream, const TCHAR* Match, bool& OnOff, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 725,
+          "text": "{"
+        },
+        {
+          "line": 726,
+          "text": "\tTCHAR TempStr[16];"
+        },
+        {
+          "line": 727,
+          "text": "\tif (FParse::Value(Stream, Match, TempStr, UE_ARRAY_COUNT(TempStr), true, OptStreamGotTo))"
+        },
+        {
+          "line": 728,
+          "text": "\t{"
+        },
+        {
+          "line": 729,
+          "text": "\t\tOnOff = FCString::ToBool(TempStr);"
+        },
+        {
+          "line": 730,
+          "text": "\t\treturn true;"
+        },
+        {
+          "line": 731,
+          "text": "\t}"
+        },
+        {
+          "line": 732,
+          "text": "\telse"
+        },
+        {
+          "line": 733,
+          "text": "\t{"
+        },
+        {
+          "line": 734,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 735,
+          "text": "\t}"
+        },
+        {
+          "line": 736,
+          "text": "}"
+        },
+        {
+          "line": 737,
+          "text": ""
+        },
+        {
+          "line": 738,
+          "text": "//"
+        },
+        {
+          "line": 739,
+          "text": "// Get a globally unique identifier."
+        },
+        {
+          "line": 740,
+          "text": "//"
+        },
+        {
+          "line": 741,
+          "text": "bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, struct FGuid& Guid, const TCHAR** OptStreamGotTo)"
+        },
+        {
+          "line": 742,
+          "text": "{"
+        },
+        {
+          "line": 743,
+          "text": "\tTCHAR Temp[256];"
+        },
+        {
+          "line": 744,
+          "text": "\tif (!FParse::Value(Stream, Match, Temp, UE_ARRAY_COUNT(Temp)))"
+        },
+        {
+          "line": 745,
+          "text": "\t{"
+        },
+        {
+          "line": 746,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 747,
+          "text": "\t}"
+        },
+        {
+          "line": 748,
+          "text": ""
+        },
+        {
+          "line": 749,
+          "text": "\tGuid.A = Guid.B = Guid.C = Guid.D = 0;"
+        },
+        {
+          "line": 750,
+          "text": "\tif( FCString::Strlen(Temp)==32 )"
+        },
+        {
+          "line": 751,
+          "text": "\t{"
+        },
+        {
+          "line": 752,
+          "text": "\t\tTCHAR* End;"
+        },
+        {
+          "line": 753,
+          "text": "\t\tGuid.D = FCString::Strtoi( Temp+24, &End, 16 ); Temp[24] = TCHAR('\\0');"
+        },
+        {
+          "line": 754,
+          "text": "\t\tGuid.C = FCString::Strtoi( Temp+16, &End, 16 ); Temp[16] = TCHAR('\\0');"
+        },
+        {
+          "line": 755,
+          "text": "\t\tGuid.B = FCString::Strtoi( Temp+8,  &End, 16 ); Temp[8 ] = TCHAR('\\0');"
+        },
+        {
+          "line": 756,
+          "text": "\t\tGuid.A = FCString::Strtoi( Temp+0,  &End, 16 ); Temp[0 ] = TCHAR('\\0');"
+        },
+        {
+          "line": 757,
+          "text": "\t}"
+        },
+        {
+          "line": 758,
+          "text": "\treturn true;"
+        },
+        {
+          "line": 759,
+          "text": "}"
+        },
+        {
+          "line": 760,
+          "text": ""
+        },
+        {
+          "line": 761,
+          "text": ""
+        },
+        {
+          "line": 762,
+          "text": "//"
+        },
+        {
+          "line": 763,
+          "text": "// Sees if Stream starts with the named command.  If it does,"
+        },
+        {
+          "line": 764,
+          "text": "// skips through the command and blanks past it.  Returns 1 of match,"
+        },
+        {
+          "line": 765,
+          "text": "// 0 if not."
+        },
+        {
+          "line": 766,
+          "text": "//"
+        },
+        {
+          "line": 767,
+          "text": "bool FParse::Command( const TCHAR** Stream, const TCHAR* Match, bool bParseMightTriggerExecution )"
+        },
+        {
+          "line": 768,
+          "text": "{"
+        },
+        {
+          "line": 769,
+          "text": "#if !UE_BUILD_SHIPPING"
+        },
+        {
+          "line": 770,
+          "text": "\tif(GConsoleCommandLibrary)"
+        },
+        {
+          "line": 771,
+          "text": "\t{"
+        },
+        {
+          "line": 772,
+          "text": "\t\tGConsoleCommandLibrary->OnParseCommand(Match);"
+        },
+        {
+          "line": 773,
+          "text": "\t\t"
+        },
+        {
+          "line": 774,
+          "text": "\t\tif(bParseMightTriggerExecution)"
+        },
+        {
+          "line": 775,
+          "text": "\t\t{"
+        },
+        {
+          "line": 776,
+          "text": "\t\t\t// Better we fail the test - we only wanted to find all commands."
+        },
+        {
+          "line": 777,
+          "text": "\t\t\treturn false;"
+        },
+        {
+          "line": 778,
+          "text": "\t\t}"
+        }
+      ]
+    },
+    {
+      "path": "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/Logging/LogSuppressionInterface.cpp",
+      "exists": true,
+      "bytes": 23304,
+      "sha256": "6aacabef950c6b9117f2729800ef3e0d0fe7f85ea7fa58ac5c2bcad68d73462c",
+      "lines": [
+        {
+          "line": 93,
+          "text": "\t\t}"
+        },
+        {
+          "line": 94,
+          "text": "\t\t"
+        },
+        {
+          "line": 95,
+          "text": "\t\tFName LogCategory = FName(*CommandParts[0]);"
+        },
+        {
+          "line": 96,
+          "text": "\t\tstatic const FString OffString = FString(\" off\");"
+        },
+        {
+          "line": 97,
+          "text": "\t\tstatic const FString OnString = FString(\" Verbose\");"
+        },
+        {
+          "line": 98,
+          "text": "\t\tfor (TPair<FName, FLogCategoryBase*> It : ReverseAssociations)"
+        },
+        {
+          "line": 99,
+          "text": "\t\t{"
+        },
+        {
+          "line": 100,
+          "text": "\t\t\tFName Name = It.Key;"
+        },
+        {
+          "line": 101,
+          "text": "\t\t\tif (Name == LogCategory)"
+        },
+        {
+          "line": 102,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 103,
+          "text": "\t\t\t\tProcessCmdString(Name.ToString() + OnString);"
+        },
+        {
+          "line": 104,
+          "text": "\t\t\t\tFLogCategoryBase* Verb = It.Value;"
+        },
+        {
+          "line": 105,
+          "text": "\t\t\t\tAr.Logf(TEXT(\"%s is now %s\"), *CommandParts[0], ToString(Verb ? ELogVerbosity::Type(Verb->Verbosity) : ELogVerbosity::Verbose));"
+        },
+        {
+          "line": 106,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 107,
+          "text": "\t\t\telse"
+        },
+        {
+          "line": 108,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 109,
+          "text": "\t\t\t\tProcessCmdString(Name.ToString() + OffString);"
+        },
+        {
+          "line": 110,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 111,
+          "text": "\t\t}"
+        },
+        {
+          "line": 112,
+          "text": ""
+        },
+        {
+          "line": 113,
+          "text": "\t\tAr.Logf(TEXT(\"Disabling other logs finished\"));"
+        },
+        {
+          "line": 114,
+          "text": "\t\treturn true;"
+        },
+        {
+          "line": 115,
+          "text": "\t}"
+        },
+        {
+          "line": 116,
+          "text": ""
+        },
+        {
+          "line": 117,
+          "text": "\t/** "
+        },
+        {
+          "line": 118,
+          "text": "\t * Process a string command to the logging suppression system "
+        },
+        {
+          "line": 119,
+          "text": "\t * @param CmdString, string to process"
+        },
+        {
+          "line": 120,
+          "text": "\t * @param FromBoot, if true, this is a boot time command, and is handled differently"
+        },
+        {
+          "line": 121,
+          "text": "\t */"
+        },
+        {
+          "line": 122,
+          "text": "\tvoid ProcessCmdString(const FString& CmdString, bool FromBoot = false)"
+        },
+        {
+          "line": 123,
+          "text": "\t{"
+        },
+        {
+          "line": 124,
+          "text": "\t\t// How to use the log command : `log <category> <verbosity>"
+        },
+        {
+          "line": 125,
+          "text": "\t\t// e.g., Turn off all logging : `log global none"
+        },
+        {
+          "line": 126,
+          "text": "\t\t// e.g., Set specific filter  : `log logshaders verbose"
+        },
+        {
+          "line": 127,
+          "text": "\t\t// e.g., Combo command        : `log global none, log logshaders verbose"
+        },
+        {
+          "line": 128,
+          "text": ""
+        },
+        {
+          "line": 129,
+          "text": "\t\tstatic FName NAME_BootGlobal(\"BootGlobal\");"
+        },
+        {
+          "line": 130,
+          "text": "\t\tstatic FName NAME_Reset(\"Reset\");"
+        },
+        {
+          "line": 131,
+          "text": "\t\tFString Cmds = CmdString;"
+        },
+        {
+          "line": 132,
+          "text": "\t\tCmds = Cmds.TrimStart().TrimQuotes().TrimStart();"
+        },
+        {
+          "line": 133,
+          "text": "\t\tTArray<FString> SubCmds;"
+        },
+        {
+          "line": 134,
+          "text": "\t\tCmds.ParseIntoArray(SubCmds, TEXT(\",\"), true);"
+        },
+        {
+          "line": 135,
+          "text": "\t\tfor (int32 Index = 0; Index < SubCmds.Num(); Index++)"
+        },
+        {
+          "line": 136,
+          "text": "\t\t{"
+        },
+        {
+          "line": 137,
+          "text": "\t\t\tstatic const auto& LogString = TEXT(\"Log \");"
+        },
+        {
+          "line": 138,
+          "text": "\t\t\tFString Command = SubCmds[Index].TrimStart();"
+        },
+        {
+          "line": 139,
+          "text": "\t\t\tif (Command.StartsWith(LogString))"
+        },
+        {
+          "line": 140,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 141,
+          "text": "\t\t\t\tCommand.RightInline(Command.Len() - (UE_ARRAY_COUNT(LogString) - 1), EAllowShrinking::No);"
+        },
+        {
+          "line": 142,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 143,
+          "text": "\t\t\tTArray<FString> CommandParts;"
+        },
+        {
+          "line": 144,
+          "text": "\t\t\tCommand.ParseIntoArrayWS(CommandParts);"
+        },
+        {
+          "line": 145,
+          "text": "\t\t\tif (CommandParts.Num() < 1)"
+        },
+        {
+          "line": 146,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 147,
+          "text": "\t\t\t\tcontinue;"
+        },
+        {
+          "line": 148,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 149,
+          "text": "\t\t\tFName Category(*CommandParts[0]);"
+        },
+        {
+          "line": 150,
+          "text": "\t\t\tif (Category == NAME_Global && FromBoot)"
+        },
+        {
+          "line": 151,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 152,
+          "text": "\t\t\t\tCategory = NAME_BootGlobal; // the boot time global is a special one, since we want things like \"log global none, log logshaders verbose\""
+        },
+        {
+          "line": 153,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 154,
+          "text": "\t\t\tTArray<FLogCategoryBase*> CategoryVerbosities;"
+        },
+        {
+          "line": 155,
+          "text": "\t\t\tuint8 Value = 0;"
+        },
+        {
+          "line": 156,
+          "text": "\t\t\tif (FromBoot)"
+        },
+        {
+          "line": 484,
+          "text": "\t\telse"
+        },
+        {
+          "line": 485,
+          "text": "\t\t{"
+        },
+        {
+          "line": 486,
+          "text": "\t\t\tverify(ReverseAssociations.Remove(Destination->GetCategoryName(), Destination) == 1);"
+        },
+        {
+          "line": 487,
+          "text": "\t\t}"
+        },
+        {
+          "line": 488,
+          "text": "\t}"
+        },
+        {
+          "line": 489,
+          "text": ""
+        },
+        {
+          "line": 490,
+          "text": "\tvoid OnConfigSectionsChanged(const FString& IniFilename, const TSet<FString>& SectionNames)"
+        },
+        {
+          "line": 491,
+          "text": "\t{"
+        },
+        {
+          "line": 492,
+          "text": "\t\tif (IniFilename == GEngineIni && SectionNames.Contains(TEXT(\"Core.Log\")))"
+        },
+        {
+          "line": 493,
+          "text": "\t\t{"
+        },
+        {
+          "line": 494,
+          "text": "\t\t\tProcessConfigAndCommandLine();"
+        },
+        {
+          "line": 495,
+          "text": "\t\t}"
+        },
+        {
+          "line": 496,
+          "text": "\t}"
+        },
+        {
+          "line": 497,
+          "text": ""
+        },
+        {
+          "line": 498,
+          "text": "\tvirtual void ProcessConfigAndCommandLine()"
+        },
+        {
+          "line": 499,
+          "text": "\t{"
+        },
+        {
+          "line": 500,
+          "text": "\t\tReverseAssociations.Reserve(PendingAssociations.Num());"
+        },
+        {
+          "line": 501,
+          "text": "\t\tfor (FLogCategoryBase* Category : PendingAssociations)"
+        },
+        {
+          "line": 502,
+          "text": "\t\t{"
+        },
+        {
+          "line": 503,
+          "text": "\t\t\tAssociateSuppressImpl(Category);"
+        },
+        {
+          "line": 504,
+          "text": "\t\t}"
+        },
+        {
+          "line": 505,
+          "text": "\t\tPendingAssociations.Empty();"
+        },
+        {
+          "line": 506,
+          "text": ""
+        },
+        {
+          "line": 507,
+          "text": "\t\t// first we do the config values"
+        },
+        {
+          "line": 508,
+          "text": "\t\tconst FConfigSection* RefTypes = GConfig->GetSection(TEXT(\"Core.Log\"), false, GEngineIni);"
+        },
+        {
+          "line": 509,
+          "text": "\t\tif (RefTypes != NULL)"
+        },
+        {
+          "line": 510,
+          "text": "\t\t{"
+        },
+        {
+          "line": 511,
+          "text": "\t\t\tfor( FConfigSectionMap::TConstIterator It(*RefTypes); It; ++It )"
+        },
+        {
+          "line": 512,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 513,
+          "text": "\t\t\t\tProcessCmdString(It.Key().ToString() + TEXT(\" \") + It.Value().GetValue(), true);"
+        },
+        {
+          "line": 514,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 515,
+          "text": "\t\t}"
+        },
+        {
+          "line": 516,
+          "text": "#if !UE_BUILD_SHIPPING"
+        },
+        {
+          "line": 517,
+          "text": "\t\t// and the command line overrides the config values"
+        },
+        {
+          "line": 518,
+          "text": "\t\tFString CmdLine(FCommandLine::Get());"
+        },
+        {
+          "line": 519,
+          "text": "\t\tFString LogCmds(\"-LogCmds=\");"
+        },
+        {
+          "line": 520,
+          "text": "\t\tint32 IndexOfEnv = CmdLine.Find(TEXT(\"-EnvAfterHere\"));"
+        },
+        {
+          "line": 521,
+          "text": "\t\tif (IndexOfEnv != INDEX_NONE)"
+        },
+        {
+          "line": 522,
+          "text": "\t\t{"
+        },
+        {
+          "line": 523,
+          "text": "\t\t\t// if we have env variable stuff set on the command line, we want to process that FIRST"
+        },
+        {
+          "line": 524,
+          "text": "\t\t\tFString CmdLineEnv = CmdLine.Mid(IndexOfEnv);"
+        },
+        {
+          "line": 525,
+          "text": "\t\t\twhile (1)"
+        },
+        {
+          "line": 526,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 527,
+          "text": "\t\t\t\tFString Cmds;"
+        },
+        {
+          "line": 528,
+          "text": "\t\t\t\tif (!FParse::Value(*CmdLineEnv, *LogCmds, Cmds, false))"
+        },
+        {
+          "line": 529,
+          "text": "\t\t\t\t{"
+        },
+        {
+          "line": 530,
+          "text": "\t\t\t\t\tbreak;"
+        },
+        {
+          "line": 531,
+          "text": "\t\t\t\t}"
+        },
+        {
+          "line": 532,
+          "text": "\t\t\t\tProcessCmdString(Cmds, true);"
+        },
+        {
+          "line": 533,
+          "text": "\t\t\t\t// remove this command so that we can try for other ones...for example one on the command line and one coming from env vars"
+        },
+        {
+          "line": 534,
+          "text": "\t\t\t\tint32 Index = CmdLineEnv.Find(*LogCmds);"
+        },
+        {
+          "line": 535,
+          "text": "\t\t\t\tensure(Index >= 0);"
+        },
+        {
+          "line": 536,
+          "text": "\t\t\t\tif (Index == INDEX_NONE)"
+        },
+        {
+          "line": 537,
+          "text": "\t\t\t\t{"
+        },
+        {
+          "line": 538,
+          "text": "\t\t\t\t\tbreak;"
+        },
+        {
+          "line": 539,
+          "text": "\t\t\t\t}"
+        },
+        {
+          "line": 540,
+          "text": "\t\t\t\tCmdLineEnv.MidInline(Index + LogCmds.Len(), MAX_int32, EAllowShrinking::No);"
+        },
+        {
+          "line": 541,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 542,
+          "text": "\t\t\t// now strip off the environment arg part"
+        },
+        {
+          "line": 543,
+          "text": "\t\t\tCmdLine.MidInline(0, IndexOfEnv, EAllowShrinking::No);"
+        },
+        {
+          "line": 544,
+          "text": "\t\t}"
+        },
+        {
+          "line": 545,
+          "text": "\t\twhile (1)"
+        },
+        {
+          "line": 546,
+          "text": "\t\t{"
+        },
+        {
+          "line": 547,
+          "text": "\t\t\tFString Cmds;"
+        },
+        {
+          "line": 548,
+          "text": "\t\t\tif (!FParse::Value(*CmdLine, *LogCmds, Cmds, false))"
+        },
+        {
+          "line": 549,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 550,
+          "text": "\t\t\t\tbreak;"
+        },
+        {
+          "line": 551,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 552,
+          "text": "\t\t\tProcessCmdString(Cmds, true);"
+        },
+        {
+          "line": 553,
+          "text": "\t\t\t// remove this command so that we can try for other ones...for example one on the command line and one coming from env vars"
+        },
+        {
+          "line": 554,
+          "text": "\t\t\tint32 Index = CmdLine.Find(*LogCmds);"
+        },
+        {
+          "line": 555,
+          "text": "\t\t\tensure(Index >= 0);"
+        },
+        {
+          "line": 556,
+          "text": "\t\t\tif (Index == INDEX_NONE)"
+        },
+        {
+          "line": 557,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 558,
+          "text": "\t\t\t\tbreak;"
+        },
+        {
+          "line": 559,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 560,
+          "text": "\t\t\tCmdLine.MidInline(Index + LogCmds.Len(), MAX_int32, EAllowShrinking::No);"
+        },
+        {
+          "line": 561,
+          "text": "\t\t}"
+        },
+        {
+          "line": 562,
+          "text": "#endif // !UE_BUILD_SHIPPING"
+        },
+        {
+          "line": 563,
+          "text": ""
+        },
+        {
+          "line": 564,
+          "text": "\t\t// and then the compiled in defaults are overridden with those"
+        },
+        {
+          "line": 565,
+          "text": "\t\tfor (TMultiMap<FName, FLogCategoryBase*>::TIterator It(ReverseAssociations); It; ++It)"
+        },
+        {
+          "line": 566,
+          "text": "\t\t{"
+        },
+        {
+          "line": 567,
+          "text": "\t\t\tSetupSuppress(It.Value(), It.Key());"
+        },
+        {
+          "line": 568,
+          "text": "\t\t}"
+        },
+        {
+          "line": 569,
+          "text": ""
+        },
+        {
+          "line": 570,
+          "text": "\t\tif (!bInitialized)"
+        },
+        {
+          "line": 571,
+          "text": "\t\t{"
+        },
+        {
+          "line": 572,
+          "text": "\t\t\tFCoreDelegates::TSOnConfigSectionsChanged().AddLambda([this](const FString& IniFilename, const TSet<FString>& SectionNames)"
+        },
+        {
+          "line": 573,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 574,
+          "text": "\t\t\t\tif (auto* LogSuppressionImplementation = static_cast<FLogSuppressionImplementation*>(FLogSuppressionInterface::TryGet()))"
+        },
+        {
+          "line": 575,
+          "text": "\t\t\t\t{"
+        },
+        {
+          "line": 576,
+          "text": "\t\t\t\t\tLogSuppressionImplementation->OnConfigSectionsChanged(IniFilename, SectionNames);"
+        },
+        {
+          "line": 577,
+          "text": "\t\t\t\t}"
+        },
+        {
+          "line": 578,
+          "text": "\t\t\t\telse"
+        },
+        {
+          "line": 579,
+          "text": "\t\t\t\t{"
+        },
+        {
+          "line": 580,
+          "text": "\t\t\t\t\tFCoreDelegates::TSOnConfigSectionsChanged().RemoveAll(this);"
+        },
+        {
+          "line": 581,
+          "text": "\t\t\t\t}"
+        },
+        {
+          "line": 582,
+          "text": "\t\t\t});"
+        },
+        {
+          "line": 583,
+          "text": "\t\t}"
+        },
+        {
+          "line": 584,
+          "text": ""
+        },
+        {
+          "line": 585,
+          "text": "\t\tbInitialized = true;"
+        },
+        {
+          "line": 586,
+          "text": "\t}"
+        },
+        {
+          "line": 587,
+          "text": ""
+        },
+        {
+          "line": 588,
+          "text": "\t/** Console commands, see embeded usage statement **/"
+        },
+        {
+          "line": 589,
+          "text": "\tvirtual bool Exec_Runtime( UWorld* Inworld, const TCHAR* Cmd, FOutputDevice& Ar )"
+        },
+        {
+          "line": 590,
+          "text": "\t{"
+        },
+        {
+          "line": 591,
+          "text": "\t\tif(FParse::Command(&Cmd,TEXT(\"LOG\")))"
+        },
+        {
+          "line": 592,
+          "text": "\t\t{"
+        },
+        {
+          "line": 593,
+          "text": "\t\t\tif(FParse::Command(&Cmd,TEXT(\"LIST\"))) // if they didn't use the list command, we will show usage"
+        },
+        {
+          "line": 594,
+          "text": "\t\t\t{"
+        },
+        {
+          "line": 626,
+          "text": "\t\t\t\t\t}"
+        },
+        {
+          "line": 627,
+          "text": ""
+        },
+        {
+          "line": 628,
+          "text": "\t\t\t\t\tTMap<FName, uint8> OldValues;"
+        },
+        {
+          "line": 629,
+          "text": "\t\t\t\t\tOldValues.Reserve(ReverseAssociations.Num());"
+        },
+        {
+          "line": 630,
+          "text": "\t\t\t\t\tfor (TPair<FName, FLogCategoryBase*> Pair : ReverseAssociations)"
+        },
+        {
+          "line": 631,
+          "text": "\t\t\t\t\t{"
+        },
+        {
+          "line": 632,
+          "text": "\t\t\t\t\t\tFLogCategoryBase* Verb = Pair.Value;"
+        },
+        {
+          "line": 633,
+          "text": "\t\t\t\t\t\tFName Name = Pair.Key;"
+        },
+        {
+          "line": 634,
+          "text": "\t\t\t\t\t\tOldValues.Add(Name, Verb->Verbosity);"
+        },
+        {
+          "line": 635,
+          "text": "\t\t\t\t\t}"
+        },
+        {
+          "line": 636,
+          "text": "\t\t\t\t\tProcessCmdString(Rest);"
+        },
+        {
+          "line": 637,
+          "text": "\t\t\t\t\tfor (TPair<FName, FLogCategoryBase*> Pair : ReverseAssociations)"
+        },
+        {
+          "line": 638,
+          "text": "\t\t\t\t\t{"
+        },
+        {
+          "line": 639,
+          "text": "\t\t\t\t\t\tFLogCategoryBase* Verb = Pair.Value;"
+        },
+        {
+          "line": 640,
+          "text": "\t\t\t\t\t\tFName Name = Pair.Key;"
+        },
+        {
+          "line": 641,
+          "text": "\t\t\t\t\t\tuint8 OldValue = OldValues.FindRef(Name);"
+        },
+        {
+          "line": 642,
+          "text": "\t\t\t\t\t\tif (Verb->Verbosity != OldValue)"
+        },
+        {
+          "line": 643,
+          "text": "\t\t\t\t\t\t{"
+        },
+        {
+          "line": 644,
+          "text": "\t\t\t\t\t\t\tAr.Logf(TEXT(\"%-40s  %-12s  %s\"), *Name.ToString(), ToString(ELogVerbosity::Type(Verb->Verbosity)), Verb->DebugBreakOnLog ? TEXT(\" - DebugBreak\") : TEXT(\"\"));"
+        },
+        {
+          "line": 645,
+          "text": "\t\t\t\t\t\t}"
+        },
+        {
+          "line": 646,
+          "text": "\t\t\t\t\t}"
+        },
+        {
+          "line": 647,
+          "text": "\t\t\t\t}"
+        },
+        {
+          "line": 648,
+          "text": "\t\t\t\telse"
+        },
+        {
+          "line": 649,
+          "text": "\t\t\t\t{"
+        },
+        {
+          "line": 650,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"------- Log conventions\") );"
+        },
+        {
+          "line": 651,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"[cat]   = a category for the command to operate on, or 'global' for all categories.\") );"
+        },
+        {
+          "line": 652,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"[level] = verbosity level, one of: none, error, warning, display, log, verbose, all, default\") );"
+        },
+        {
+          "line": 653,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"At boot time, compiled in default is overridden by ini files setting, which is overridden by command line\") );"
+        },
+        {
+          "line": 654,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"------- Log console command usage\") );"
+        },
+        {
+          "line": 655,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"Log list            - list all log categories\") );"
+        },
+        {
+          "line": 656,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"Log list [string]   - list all log categories containing a substring\") );"
+        },
+        {
+          "line": 657,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"Log reset           - reset all log categories to their boot-time default\") );"
+        },
+        {
+          "line": 658,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"Log [cat]           - toggle the display of the category [cat]\") );"
+        },
+        {
+          "line": 659,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"Log [cat] off       - disable display of the category [cat]\") );"
+        },
+        {
+          "line": 660,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"Log [cat] on        - resume display of the category [cat]\") );"
+        },
+        {
+          "line": 661,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"Log [cat] only      - enables [cat] and disables all other categories\"));"
+        },
+        {
+          "line": 662,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"Log [cat] [level]   - set the verbosity level of the category [cat]\") );"
+        },
+        {
+          "line": 663,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"Log [cat] break     - toggle the debug break on display of the category [cat]\") );"
+        },
+        {
+          "line": 664,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"------- Log command line\") );"
+        },
+        {
+          "line": 665,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"-LogCmds=\\\"[arguments],[arguments]...\\\"           - applies a list of console commands at boot time\") );"
+        },
+        {
+          "line": 666,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"-LogCmds=\\\"foo verbose, bar off\\\"         - turns on the foo category and turns off the bar category\") );\t\t\t\t\t"
+        },
+        {
+          "line": 667,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"------- Environment variables\") );"
+        },
+        {
+          "line": 668,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"Any command line option can be set via the environment variable UE-CmdLineArgs\") );"
+        },
+        {
+          "line": 669,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"set UE-CmdLineArgs=\\\"-LogCmds=foo verbose breakon, bar off\\\"\") );"
+        },
+        {
+          "line": 670,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"------- Config file\") );"
+        },
+        {
+          "line": 671,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"[Core.Log]\") );"
+        },
+        {
+          "line": 672,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"global=[default verbosity for things not listed later]\") );\t\t\t\t\t"
+        },
+        {
+          "line": 673,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"[cat]=[level]\") );\t\t\t\t\t"
+        },
+        {
+          "line": 674,
+          "text": "\t\t\t\t\tAr.Logf( TEXT(\"foo=verbose break\") );\t\t\t\t\t"
+        },
+        {
+          "line": 675,
+          "text": "\t\t\t\t}"
+        },
+        {
+          "line": 676,
+          "text": "\t\t\t\treturn true;"
+        },
+        {
+          "line": 677,
+          "text": "\t\t\t}"
+        },
+        {
+          "line": 678,
+          "text": "\t\t}"
+        },
+        {
+          "line": 679,
+          "text": "\t\treturn false;"
+        },
+        {
+          "line": 680,
+          "text": "\t}"
+        },
+        {
+          "line": 681,
+          "text": "};"
+        },
+        {
+          "line": 682,
+          "text": ""
+        },
+        {
+          "line": 683,
+          "text": "FLogSuppressionInterface& FLogSuppressionInterface::Get()"
+        },
+        {
+          "line": 684,
+          "text": "{"
+        },
+        {
+          "line": 685,
+          "text": "\treturn TLazySingleton<FLogSuppressionImplementation>::Get();"
+        },
+        {
+          "line": 686,
+          "text": "}"
+        },
+        {
+          "line": 687,
+          "text": ""
+        },
+        {
+          "line": 688,
+          "text": "FLogSuppressionInterface* FLogSuppressionInterface::TryGet()"
+        },
+        {
+          "line": 689,
+          "text": "{"
+        },
+        {
+          "line": 690,
+          "text": "\treturn TLazySingleton<FLogSuppressionImplementation>::TryGet();"
+        },
+        {
+          "line": 691,
+          "text": "}"
+        },
+        {
+          "line": 692,
+          "text": ""
+        },
+        {
+          "line": 693,
+          "text": "void FLogSuppressionInterface::TearDown()"
+        },
+        {
+          "line": 694,
+          "text": "{"
+        },
+        {
+          "line": 695,
+          "text": "\tTLazySingleton<FLogSuppressionImplementation>::TearDown();"
+        },
+        {
+          "line": 696,
+          "text": "}"
+        }
+      ]
+    }
+  ],
+  "actual_log_lines": [
+    {
+      "line": 23,
+      "text": "LogCsvProfiler: Display: Metadata set : commandline=\"\" /home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/Sub01HomeLab.uproject /Game/Sub01Home/ActualHome -game -Sub01CompletionSandbox -Sub01ManualView -Sub01StreamerVisual -Sub01NativeControl=/home/unreal/.sub01-private/animation-visual-reading-20261026-attempt05/native-control.json -vulkan -unattended -notraceserver -NoSound -NoSplash -NoLiveCoding -NoHotReloadFromIDE -corelimit=6 -RenderOffScreen -windowed -NoBorder -WinX=0 -WinY=0 -ResX=1920 -ResY=1080 -ForceRes -ExecCmds=\"t.MaxFPS 60,t.IdleWhenNotForeground 0,r.VSync 0,Slate.bAllowThrottling 0\" -stdout -FullStdOutLogOutput -DDC=(ProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp),InstalledProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp,Compressed=true),EnginePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp,Compressed=true),EnterprisePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp,Compressed=true),Local=(Type=FileSystem,Path=/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache,ReadOnly=false,UnusedFileAge=34,PromptIfMissing=true,Clean=false,Flush=false,DeleteUnused=false)) -DDC-NoDefaultGraph -noshaderworker -cvarsini=/home/sub01-animation-visual-20261026-attempt05/ddc-launch.ini -LogCmds=\"\"LogDerivedDataCache Verbose,LogConfig Log,LogConsoleManager Verbose\"\"\"\""
+    },
+    {
+      "line": 437,
+      "text": "LogInit: Command Line: /Game/Sub01Home/ActualHome -game -Sub01CompletionSandbox -Sub01ManualView -Sub01StreamerVisual -Sub01NativeControl=/home/unreal/.sub01-private/animation-visual-reading-20261026-attempt05/native-control.json -vulkan -unattended -notraceserver -NoSound -NoSplash -NoLiveCoding -NoHotReloadFromIDE -corelimit=6 -RenderOffScreen -windowed -NoBorder -WinX=0 -WinY=0 -ResX=1920 -ResY=1080 -ForceRes -ExecCmds=\"t.MaxFPS 60,t.IdleWhenNotForeground 0,r.VSync 0,Slate.bAllowThrottling 0\" -stdout -FullStdOutLogOutput -DDC=(ProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp),InstalledProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt05/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp,Compressed=true),EnginePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp,Compressed=true),EnterprisePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp,Compressed=true),Local=(Type=FileSystem,Path=/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache,ReadOnly=false,UnusedFileAge=34,PromptIfMissing=true,Clean=false,Flush=false,DeleteUnused=false)) -DDC-NoDefaultGraph -noshaderworker -cvarsini=/home/sub01-animation-visual-20261026-attempt05/ddc-launch.ini -LogCmds=\"\"LogDerivedDataCache Verbose,LogConfig Log,LogConsoleManager Verbose\"\""
+    }
+  ]
+}

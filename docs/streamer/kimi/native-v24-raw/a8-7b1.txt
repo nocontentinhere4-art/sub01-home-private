@@ -1,0 +1,4 @@
+1. Yes — as a non-atomic snapshot: `os.stat(fd)` follows the procfd link, octal `flags` plus `(flags & os.O_ACCMODE) in (os.O_RDONLY, os.O_RDWR)` is correct, and listing `PermissionError` is correctly counted as `unchecked`; concurrent/later opens remain possible.
+2. No, even granting whole SOI…EOI input; and yes — `if marker == 0xDA: break` makes SOS optional and skips later APPn/COM, while `pos += 2 + length` follows unchecked lengths; fix: reject `length < 2`/overruns, require SOS and one valid SOF0, and parse through EOI to enforce the whole-frame ban.
+   `seq = int(body[len(COM_PREFIX):])` can raise `ValueError` beyond Python 3.11+’s default 4,300-digit conversion limit; fix: catch `ValueError` or enforce a documented digit limit, returning `(False, None, 'bad seq')`.
+blocking: `check_contract` is not an exact validator and malformed input can escape its `(False, ...)` path.

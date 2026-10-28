@@ -1,0 +1,45 @@
+{
+  "files": {
+    "PRESERVATION-RECEIPT.json": {
+      "sha256": "b0ca80beaf215bdc68fb3409633dca33545e814b547e69973fbccd1372d159f7",
+      "bytes": 3587
+    },
+    "independent-import-verification.json": {
+      "sha256": "d5294f582b14465d386a15508a8c714b968a30e67d9b46449f52bd263c143769",
+      "bytes": 6603
+    },
+    "results/supervisor-final.json": {
+      "sha256": "055ca8f3ce731d327a108e7b6d33b72b5cdb8b362840fdf3ab1ba80140d2e984",
+      "bytes": 9136
+    },
+    "results/import-result.json": {
+      "sha256": "62deedadafa5e08e0d7a731a75c2fe18d5afb1518d8105d23a211dfebf9694d1",
+      "bytes": 4702
+    },
+    "metadata/manifest.json": {
+      "sha256": "c88b06e242070db8520c84210319795e8e18c917e6b26a288c5d22dc973d0dce",
+      "bytes": 5981
+    },
+    "metadata/baseline-manifest.json": {
+      "sha256": "0a1765a1c0881b3b260bb43ac43f841a28c97fe30b92aeb159d3a24bf35386c5",
+      "bytes": 1216282
+    },
+    "native/Content/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.uasset": {
+      "sha256": "c2d019ff57f55706a1e1493119bfca00afd39bf55e39111e7ec4aa25b46a78dc",
+      "bytes": 880799
+    },
+    "native/Content/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.uasset": {
+      "sha256": "119e322af180f132d0c645f9e3df4e8238cfbd58b32e76d34a0c9e24467407ca",
+      "bytes": 880787
+    },
+    "native/Content/Sub01Hands/Cinematic20261022/Reach_c8accd7a0070407c8af117eed5df534d/AuthoredReach.uasset": {
+      "sha256": "6515c6022ecc2573bb5f1632b68efaae8d6f20023cbb926e3dd93564c5634af1",
+      "bytes": 522308
+    }
+  },
+  "archive": {
+    "path": "/workspace/sub01-animation-reconstruction-20261026-attempt02/verified-three-assets-evidence.tar.gz",
+    "sha256": "12b836e113f98032d68641afd6757d7bd06d715fd3a355290e613b5f91b7a05a",
+    "bytes": 545268
+  }
+}

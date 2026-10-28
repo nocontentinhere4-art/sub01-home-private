@@ -1,0 +1,51 @@
+def run(source: Path, dry_run: bool) -> dict:
+    source = Path(source).resolve()
+    missing = [n for n in FILES.values() if not (source / n).is_file()]
+    if missing:
+        raise Refused(f'missing in {source}: {", ".join(missing)}')
+    raw = {key: v2.read_raw(source / name) for key, name in FILES.items()}
+    eol = {key: v2.line_ending(FILES[key], raw[key]) for key in FILES}
+    result = plan({key: text.replace('\r\n', '\n') for key, text in raw.items()})
+    after = {key: result['sources'][key].replace('\n', eol[key]) for key in FILES}
+    report = {'schema': SCHEMA, 'source': str(source), 'dry_run': dry_run, 'marker': MARKER,
+              'requires': [v23.MARKER, v22.MARKER, v21.MARKER, cam2.MARKER, streampass.MARKER, seatfix.MARKER, v2.MARKER],
+              'main_tap': {'fifo': f'{cam2.STREAM_DIR}/{FIFO_NAME}', 'lock': f'{cam2.STREAM_DIR}/{LOCK_NAME}', 'status': f'{cam2.STREAM_DIR}/{STATUS_NAME}',
+                           'status_schema': STATUS_SCHEMA, 'status_fields': list(STATUS_FIELDS), 'com': f'{COM_PREFIX}<n>', 'size': [WIDTH, HEIGHT],
+                           'slots': SLOTS, 'encoders': ENCODERS, 'reorder': REORDER_MAX, 'queue': QUEUE_MAX, 'deadline_s': DEADLINE_S, 'poll_slice_ms': SLICE_MS,
+                           'probe_s': PROBE_S, 'lock_retry_s': LOCK_RETRY_S, 'diag_s': DIAG_S, 'status_s': STATUS_S, 'log_s': LOG_S,
+                           'defaults': {'main_tap': 'auto (offscreen)', 'main_fps': MAIN_FPS, 'main_quality': MAIN_QUALITY, 'main_source': MAIN_SOURCE},
+                           'gonogo': {'frames': GONOGO_FRAMES, 'timeout_s': GONOGO_TIMEOUT_S, 'no_calls_s': NO_CALLS_S, 'fires_per_frame': list(FIRE_TOLERANCE),
+                                      'nonblack_min': NONBLACK_MIN},
+                           'path': 'OnBackBufferReadyToPresent (render thread, game window) -> Unknown->CopySrc -> FRHIGPUTextureReadback ring (oldest first, '
+                                   'every ready copy) -> 2 encoder threads (BGRA8, TurboJPEG, COM seq) -> in-order queue -> writer thread (flock, poll, '
+                                   'deadline, whole frames) -> main.mjpeg'},
+              'cam2_evidence': ['pipe_size', 'full_queued_max_kb'], 'tuning_limits': TUNING_LIMITS, 'edits': result['edits'],
+              'files': {FILES[key]: {'before_sha256': v2.sha256(raw[key]), 'after_sha256': v2.sha256(after[key]),
+                                     'bytes_before': len(raw[key].encode()), 'bytes_after': len(after[key].encode()),
+                                     'line_ending': 'CRLF' if eol[key] == '\r\n' else 'LF',
+                                     'edits': sum(1 for k, _, _ in EDITS if k == key)} for key in FILES}}
+    if not dry_run:
+        v2.write_atomically({source / FILES[key]: after[key] for key in FILES})
+        for key in FILES:
+            if v2.sha256(v2.read_raw(source / FILES[key])) != report['files'][FILES[key]]['after_sha256']:
+                raise Refused(f'{FILES[key]}: written bytes differ from the plan')
+    report['status'] = 'planned' if dry_run else 'applied'
+    return report
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--source', type=Path, required=True, help='directory with the v23 pod files (patched in place)')
+    parser.add_argument('--dry-run', action='store_true', help='check every anchor and print the report; write nothing')
+    args = parser.parse_args(argv)
+    try:
+        report = run(args.source, args.dry_run)
+    except Refused as error:
+        print(json.dumps({'schema': SCHEMA, 'source': str(args.source), 'dry_run': args.dry_run, 'status': 'refused', 'reason': str(error)}, indent=2))
+        return 2
+    print(json.dumps(report, indent=2))
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "APPROVE — strictly as a bounded, view-only diagnostic. Limit contact observations to what is visible in the sampled monitor/spectator views; cropping or occlusion is indeterminate. Report decode/sequence results separately as technical checks, not semantic-contact or provenance evidence. No all-frame claim, Reach coverage, promotion, or tuning/game change. Any identity mismatch, alien reader, contract failure, or frozen fallback aborts the experiment with evidence retained.",
+ "finish_reason": "stop",
+ "prompt_tokens": 560,
+ "completion_tokens": 3907,
+ "reasoning_tokens": 3802,
+ "seconds": 100.5
+}

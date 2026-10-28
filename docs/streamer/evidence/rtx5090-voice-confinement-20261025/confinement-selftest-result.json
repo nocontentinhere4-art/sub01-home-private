@@ -1,0 +1,102 @@
+{
+  "schema": "sub01.confinement-selftest-run.v1",
+  "started_utc": 1792920760.2340763,
+  "gpu_work": false,
+  "services_started": false,
+  "restrict-diagnostic-child.py_sha256": "5dd87124b900a017774a3835d92767ed568d360dd27185da1f25716ce9b492f8",
+  "test-restricted-diagnostic-child.py_sha256": "ac7517eb282aa655bca8022bdfc41e4772f537b13d71c37d621e44f1083bdcbe",
+  "pid": 37171,
+  "ticks": 55703575,
+  "exit": 0,
+  "test": {
+    "schema": "sub01.diagnostic-confinement-test.v1",
+    "all_pass": true,
+    "results": {
+      "isolated-write": {
+        "allowed": true
+      },
+      "readonly-read": {
+        "allowed": true
+      },
+      "readonly-content-write": {
+        "blocked": true,
+        "errno": 13
+      },
+      "readonly-truncate": {
+        "blocked": true,
+        "errno": 13
+      },
+      "outside-create": {
+        "blocked": true,
+        "errno": 13
+      },
+      "2-udp": {
+        "blocked": true,
+        "errno": 1
+      },
+      "2-raw": {
+        "blocked": true,
+        "errno": 1
+      },
+      "2-sctp": {
+        "blocked": true,
+        "errno": 1
+      },
+      "2-mptcp": {
+        "blocked": true,
+        "errno": 1
+      },
+      "10-udp": {
+        "blocked": true,
+        "errno": 1
+      },
+      "10-raw": {
+        "blocked": true,
+        "errno": 1
+      },
+      "10-sctp": {
+        "blocked": true,
+        "errno": 1
+      },
+      "10-mptcp": {
+        "blocked": true,
+        "errno": 1
+      },
+      "unix-socket": {
+        "allowed": true
+      },
+      "loopback-bind-8855": {
+        "allowed": true
+      },
+      "unlisted-bind": {
+        "blocked": true,
+        "errno": 13
+      },
+      "tcp-connect-127.0.0.1": {
+        "blocked": true,
+        "errno": 13
+      },
+      "tcp-connect-198.51.100.1": {
+        "blocked": true,
+        "errno": 13
+      },
+      "io-uring-425": {
+        "blocked": true,
+        "errno": 1
+      },
+      "io-uring-426": {
+        "blocked": true,
+        "errno": 1
+      },
+      "io-uring-427": {
+        "blocked": true,
+        "errno": 1
+      }
+    },
+    "scope": "known non-adversarial offline diagnostics; AF_UNIX IPC available; bind-address enforcement remains a source/observer gate"
+  },
+  "status": "selftest-passed",
+  "finished_utc": 1792920760.2798874,
+  "native_unchanged": true,
+  "STOP_held": true
+}

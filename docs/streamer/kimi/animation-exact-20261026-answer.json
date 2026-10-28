@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "**BLOCK \u2014 do not execute this candidate as supplied.** This is a source-review decision only; nothing was executed.\n\n1. **Unreviewed Python is executed inside Unreal.**  \n   `import-animation-candidate.py` loads `7f1b8c\u2026py` using `spec.loader.exec_module(helper)`, but that 11,880-byte file\u2019s contents are not included. Its hash pins identity, not behavior. Top-level code would run with the probe\u2019s Unreal authority after the initial gate and before the per-clip gates, so the review cannot establish that it performs no imports, writes, network activity, or other side effects. Provide and review the complete helper and establish side-effect-free module loading, or replace it with a reviewed minimal module containing only `authored_native_reference`.\n\n2. **There is a post-`Popen` cleanup gap.**  \n   In `run()`, the `try/finally` begins only after `Popen`, `identity()`, the UID/SID assertions, `children.append()`, and the supervisor write. If process identity acquisition or its assertion fails before `children.append(entry)`, neither `run()` nor the outer supervisor has a recorded child to clean up, potentially leaving the engine running. The protected region must begin immediately after successful `Popen`, with cleanup handling both validated and partially validated child identities.\n\n3. **The required pre-invocation plan/result metadata is not persisted.**  \n   The only in-run `supervisor.json` write occurs **after** `Popen`; before that, the plan exists only in memory. This does not satisfy the stated requirement that root store explicit current one-call plan/result metadata before invocation. A root-owned, probe-unmodifiable record must be completed before engine launch, identifying the exact invocation, script/project and pinned inputs, planned state, deadlines, and no-render/no-provenance scope.\n\n4. **The current sequencing prerequisite is unmet.**  \n   The request states that full cap61 media decode is still running. Independently of the code findings, that prohibits invoking this import now. Invocation requires fresh evidence of cap61 completion and cleanup, plus the stated no-jobs/runtime-ownership and lease/STOP admission checks.\n\nThe first three findings require supervisor/review-artifact corrections; any supervisor change invalidates the supplied wrapper digest and requires a newly pinned exact candidate. No import, rendering, acceptance, or later-route approval is granted.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 14617,
+    "completion_tokens": 9112,
+    "total_tokens": 23729,
+    "completion_tokens_details": {
+      "reasoning_tokens": 8608
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 14592
+    }
+  },
+  "seconds": 357.78
+}

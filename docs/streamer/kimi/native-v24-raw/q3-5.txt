@@ -1,0 +1,9 @@
+Context: UE 5.8.3 game-module C++ on Linux/Vulkan, the game run with -RenderOffScreen (Slate renders the game window into a texture, no swapchain). Pre-commit review of install_v24.py's generated code: the Slate back buffer -> 3-slot FRHIGPUTextureReadback ring (render thread) -> 2 encoder threads -> in-order release -> output queue of 2 -> 1 writer thread -> the FIFO main.mjpeg. It compiles against a stub with g++/clang++ -Wall -Werror -Wshadow and a runtime driver passes. Answer ONLY the numbered questions, each in at most 3 lines, starting with yes/no (or "ok"/"bug"); quote the line for any bug and give the fix. Do not review anything else. End with "no blocking issue" or "blocking: ...".
+
+Attached: main.json (once per second) and the periodic log line (every 10 s), game thread. Check ONLY:
+1. Every UE_LOG format specifier against its argument type (int64 via static_cast<long long> -> %lld, uint64 -> %llu, int32 -> %d,
+   double/float -> %f/%.Nf, TCHAR* -> %s, FString via * -> %s). Any mismatch (a build error under -Werror=format or garbage)?
+2. FJsonObject setters: SetNumberField(const FString&, double) given int32/int64/float arguments; SetBoolField; SetStringField
+   with TCHAR*/FString: any ambiguity or narrowing that breaks the build?
+3. The windowed rates (fps over the time since the last write; totals minus the previous totals): correct, no division by zero?
+4. std::rename after FFileHelper::SaveStringToFile to a .tmp in the same directory: atomic replace?

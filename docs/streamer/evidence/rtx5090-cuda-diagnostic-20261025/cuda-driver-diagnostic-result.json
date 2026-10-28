@@ -1,0 +1,112 @@
+{
+  "schema": "sub01.cuda-driver-diagnostic.v1",
+  "owner": "codex-cuda-driver-0f8a7b61545044acb8f0884ee7a53370",
+  "started": 1792925394.3564758,
+  "runs": [
+    {
+      "label": "A",
+      "command": [
+        "/usr/bin/python3",
+        "-I",
+        "/tmp/sub01-share/cuda-driver-probe.py"
+      ],
+      "started": 1792925394.3583121,
+      "leader": {
+        "pid": 37637,
+        "ppid": 37636,
+        "sid": 37637,
+        "ticks": 56166987,
+        "state": "R"
+      },
+      "returncode": 0,
+      "elapsed": 0.024186523049138486,
+      "probe": {
+        "uid": 1001,
+        "cuInit": 0,
+        "cuDeviceGetCount": 0,
+        "count": 1
+      },
+      "whole_run_elapsed": 0.026084738899953663
+    },
+    {
+      "label": "B",
+      "command": [
+        "/opt/sub01toolroot/extracted/usr/bin/strace",
+        "-f",
+        "-qq",
+        "-s",
+        "128",
+        "-e",
+        "trace=%file,%network,ioctl",
+        "/usr/bin/python3",
+        "-I",
+        "/tmp/sub01-share/restrict-diagnostic-child.py",
+        "--directory",
+        "/home/unreal/.sub01-private/cuda-driver-diagnostic-20261025",
+        "--bind-port",
+        "8855",
+        "--",
+        "/usr/bin/python3",
+        "-I",
+        "/tmp/sub01-share/cuda-driver-probe.py"
+      ],
+      "started": 1792925394.3844116,
+      "leader": {
+        "pid": 37639,
+        "ppid": 37636,
+        "sid": 37639,
+        "ticks": 56166990,
+        "state": "R"
+      },
+      "returncode": 0,
+      "elapsed": 0.03878009004984051,
+      "probe": {
+        "uid": 1001,
+        "cuInit": 304,
+        "cuDeviceGetCount": 3,
+        "count": -1
+      },
+      "whole_run_elapsed": 0.04075654305052012
+    }
+  ],
+  "environment": {
+    "PATH": "/usr/bin:/bin",
+    "HOME": "/home/unreal/.sub01-private/cuda-driver-diagnostic-20261025",
+    "TMPDIR": "/home/unreal/.sub01-private/cuda-driver-diagnostic-20261025",
+    "LANG": "C.UTF-8",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "manifest": {
+    "schema": "sub01.cuda-driver-manifest.v1",
+    "probe_sha256": "a7f003256288f7b21027055d7c1d92f4791c79c6fb565bb76a45e4a1b68c450e",
+    "runner_sha256": "33925a26d7abcd8024986c66e77d08bde328cba01db4f3544609566b41e278d5",
+    "environment": {
+      "PATH": "/usr/bin:/bin",
+      "HOME": "/home/unreal/.sub01-private/cuda-driver-diagnostic-20261025",
+      "TMPDIR": "/home/unreal/.sub01-private/cuda-driver-diagnostic-20261025",
+      "LANG": "C.UTF-8",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "environment_sha256": "502c556685e9b8f8c1ccf34ab69cf0ccfd7a94f4a23c340fe92b0c97a013ea6f",
+    "launch": [
+      "env",
+      "-u",
+      "PYTHONOPTIMIZE",
+      "/usr/bin/python3",
+      "-I",
+      "/tmp/sub01-share/supervise-cuda-driver-diagnostic.py"
+    ],
+    "supervisor_sha256": "bc9b6e7f580591abfb4ec646090411393e7adfdbd486523d44ed7323b6b402ff"
+  },
+  "session": 37639,
+  "leader_ticks": 56166990,
+  "status": "diagnostic-recorded-not-root-cause-acceptance",
+  "cleanup_verified": true,
+  "finished": 1792925394.4268017,
+  "elapsed": 0.08887380897067487,
+  "owned": {
+    "37637": 56166987,
+    "37639": 56166990,
+    "37642": 56166990
+  }
+}

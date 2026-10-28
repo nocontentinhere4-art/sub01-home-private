@@ -27,7 +27,8 @@ import { createShadowFit, homeShadowSweptBounds } from "./shadow_fit.mjs?v=1";
 import { createBrowserOperatorControls } from "./browser_operator_controls.mjs?v=1";
 import { createOwnedBitmapPainter } from "./owned_bitmap_painter.mjs?v=1";
 import { createMinecraftFrameFeed, actionErrorMessage } from "./device_requests.mjs?v=1";
-import { createPhoneScreen } from "./phone_screen.mjs?v=1";
+import { computerScreenLines, computerPanelText, browserUnavailableMessage, wrapLines } from "./computer_screen.mjs?v=1";
+import { createPhoneScreen } from "./phone_screen.mjs?v=2";
 import { createDeviceRevisions } from "./device_revisions.mjs?v=1";
 import { configureBakedReceiverLighting } from "./baked_receiver_lighting.mjs?v=1";
 import { inspectReplacedAssets, retireReplacedAssets, releaseStartupModelCache } from "./replaced_asset_cleanup.mjs?v=2";
@@ -48,6 +49,7 @@ import { createHouseControlsPanel, operatorMutate } from './house_controls_panel
 import { applyHavenSeamDetail, applyQueenBedOak } from './furnishing_detail.mjs';
 import { createBathFixtureMaterials, installBathFixture } from './bath_fixture_materials.mjs';
 import { BATH_FALLBACK_CALLS, findReplacedPrimitives, sameCalls } from './replaced_primitives.mjs';
+import { createOptionalAssets } from './optional_assets.mjs';
 import { paintPrivacyScreen } from './privacy_screen.mjs';
 import { sameVertexPositions } from './bake_shape.mjs';
 import { createSunDust } from './sun_dust.mjs';
@@ -966,10 +968,12 @@ box(0.42, 0.42, 0.6, -2.9, 3.24, 2.23, M.white, 0.11);
 box(0.43, 0.64, 0.18, -2.9, 3.47, 2.49, M.white, 0.07);
 box(0.36, 0.04, 0.46, -2.9, 3.48, 2.18, M.cream, 0.08);
 obstacle(-2.9, 2.23, 0.45, 0.72, 1);
-// Original bath vanity/toilet, ceiling light and oak door leaf (tools/build_home_bath_*.py).
-// The primitives above stay unbatched and are hidden only after the matching
-// GLB + sidecar loaded; any missing asset or mismatch keeps them as they are.
+// Original bath vanity/toilet, ceiling light and oak door leaf (tools/build_home_bath_*.py),
+// listed in assets/optional-manifest.json. The primitives above stay unbatched and are
+// hidden only after the matching GLB + sidecar loaded; a missing or mismatched asset keeps
+// them as they are, is logged once and is named in the House panel.
 const bathMaterials = createBathFixtureMaterials(T, { oak: M.architectureOak, brass: M.brass, metal: M.metal });
+const optionalAssets = createOptionalAssets({ loadGltf: url => gltfLoader.loadAsync(url) });
 const bathFallback = {};
 for (const [name, calls] of Object.entries(BATH_FALLBACK_CALLS)) {
   try {
@@ -978,25 +982,16 @@ for (const [name, calls] of Object.entries(BATH_FALLBACK_CALLS)) {
   } catch (error) { console.warn('Bath ' + name + ' stays procedural:', error.message); }
 }
 let bathLight = null;
-function loadBathAsset(dir, name) {
-  return Promise.all([
-    fetch('/house/assets/' + dir + '/' + name + '.json?v=1').then(r => {
-      if (!r.ok) throw Error('sidecar ' + r.status);
-      return r.json();
-    }),
-    gltfLoader.loadAsync('/house/assets/' + dir + '/' + name + '.glb?v=1'),
-  ]);
-}
 const bathFixturesReady = Promise.all(Object.keys(BATH_FALLBACK_CALLS).map(name =>
-  loadBathAsset('bath-fixtures-original', name).then(([sidecar, gltf]) => {
+  optionalAssets.get(name).then(({sidecar, gltf}) => {
     if (!bathFallback[name] || !sameCalls(sidecar.replaces_home_js, BATH_FALLBACK_CALLS[name]))
       throw Error('sidecar does not match the home.js fallback');
     scene.add(installBathFixture(gltf.scene, sidecar, bathMaterials));
     for (const mesh of bathFallback[name]) mesh.visible = false;
     document.getElementById('status').dataset['bath' + name[0].toUpperCase() + name.slice(1)] = 'original';
     renderer.shadowMap.needsUpdate = true;
-  }).catch(error => console.warn('Bath ' + name + ' fallback:', error.message))));
-const bathLightReady = loadBathAsset('bath-light-original', 'bath-light').then(([sidecar, gltf]) => {
+  }).catch(error => optionalAssets.fail(name, error))));
+const bathLightReady = optionalAssets.get('bath-light').then(({sidecar, gltf}) => {
   const spec = sidecar.light;
   if (spec?.type !== 'PointLight' || spec.room !== 'bathroom') throw Error('unexpected light spec');
   scene.add(installBathFixture(gltf.scene, sidecar, bathMaterials));
@@ -1006,14 +1001,14 @@ const bathLightReady = loadBathAsset('bath-light-original', 'bath-light').then((
   scene.add(bathLight);
   switchedMaterials.add(bathMaterials.diffuser);
   applyRoomLights();
-}).catch(error => console.warn('Bath light fallback:', error.message));
-const bathDoorReady = loadBathAsset('bath-door-original', 'bath-door').then(([sidecar, gltf]) => {
+}).catch(error => optionalAssets.fail('bath-light', error));
+const bathDoorReady = optionalAssets.get('bath-door').then(({sidecar, gltf}) => {
   if (sidecar.runtime_parent !== 'bathDoor') throw Error('unexpected door parent');
   // The slab keeps sliding and colliding; only its look is replaced.
   bathDoor.add(installBathFixture(gltf.scene, sidecar, bathMaterials));
   bathDoor.material = new T.MeshBasicMaterial({ visible: false });
   renderer.shadowMap.needsUpdate = true;
-}).catch(error => console.warn('Bath door fallback:', error.message));
+}).catch(error => optionalAssets.fail('bath-door', error));
 box(0.9, 0.1, 1, -1.5, 3.08, 2.15, tiles, 0.015);
 const showerGlass = new T.MeshStandardMaterial({
   color: "#c2d5d1",
@@ -1479,10 +1474,19 @@ document.getElementById("curtain").onclick = toggleCurtain;
 const houseControlsBox = document.createElement('details');
 houseControlsBox.id = 'house-controls';
 houseControlsBox.append(Object.assign(document.createElement('summary'), { textContent: 'House' }));
+// One line naming optional house assets that did not load; their placeholders stay in the room.
+const optionalAssetNote = Object.assign(document.createElement('p'), { className: 'muted', hidden: true });
+houseControlsBox.append(optionalAssetNote);
 document.querySelector('footer').append(houseControlsBox);
 const houseControls = createHouseControlsPanel(houseControlsBox,
   { mutate: operatorMutate(fetch, operatorToken), operatorKey: operatorToken });
 houseControlsBox.addEventListener('toggle', () => houseControls.refreshOperator());
+Promise.allSettled([bathFixturesReady, bathLightReady, bathDoorReady]).then(() => {
+  const text = optionalAssets.noteText();
+  optionalAssetNote.textContent = text;
+  optionalAssetNote.hidden = !text;
+  document.getElementById('status').dataset.optionalAssets = JSON.stringify(optionalAssets.summary());
+});
 addEventListener("keydown", (e) => {
   if (e.key === "Escape" && (panelKind === "view" || !e.target.matches("input,textarea"))) {
     if (panelKind) { e.preventDefault(); closePanel(); }
@@ -1728,6 +1732,7 @@ let homeState = null,
   browserState = null,
   browserScreen = null,
   phoneBrowserScreen = null,
+  phoneLifeView = null,
   minecraftState = { enabled: false, status: "disabled" },
   lastConsoleGame = null,
   panelKind = "",
@@ -1799,12 +1804,6 @@ function notice(text) {
   clearTimeout(notice.timer);
   notice.timer = setTimeout(() => (n.style.display = "none"), 5000);
 }
-function terminalOutput() {
-  return (computerState.output || "Connecting to his Linux computer…")
-    .replace(/\r/g, "")
-    .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "")
-    .replace(/\x1b\][^\x07]*(?:\x07|\x1b\\)/g, "");
-}
 function operatorToken() {
   return sessionStorage.getItem("sub01-operator-token") || "";
 }
@@ -1829,7 +1828,10 @@ async function mutate(action, data) {
     }
     const result = await response.json();
     if (result.ok === false) {
-      notice("This device is not ready yet. Try again after it connects.");
+      // The computer route says why it is not ready (guest not installed, booting, worker exited).
+      const why = typeof result.error === "string" && result.error ? result.error : "";
+      const hint = typeof result.hint === "string" && result.hint ? " " + result.hint : "";
+      notice(why ? "Not ready: " + why + "." + hint : "This device is not ready yet. Try again after it connects.");
       return false;
     }
     return result;
@@ -1855,7 +1857,7 @@ function consoleChoice(label, game) {
       minecraftBitmapPainter?.invalidate();
       const changedGame = tvGame !== game;
       tvGame = game;
-      if (changedGame && game === 'minecraft') paintMinecraftUnavailable();
+      if (changedGame && game === 'minecraft') paintMinecraftUnavailable(minecraftScreenMessage());
       lastConsoleGame = game;
       renderPanel(true);
       drawTV();
@@ -1949,7 +1951,8 @@ function browserFrame(device, parent) {
       image.hidden = !state.frameId;
       message.hidden = !!state.frameId;
       if (!state.frameId) message.textContent = state.loading
-        ? 'Loading his current browser page…' : 'His browser has no current public page to show.';
+        ? 'Loading his current browser page…'
+        : browserUnavailableMessage(browserState, 'His browser has no current public page to show.');
     },
     onFeedback: text => { message.textContent = text; message.hidden = false; notice(text); },
     onStatus: status => {
@@ -2062,9 +2065,8 @@ function renderPanel(reset = false) {
     const pageLabel = document.getElementById('browser-page-label');
     if (pageLabel) pageLabel.textContent = browserScreen?.title
       ? 'On screen: ' + browserScreen.title : '';
-    if (terminal)
-      terminal.textContent =
-        terminalOutput() + "\n\n[" + (computerState.status || "offline") + "]";
+    // Output, or the honest placeholder, then "[status] summary" and the fix the server names.
+    if (terminal) terminal.textContent = computerPanelText(computerState);
   } else if (panelKind === "pong") {
     title.textContent = "Wall TV / " + (tvGame === "minecraft" ? "Minecraft" : tvGame === "chess" ? "Chess" : "Pong");
     if (reset) {
@@ -2075,7 +2077,10 @@ function renderPanel(reset = false) {
         consoleChoice("Pong", "pong"),
         consoleChoice("Chess", "chess"),
       );
-      if (minecraftState.enabled) choices.append(consoleChoice("Minecraft", "minecraft"));
+      // The button stays while the console is configured but offline: the server answers the
+      // click with the reason (409), shown as a notice, instead of a silent switch to nothing.
+      if (minecraftState.enabled)
+        choices.append(consoleChoice(minecraftState.offline_reason ? "Minecraft (offline)" : "Minecraft", "minecraft"));
       panelBody.append(choices);
       if (tvGame === "minecraft") {
         // Mirrors the TV canvas; the TV's frame feed repaints it (no second download).
@@ -2084,8 +2089,6 @@ function renderPanel(reset = false) {
         image.dataset.minecraftFrame = "1";
         image.getContext("2d").drawImage(tvCanvas, 0, 0);
         panelBody.append(image, textEl("p", "His persistent Minecraft world. He plays when he chooses the console.", "muted"));
-        panelBody.append(textEl("p", "", "muted"));
-        panelBody.lastChild.id = "minecraft-status";
       } else {
       const c = document.createElement("canvas");
       c.id = "pong-panel";
@@ -2109,6 +2112,10 @@ function renderPanel(reset = false) {
           pongControlButton("↓", 1),
         );
       }
+      // One honest status line for every TV game: Minecraft's state while it is on, and why the
+      // TV shows Pong or chess when the configured Minecraft console is offline.
+      panelBody.append(textEl("p", "", "muted"));
+      panelBody.lastChild.id = "console-status";
       const ownerKey = document.createElement("input");
       ownerKey.type = "password";
       ownerKey.placeholder = "Owner access key · needed to change games";
@@ -2117,19 +2124,22 @@ function renderPanel(reset = false) {
       ownerKey.oninput = () => sessionStorage.setItem("sub01-operator-token", ownerKey.value);
       panelBody.append(ownerKey);
     }
+    const status = document.getElementById("console-status");
     if (tvGame === "minecraft") {
-      const status = document.getElementById("minecraft-status");
       const observation = minecraftState.observation || {};
       const supplies = (observation.inventory || []).map(item => `${item.count} ${item.name.replaceAll("_", " ")}`).join(" · ");
-      if (status) status.textContent = minecraftState.status === "needs_eula"
-        ? "Waiting for the owner to accept the Minecraft EULA. The game has not started."
+      if (status) status.textContent = minecraftState.offline_reason
+        ? "Minecraft " + minecraftScreenMessage().replace(/^Console/, "console") + ". The game has not started."
         : "Minecraft: " + minecraftState.status + (minecraftState.last_action ? " · " + minecraftState.last_action.replaceAll("_", " ") : "")
           + (observation.connected ? ` · Health ${observation.health}/20 · Food ${observation.food}/20` : "")
           + (supplies ? " · " + supplies : "")
           + (minecraftState.error ? " · " + minecraftState.error : "");
-    } else if (tvGame === "chess")
-      drawChess(document.getElementById("pong-panel"), chessState?.game);
-    else drawPong(document.getElementById("pong-panel"), homeState?.pong);
+    } else {
+      if (status) status.textContent = consoleFallbackNotice(" He plays " + (tvGame === "chess" ? "chess" : "Pong") + " meanwhile.");
+      if (tvGame === "chess") drawChess(document.getElementById("pong-panel"), chessState?.game);
+      else drawPong(document.getElementById("pong-panel"), homeState?.pong);
+      drawConsoleNotice(document.getElementById("pong-panel"));
+    }
   } else if (panelKind === "phone") {
     title.textContent = "Phone · " + (homeState?.phone.battery ?? "—") + "%";
     if (reset) {
@@ -2313,12 +2323,18 @@ async function pongInput(direction) {
   } catch { return false; }
   finally { clearTimeout(timeout); pongSending = false; }
 }
+// A failed paddle send is retried at most 3 times (one send plus 3 retries); then sending
+// waits for the next key event, which starts a fresh count.
+let pongFailures = 0, pongFailureVersion = -1;
 setInterval(async () => {
   if (panelKind !== "pong" || tvGame !== "pong" || document.hidden)
     pongHeld.clear();
   if (!pongHeld.active && !pongHeld.changed) return;
   const version = pongHeld.version;
-  if (await pongInput(pongHeld.direction)) pongHeld.acknowledge(version);
+  if (version !== pongFailureVersion) { pongFailureVersion = version; pongFailures = 0; }
+  if (pongFailures > 3 || pongSending || Date.now() - lastPongInput < 100) return;
+  if (await pongInput(pongHeld.direction)) { pongHeld.acknowledge(version); pongFailures = 0; }
+  else if (pongFailureVersion === version) pongFailures++;
 }, 110);
 function drawPong(canvas, state) {
   if (!canvas) return;
@@ -2420,21 +2436,64 @@ function drawChess(canvas, game) {
     h - 12,
   );
 }
+// What the TV says while the Minecraft console has no picture: the server's own state and
+// reason (home_minecraft.view), never a guess. An offline console reads "Console offline: <why>".
+function minecraftScreenMessage() {
+  const s = minecraftState || {};
+  if (!s.enabled) return 'Minecraft is not configured on this server';
+  if (s.offline_reason || ['offline', 'needs_eula', 'error'].includes(s.status))
+    return 'Console offline: ' + (s.offline_reason || s.error || s.status);
+  if (s.status === 'preparing' || s.status === 'starting_server') return 'Starting the Minecraft server…';
+  if (s.status === 'ready' || s.status === 'connecting') return 'Connecting the player to his world…';
+  if (s.status === 'paused') return 'Paused · he is not at the TV';
+  if (s.status === 'playing') return 'Waiting for the first picture…';
+  return 'Waiting for Minecraft…';
+}
+// "Minecraft offline: <why>" while a configured console cannot run (the TV then shows Pong), else "".
+function consoleFallbackNotice(suffix = "") {
+  const reason = minecraftState?.enabled ? minecraftState.offline_reason : null;
+  return reason ? "Minecraft offline: " + reason + "." + suffix : "";
+}
+function wrapText(context, text, width) {
+  const lines = [];
+  let line = "";
+  for (const word of String(text).split(/\s+/)) {
+    const next = line ? line + " " + word : word;
+    if (line && context.measureText(next).width > width) { lines.push(line); line = word; }
+    else line = next;
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, 4);
+}
 function paintMinecraftUnavailable(message = 'Waiting for Minecraft…') {
   const context = tvCanvas.getContext('2d');
   context.fillStyle = '#10201a'; context.fillRect(0, 0, 800, 460);
   context.fillStyle = '#ffae69'; context.textAlign = 'center'; context.font = '28px system-ui';
   context.fillText('Minecraft', 400, 205);
-  context.font = '18px system-ui'; context.fillText(message, 400, 245);
+  context.font = '18px system-ui';
+  wrapText(context, message, 720).forEach((line, index) => context.fillText(line, 400, 245 + index * 26));
   tvTexture.needsUpdate = true;
+}
+// A dim band over the Pong court / chess board while the configured Minecraft console is offline.
+function drawConsoleNotice(canvas) {
+  const text = consoleFallbackNotice();
+  if (!canvas || !text) return;
+  const context = canvas.getContext('2d'), w = canvas.width;
+  context.fillStyle = '#000000a0'; context.fillRect(0, 0, w, 22);
+  context.fillStyle = '#ffae69'; context.font = '13px system-ui'; context.textAlign = 'left'; context.textBaseline = 'middle';
+  let shown = text;
+  while (shown.length > 8 && context.measureText(shown).width > w - 24) shown = shown.slice(0, -2).trimEnd() + '…';
+  context.fillText(shown, 12, 11);
+  context.textBaseline = 'alphabetic';
 }
 function drawTV() {
   if (tvGame === "minecraft") {
-    if (!minecraftState.has_frame) paintMinecraftUnavailable(
-      minecraftState.status === 'needs_eula' ? 'Waiting for EULA approval' : minecraftState.status || 'Waiting for Minecraft…');
-  } else if (tvGame === "chess" || homeState?.activity === "play_chess")
-    drawChess(tvCanvas, chessState?.game);
-  else drawPong(tvCanvas, homeState?.pong);
+    if (!minecraftState.has_frame) paintMinecraftUnavailable(minecraftScreenMessage());
+  } else {
+    if (tvGame === "chess" || homeState?.activity === "play_chess") drawChess(tvCanvas, chessState?.game);
+    else drawPong(tvCanvas, homeState?.pong);
+    drawConsoleNotice(tvCanvas);
+  }
   tvTexture.needsUpdate = true;
 }
 const tvCanvas = document.createElement("canvas");
@@ -2458,20 +2517,38 @@ interactions.push({
   fn: () => openPanel("pong"),
 });
 drawPong(tvCanvas);
+// Minecraft frames are requested only while the TV is in the camera view or its panel is open.
+// Each failed request doubles the wait (150 ms up to 10 s); a painted frame restores 150 ms.
+const tvFrustum = new T.Frustum(), tvViewProjection = new T.Matrix4();
+function tvInView() {
+  camera.updateMatrixWorld();
+  tvViewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  tvFrustum.setFromProjectionMatrix(tvViewProjection);
+  return tvFrustum.intersectsObject(tv);
+}
+let minecraftFrameWait = 150;
+function backOffMinecraftFrame() { minecraftFrameWait = Math.min(minecraftFrameWait * 2, 10000); }
 minecraftBitmapPainter = createMinecraftFrameFeed({
   getContextKey: () => tvGame === 'minecraft' && minecraftState.has_frame ? 'minecraft' : null,
-  isActive: () => !privacyActive && !homeState?.privacy && !document.hidden,
+  isActive: () => !privacyActive && !homeState?.privacy && !document.hidden &&
+    ((!panel.hidden && panelKind === 'pong' && tvGame === 'minecraft') || tvInView()),
   getURL: () => '/api/home/minecraft/frame.jpg',
-  onUnavailable: () => paintMinecraftUnavailable(),
-  onError: () => paintMinecraftUnavailable('Minecraft picture unavailable.'),
-  onTimeout: () => paintMinecraftUnavailable('Minecraft is taking a moment…'),
+  onUnavailable: () => { backOffMinecraftFrame(); paintMinecraftUnavailable(minecraftScreenMessage()); },
+  onError: () => { backOffMinecraftFrame(); paintMinecraftUnavailable('Minecraft picture unavailable.'); },
+  onTimeout: () => { backOffMinecraftFrame(); paintMinecraftUnavailable('Minecraft is taking a moment…'); },
   paint: image => {
+    minecraftFrameWait = 150;
     tvCanvas.getContext('2d').drawImage(image, 0, 0, 800, 460);
     tvTexture.needsUpdate = true;
     panelBody.querySelector('[data-minecraft-frame]')?.getContext('2d').drawImage(image, 0, 0, 800, 460);
   },
 });
-setInterval(() => { void minecraftBitmapPainter.update(); }, 150);
+// The tick is local only: update() sends nothing while the feed is inactive.
+function pollMinecraftFrame() {
+  void minecraftBitmapPainter.update();
+  setTimeout(pollMinecraftFrame, minecraftFrameWait);
+}
+setTimeout(pollMinecraftFrame, 150);
 const phoneMesh = box(0.075, 0.015, 0.15, 2.7, 0.858, -2.92, M.black, 0.014);
 // A shared-state display, rather than a second application or browser instance.
 const phoneCanvas = document.createElement("canvas");
@@ -2500,7 +2577,7 @@ phoneScreen = createPhoneScreen({
   canvas: phoneCanvas, texture: phoneTexture,
   getState: () => ({
     activity: homeState?.activity, app: homeState?.phone?.app, battery: homeState?.phone?.battery,
-    frameId: phoneBrowserScreen?.frame_id, title: phoneBrowserScreen?.title,
+    frameId: phoneBrowserScreen?.frame_id, title: phoneBrowserScreen?.title, view: phoneLifeView,
     privacy: privacyActive || !!homeState?.privacy, hidden: document.hidden,
     time: phoneClockFormat.format(new Date(homeTime * 1000)),
   }),
@@ -2580,14 +2657,18 @@ function drawComputer() {
   );
   sx.fillStyle = "#b7d9c4";
   sx.font = "15px monospace";
-  const lines = terminalOutput().split("\n").slice(-29);
+  // Guest output when there is any; otherwise the honest state (guest not installed,
+  // booting, worker exited) with the fix, so the monitor is never black or a fake shell.
+  const lines = computerScreenLines(computerState, 29);
   lines.forEach((l, i) => sx.fillText(l.slice(0, 105), 28, 68 + i * 17));
   st.needsUpdate = true;
 }
-function paintBrowserUnavailable(message = 'His browser has no public page to show right now.') {
+function paintBrowserUnavailable(message) {
+  // No wording given: name the browser's real state (off with BROWSE=0, restarting, idle).
+  message ??= browserUnavailableMessage(browserState, 'His browser has no public page to show right now.');
   sx.fillStyle = '#10201a'; sx.fillRect(0, 0, 1024, 600);
   sx.fillStyle = '#cbd6c8'; sx.font = '24px sans-serif'; sx.textAlign = 'left';
-  sx.fillText(message, 32, 300);
+  wrapLines(message, 70).slice(0, 4).forEach((line, i) => sx.fillText(line, 32, 270 + i * 34));
   st.needsUpdate = true;
 }
 deskBitmapPainter = createOwnedBitmapPainter({
@@ -2631,7 +2712,7 @@ function acceptHome(state) {
     minecraftBitmapPainter?.invalidate();
     lastConsoleGame = state.console_game;
     tvGame = state.console_game;
-    if (tvGame === 'minecraft') paintMinecraftUnavailable();
+    if (tvGame === 'minecraft') paintMinecraftUnavailable(minecraftScreenMessage());
     if (panelKind === "pong") renderPanel(true);
   }
   if (!state.notes?.length && homeState.notes?.length === 0 && lastFullHome)
@@ -2660,7 +2741,7 @@ function acceptHome(state) {
 let lastFullHome = null;
 // Optional WebSocket device identities: refresh on change (polling remains the fallback).
 const deviceRevisions = createDeviceRevisions({
-  refresh: () => syncState(),
+  refresh: () => (document.hidden ? undefined : syncState()),
   onPrivacy: () => {
     browserScreen = phoneBrowserScreen = null;
     computerState = { ...computerState, output: "", last_command: null };
@@ -2668,24 +2749,38 @@ const deviceRevisions = createDeviceRevisions({
     invalidateDeviceBitmaps();
   },
 });
+// Each home request gets a 5 s AbortController deadline, which also covers reading its JSON body.
+async function homeRequest(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return { ok: response.ok, data: response.ok ? await response.json() : null };
+  } finally {
+    clearTimeout(timer);
+  }
+}
 async function syncState() {
   const epoch = deviceRevisions.epoch;
+  let healthy = false;
   try {
-    const r = await fetch("/api/home");
+    const r = await homeRequest("/api/home");
     if (!r.ok) {
       notice("The home is not enabled on this server yet.");
-      return;
+      return false;
     }
-    const s = await r.json();
-    try {
-      chessState = await (await fetch("/api/chess")).json();
-    } catch {}
-    if (epoch !== deviceRevisions.epoch) return; // requested before a privacy entry/exit
+    const s = r.data;
+    // A failed chess request counts against this poll but keeps the last board.
+    const chess = await homeRequest("/api/chess").catch(() => ({ ok: false }));
+    if (chess.ok) chessState = chess.data;
+    healthy = chess.ok;
+    if (epoch !== deviceRevisions.epoch) return healthy; // requested before a privacy entry/exit
     lastFullHome = s.home;
     computerState = s.computer;
     browserState = s.browser || null;
     browserScreen = s.browser_screen || null;
     phoneBrowserScreen = s.phone_browser_screen || null;
+    phoneLifeView = s.phone_view || null;
     minecraftState = s.minecraft || { enabled: false, status: "disabled" };
     homeTime = s.time;
     brainStage = s.stage;
@@ -2697,8 +2792,22 @@ async function syncState() {
     else await updateRealBrowser();
     refreshPanelScreens();
   } catch {}
+  return healthy;
 }
-let socket, reconnectTimer, pendingImpulse;
+// Home poll: every 3 s while healthy; each consecutive failure doubles the wait (3, 6, 12 ... up to 60 s).
+// Polls pause while the tab is hidden, and a tab that becomes visible polls at once.
+let syncFailures = 0, syncTimer = 0;
+function scheduleSync(wait = syncFailures ? Math.min(3000 * 2 ** (syncFailures - 1), 60000) : 3000) {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    if (!document.hidden) syncFailures = (await syncState().catch(() => false)) ? 0 : syncFailures + 1;
+    scheduleSync();
+  }, wait);
+}
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) scheduleSync(0);
+});
+let socket, reconnectTimer, pendingImpulse, socketAttempts = 0;
 function finishImpulse(ok, message) {
   if (!pendingImpulse) return;
   clearTimeout(pendingImpulse.timer);
@@ -2713,11 +2822,15 @@ function connect() {
       location.host +
       "/ws?rate=5&lite=1",
   );
+  socket.onopen = () => { socketAttempts = 0; };
   socket.onmessage = (e) => {
     try {
       const m = JSON.parse(e.data);
       if (m.type === 'chat_ack')
-        finishImpulse(m.ok === true, m.ok ? 'Impulse received. He chooses what to do.' : 'Impulse not accepted. Edit it and try again.');
+        // The server's in-character reaction (impulse.py) says at once what he does with it.
+        finishImpulse(m.ok === true, m.ok
+          ? (typeof m.reaction === 'string' && m.reaction ? m.reaction : 'Impulse received. He chooses what to do.')
+          : 'Impulse not accepted. Edit it and try again.');
       if (m.type === "chess") {
         chessState = { ...chessState, game: m };
         drawTV();
@@ -2733,12 +2846,14 @@ function connect() {
   socket.onclose = () => {
     finishImpulse(false, 'Connection lost. Your impulse was not confirmed.');
     clearTimeout(reconnectTimer);
-    reconnectTimer = setTimeout(connect, 2000);
+    // Exponential back-off with jitter: about 2 s, doubling per failed attempt, at most 60 s.
+    const cap = Math.min(2000 * 2 ** socketAttempts, 60000);
+    socketAttempts++;
+    reconnectTimer = setTimeout(connect, cap / 2 + Math.random() * cap / 2);
   };
 }
 connect();
-syncState();
-setInterval(syncState, 3000);
+scheduleSync(0);
 setInterval(() => {
   const fresh = performance.now() - onlineAt < 5000;
   document.getElementById("connection").textContent = fresh
@@ -3065,7 +3180,8 @@ renderer.setAnimationLoop(() => {
   // Away (presence "away"): no body; the camera still follows homeState.position
   // and the body returns on the first frame he is back (step() sets visibility).
   firstPersonBody.step(dt, homeState, computerState, performance.now() / 1000,
-    following && !privacyActive && actorVisible(homeState), camera);
+    following && !privacyActive && actorVisible(homeState), camera,
+    (x, z) => floorAt(x, z, camera.position.y - 1.65));   // (the floor under the camera: the body stands on it, its eyes at the camera)
   for (const panel of curtainPanels)
     if (panel.update(dt)) renderer.shadowMap.needsUpdate = true;
   if (!startup.ready) return;

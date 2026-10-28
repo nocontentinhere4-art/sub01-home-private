@@ -1,0 +1,13 @@
+{
+  "schema": "sub01.analysis-supervisor-test.v1",
+  "returncode": 1,
+  "elapsed": 2.046292555052787,
+  "pids": {
+    "39676": 57125150,
+    "39677": 57125152
+  },
+  "all_owned_reaped": true,
+  "stdout": "",
+  "stderr": "",
+  "all_pass": true
+}

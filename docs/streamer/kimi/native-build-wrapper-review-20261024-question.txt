@@ -1,0 +1,250 @@
+Exact code review before commit and before native execution. Design was approved with strict fail-closed corrections. Review the following build-only wrapper and disposable-project tests for concrete blockers (status propagation, backups, source/application hashes, measurement lease, capacity, binary proof). No runtime launch/restart is included. Native installer is from an independent ongoing review; its final package is NOT yet available, so this wrapper has not run on the real project. Say COMMIT YES or list concrete blockers, under 500 words.
+
+--- tools/pod/onpod/build-v24.sh ---
+#!/bin/bash
+# Coordinator only. Stage the reviewed installer and frozen manifests in deploy/v24 first.
+# This builds only: no game, supervisor, director, agent or Vagon restart.
+set -euo pipefail
+P=/home/unreal/.sub01-private/cinematic-source-v3-final
+M=$P/Sub01HomeLab/Source/Sub01HomeLab
+B=$P/Sub01HomeLab/Binaries/Linux
+D=/tmp/sub01-share/deploy/v24
+SO=$B/libUnrealEditor-Sub01HomeLab.so
+LOG=$P/build-v24.log
+CHANGES=/tmp/sub01-share/pod-changes.log
+STARTED=$(date -u '+%F %T')
+START_EPOCH=$(date +%s)
+STATE=preflight
+BUILD_EXIT=not_started
+finish() {
+  rc=$?; trap - EXIT
+  printf '%s UTC | coordinator | v24 build wrapper exit=%s state=%s BUILD_EXIT=%s started=%s | source-backup-before-v24, binaries-backup-before-v24\n' \
+    "$(date -u '+%F %T')" "$rc" "$STATE" "$BUILD_EXIT" "$STARTED" >> "$CHANGES" || true
+  exit "$rc"
+}
+trap finish EXIT
+preflight() {
+  [ ! -e /tmp/sub01-share/MEASURING ] || { echo 'REFUSED: measurement lease active'; exit 3; }
+  [ -e /home/unreal/.sub01-private/streamer/STOP ] || { echo 'REFUSED: agent STOP missing'; exit 3; }
+  # 3.5 GiB, checked on every filesystem used for backups or build output.
+  for path in / "$P" "$M" "$B"; do
+    free=$(df -PB1 "$path" | awk 'END {print $4}')
+    [ "$free" -gt 3758096384 ] || { echo "REFUSED: <=3.5 GiB available at $path"; exit 4; }
+  done
+}
+verify_sources() {
+  python3 - "$1" "$D/source-v23-manifest.json" <<'PY'
+import hashlib, json, sys
+from pathlib import Path
+root = Path(sys.argv[1])
+paths = list(root.rglob('*'))
+assert not any(p.is_symlink() for p in paths), 'source symlinks require explicit review'
+actual = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file()}
+assert actual == json.loads(Path(sys.argv[2]).read_text()), 'source tree differs from frozen v23 manifest'
+PY
+}
+[ "$(id -u)" = 0 ] || { echo 'REFUSED: coordinator must run as root'; exit 2; }
+preflight
+for file in source-v23-manifest.json expected-dry-run.json installer.sha256 artifact-marker.txt; do
+  [ -s "$D/$file" ] || { echo "REFUSED: missing frozen $file"; exit 2; }
+done
+[ ! -e "$P/source-backup-before-v24" ] && [ ! -e "$P/binaries-backup-before-v24" ] || {
+  echo 'REFUSED: existing v24 backup needs explicit verification/recovery'; exit 2;
+}
+(cd "$D" && sha256sum -c installer.sha256)
+verify_sources "$M"
+BEFORE_SHA=$(sha256sum "$SO" | awk '{print $1}')
+MARKER=$(cat "$D/artifact-marker.txt")
+[[ ${#MARKER} -ge 8 && "$MARKER" != *$'\n'* ]] || { echo 'REFUSED: invalid artifact marker'; exit 2; }
+STATE=dry_run
+runuser -u unreal -- python3 "$D/install_v24.py" --source "$M" --dry-run > "$D/dry-run.txt" 2>&1
+python3 - "$D/expected-dry-run.json" "$D/dry-run.txt" <<'PY'
+import json, sys
+expected, actual = [json.load(open(p)) for p in sys.argv[1:]]
+assert actual == expected and actual.get('status') == 'planned', 'dry-run change set differs from frozen plan'
+PY
+preflight
+verify_sources "$M"
+STATE=backups
+printf '%s UTC | coordinator | v24 source/binary backup and apply start | restore source-backup-before-v24 and binaries-backup-before-v24\n' \
+  "$(date -u '+%F %T')" >> "$CHANGES"
+cp -a "$M" "$P/source-backup-before-v24"
+cp -a "$B" "$P/binaries-backup-before-v24"
+verify_sources "$P/source-backup-before-v24"
+diff -qr "$B" "$P/binaries-backup-before-v24"
+STATE=apply
+verify_sources "$M"
+runuser -u unreal -- python3 "$D/install_v24.py" --source "$M" > "$D/apply.txt" 2>&1
+python3 - "$M" "$D/source-v23-manifest.json" "$D/expected-dry-run.json" "$D/apply.txt" <<'PY'
+import hashlib, json, sys
+from pathlib import Path
+root = Path(sys.argv[1])
+before, planned, applied = [json.load(open(p)) for p in sys.argv[2:]]
+files = planned.get('files')
+assert isinstance(files, dict) and files and applied.get('status') == 'applied', 'invalid apply report'
+assert applied.get('files') == files, 'applied change set differs from frozen plan'
+expected = dict(before)
+expected.update({name: meta['after_sha256'] for name, meta in files.items()})
+paths = list(root.rglob('*'))
+assert not any(p.is_symlink() for p in paths), 'unexpected source symlink after apply'
+actual = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file()}
+assert actual == expected, 'applied source tree does not match frozen after hashes'
+PY
+preflight
+STATE=build
+cd "$P"
+if runuser -u unreal -- /workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh \
+  Sub01HomeLabEditor Linux Development -Project="$P/Sub01HomeLab/Sub01HomeLab.uproject" \
+  -NoHotReload -NoUBTMakefiles -MaxParallelActions=6 -NoUBA \
+  "-AdditionalCompilerArguments=-ivfsoverlay $P/exact-header-overlay.json" > "$LOG" 2>&1; then
+  BUILD_EXIT=0
+else
+  BUILD_EXIT=$?
+fi
+printf 'BUILD_EXIT=%s\n' "$BUILD_EXIT" >> "$LOG"
+[ "$BUILD_EXIT" -eq 0 ] || exit "$BUILD_EXIT"
+STATE=verify_artifact
+AFTER_SHA=$(sha256sum "$SO" | awk '{print $1}')
+[ "$AFTER_SHA" != "$BEFORE_SHA" ] && [ "$(stat -c %Y "$SO")" -ge "$START_EPOCH" ] && grep -aFq -- "$MARKER" "$SO" || {
+  echo 'BUILD_EXIT=0 but artifact verification failed'; exit 8;
+}
+printf 'before_sha256=%s\nafter_sha256=%s\nartifact=%s\n' "$BEFORE_SHA" "$AFTER_SHA" "$SO" > "$D/artifact-receipt.txt"
+STATE=complete
+printf 'BUILD_EXIT=0 artifact_sha256=%s\n' "$AFTER_SHA"
+exit 0
+
+--- tests/test_pod_native_build_wrapper.py ---
+"""Exercise the v24 wrapper in a disposable project; never invoke Unreal or touch a pod."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+@pytest.fixture
+def build(tmp_path):
+    project = tmp_path / 'project'
+    source = project / 'Sub01HomeLab/Source/Sub01HomeLab'
+    binaries = project / 'Sub01HomeLab/Binaries/Linux'
+    deploy = tmp_path / 'share/deploy/v24'
+    commands = tmp_path / 'commands'
+    for p in (source, binaries, deploy, commands):
+        p.mkdir(parents=True)
+    (source / 'scene.cpp').write_text('v23 source')
+    so = binaries / 'libUnrealEditor-Sub01HomeLab.so'
+    so.write_text('v23 binary')
+    stop = tmp_path / 'STOP'
+    stop.touch()
+    (deploy / 'source-v23-manifest.json').write_text(json.dumps({'scene.cpp': hashlib.sha256(b'v23 source').hexdigest()}))
+    after = hashlib.sha256(b'v24 source').hexdigest()
+    report = {'status': 'planned', 'source': str(source), 'files': {'scene.cpp': {'after_sha256': after}}}
+    (deploy / 'expected-dry-run.json').write_text(json.dumps(report))
+    installer = deploy / 'install_v24.py'
+    installer.write_text('import json,sys,os\nfrom pathlib import Path\np=Path(sys.argv[sys.argv.index("--source")+1])\n'
+                         f'print(json.dumps({{"status":"planned" if "--dry-run" in sys.argv else "applied","source":str(p),"files":{{"scene.cpp":{{"after_sha256":"{after}"}}}}}}))\n'
+                         'if "--dry-run" not in sys.argv: (p/"scene.cpp").write_text("wrong" if os.environ.get("TEST_APPLY_MODE")=="wrong" else "v24 source")\n')
+    (deploy / 'installer.sha256').write_text(hashlib.sha256(installer.read_bytes()).hexdigest() + '  install_v24.py\n')
+    (deploy / 'artifact-marker.txt').write_text('V24_TEST_MARKER\n')
+
+    def executable(path, text):
+        path.write_text(text)
+        path.chmod(0o755)
+
+    executable(commands / 'id', '#!/bin/sh\necho 0\n')
+    executable(commands / 'runuser', '#!/bin/sh\nshift 3\nexec "$@"\n')
+    executable(commands / 'df', '#!/bin/sh\necho "Filesystem blocks used available capacity mounted"\n'
+               'echo "test 10000000000 0 ${TEST_AVAILABLE:-9000000000} 0% /"\n')
+    executable(commands / 'stat', f'#!{sys.executable}\nimport os,sys\nprint(int(os.stat(sys.argv[-1]).st_mtime))\n')
+    executable(commands / 'sha256sum', f'#!{sys.executable}\n' + '''import hashlib,sys
+from pathlib import Path
+if sys.argv[1] == '-c':
+ for row in Path(sys.argv[2]).read_text().splitlines():
+  sha,name=row.split(None,1)
+  if hashlib.sha256(Path(name.strip()).read_bytes()).hexdigest()!=sha: sys.exit(1)
+else:
+ p=Path(sys.argv[1]); print(hashlib.sha256(p.read_bytes()).hexdigest(), str(p))
+''')
+    engine = tmp_path / 'fake-engine-command'
+    executable(engine, f'#!{sys.executable}\n' + '''import os,sys
+from pathlib import Path
+if os.environ.get('TEST_BUILD_MODE') == 'success': Path(os.environ['TEST_SO']).write_text('new V24_TEST_MARKER binary')
+sys.exit(int(os.environ.get('TEST_BUILD_STATUS','0')))
+''')
+    wrapper = tmp_path / 'build.sh'
+    script = (ROOT / 'tools/pod/onpod/build-v24.sh').read_text()
+    script = script.replace('/home/unreal/.sub01-private/cinematic-source-v3-final', str(project))
+    script = script.replace('/home/unreal/.sub01-private/streamer/STOP', str(stop))
+    script = script.replace('/tmp/sub01-share', str(tmp_path / 'share'))
+    script = script.replace('/workspace/sub01-private-recovered-engine/Engine/Build/BatchFiles/Linux/Build.sh', str(engine))
+    wrapper.write_text(script)
+
+    def run(mode='success', status=0, available=9000000000, apply_mode='normal'):
+        env = dict(os.environ, PATH=str(commands)+os.pathsep+os.environ['PATH'], TEST_BUILD_MODE=mode,
+                   TEST_BUILD_STATUS=str(status), TEST_AVAILABLE=str(available), TEST_SO=str(so), TEST_APPLY_MODE=apply_mode)
+        return subprocess.run(['bash', str(wrapper)], capture_output=True, text=True, env=env, timeout=10)
+    return run, project, source, tmp_path / 'share', deploy
+
+
+def test_build_failure_preserves_status_and_backup(build):
+    run, project, source, share, deploy = build
+    result = run(status=7)
+    assert result.returncode == 7, result.stdout + result.stderr
+    assert (project / 'source-backup-before-v24/scene.cpp').read_text() == 'v23 source'
+    assert 'BUILD_EXIT=7' in (share / 'pod-changes.log').read_text()
+    assert not (deploy / 'artifact-receipt.txt').exists()
+
+
+def test_verified_build_success(build):
+    run, project, source, share, deploy = build
+    result = run()
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert 'after_sha256=' in (deploy / 'artifact-receipt.txt').read_text()
+    assert 'state=complete BUILD_EXIT=0' in (share / 'pod-changes.log').read_text()
+
+
+def test_success_without_new_binary_is_failure(build):
+    run, project, source, share, deploy = build
+    assert run(mode='no_artifact').returncode == 8
+    assert not (deploy / 'artifact-receipt.txt').exists()
+
+
+def test_wrong_applied_source_stops_before_build(build):
+    run, project, source, share, deploy = build
+    result = run(apply_mode='wrong')
+    assert result.returncode != 0
+    assert not (project / 'build-v24.log').exists()
+    assert (project / 'source-backup-before-v24/scene.cpp').read_text() == 'v23 source'
+
+
+@pytest.mark.parametrize('condition,status', [('lease', 3), ('low_disk', 4), ('drift', 1), ('backup', 2), ('installer', 1)])
+def test_preflight_refuses_before_source_changes(build, condition, status):
+    run, project, source, share, deploy = build
+    if condition == 'lease': (share / 'MEASURING').touch()
+    if condition == 'drift': (source / 'extra.cpp').write_text('unexpected')
+    if condition == 'backup': (project / 'source-backup-before-v24').mkdir()
+    if condition == 'installer': (deploy / 'install_v24.py').write_text('unreviewed change')
+    result = run(available=3758096384 if condition == 'low_disk' else 9000000000)
+    assert result.returncode == status, result.stdout + result.stderr
+    assert (source / 'scene.cpp').read_text() == 'v23 source'
+    assert not (project / 'binaries-backup-before-v24').exists()
+
+--- docs/streamer/NATIVE-BUILD-WRAPPER-20261024.md ---
+# Guarded v24 build wrapper
+
+`tools/pod/onpod/build-v24.sh` builds only; the offscreen game launch and director switch remain separate operations. This script has not been run on the native project yet.
+
+Stage the reviewed installer and its Python imports in `/tmp/sub01-share/deploy/v24/`. Freeze `source-v23-manifest.json` as a mapping of every relative native-source filename to its SHA-256, `expected-dry-run.json` as the exact reviewed dry-run report, `installer.sha256` as the staged file checksums, and `artifact-marker.txt` as one literal log string compiled only by v24. Validate these against the final worker manifest before execution. No final native worker package is available yet.
+
+The wrapper refuses missing STOP, MEASURING, source drift, installer drift, backup collisions or <=3.5 GiB available on the source/backup/build filesystems. Fresh source and binary backups are verified; existing v23 backups are preserved. Dry-run equality and before/after source hashes gate compilation. The real compiler status is returned; a zero compiler status with an unchanged, stale or marker-free binary returns 8. UTC stages and exit status go to the shared change log; a successful build writes an artifact hash receipt. A partial apply or failed build requires explicit coordinator recovery from backups before another attempt.
+
+Validation uses a disposable project, real file copies and a fake engine executable. Cases cover a compiler exit 7, verified success, missing new binary, source mismatch after apply, active lease, exact disk threshold, source drift, backup collision and installer drift. This verifies the wrapper, not Unreal compilation or rendering.
+
+## Kimi review
+
+The design was approved with fail-closed requirements for status, backups, source hashes, artifact verification and capacity. The question and answer are saved verbatim in `kimi/native-build-wrapper-design-20261024-*`. Exact code review is pending; execution and commit await it and the final native worker package.

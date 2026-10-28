@@ -1,0 +1,16 @@
+{
+  "raw_result_status": "failed",
+  "probe_status": "recorded",
+  "bytes_discarded": 93032865,
+  "samples": 10,
+  "last_write_fresh_samples": 9,
+  "no_writer_samples": 9,
+  "max_drain_lag": 0.004989985143765807,
+  "postconditions_independently_verified": true,
+  "original_failure_retained": true,
+  "hypothesis_not_yet_direct_errno_proof": "Landlock ptrace-related proc FD visibility restriction",
+  "references": [
+    "https://docs.kernel.org/userspace-api/landlock.html#ptrace-restrictions",
+    "https://man7.org/linux/man-pages/man5/proc_pid_fd.5.html"
+  ]
+}

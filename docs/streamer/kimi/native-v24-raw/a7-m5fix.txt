@@ -1,0 +1,4 @@
+1. Yes — scans are incremental and complete-line-only, deadlines are monotonic, child exit gets a final read, and the OUT chown no longer follows a symlink.
+2. No—for newline-terminated markers: each wait terminates on marker/deadline/exit, unfinished lines are retried, and restarting at `log_offset` prevents either search skipping earlier output.
+3. No — no new launcher-breaking regression is evident in the supplied diff; a permanently unterminated final marker line remains intentionally ignored.
+no blocking issue

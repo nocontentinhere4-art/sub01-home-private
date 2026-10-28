@@ -255,14 +255,14 @@ def test_private_bathroom_movement_control_and_feedback_do_not_unmask_devices():
             assert (await client.post('/home/native_state', headers=AUTH, json=report('walking',bind=True,node='bath_door'))).status == 200
             assert not world.activity_ready()
             world.bladder = .9
-            world.update(.2,0,{'activity':'use_bathroom'}, {})
-            assert world.bladder == .9  # No simulated completion before real arrival.
+            world.update(.2,.2,{'activity':'use_bathroom'}, {})
+            assert world.bladder >= .9  # No simulated completion before real arrival (the bladder empties in sim time).
             for phase, patch in [('seated',{'chair':'desk_chair'}), ('walking',{'node':'desk'}),
                                  ('arrived',{'node':'bath_door'}), ('arrived',{'sequence':99})]:
                 assert (await client.post('/home/native_state', headers=AUTH, json=report(phase,**patch))).status == 409
             assert (await client.post('/home/native_state', headers=AUTH, json=report('arrived'))).status == 200
             assert world.activity_ready('use_bathroom')
-            world.update(.2,0,{'activity':'use_bathroom'}, {})
+            world.update(.2,.2,{'activity':'use_bathroom'}, {})
             assert world.bladder < .9
             assert (await direct.post('/api/home/computer', headers=AUTH, json={'input':'uname'})).status == 409
             assert (await direct.post('/api/home/browser', headers=AUTH, json={'url':'https://example.org','device':'phone'})).status == 409

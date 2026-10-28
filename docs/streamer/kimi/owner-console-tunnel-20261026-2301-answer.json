@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "**Approved**, with only these mandatory implementation clarifications:\n\n- Enforce an **exact method/path allowlist**, including permitted query parameters. UI/frame/pcstate GETs must be side-effect-free; operatorinput and owner arm/start must be POST-only. Reject absolute request URLs, other paths/methods, and redirects. Construct pod requests from fixed fields; never forward inbound `Authorization`, `X-Admin-Token`, cookies, or arbitrary headers.\n- Require `Host: 127.0.0.1:18838`. For every POST, require `Origin: http://127.0.0.1:18838`; reject missing, `null`, or cross-site origins and provide no CORS allowance. Arm/start must require an explicit owner action\u2014never page load, prefetch, or agent activity.\n- Bound the pending queue as well as bodies, frames, headers, and responses; keep one request in flight and fail fast on overflow. Apply connection, read/write, and overall timeouts.\n- Dispatch each POST **at most once**. On transport loss, discard queued work and never resend in-flight or completed requests. If dispatch outcome is uncertain, report it as indeterminate; the owner must inspect current state before manually retrying.\n- Rebuild responses using a safe header allowlist and valid `Content-Length`; strip hop-by-hop and permissive CORS headers. Keep responses bounded and `no-store`.\n- Preserve the stated pod-only token injection, fixed `127.0.0.1:8838` target, existing Jupyter authentication, STOP hold, and cleanup of only the owned terminal.\n\nNo public exposure, provider changes, or additional transport is needed.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 395,
+    "completion_tokens": 3323,
+    "total_tokens": 3718,
+    "completion_tokens_details": {
+      "reasoning_tokens": 2968
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 256
+    }
+  },
+  "seconds": 89.44
+}

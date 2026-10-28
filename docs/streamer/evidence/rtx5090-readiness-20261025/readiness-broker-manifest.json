@@ -1,0 +1,28 @@
+{
+  "main_inode": [
+    67,
+    6480385251
+  ],
+  "environment": {
+    "PATH": "/home/unreal/venv/bin:/usr/bin:/bin",
+    "HOME": "/home/unreal/.sub01-private/readiness-broker-proof-20261025/confined",
+    "TMPDIR": "/home/unreal/.sub01-private/readiness-broker-proof-20261025/confined",
+    "LANG": "C.UTF-8",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "launch": [
+    "env",
+    "-u",
+    "PYTHONOPTIMIZE",
+    "/usr/bin/python3",
+    "-I",
+    "/tmp/sub01-share/supervise-readiness-broker-proof.py"
+  ],
+  "probe_sha256": "df10a83a1d0e803e6c87b602477a3689d71730f70b1318383e124b7e37eff842",
+  "runner_sha256": "5f0c59b31078f135dd04b445c7aed746e7441c0ba04fa00aca2f9989ad8aa1ea",
+  "supervisor_sha256": "310a01a8da027f4832b24d47284f34761ec49d80b87f90a808b00411b20a44f6",
+  "wrapper_sha256": "68710e0196159a242afdc82377a152f9dea7659dd3da38f7bee49248fb9bdf17",
+  "observer_sha256": "acbf714e8a0466aafb858544bd16e0dd1d7e22cd469984bbbe48afa028bf18ae",
+  "broker_sha256": "71cbc27a5f1686d33ecd539ca743342e65b888b8cba2fc371742b3d767b77234",
+  "validator_sha256": "b025a5e73ee2fafa9493a23363402104949d1c7c85e1021c1c40fb764fb33212"
+}

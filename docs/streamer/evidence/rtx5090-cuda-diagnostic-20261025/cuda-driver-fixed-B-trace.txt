@@ -1,0 +1,1072 @@
+execve("/usr/bin/python3", ["/usr/bin/python3", "-I", "/tmp/sub01-share/restrict-diagnostic-child-v2.py", "--directory", "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox", "--bind-port", "8855", "--", "/usr/bin/python3", "-I", "/tmp/sub01-share/cuda-driver-fixed-probe.py", "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox", "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/readonly-control", "37784"], 0x7ffcf6375498 /* 5 vars */) = 0
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libm.so.6", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libz.so.1", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libexpat.so.1", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/usr/lib/locale/locale-archive", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/locale/locale.alias", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_CTYPE", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/locale/C.utf8/LC_CTYPE", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/usr/pyvenv.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/bin/pyvenv.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
+readlink("/usr/bin/python3", "python3.12", 4096) = 10
+readlink("/usr/bin/python3.12", 0x7ffd99dbf750, 4096) = -1 EINVAL (Invalid argument)
+openat(AT_FDCWD, "/usr/bin/python3._pth", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/bin/python3.12._pth", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/bin/pybuilddir.txt", O_RDONLY) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/bin/Modules/Setup.local", 0x7ffd99dc4730, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/bin/lib/python312.zip", 0x7ffd99dc44f0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python312.zip", 0x7ffd99dc4550, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/bin/lib/python3.12/os.py", 0x7ffd99dc4550, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/bin/lib/python3.12/os.pyc", 0x7ffd99dc4550, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/os.py", {st_mode=S_IFREG|0644, st_size=39786, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/bin/lib/python3.12/lib-dynload", 0x7ffd99dc4550, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/etc/localtime", O_RDONLY|O_CLOEXEC) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python312.zip", 0x7ffd99dc3f80, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib", {st_mode=S_IFDIR|0755, st_size=93, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python312.zip", 0x7ffd99dc4300, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/__init__.cpython-312-x86_64-linux-gnu.so", 0x7ffd99dc4300, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/__init__.abi3.so", 0x7ffd99dc4300, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/__init__.so", 0x7ffd99dc4300, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/__init__.py", {st_mode=S_IFREG|0644, st_size=5884, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/__init__.py", {st_mode=S_IFREG|0644, st_size=5884, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/encodings/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3f40)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/encodings", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/aliases.py", {st_mode=S_IFREG|0644, st_size=15677, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/aliases.py", {st_mode=S_IFREG|0644, st_size=15677, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/encodings/__pycache__/aliases.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc34c0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/utf_8.py", {st_mode=S_IFREG|0644, st_size=1005, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/utf_8.py", {st_mode=S_IFREG|0644, st_size=1005, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/encodings/__pycache__/utf_8.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3fd0)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(0, TCGETS, 0x7ffd99dc46c0)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(0, TCGETS, 0x7ffd99dc4950)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(1, TCGETS, 0x7ffd99dc46c0)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(1, TCGETS, 0x7ffd99dc4950)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(2, TCGETS, 0x7ffd99dc46c0)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(2, TCGETS, 0x7ffd99dc4950)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/bin/pyvenv.cfg", 0x7ffd99dc3f40, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/pyvenv.cfg", 0x7ffd99dc3fa0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/distutils-precedence.pth", {st_mode=S_IFREG|0644, st_size=151, ...}, AT_SYMLINK_NOFOLLOW) = 0
+openat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/distutils-precedence.pth", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3e10)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 4
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 4
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__init__.cpython-312-x86_64-linux-gnu.so", 0x7ffd99dc3a20, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__init__.abi3.so", 0x7ffd99dc3a20, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__init__.so", 0x7ffd99dc3a20, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__init__.py", {st_mode=S_IFREG|0644, st_size=6755, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__init__.py", {st_mode=S_IFREG|0644, st_size=6755, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 4
+ioctl(4, TCGETS, 0x7ffd99dc36c0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3/dist-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/dist-packages", 0x7ffd99dc41d0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/sitecustomize.py", {st_mode=S_IFREG|0644, st_size=155, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/sitecustomize.py", {st_mode=S_IFREG|0644, st_size=155, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/sitecustomize.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3ab0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3/dist-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/tmp/sub01-share/restrict-diagnostic-child-v2.py", {st_mode=S_IFREG|0644, st_size=5634, ...}, 0) = 0
+openat(AT_FDCWD, "/tmp/sub01-share/restrict-diagnostic-child-v2.py", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc4610)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/tmp/sub01-share/restrict-diagnostic-child-v2.py", {st_mode=S_IFREG|0644, st_size=5634, ...}, 0) = 0
+openat(AT_FDCWD, "/tmp/sub01-share/restrict-diagnostic-child-v2.py", O_RDONLY) = 3
+ioctl(3, FIOCLEX)                       = 0
+ioctl(3, TCGETS, 0x7ffd99dc4d40)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/argparse.py", {st_mode=S_IFREG|0644, st_size=101750, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/argparse.py", {st_mode=S_IFREG|0644, st_size=101750, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/argparse.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc4310)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/__init__.cpython-312-x86_64-linux-gnu.so", 0x7ffd99dc4000, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/__init__.abi3.so", 0x7ffd99dc4000, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/__init__.so", 0x7ffd99dc4000, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/__init__.py", {st_mode=S_IFREG|0644, st_size=16315, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/__init__.py", {st_mode=S_IFREG|0644, st_size=16315, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3ca0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/enum.py", {st_mode=S_IFREG|0644, st_size=81636, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/enum.py", {st_mode=S_IFREG|0644, st_size=81636, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/enum.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3630)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/types.py", {st_mode=S_IFREG|0644, st_size=10993, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/types.py", {st_mode=S_IFREG|0644, st_size=10993, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/types.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc2fc0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/operator.py", {st_mode=S_IFREG|0644, st_size=10965, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/operator.py", {st_mode=S_IFREG|0644, st_size=10965, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/operator.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc2fc0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/functools.py", {st_mode=S_IFREG|0644, st_size=38126, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/functools.py", {st_mode=S_IFREG|0644, st_size=38126, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/functools.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc2fc0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/__init__.cpython-312-x86_64-linux-gnu.so", 0x7ffd99dc2cb0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/__init__.abi3.so", 0x7ffd99dc2cb0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/__init__.so", 0x7ffd99dc2cb0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/__init__.py", {st_mode=S_IFREG|0644, st_size=52378, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/__init__.py", {st_mode=S_IFREG|0644, st_size=52378, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/collections/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc2950)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/keyword.py", {st_mode=S_IFREG|0644, st_size=1073, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/keyword.py", {st_mode=S_IFREG|0644, st_size=1073, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/keyword.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc22e0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/reprlib.py", {st_mode=S_IFREG|0644, st_size=6569, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/reprlib.py", {st_mode=S_IFREG|0644, st_size=6569, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/reprlib.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc22e0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_compiler.py", {st_mode=S_IFREG|0644, st_size=26089, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_compiler.py", {st_mode=S_IFREG|0644, st_size=26089, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re/__pycache__/_compiler.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc31c0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_parser.py", {st_mode=S_IFREG|0644, st_size=41201, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_parser.py", {st_mode=S_IFREG|0644, st_size=41201, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re/__pycache__/_parser.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc26e0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_constants.py", {st_mode=S_IFREG|0644, st_size=5930, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_constants.py", {st_mode=S_IFREG|0644, st_size=5930, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re/__pycache__/_constants.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc2070)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_casefix.py", {st_mode=S_IFREG|0644, st_size=5446, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_casefix.py", {st_mode=S_IFREG|0644, st_size=5446, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re/__pycache__/_casefix.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc2b50)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/copyreg.py", {st_mode=S_IFREG|0644, st_size=7614, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/copyreg.py", {st_mode=S_IFREG|0644, st_size=7614, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/copyreg.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3630)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/warnings.py", {st_mode=S_IFREG|0644, st_size=21760, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/warnings.py", {st_mode=S_IFREG|0644, st_size=21760, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/warnings.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3ca0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/gettext.py", {st_mode=S_IFREG|0644, st_size=21747, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/gettext.py", {st_mode=S_IFREG|0644, st_size=21747, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/gettext.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3ca0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__init__.cpython-312-x86_64-linux-gnu.so", 0x7ffd99dc4670, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__init__.abi3.so", 0x7ffd99dc4670, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__init__.so", 0x7ffd99dc4670, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__init__.py", {st_mode=S_IFREG|0644, st_size=18182, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__init__.py", {st_mode=S_IFREG|0644, st_size=18182, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc4310)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/_ctypes.cpython-312-x86_64-linux-gnu.so", {st_mode=S_IFREG|0644, st_size=137968, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/_ctypes.cpython-312-x86_64-linux-gnu.so", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libffi.so.8", O_RDONLY|O_CLOEXEC) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/struct.py", {st_mode=S_IFREG|0644, st_size=257, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/struct.py", {st_mode=S_IFREG|0644, st_size=257, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/struct.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3ca0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes", {st_mode=S_IFDIR|0755, st_size=139, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes", {st_mode=S_IFDIR|0755, st_size=139, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes", {st_mode=S_IFDIR|0755, st_size=139, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/ctypes", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/_endian.py", {st_mode=S_IFREG|0644, st_size=2535, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/_endian.py", {st_mode=S_IFREG|0644, st_size=2535, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__pycache__/_endian.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3ca0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/pathlib.py", {st_mode=S_IFREG|0644, st_size=51153, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/pathlib.py", {st_mode=S_IFREG|0644, st_size=51153, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/pathlib.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc4310)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/fnmatch.py", {st_mode=S_IFREG|0644, st_size=5999, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/fnmatch.py", {st_mode=S_IFREG|0644, st_size=5999, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/fnmatch.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3ca0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/__init__.cpython-312-x86_64-linux-gnu.so", 0x7ffd99dc3b90, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/__init__.abi3.so", 0x7ffd99dc3b90, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/__init__.so", 0x7ffd99dc3b90, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/__init__.py", {st_mode=S_IFREG|0644, st_size=0, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/__init__.py", {st_mode=S_IFREG|0644, st_size=0, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/urllib/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3830)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib", {st_mode=S_IFDIR|0755, st_size=167, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib", {st_mode=S_IFDIR|0755, st_size=167, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib", {st_mode=S_IFDIR|0755, st_size=167, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/urllib", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/parse.py", {st_mode=S_IFREG|0644, st_size=45591, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/parse.py", {st_mode=S_IFREG|0644, st_size=45591, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/urllib/__pycache__/parse.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3ca0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ipaddress.py", {st_mode=S_IFREG|0644, st_size=78294, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ipaddress.py", {st_mode=S_IFREG|0644, st_size=78294, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/ipaddress.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3630)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/platform.py", {st_mode=S_IFREG|0755, st_size=43331, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/platform.py", {st_mode=S_IFREG|0755, st_size=43331, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/platform.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc4310)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/locale.py", {st_mode=S_IFREG|0644, st_size=78562, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/locale.py", {st_mode=S_IFREG|0644, st_size=78562, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/locale.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3ff0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/share/locale/C.UTF-8/LC_MESSAGES/messages.mo", 0x7ffd99dc46b0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/share/locale-langpack/C.UTF-8/LC_MESSAGES/messages.mo", 0x7ffd99dc4710, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/share/locale/C.UTF-8/LC_MESSAGES/messages.mo", 0x7ffd99dc4710, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/share/locale-langpack/C.UTF-8/LC_MESSAGES/messages.mo", 0x7ffd99dc4710, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/share/locale/C.UTF-8/LC_MESSAGES/messages.mo", 0x7ffd99dc4710, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/share/locale-langpack/C.UTF-8/LC_MESSAGES/messages.mo", 0x7ffd99dc4710, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/shutil.py", {st_mode=S_IFREG|0644, st_size=58120, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/shutil.py", {st_mode=S_IFREG|0644, st_size=58120, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/shutil.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3cd0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/bz2.py", {st_mode=S_IFREG|0644, st_size=11847, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/bz2.py", {st_mode=S_IFREG|0644, st_size=11847, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/bz2.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3660)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/_compression.py", {st_mode=S_IFREG|0644, st_size=5681, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/_compression.py", {st_mode=S_IFREG|0644, st_size=5681, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/_compression.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc2ff0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/_bz2.cpython-312-x86_64-linux-gnu.so", {st_mode=S_IFREG|0644, st_size=32112, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/_bz2.cpython-312-x86_64-linux-gnu.so", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libbz2.so.1.0", O_RDONLY|O_CLOEXEC) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lzma.py", {st_mode=S_IFREG|0644, st_size=13277, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lzma.py", {st_mode=S_IFREG|0644, st_size=13277, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/lzma.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc3660)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/_lzma.cpython-312-x86_64-linux-gnu.so", {st_mode=S_IFREG|0644, st_size=49256, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/_lzma.cpython-312-x86_64-linux-gnu.so", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/liblzma.so.5", O_RDONLY|O_CLOEXEC) = 3
+ioctl(1, TIOCGWINSZ, 0x7ffd99dc4428)    = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(1, TIOCGWINSZ, 0x7ffd99dc47a8)    = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(1, TIOCGWINSZ, 0x7ffd99dc47a8)    = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(1, TIOCGWINSZ, 0x7ffd99dc47a8)    = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/proc/self/status", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc4840)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/home", {st_mode=S_IFDIR|0755, st_size=121, ...}, AT_SYMLINK_NOFOLLOW) = 0
+newfstatat(AT_FDCWD, "/home/unreal", {st_mode=S_IFDIR|0755, st_size=4096, ...}, AT_SYMLINK_NOFOLLOW) = 0
+newfstatat(AT_FDCWD, "/home/unreal/.sub01-private", {st_mode=S_IFDIR|0700, st_size=4096, ...}, AT_SYMLINK_NOFOLLOW) = 0
+newfstatat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025", {st_mode=S_IFDIR|0700, st_size=57, ...}, AT_SYMLINK_NOFOLLOW) = 0
+newfstatat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox", {st_mode=S_IFDIR|0700, st_size=10, ...}, AT_SYMLINK_NOFOLLOW) = 0
+newfstatat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox", {st_mode=S_IFDIR|0700, st_size=10, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox", {st_mode=S_IFDIR|0700, st_size=10, ...}, AT_SYMLINK_NOFOLLOW) = 0
+newfstatat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox", {st_mode=S_IFDIR|0700, st_size=10, ...}, 0) = 0
+openat(AT_FDCWD, "/proc/self/fd", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox", O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_PATH) = 4
+newfstatat(AT_FDCWD, "/dev/null", {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1, 0x3), ...}, 0) = 0
+newfstatat(AT_FDCWD, "/dev/null", {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1, 0x3), ...}, AT_SYMLINK_NOFOLLOW) = 0
+openat(AT_FDCWD, "/dev/null", O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_PATH) = 4
+newfstatat(AT_FDCWD, "/dev/nvidiactl", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0xff), ...}, 0) = 0
+newfstatat(AT_FDCWD, "/dev/nvidiactl", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0xff), ...}, AT_SYMLINK_NOFOLLOW) = 0
+openat(AT_FDCWD, "/dev/nvidiactl", O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_PATH) = 4
+newfstatat(AT_FDCWD, "/dev/nvidia-uvm", {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1fa, 0), ...}, 0) = 0
+newfstatat(AT_FDCWD, "/dev/nvidia-uvm", {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1fa, 0), ...}, AT_SYMLINK_NOFOLLOW) = 0
+openat(AT_FDCWD, "/dev/nvidia-uvm", O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_PATH) = 4
+newfstatat(AT_FDCWD, "/dev/nvidia-uvm-tools", {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1fa, 0x1), ...}, 0) = 0
+newfstatat(AT_FDCWD, "/dev/nvidia-uvm-tools", {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1fa, 0x1), ...}, AT_SYMLINK_NOFOLLOW) = 0
+openat(AT_FDCWD, "/dev/nvidia-uvm-tools", O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_PATH) = 4
+newfstatat(AT_FDCWD, "/proc/37788/task", {st_mode=S_IFDIR|0555, st_size=0, ...}, AT_SYMLINK_NOFOLLOW) = 0
+openat(AT_FDCWD, "/proc/37788/task", O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_PATH) = 4
+newfstatat(AT_FDCWD, "/dev/nvidia1", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0x1), ...}, AT_SYMLINK_NOFOLLOW) = 0
+openat(AT_FDCWD, "/dev/nvidia1", O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_PATH) = 4
+openat(AT_FDCWD, "/proc/self/status", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7ffd99dc48a0)        = -1 ENOTTY (Inappropriate ioctl for device)
+execve("/usr/bin/python3", ["/usr/bin/python3", "-I", "/tmp/sub01-share/cuda-driver-fixed-probe.py", "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox", "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/readonly-control", "37784"], 0x74c70dbe2fd0 /* 5 vars */) = 0
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libm.so.6", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libz.so.1", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libexpat.so.1", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/usr/lib/locale/locale-archive", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/locale/locale.alias", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_CTYPE", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/locale/C.utf8/LC_CTYPE", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/usr/pyvenv.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/bin/pyvenv.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
+readlink("/usr/bin/python3", "python3.12", 4096) = 10
+readlink("/usr/bin/python3.12", 0x7fff315d2060, 4096) = -1 EINVAL (Invalid argument)
+openat(AT_FDCWD, "/usr/bin/python3._pth", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/bin/python3.12._pth", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/bin/pybuilddir.txt", O_RDONLY) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/bin/Modules/Setup.local", 0x7fff315d7040, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/bin/lib/python312.zip", 0x7fff315d6e00, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python312.zip", 0x7fff315d6e60, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/bin/lib/python3.12/os.py", 0x7fff315d6e60, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/bin/lib/python3.12/os.pyc", 0x7fff315d6e60, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/os.py", {st_mode=S_IFREG|0644, st_size=39786, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/bin/lib/python3.12/lib-dynload", 0x7fff315d6e60, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/etc/localtime", O_RDONLY|O_CLOEXEC) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python312.zip", 0x7fff315d6890, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib", {st_mode=S_IFDIR|0755, st_size=93, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python312.zip", 0x7fff315d6c10, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/__init__.cpython-312-x86_64-linux-gnu.so", 0x7fff315d6c10, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/__init__.abi3.so", 0x7fff315d6c10, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/__init__.so", 0x7fff315d6c10, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/__init__.py", {st_mode=S_IFREG|0644, st_size=5884, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/__init__.py", {st_mode=S_IFREG|0644, st_size=5884, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/encodings/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6850)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/encodings", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/aliases.py", {st_mode=S_IFREG|0644, st_size=15677, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/aliases.py", {st_mode=S_IFREG|0644, st_size=15677, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/encodings/__pycache__/aliases.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5dd0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/utf_8.py", {st_mode=S_IFREG|0644, st_size=1005, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/encodings/utf_8.py", {st_mode=S_IFREG|0644, st_size=1005, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/encodings/__pycache__/utf_8.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d68e0)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(0, TCGETS, 0x7fff315d6fd0)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(0, TCGETS, 0x7fff315d7260)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(1, TCGETS, 0x7fff315d6fd0)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(1, TCGETS, 0x7fff315d7260)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(2, TCGETS, 0x7fff315d6fd0)        = -1 ENOTTY (Inappropriate ioctl for device)
+ioctl(2, TCGETS, 0x7fff315d7260)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/bin/pyvenv.cfg", 0x7fff315d6850, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/pyvenv.cfg", 0x7fff315d68b0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/distutils-precedence.pth", {st_mode=S_IFREG|0644, st_size=151, ...}, AT_SYMLINK_NOFOLLOW) = 0
+openat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/distutils-precedence.pth", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6720)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 4
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 4
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__init__.cpython-312-x86_64-linux-gnu.so", 0x7fff315d6330, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__init__.abi3.so", 0x7fff315d6330, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__init__.so", 0x7fff315d6330, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__init__.py", {st_mode=S_IFREG|0644, st_size=6755, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__init__.py", {st_mode=S_IFREG|0644, st_size=6755, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages/_distutils_hack/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 4
+ioctl(4, TCGETS, 0x7fff315d5fd0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3/dist-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/dist-packages", 0x7fff315d6ae0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/sitecustomize.py", {st_mode=S_IFREG|0644, st_size=155, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/sitecustomize.py", {st_mode=S_IFREG|0644, st_size=155, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/sitecustomize.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d63c0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3/dist-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/tmp/sub01-share/cuda-driver-fixed-probe.py", {st_mode=S_IFREG|0644, st_size=944, ...}, 0) = 0
+openat(AT_FDCWD, "/tmp/sub01-share/cuda-driver-fixed-probe.py", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6f20)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/tmp/sub01-share/cuda-driver-fixed-probe.py", {st_mode=S_IFREG|0644, st_size=944, ...}, 0) = 0
+openat(AT_FDCWD, "/tmp/sub01-share/cuda-driver-fixed-probe.py", O_RDONLY) = 3
+ioctl(3, FIOCLEX)                       = 0
+ioctl(3, TCGETS, 0x7fff315d7650)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__init__.cpython-312-x86_64-linux-gnu.so", 0x7fff315d6f80, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__init__.abi3.so", 0x7fff315d6f80, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__init__.so", 0x7fff315d6f80, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__init__.py", {st_mode=S_IFREG|0644, st_size=18182, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__init__.py", {st_mode=S_IFREG|0644, st_size=18182, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6c20)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/types.py", {st_mode=S_IFREG|0644, st_size=10993, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/types.py", {st_mode=S_IFREG|0644, st_size=10993, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/types.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d65b0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/_ctypes.cpython-312-x86_64-linux-gnu.so", {st_mode=S_IFREG|0644, st_size=137968, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/_ctypes.cpython-312-x86_64-linux-gnu.so", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libffi.so.8", O_RDONLY|O_CLOEXEC) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/struct.py", {st_mode=S_IFREG|0644, st_size=257, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/struct.py", {st_mode=S_IFREG|0644, st_size=257, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/struct.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d65b0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes", {st_mode=S_IFDIR|0755, st_size=139, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes", {st_mode=S_IFDIR|0755, st_size=139, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes", {st_mode=S_IFDIR|0755, st_size=139, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/ctypes", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/_endian.py", {st_mode=S_IFREG|0644, st_size=2535, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ctypes/_endian.py", {st_mode=S_IFREG|0644, st_size=2535, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/ctypes/__pycache__/_endian.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d65b0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/__init__.cpython-312-x86_64-linux-gnu.so", 0x7fff315d6f80, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/__init__.abi3.so", 0x7fff315d6f80, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/__init__.so", 0x7fff315d6f80, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/__init__.py", {st_mode=S_IFREG|0644, st_size=14020, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/__init__.py", {st_mode=S_IFREG|0644, st_size=14020, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/json/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6c20)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json", {st_mode=S_IFDIR|0755, st_size=141, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json", {st_mode=S_IFDIR|0755, st_size=141, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json", {st_mode=S_IFDIR|0755, st_size=141, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/json", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/decoder.py", {st_mode=S_IFREG|0644, st_size=12473, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/decoder.py", {st_mode=S_IFREG|0644, st_size=12473, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/json/__pycache__/decoder.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d65b0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/__init__.cpython-312-x86_64-linux-gnu.so", 0x7fff315d62a0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/__init__.abi3.so", 0x7fff315d62a0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/__init__.so", 0x7fff315d62a0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/__init__.py", {st_mode=S_IFREG|0644, st_size=16315, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/__init__.py", {st_mode=S_IFREG|0644, st_size=16315, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5f40)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/enum.py", {st_mode=S_IFREG|0644, st_size=81636, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/enum.py", {st_mode=S_IFREG|0644, st_size=81636, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/enum.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d58d0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/operator.py", {st_mode=S_IFREG|0644, st_size=10965, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/operator.py", {st_mode=S_IFREG|0644, st_size=10965, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/operator.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5260)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/functools.py", {st_mode=S_IFREG|0644, st_size=38126, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/functools.py", {st_mode=S_IFREG|0644, st_size=38126, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/functools.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5260)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/__init__.cpython-312-x86_64-linux-gnu.so", 0x7fff315d4f50, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/__init__.abi3.so", 0x7fff315d4f50, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/__init__.so", 0x7fff315d4f50, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/__init__.py", {st_mode=S_IFREG|0644, st_size=52378, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/__init__.py", {st_mode=S_IFREG|0644, st_size=52378, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/collections/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d4bf0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/keyword.py", {st_mode=S_IFREG|0644, st_size=1073, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/keyword.py", {st_mode=S_IFREG|0644, st_size=1073, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/keyword.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d4580)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/reprlib.py", {st_mode=S_IFREG|0644, st_size=6569, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/reprlib.py", {st_mode=S_IFREG|0644, st_size=6569, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/reprlib.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d4580)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_compiler.py", {st_mode=S_IFREG|0644, st_size=26089, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_compiler.py", {st_mode=S_IFREG|0644, st_size=26089, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re/__pycache__/_compiler.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5460)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_parser.py", {st_mode=S_IFREG|0644, st_size=41201, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_parser.py", {st_mode=S_IFREG|0644, st_size=41201, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re/__pycache__/_parser.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d4980)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_constants.py", {st_mode=S_IFREG|0644, st_size=5930, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_constants.py", {st_mode=S_IFREG|0644, st_size=5930, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re/__pycache__/_constants.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d4310)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re", {st_mode=S_IFDIR|0755, st_size=150, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_casefix.py", {st_mode=S_IFREG|0644, st_size=5446, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/re/_casefix.py", {st_mode=S_IFREG|0644, st_size=5446, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/re/__pycache__/_casefix.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d4df0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/copyreg.py", {st_mode=S_IFREG|0644, st_size=7614, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/copyreg.py", {st_mode=S_IFREG|0644, st_size=7614, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/copyreg.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d58d0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json", {st_mode=S_IFDIR|0755, st_size=141, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/scanner.py", {st_mode=S_IFREG|0644, st_size=2425, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/scanner.py", {st_mode=S_IFREG|0644, st_size=2425, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/json/__pycache__/scanner.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5ad0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/_json.cpython-312-x86_64-linux-gnu.so", {st_mode=S_IFREG|0644, st_size=48952, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/_json.cpython-312-x86_64-linux-gnu.so", O_RDONLY|O_CLOEXEC) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json", {st_mode=S_IFDIR|0755, st_size=141, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/encoder.py", {st_mode=S_IFREG|0644, st_size=16070, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/json/encoder.py", {st_mode=S_IFREG|0644, st_size=16070, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/json/__pycache__/encoder.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d65b0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/resource.cpython-312-x86_64-linux-gnu.so", {st_mode=S_IFREG|0644, st_size=19432, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload/resource.cpython-312-x86_64-linux-gnu.so", O_RDONLY|O_CLOEXEC) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/contextlib.py", {st_mode=S_IFREG|0644, st_size=27637, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/contextlib.py", {st_mode=S_IFREG|0644, st_size=27637, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/contextlib.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6c20)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/importlib/__init__.cpython-312-x86_64-linux-gnu.so", 0x7fff315d64e0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/importlib/__init__.abi3.so", 0x7fff315d64e0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/importlib/__init__.so", 0x7fff315d64e0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/importlib/__init__.py", {st_mode=S_IFREG|0644, st_size=4774, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/importlib/__init__.py", {st_mode=S_IFREG|0644, st_size=4774, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/importlib/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6180)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/warnings.py", {st_mode=S_IFREG|0644, st_size=21760, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/warnings.py", {st_mode=S_IFREG|0644, st_size=21760, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/warnings.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5b10)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/importlib", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/importlib", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/importlib", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/importlib", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/importlib/_abc.py", {st_mode=S_IFREG|0644, st_size=1354, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/importlib/_abc.py", {st_mode=S_IFREG|0644, st_size=1354, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/importlib/__pycache__/_abc.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5fc0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/threading.py", {st_mode=S_IFREG|0644, st_size=60123, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/threading.py", {st_mode=S_IFREG|0644, st_size=60123, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/threading.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5fc0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/_weakrefset.py", {st_mode=S_IFREG|0644, st_size=5893, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/_weakrefset.py", {st_mode=S_IFREG|0644, st_size=5893, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/_weakrefset.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5950)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/pkgutil.py", {st_mode=S_IFREG|0644, st_size=18281, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/pkgutil.py", {st_mode=S_IFREG|0644, st_size=18281, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/pkgutil.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6c20)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/weakref.py", {st_mode=S_IFREG|0644, st_size=21513, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/weakref.py", {st_mode=S_IFREG|0644, st_size=21513, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/weakref.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d65b0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/typing.py", {st_mode=S_IFREG|0644, st_size=117428, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/typing.py", {st_mode=S_IFREG|0644, st_size=117428, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/typing.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d65b0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections", {st_mode=S_IFDIR|0755, st_size=74, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections", {st_mode=S_IFDIR|0755, st_size=74, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections", {st_mode=S_IFDIR|0755, st_size=74, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/collections", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/abc.py", {st_mode=S_IFREG|0644, st_size=119, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/collections/abc.py", {st_mode=S_IFREG|0644, st_size=119, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/collections/__pycache__/abc.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5f40)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/tmp/sub01-share/test-restricted-diagnostic-child-v2.py", {st_mode=S_IFREG|0644, st_size=5160, ...}, 0) = 0
+openat(AT_FDCWD, "/tmp/sub01-share/test-restricted-diagnostic-child-v2.py", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6cc0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/tmp/sub01-share/test-restricted-diagnostic-child-v2.py", {st_mode=S_IFREG|0644, st_size=5160, ...}, 0) = 0
+openat(AT_FDCWD, "/tmp/sub01-share/test-restricted-diagnostic-child-v2.py", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6f80)        = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/tmp/sub01-share/test-restricted-diagnostic-child-v2.py", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6f80)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/pathlib.py", {st_mode=S_IFREG|0644, st_size=51153, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/pathlib.py", {st_mode=S_IFREG|0644, st_size=51153, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/pathlib.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6950)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/fnmatch.py", {st_mode=S_IFREG|0644, st_size=5999, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/fnmatch.py", {st_mode=S_IFREG|0644, st_size=5999, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/fnmatch.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d62e0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/__init__.cpython-312-x86_64-linux-gnu.so", 0x7fff315d61d0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/__init__.abi3.so", 0x7fff315d61d0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/__init__.so", 0x7fff315d61d0, 0) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/__init__.py", {st_mode=S_IFREG|0644, st_size=0, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/__init__.py", {st_mode=S_IFREG|0644, st_size=0, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/urllib/__pycache__/__init__.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5e70)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib", {st_mode=S_IFDIR|0755, st_size=167, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib", {st_mode=S_IFDIR|0755, st_size=167, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib", {st_mode=S_IFDIR|0755, st_size=167, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/urllib", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/parse.py", {st_mode=S_IFREG|0644, st_size=45591, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/urllib/parse.py", {st_mode=S_IFREG|0644, st_size=45591, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/urllib/__pycache__/parse.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d62e0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ipaddress.py", {st_mode=S_IFREG|0644, st_size=78294, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/ipaddress.py", {st_mode=S_IFREG|0644, st_size=78294, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/ipaddress.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d5c70)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/socket.py", {st_mode=S_IFREG|0644, st_size=37411, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/socket.py", {st_mode=S_IFREG|0644, st_size=37411, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/socket.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6950)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/selectors.py", {st_mode=S_IFREG|0644, st_size=19671, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/selectors.py", {st_mode=S_IFREG|0644, st_size=19671, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/selectors.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d62e0)        = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/allowed.bin", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0666) = 3
+ioctl(3, TCGETS, 0x7fff315d6e80)        = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/allowed.bin", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6ee0)        = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/allowed.bin", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6ee0)        = -1 ENOTTY (Inappropriate ioctl for device)
+unlink("/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/allowed.bin") = 0
+openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/readonly-control", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6ee0)        = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/readonly-control", O_WRONLY|O_CLOEXEC) = -1 EACCES (Permission denied)
+openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/readonly-control", O_WRONLY|O_TRUNC|O_CLOEXEC) = -1 EACCES (Permission denied)
+openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/unexpected-file", O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC, 0600) = -1 EACCES (Permission denied)
+socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC, IPPROTO_IP) = -1 EPERM (Operation not permitted)
+socket(AF_INET, SOCK_RAW|SOCK_CLOEXEC, IPPROTO_IP) = -1 EPERM (Operation not permitted)
+socket(AF_INET, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_SCTP) = -1 EPERM (Operation not permitted)
+socket(AF_INET, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_MPTCP) = -1 EPERM (Operation not permitted)
+socket(AF_INET6, SOCK_DGRAM|SOCK_CLOEXEC, IPPROTO_IP) = -1 EPERM (Operation not permitted)
+socket(AF_INET6, SOCK_RAW|SOCK_CLOEXEC, IPPROTO_IP) = -1 EPERM (Operation not permitted)
+socket(AF_INET6, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_SCTP) = -1 EPERM (Operation not permitted)
+socket(AF_INET6, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_MPTCP) = -1 EPERM (Operation not permitted)
+socket(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC, 0) = 3
+socket(AF_INET, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_TCP) = 3
+bind(3, {sa_family=AF_INET, sin_port=htons(8855), sin_addr=inet_addr("127.0.0.1")}, 16) = 0
+socket(AF_INET, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_IP) = 3
+bind(3, {sa_family=AF_INET, sin_port=htons(8856), sin_addr=inet_addr("127.0.0.1")}, 16) = -1 EACCES (Permission denied)
+socket(AF_INET, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_IP) = 3
+ioctl(3, FIONBIO, [1])                  = 0
+connect(3, {sa_family=AF_INET, sin_port=htons(443), sin_addr=inet_addr("127.0.0.1")}, 16) = -1 EACCES (Permission denied)
+socket(AF_INET, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_IP) = 3
+ioctl(3, FIONBIO, [1])                  = 0
+connect(3, {sa_family=AF_INET, sin_port=htons(443), sin_addr=inet_addr("198.51.100.1")}, 16) = -1 EACCES (Permission denied)
+openat(AT_FDCWD, "/proc/37788/task/37788/comm", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0600) = 3
+openat(AT_FDCWD, "/proc/37788/task/37788/comm", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6ee0)        = -1 ENOTTY (Inappropriate ioctl for device)
+[pid 37789] openat(AT_FDCWD, "/proc/37788/task/37789/comm", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0600) = 3
+[pid 37789] openat(AT_FDCWD, "/proc/37788/task/37789/comm", O_RDONLY|O_CLOEXEC) = 3
+[pid 37789] ioctl(3, TCGETS, 0x74f3d96baa10) = -1 ENOTTY (Inappropriate ioctl for device)
+[pid 37788] openat(AT_FDCWD, "/proc/37784/comm", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6ee0)        = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/proc/37784/comm", O_WRONLY|O_CLOEXEC) = -1 EACCES (Permission denied)
+openat(AT_FDCWD, "/proc/37784/comm", O_WRONLY|O_TRUNC|O_CLOEXEC) = -1 EACCES (Permission denied)
+openat(AT_FDCWD, "/proc/37784/comm", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6ee0)        = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/proc/self/status", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6ee0)        = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/proc/self/status", O_WRONLY|O_CLOEXEC) = -1 EACCES (Permission denied)
+openat(AT_FDCWD, "/proc/self/status", O_WRONLY|O_TRUNC|O_CLOEXEC) = -1 EACCES (Permission denied)
+openat(AT_FDCWD, "/proc/self/status", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6ee0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/dev/nvidia0", 0x7fff315d7010, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+newfstatat(AT_FDCWD, "/dev/nvidia1", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0x1), ...}, AT_SYMLINK_NOFOLLOW) = 0
+newfstatat(AT_FDCWD, "/tmp/sub01-share/restrict-diagnostic-child-v2.py", {st_mode=S_IFREG|0644, st_size=5634, ...}, 0) = 0
+openat(AT_FDCWD, "/tmp/sub01-share/restrict-diagnostic-child-v2.py", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d69f0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/tmp/sub01-share/restrict-diagnostic-child-v2.py", {st_mode=S_IFREG|0644, st_size=5634, ...}, 0) = 0
+openat(AT_FDCWD, "/tmp/sub01-share/restrict-diagnostic-child-v2.py", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6d10)        = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/tmp/sub01-share/restrict-diagnostic-child-v2.py", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6d10)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/argparse.py", {st_mode=S_IFREG|0644, st_size=101750, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/argparse.py", {st_mode=S_IFREG|0644, st_size=101750, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/argparse.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d66e0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/gettext.py", {st_mode=S_IFREG|0644, st_size=21747, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/gettext.py", {st_mode=S_IFREG|0644, st_size=21747, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/gettext.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6070)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/platform.py", {st_mode=S_IFREG|0755, st_size=43331, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/platform.py", {st_mode=S_IFREG|0755, st_size=43331, ...}, 0) = 0
+openat(AT_FDCWD, "/usr/lib/python3.12/__pycache__/platform.cpython-312.pyc", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d66e0)        = -1 ENOTTY (Inappropriate ioctl for device)
+newfstatat(AT_FDCWD, "/usr/lib/python3.12", {st_mode=S_IFDIR|0755, st_size=71, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3.12/lib-dynload", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/local/lib/python3.12/dist-packages", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+newfstatat(AT_FDCWD, "/usr/lib/python3/dist-packages", {st_mode=S_IFDIR|0755, st_size=67, ...}, 0) = 0
+openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/bad-device-regular", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0666) = 3
+ioctl(3, TCGETS, 0x7fff315d6ee0)        = -1 ENOTTY (Inappropriate ioctl for device)
+symlink("/dev/nvidia1", "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/bad-device-link") = 0
+newfstatat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/bad-device-regular", {st_mode=S_IFREG|0644, st_size=12, ...}, AT_SYMLINK_NOFOLLOW) = 0
+newfstatat(AT_FDCWD, "/dev/null", {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1, 0x3), ...}, AT_SYMLINK_NOFOLLOW) = 0
+newfstatat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/bad-device-link", {st_mode=S_IFLNK|0777, st_size=12, ...}, AT_SYMLINK_NOFOLLOW) = 0
+unlink("/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/bad-device-regular") = 0
+unlink("/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/bad-device-link") = 0
+openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/readonly-control", O_RDONLY|O_CLOEXEC) = 3
+ioctl(3, TCGETS, 0x7fff315d6ee0)        = -1 ENOTTY (Inappropriate ioctl for device)
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libcuda.so.1", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libpthread.so.0", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libdl.so.2", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/librt.so.1", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/sys/devices/system/cpu/online", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/sys/devices/system/cpu/online", O_RDONLY|O_CLOEXEC) = 3
+openat(AT_FDCWD, "/proc/sys/vm/mmap_min_addr", O_RDONLY) = 3
+openat(AT_FDCWD, "/proc/cpuinfo", O_RDONLY) = 3
+openat(AT_FDCWD, "/proc/self/maps", O_RDONLY) = 3
+openat(AT_FDCWD, "/sys/devices/system/cpu/online", O_RDONLY|O_CLOEXEC) = 3
+[pid 37788] openat(AT_FDCWD, "/proc/self/task/37790/comm", O_WRONLY|O_CREAT|O_TRUNC, 0666) = 8
+[pid 37788] openat(AT_FDCWD, "/dev/shm/cuda_injection_path_shm", O_RDWR|O_NOFOLLOW|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/.nv/nvidia-application-profile-globals-rc", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/.nv/nvidia-application-profiles-rc", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/.nv/nvidia-application-profiles-rc.d", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/etc/nvidia/nvidia-application-profiles-rc", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/etc/nvidia/nvidia-application-profiles-rc.d/", O_RDONLY) = 8
+[pid 37788] openat(AT_FDCWD, "/etc/nvidia/nvidia-application-profiles-rc.d/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 8
+[pid 37788] openat(AT_FDCWD, "/etc/nvidia/nvidia-application-profiles-rc.d//10-container.conf", O_RDONLY) = 8
+[pid 37788] openat(AT_FDCWD, "/usr/share/nvidia/nvidia-application-profiles-595.91.07-rc", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/usr/share/nvidia/nvidia-application-profiles-rc", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 37788] socket(AF_UNIX, SOCK_SEQPACKET|SOCK_CLOEXEC, 0) = 8
+[pid 37788] setsockopt(8, SOL_SOCKET, SO_PASSCRED, [1], 4) = 0
+[pid 37788] connect(8, {sa_family=AF_UNIX, sun_path="/tmp/nvidia-mps/control"}, 26) = -1 ENOENT (No such file or directory)
+[pid 37788] readlink("/proc", 0x7fff315d5f90, 1023) = -1 EINVAL (Invalid argument)
+[pid 37788] readlink("/proc/self", "37788", 1023) = 5
+[pid 37788] readlink("/proc/37788", 0x7fff315d5f90, 1023) = -1 EINVAL (Invalid argument)
+[pid 37788] readlink("/proc/37788/exe", "/usr/bin/python3.12", 1023) = 19
+[pid 37788] readlink("/usr", 0x7fff315d5f90, 1023) = -1 EINVAL (Invalid argument)
+[pid 37788] readlink("/usr/bin", 0x7fff315d5f90, 1023) = -1 EINVAL (Invalid argument)
+[pid 37788] readlink("/usr/bin/python3.12", 0x7fff315d5f90, 1023) = -1 EINVAL (Invalid argument)
+[pid 37788] access("/sys/module/nvidia/initstate", R_OK) = 0
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 8
+[pid 37788] stat("/dev/nvidiactl", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0xff), ...}) = 0
+[pid 37788] unlink("/dev/char/195:255") = -1 ENOENT (No such file or directory)
+[pid 37788] symlink("../nvidiactl", "/dev/char/195:255") = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/dev/char/195:255", 0x7fff315d63f0) = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/usr/bin/nvidia-modprobe", 0x7fff315d6360) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 8
+[pid 37788] stat("/dev/nvidiactl", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0xff), ...}) = 0
+[pid 37788] openat(AT_FDCWD, "/dev/nvidiactl", O_RDWR) = 8
+[pid 37788] openat(AT_FDCWD, "/sys/devices/system/memory/block_size_bytes", O_RDONLY) = 9
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0xd6, 0x8), 0x7fff315d66a0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0xc8, 0x900), 0x74f3d3f97b40) = 0
+[pid 37788] stat("/proc/driver/nvidia/gpus/0000:01:00.0/numa_status", 0x7fff315d6610) = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/proc/driver/nvidia/gpus/0000:02:00.0/numa_status", 0x7fff315d6610) = -1 ENOENT (No such file or directory)
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d67f0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d5700) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x29, 0x10), 0x7fff315d67e0) = 0
+[pid 37788] access("/sys/module/nvidia/initstate", R_OK) = 0
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 8
+[pid 37788] stat("/dev/nvidiactl", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0xff), ...}) = 0
+[pid 37788] unlink("/dev/char/195:255") = -1 ENOENT (No such file or directory)
+[pid 37788] symlink("../nvidiactl", "/dev/char/195:255") = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/dev/char/195:255", 0x7fff315d69b0) = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/usr/bin/nvidia-modprobe", 0x7fff315d6920) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 8
+[pid 37788] stat("/dev/nvidiactl", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0xff), ...}) = 0
+[pid 37788] openat(AT_FDCWD, "/dev/nvidiactl", O_RDWR) = 8
+[pid 37788] openat(AT_FDCWD, "/sys/devices/system/memory/block_size_bytes", O_RDONLY) = 9
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0xd6, 0x8), 0x7fff315d6c60) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0xc8, 0x900), 0x74f3d3f97b40) = 0
+[pid 37788] stat("/proc/driver/nvidia/gpus/0000:01:00.0/numa_status", 0x7fff315d6bd0) = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/proc/driver/nvidia/gpus/0000:02:00.0/numa_status", 0x7fff315d6bd0) = -1 ENOENT (No such file or directory)
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d6db0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d5c80) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d5c80) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d6db0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d5c90) = 0
+[pid 37788] openat(AT_FDCWD, "/sys/devices/system/cpu/online", O_RDONLY|O_CLOEXEC) = 9
+[pid 37788] openat(AT_FDCWD, "/proc/self/status", O_RDONLY) = 9
+[pid 37788] openat(AT_FDCWD, "/sys/devices/system/node", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 9
+[pid 37788] openat(AT_FDCWD, "/sys/devices/system/node/node0/cpumap", O_RDONLY) = 10
+[pid 37788] access("/sys/module/nvidia_uvm/initstate", R_OK) = 0
+[pid 37788] openat(AT_FDCWD, "/proc/devices", O_RDONLY) = 9
+[pid 37788] stat("/dev/nvidia-uvm", {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1fa, 0), ...}) = 0
+[pid 37788] chmod("/dev/nvidia-uvm", 0666) = -1 EPERM (Operation not permitted)
+[pid 37788] stat("/usr/bin/nvidia-modprobe", 0x7fff315d6d30) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/dev/nvidia-uvm", O_RDWR|O_CLOEXEC) = 9
+[pid 37788] openat(AT_FDCWD, "/dev/nvidia-uvm", O_RDWR|O_CLOEXEC) = 10
+[pid 37788] ioctl(9, _IOC(_IOC_NONE, 0, 0x1, 0x3000), 0x7fff315d6e00) = 0
+[pid 37788] ioctl(10, _IOC(_IOC_NONE, 0, 0x4b, 0), 0x7fff315d6e00) = 0
+[pid 37788] ioctl(9, _IOC(_IOC_NONE, 0, 0x27, 0), 0x7fff315d6e00) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e40) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d36f0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e00) = 0
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 11
+[pid 37788] stat("/dev/nvidia0", 0x7fff315d3b70) = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/usr/bin/nvidia-modprobe", 0x7fff315d3b70) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 11
+[pid 37788] stat("/dev/nvidia0", 0x7fff315d3ce0) = -1 ENOENT (No such file or directory)
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e00) = 0
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 11
+[pid 37788] stat("/dev/nvidia1", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0x1), ...}) = 0
+[pid 37788] unlink("/dev/char/195:1")   = -1 ENOENT (No such file or directory)
+[pid 37788] symlink("../nvidia1", "/dev/char/195:1") = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/dev/char/195:1", 0x7fff315d3c00) = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/usr/bin/nvidia-modprobe", 0x7fff315d3b70) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 11
+[pid 37788] stat("/dev/nvidia1", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0x1), ...}) = 0
+[pid 37788] openat(AT_FDCWD, "/dev/nvidia1", O_RDWR|O_CLOEXEC) = 11
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3fc0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d33c0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3fb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x29, 0x10), 0x7fff315d5050) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e40) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e40) = 0
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 12
+[pid 37788] stat("/dev/nvidia0", 0x7fff315d4d70) = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/usr/bin/nvidia-modprobe", 0x7fff315d4d70) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 12
+[pid 37788] stat("/dev/nvidia0", 0x7fff315d4ee0) = -1 ENOENT (No such file or directory)
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3f40) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3fb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x29, 0x10), 0x7fff315d5050) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e40) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e40) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e40) = 0
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 12
+[pid 37788] stat("/dev/nvidia1", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0x1), ...}) = 0
+[pid 37788] unlink("/dev/char/195:1")   = -1 ENOENT (No such file or directory)
+[pid 37788] symlink("../nvidia1", "/dev/char/195:1") = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/dev/char/195:1", 0x7fff315d4e00) = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/usr/bin/nvidia-modprobe", 0x7fff315d4d70) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 12
+[pid 37788] stat("/dev/nvidia1", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0x1), ...}) = 0
+[pid 37788] openat(AT_FDCWD, "/dev/nvidia1", O_RDWR|O_CLOEXEC) = 12
+[pid 37788] ioctl(12, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0xc9, 0x4), 0x7fff315d4fc0) = 0
+[pid 37788] ioctl(12, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0xd7, 0x230), 0x7fff315d4d40) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e60) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d5090) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3fc0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3c90) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3fc0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3f40) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e40) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e40) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e40) = 0
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 13
+[pid 37788] stat("/dev/nvidia1", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0x1), ...}) = 0
+[pid 37788] unlink("/dev/char/195:1")   = -1 ENOENT (No such file or directory)
+[pid 37788] symlink("../nvidia1", "/dev/char/195:1") = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/dev/char/195:1", 0x7fff315d4e00) = -1 ENOENT (No such file or directory)
+[pid 37788] stat("/usr/bin/nvidia-modprobe", 0x7fff315d4d70) = -1 ENOENT (No such file or directory)
+[pid 37788] openat(AT_FDCWD, "/proc/driver/nvidia/params", O_RDONLY) = 13
+[pid 37788] stat("/dev/nvidia1", {st_mode=S_IFCHR|0666, st_rdev=makedev(0xc3, 0x1), ...}) = 0
+[pid 37788] openat(AT_FDCWD, "/dev/nvidia1", O_RDWR|O_CLOEXEC) = 13
+[pid 37788] ioctl(13, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0xc9, 0x4), 0x7fff315d4fc0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d50d0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d50e0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3bc0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3b70) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3ec0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d30f0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d28e0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d2cd0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3bb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3db0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3a90) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3a90) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3a90) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3a90) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3a90) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3730) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d39b0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3c50) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3db0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3db0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3d80) = 0
+[pid 37788] openat(AT_FDCWD, "/dev/nvidia1", O_RDWR|O_CLOEXEC) = 14
+[pid 37788] ioctl(14, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0xc9, 0x4), 0x7fff315d4e80) = 0
+[pid 37788] ioctl(14, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0xce, 0x10), 0x7fff315d4e70) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3ab0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3ca0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3c20) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cb0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3b40) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d04c0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d2180) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3de0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d39e0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d4e50) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3c20) = 0
+[pid 37788] openat(AT_FDCWD, "/dev/nvidia1", O_RDWR|O_CLOEXEC) = 15
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x4e, 0x38), 0x7fff315d4de0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d4e50) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3c20) = 0
+[pid 37788] openat(AT_FDCWD, "/dev/nvidia1", O_RDWR|O_CLOEXEC) = 15
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x4e, 0x38), 0x7fff315d4de0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x5e, 0x28), 0x7fff315d4db0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d4ee0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3c70) = 0
+[pid 37788] openat(AT_FDCWD, "/dev/nvidiactl", O_RDWR|O_CLOEXEC) = 15
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x4e, 0x38), 0x7fff315d4e30) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3d90) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d4ea0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d4ea0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3db0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3d50) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3d10) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3e10) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d3cd0) = 0
+[pid 37788] openat(AT_FDCWD, "/sys/bus/pci/devices/0000:02:00.0/numa_node", O_RDONLY) = 15
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d5210) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d5210) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d41e0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d41e0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d4af0) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2a, 0x20), 0x7fff315d14b0) = 0
+[pid 37788] mkdir("/home", 0700)        = -1 EEXIST (File exists)
+[pid 37788] mkdir("/home/unreal", 0700) = -1 EEXIST (File exists)
+[pid 37788] mkdir("/home/unreal/.sub01-private", 0700) = -1 EEXIST (File exists)
+[pid 37788] mkdir("/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025", 0700) = -1 EEXIST (File exists)
+[pid 37788] mkdir("/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox", 0700) = -1 EEXIST (File exists)
+[pid 37788] mkdir("/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/.nv", 0700) = 0
+[pid 37788] mkdir("/home/unreal/.sub01-private/cuda-driver-fixed-diagnostic-20261025/sandbox/.nv/ComputeCache", 0700) = 0
+[pid 37788] ioctl(9, _IOC(_IOC_NONE, 0, 0x25, 0), 0x7fff315d6950) = 0
+[pid 37788] ioctl(9, _IOC(_IOC_NONE, 0, 0x17, 0), 0x7fff315d6e10) = 0
+[pid 37788] ioctl(8, _IOC(_IOC_READ|_IOC_WRITE, 0x46, 0x2b, 0x30), 0x7fff315d6b60) = 0
+[pid 37788] stat("/proc/37788/ns/pid", {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
+[pid 37788] stat("/proc/37788/ns/pid", {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
+[pid 37788] socket(AF_UNIX, SOCK_SEQPACKET|SOCK_CLOEXEC, 0) = 15
+[pid 37788] unlink("")                  = -1 ENOENT (No such file or directory)
+[pid 37788] bind(15, {sa_family=AF_UNIX, sun_path=@"cuda-uvmfd-4026534670-37788\0"}, 31) = 0
+[pid 37788] listen(15, 128)             = 0

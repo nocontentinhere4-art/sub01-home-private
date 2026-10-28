@@ -3,13 +3,18 @@
     python -m pytest tests/test_brain_step.py -q
 `reference_step` is the step from main before #19, kept verbatim as the reference (analysis/bench_step.py times it).
 """
+import json
+import os
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from brain_sim import SLOW_DRIVE, Brain  # noqa: E402
 
@@ -94,3 +99,67 @@ def test_clone_shares_operator_and_matches():
     c.step(500)
     reference_step(ref, 500)
     assert np.abs(c.buf - ref.buf).max() < TOL
+
+
+# --- one BLAS / OpenMP thread without the environment (spiking/threads.py) -----------------------------------------------
+THREAD_VARS = ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS")
+needs_proc = pytest.mark.skipif(not Path("/proc/self/maps").exists(), reason="reads /proc (Linux)")
+# numpy first, then brain_sim and the spiking child, as live_server.py imports them: the pool numpy made is capped too
+PROBE = ("import json, os, numpy, brain_sim, spiking.live\n"
+         "from spiking import threads\n"
+         "print(json.dumps({'env': {v: os.environ.get(v) for v in %r}, 'blas': threads.thread_counts()}))" % (THREAD_VARS,))
+
+
+def probe(code, env=None):
+    """Run `code` in a fresh interpreter from the repo root, with no thread variables (plus `env`); its last line is JSON."""
+    base = {k: v for k, v in os.environ.items() if k not in THREAD_VARS}
+    out = subprocess.run([sys.executable, "-c", code], cwd=ROOT, env={**base, **(env or {})}, capture_output=True,
+                         text=True, timeout=120)
+    assert out.returncode == 0, out.stderr[-2000:]
+    return json.loads(out.stdout.strip().splitlines()[-1])
+
+
+@needs_proc
+def test_threads_are_capped_for_a_start_without_the_environment():
+    res = probe(PROBE)
+    assert res["env"] == {v: "1" for v in THREAD_VARS}
+    assert res["blas"] and set(res["blas"].values()) == {1}          # the OpenBLAS numpy loaded now runs one thread
+
+
+@needs_proc
+def test_an_explicit_thread_count_is_respected():
+    res = probe(PROBE, {"OPENBLAS_NUM_THREADS": "2"})
+    assert res["env"] == {"OPENBLAS_NUM_THREADS": "2", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"}
+    assert set(res["blas"].values()) == {2}
+
+
+def test_torch_takes_the_omp_count_when_it_is_already_imported():
+    code = ("import json, sys, types\n"
+            "calls = []\n"
+            "sys.modules['torch'] = types.SimpleNamespace(set_num_threads=calls.append)\n"
+            "from spiking import threads\n"
+            "print(json.dumps({'torch': threads.cap_threads()['torch'], 'calls': calls}))")
+    res = probe(code)
+    assert res["torch"] == 1 and res["calls"][-1] == 1
+    res = probe(code, {"OMP_NUM_THREADS": "3"})
+    assert res["torch"] == 3 and res["calls"][-1] == 3
+
+
+@needs_proc
+def test_the_slow_layer_loop_does_not_spin_when_capped():
+    """Ten 214 x 214 complex products a second, as brain_sim's slow layer makes them: the caps keep the process far below
+    a core (measured on the 4-vCPU box: 54-65 % of a core with the pool spinning, 0.3 % capped)."""
+    code = ("import json, time, numpy, brain_sim\n"
+            "import numpy as np\n"
+            "rng = np.random.default_rng(0)\n"
+            "A = (rng.standard_normal((214, 214)) + 1j * rng.standard_normal((214, 214))) * 0.01\n"
+            "z = np.zeros(214, dtype=complex)\n"
+            "w = rng.standard_normal(214) + 1j * rng.standard_normal(214)\n"
+            "t0, c0, nxt = time.perf_counter(), time.process_time(), 0.0\n"
+            "while time.perf_counter() - t0 < 2.0:\n"
+            "    z = A @ z + A @ w\n"
+            "    nxt += 0.1\n"
+            "    time.sleep(max(0.0, nxt - (time.perf_counter() - t0)))\n"
+            "print(json.dumps({'cpu_pct': 100 * (time.process_time() - c0) / (time.perf_counter() - t0)}))")
+    res = probe(code)
+    assert res["cpu_pct"] < 25, res

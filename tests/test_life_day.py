@@ -283,7 +283,7 @@ def test_the_courier_interrupts_an_outing():
     lf.update(t + 61, 1, 1, "AWAKE", {}, 0.0, 0.0)
     assert lf.activity == "get_delivery" and lf.path and lf.path[-1] == "door_in"   # off the bench, home
     t2 = arrive(lf, t + 61)
-    assert lf.place == "door_in" and t2 - (t + 60) <= 6 * 60                          # the courier waits < 6 sim minutes
+    assert lf.place == "door_in" and t2 - (t + 60) <= 8 * 60                          # the courier waits < 8 sim minutes (the park walk at 1.2 m/s)
     lf = life()                                                                       # mid-walk: turns back
     t = at(14)
     lf.start("park", t, "x")

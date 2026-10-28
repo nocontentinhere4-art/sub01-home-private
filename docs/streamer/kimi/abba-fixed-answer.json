@@ -1,0 +1,9 @@
+{
+ "model": "kimi-k3.1-pro",
+ "answer": "APPROVE",
+ "finish_reason": "stop",
+ "prompt_tokens": 6111,
+ "completion_tokens": 20856,
+ "reasoning_tokens": 20838,
+ "seconds": 570.9
+}

@@ -121,3 +121,80 @@ export class PhoneScreen {
     } catch { return new this.THREE.Color(0xcfe0ff); }
   }
 }
+
+// ---- the chat app and the order app: home_phone.life_view decides which one is due; these draw only the view they are
+// given. drawLifeApp(g, w, h, view, top) paints into a 2D context of w x h below `top` px (the status bar's band). A view
+// of app 'short', or none, paints nothing: the page then shows the browser's own frame. Sizes scale with the width (390 px
+// is the base), so one view fits the classic room's glass and the house page's screen alike.
+const LIFE_BASE = 390, LIFE_FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
+function lifeWrap(g, text, width, max){
+  const out = []; let line = "";
+  for (const word of String(text || "").split(/\s+/)) {
+    const t = line ? line + " " + word : word;
+    if (g.measureText(t).width > width && line) { out.push(line); line = word; if (out.length >= max) break; }
+    else line = t;
+  }
+  if (line && out.length < max) out.push(line);
+  return out;
+}
+function lifeChat(g, w, h, view, top){
+  const s = w / LIFE_BASE, pad = 22 * s, bw = w - 2 * pad, inner = 14 * s;
+  const rows = Array.isArray(view.lines) ? view.lines : [];
+  g.fillStyle = "#0d0f15"; g.fillRect(0, top, w, h - top);
+  g.fillStyle = "#151924"; g.fillRect(0, top, w, 56 * s);
+  g.fillStyle = "#e6e8ef"; g.font = `bold ${24 * s}px ${LIFE_FONT}`; g.textAlign = "left"; g.fillText("Chat", pad, top + 37 * s);
+  if (!rows.length) { g.fillStyle = "#7b8196"; g.font = `${18 * s}px ${LIFE_FONT}`; g.fillText("no messages yet", pad, top + 110 * s); }
+  // newest at the bottom, laid out upwards until the glass is full (older lines are let go); measured in the body's font
+  g.font = `${16 * s}px ${LIFE_FONT}`;
+  const blocks = rows.map(x => ({x, lines: lifeWrap(g, x.text, bw - 2 * inner, 4)}));
+  let y = h - (view.why ? 52 : 34) * s;
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const {x, lines} = blocks[i], extra = x.re ? 18 * s : 0, bh = (48 + 22 * lines.length) * s + extra;
+    y -= bh + 8 * s; if (y < top + 70 * s) break;
+    const mine = x.kind !== "viewer", left = mine ? w - pad - bw : pad;     // his replies and reactions on the right
+    g.fillStyle = mine ? "#3a2510" : "#1b1f2b"; g.beginPath();
+    if (g.roundRect) g.roundRect(left, y, bw, bh, 12 * s); else g.rect(left, y, bw, bh);
+    g.fill();
+    if (mine) { g.fillStyle = "#ff9a3c"; g.fillRect(left, y + 8 * s, 4 * s, bh - 16 * s); }
+    g.font = `${12 * s}px ${LIFE_FONT}`; g.fillStyle = mine ? "#ffb877" : "#7b8196";
+    g.fillText(`${String(x.who || "")} · ${String(x.t || "")}`, left + inner, y + 20 * s);
+    let ty = y + 40 * s;
+    if (x.re) { g.fillStyle = "#8d93a6"; g.fillText(`to a viewer: “${String(x.re)}”`, left + inner, ty); ty += 18 * s; }
+    g.font = `${16 * s}px ${LIFE_FONT}`; g.fillStyle = mine ? "#fff1e2" : "#d5d8e2";
+    lines.forEach((l, k) => g.fillText(l, left + inner, ty + k * 22 * s));
+  }
+  if (view.why) { g.fillStyle = "#c79a7a"; g.font = `${12 * s}px ${LIFE_FONT}`; g.fillText(String(view.why), pad, h - 34 * s); }
+  g.fillStyle = "#6f7488"; g.font = `${11 * s}px ${LIFE_FONT}`;
+  g.fillText("his replies are AI-written · his reactions are fixed lines", pad, h - 14 * s);
+}
+function lifeOrder(g, w, h, view, top){
+  const s = w / LIFE_BASE, X = 24 * s, span = h - top, at = f => top + span * f;
+  g.fillStyle = "#f6f4ef"; g.fillRect(0, top, w, span);
+  g.fillStyle = "#06c167"; g.fillRect(0, top, w, span * 0.13);
+  g.fillStyle = "#fff"; g.textAlign = "left"; g.font = `bold ${20 * s}px ${LIFE_FONT}`;
+  g.fillText(view.dish ? `Your order: 1 × ${String(view.dish)}` : "Your order", X, at(0.085));
+  g.font = `${13 * s}px ${LIFE_FONT}`; g.fillText("Kichijōji · simulated delivery", X, at(0.115));
+  g.fillStyle = "#111"; g.font = `bold ${58 * s}px ${LIFE_FONT}`;
+  g.fillText(view.eta_min != null ? `${view.eta_min} min` : "…", X, at(0.23));
+  g.font = `${15 * s}px ${LIFE_FONT}`; g.fillStyle = "#555"; g.fillText(String(view.status || ""), X, at(0.265));
+  const steps = Array.isArray(view.steps) ? view.steps : [], step = Number.isInteger(view.step) ? view.step : 0;
+  steps.forEach((label, i) => {
+    const y = at(0.44 + i * 0.075), done = i <= step;
+    g.fillStyle = done ? "#06c167" : "#d6d2c8"; g.beginPath(); g.arc(36 * s, y, 7 * s, 0, 2 * Math.PI); g.fill();
+    g.fillStyle = done ? "#111" : "#999"; g.font = `${i === step ? "bold " : ""}${15 * s}px ${LIFE_FONT}`;
+    g.fillText(String(label), 60 * s, y + 5 * s);
+  });
+  g.fillStyle = "#999"; g.font = `${12 * s}px ${LIFE_FONT}`; g.fillText("Food orders and the courier are simulated.", X, at(0.965));
+}
+export function drawLifeApp(g, w, h, view, top = 0){
+  if (!view || (view.app !== "chat" && view.app !== "order")) return false;
+  g.save();
+  try { if (view.app === "order") lifeOrder(g, w, h, view, top); else lifeChat(g, w, h, view, top); }
+  finally { g.restore(); }
+  return true;
+}
+// the view as a canvas, for the classic room's glass (PhoneScreen.show draws its status bar over the top `top` px)
+export function lifeAppCanvas(view, w = LIFE_BASE, h = 844, top = 0){
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  drawLifeApp(c.getContext("2d"), w, h, view, top); return c;
+}

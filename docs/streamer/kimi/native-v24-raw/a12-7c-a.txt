@@ -1,0 +1,2 @@
+1. **blocking** — `readers, unchecked = other_readers(...)`: the scan remains TOCTOU; another reader can open the FIFO immediately afterward and split frames during the probe. The shown refusal paths do close `fd`, and open/`fstat` removes the path-check race.
+   **Fix:** hold an exclusive single-reader lock/protocol honoured by every reader for the entire probe, or designate one permanent FIFO owner. Otherwise document the scan as advisory—rescanning `/proc` cannot make exclusivity race-free.

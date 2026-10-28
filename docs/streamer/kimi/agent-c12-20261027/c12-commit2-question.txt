@@ -1,0 +1,35 @@
+Re-review after your APPROVE, answer APPROVE / BLOCK in <= 80 words. Following your false-positive note, the verb is narrowed from 'jump\s+(?:back\s+)?to' to 'jump\s+(?:back\s+)?to\s+(?:the\s+)?(?:top|bottom)' so ordinary chat ('jump to conclusions much?', "don't jump to conclusions") now parses to None (no action, no refusal line); tests assert this. Full diff:
+
+diff --git a/streamer_agent.py b/streamer_agent.py
+index 75cc76e..fec896c 100644
+--- a/streamer_agent.py
++++ b/streamer_agent.py
+@@ -750,7 +750,7 @@ FILLER = re.compile(r"\b(?:sub[\s-]?01|hey|hi|yo|ok(?:ay)?|please|pls|plz|kindly
+                     r"when\s+you\s+can|right\s+now|would\s+you\s+mind(?:\s+to)?|do\s+me\s+a\s+favou?r\s+and)\b|"
+                     r"\b(?:can|could|would|will|may|do)\s+(?:you|u|ya)\b|\b(?:i\s+want\s+you\s+to|i'?d\s+like\s+you\s+to|"
+                     r"you\s+should|why\s+don'?t\s+you|let'?s|wanna|go\s+ahead\s+and|try\s+to|try\s+and)\b", re.I)
+-ACTION_VERB = (r"open(?:\s+up)?|go\s+(?:to|on|back)|visit|navigate\s+to|browse(?:\s+to)?|head\s+(?:to|over\s+to)|load|"
++ACTION_VERB = (r"open(?:\s+up)?|go\s+(?:to|on|back)|jump\s+(?:back\s+)?to\s+(?:the\s+)?(?:top|bottom)|visit|navigate\s+to|browse(?:\s+to)?|head\s+(?:to|over\s+to)|load|"
+                r"search(?:\s+for|\s+up)?|google|look\s+(?:up|at|for|into)|find(?:\s+out)?|show\s+(?:me|us)|pull\s+up|"
+                r"bring\s+up|take\s+(?:me|us)\s+to|check(?:\s+out)?|research|keep\s+scrolling|scroll|page\s+(?:up|down)|"
+                r"next\s+page|previous\s+page|back|click|tap|press|select|choose|pick|read|play|watch|zoom|expand|refresh|"
+diff --git a/tests/test_streamer_agent.py b/tests/test_streamer_agent.py
+index 7a35832..c64c51b 100644
+--- a/tests/test_streamer_agent.py
++++ b/tests/test_streamer_agent.py
+@@ -3850,3 +3850,15 @@ def test_checks_the_watchdog_keeps_retrying_its_own_trips_release_after_stop_is_
+     assert wd.check() is None and wd.release_pending and len(release_server["seen"]) > n   # still retried
+     release_server["answer"] = {"session": False}
+     assert wd.check() is None and not wd.release_pending and not (d / "STOP").exists()
++
++
++def test_jump_to_top_or_bottom_is_a_key_request():
++    """Live check C12 (2026-10-27): "jump to the bottom of the page" was read as plain chat, so nothing ran."""
++    import streamer_agent as A
++    for text, key in (("jump to the bottom of the page", "End"), ("jump to the top", "Home"),
++                      ("jump back to the top of the page", "Home")):
++        req = A.parse_request(text, pc=True)
++        assert req and req["kind"] == "key" and req["action"] == {"action": "key", "key": key}, (text, req)
++    for chat in ("i jumped in the pool lol", "don't jump to conclusions", "jump to conclusions much?"):
++        req = A.parse_request(chat, pc=True)
++        assert req is None, (chat, req)              # plain chat: no action and no refusal line

@@ -26,7 +26,7 @@ _ADV = r"(?:this|that|the|a|an|some|more|my|our|your|these|those|their|his|new|c
 _AMOUNT = r"\$\s?\d[\d,.]*[kmb]?|\d[\d,.]*[kmb]|\d[\d,.]* ?(?:dollars?|usd|bucks|euros?)"   # "$5", "10k", "500 dollars"
 
 HYPE = re.compile(r"\b(?:"
-                  r"fomo(?: app)?|pump ?fun|pump and dumps?|"
+                  r"pump ?fun|pump and dumps?|"                 # "fomo" removed: owner 2026-10-27 ("rimuovi sto filtro")
                   r"crypto (?:trading|signals?|gems?|calls?|course|guru|bros?|tips?|picks?)|"
                   r"(?:day|swing|copy|paper|margin|leverage) ?trad(?:e|ing|er|ers)|scalp(?:ing|er|ers)|prop firms?|"
                   r"ict trader|options trading|forex|"

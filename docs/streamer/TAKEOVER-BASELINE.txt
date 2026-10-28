@@ -1,0 +1,2 @@
+Takeover baseline (2026-10-24 ~22:05 UTC): 9a9616295b35c1c87474a86a54e4a6da01893927
+Branch: claude/happy-einstein-1x0561 of nocontentinhere4-art/sub01-home-private. Resume against this commit; later commits on the branch are newer work.

@@ -1,0 +1,9 @@
+{
+  "actual_source_sha256": "0f9bffcdff05f3b8132c6329f103124a8de545a76f8ebc29331d78e7457fc07c",
+  "injected_alarm_failure_reports": true,
+  "worker_alarm_disarmed_before_reporting": true,
+  "oversized_small_json_rejected": true,
+  "valid_small_json_pinned": true,
+  "no_capture_processed": true,
+  "all_pass": true
+}

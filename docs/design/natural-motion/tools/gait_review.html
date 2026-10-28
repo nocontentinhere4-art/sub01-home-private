@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- The room's live walk (room/char_mixamo.glb with room/mh_mx/room_walk.glb, the stand room_window's first frame) seen from
+     the side, as the page blends it (room.html drive(), room/gait.js): a strip of frames every ?every seconds while he walks
+     at ?speed m/s across 0.25 m floor tiles. Two rows: "before" (the full stride at rate speed / REF_SPEED, floor 0.2: the
+     rule up to 5e45c84) and "after" (the gait model's stride share toward the stand and rate speed / (share · REF_SPEED)).
+     The planted foot should stay on its tile from frame to frame; the stride should match the pace. Served from the
+     repository root, the vendored three.js; no network. shots.py takes the pictures. -->
+<html><head><meta charset="utf-8"><title>gait review</title>
+<style>html,body{margin:0;background:#202428;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/web/house/vendor/three.module.js"}}</script>
+</head><body>
+<script type="module">
+import * as T from "three";
+import { GLTFLoader } from "/web/house/vendor/GLTFLoader.js";
+import { MeshoptDecoder } from "/web/house/vendor/meshopt_decoder.module.js";
+import { strideShare, clipStep, clipRate } from "/web/room/gait.js";
+const q = new URLSearchParams(location.search), num = (k, d) => q.has(k) ? +q.get(k) : d;
+const N = num("n", 5), CW = num("cw", 200), CH = num("ch", 260), SPEED = num("speed", 0.4), EVERY = num("every", 0.3), REF = 0.67;
+const W = CW * N, H = CH * 2;
+const renderer = new T.WebGLRenderer({antialias: true, preserveDrawingBuffer: true}); renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.outputColorSpace = T.SRGBColorSpace; renderer.setScissorTest(true); document.body.appendChild(renderer.domElement);
+const scene = new T.Scene(); scene.background = new T.Color(0x3a4048);
+scene.add(new T.HemisphereLight(0xdfe6ee, 0x3a3328, 1.1));
+const sun = new T.DirectionalLight(0xffffff, 1.6); sun.position.set(2, 4, 3); scene.add(sun);
+const tiles = 40, cv = document.createElement("canvas"); cv.width = cv.height = 512; const cx = cv.getContext("2d");
+for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { cx.fillStyle = (i + j) % 2 ? "#8c8578" : "#5f5a50"; cx.fillRect(i * 64, j * 64, 64, 64); }
+const tex = new T.CanvasTexture(cv); tex.wrapS = tex.wrapT = T.RepeatWrapping; tex.repeat.set(tiles / 2, tiles / 2); tex.colorSpace = T.SRGBColorSpace;
+const floor = new T.Mesh(new T.PlaneGeometry(tiles * 0.25, tiles * 0.25), new T.MeshStandardMaterial({map: tex, roughness: 0.9})); floor.rotation.x = -Math.PI / 2; scene.add(floor);
+// a post every metre along his way: how far he has come
+for (let z = -2; z <= 6; z++) { const p = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.5), new T.MeshStandardMaterial({color: 0xd8c050})); p.position.set(-0.6, 0.25, z); scene.add(p); }
+const camera = new T.PerspectiveCamera(40, CW / CH, 0.05, 60);
+const gltf = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const [body, walk, stand] = await Promise.all(["/web/room/char_mixamo.glb", "/web/room/mh_mx/room_walk.glb", "/web/room/mh_mx/room_window.glb"].map(u => gltf.loadAsync(u)));
+const boy = body.scene; scene.add(boy); boy.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
+const mixer = new T.AnimationMixer(boy);
+const still = new T.AnimationClip("stand0", 1, stand.animations[0].tracks.map(tr => { const v = tr.createInterpolant().evaluate(0).slice(); return new tr.constructor(tr.name, [0, 1], [...v, ...v]); }));
+const Wk = mixer.clipAction(walk.animations[0]), St = mixer.clipAction(still); Wk.play(); St.play();
+const step = clipStep(REF, walk.animations[0].duration, 2);
+window.info = {clipStep: +step.toFixed(3), duration: walk.animations[0].duration};
+// one row: the walk from z = 0 at SPEED for the strip's span, the mixer stepped at 60 Hz with the row's rule; a frame every EVERY s
+function row(rule, r) {
+  mixer.stopAllAction(); Wk.reset().play(); St.reset().play(); let z = 0, t = 0; const dt = 1 / 60;
+  { const share = rule === "after" ? strideShare(SPEED, step) : 1; Wk.setEffectiveWeight(share); St.setEffectiveWeight(1 - share); mixer.update(0); }   // (the first frame at the blend)
+  for (let i = 0; i < N; i++) {
+    const until = i * EVERY;
+    while (t < until - 1e-9) {
+      const share = rule === "after" ? strideShare(SPEED, step) : 1;
+      Wk.setEffectiveWeight(share); St.setEffectiveWeight(1 - share);
+      Wk.timeScale = rule === "after" ? clipRate(SPEED, share, REF) : Math.max(0.2, SPEED / REF);
+      mixer.update(dt); z += SPEED * dt; t += dt; }
+    boy.position.set(0, 0, z); boy.updateMatrixWorld(true);
+    camera.position.set(3.2, 1.1, z + 0.3); camera.lookAt(0, 0.8, z + 0.3);
+    renderer.setViewport(i * CW, r * CH, CW, CH); renderer.setScissor(i * CW, r * CH, CW, CH); renderer.render(scene, camera);
+  }
+}
+row("before", 1); row("after", 0);   // (canvas rows: the top row is "before", the bottom "after")
+window.ready = true;
+</script>
+</body></html>

@@ -1,0 +1,128 @@
+def save_frame(directory: Path, name: str, frame: bytes) -> str | None:
+    """Write one frame without following a link and without replacing anything (-> its path, or None when the name exists)."""
+    target = directory / name
+    try:
+        fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC, 0o644)
+    except FileExistsError:
+        return None
+    with os.fdopen(fd, 'wb') as handle:
+        handle.write(frame)
+    return str(target)
+
+
+def probe(path: Path, seconds: float, contract: str, save: Path | None, save_count: int, force: bool) -> dict:
+    try:   # open first (never through a link), then check what was opened: no window between the check and the open
+        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC | os.O_NOFOLLOW)
+    except OSError as exc:
+        if exc.errno == errno.ENOENT:
+            raise
+        raise SystemExit(f'refused: {path} cannot be opened as a FIFO ({os.strerror(exc.errno)}; a link is never followed)')
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISFIFO(info.st_mode):
+            raise SystemExit(f'refused: {path} is not a FIFO (this tool never creates or replaces it)')
+        if not force:
+            readers, unchecked = other_readers(path, target=(info.st_dev, info.st_ino))
+            if readers:
+                raise SystemExit(f'refused: other readers hold {path} (pids {readers}); a second reader would split frames (--force to skip)')
+            if unchecked:
+                raise SystemExit(f'refused: {unchecked} processes are not visible to this user, so another reader could be missed (run it as '
+                                 'root, or --force when you know nobody else reads the FIFO)')
+    except BaseException:
+        os.close(fd)
+        raise
+    walker, frames, seqs, arrivals, failures, saved, save_skipped = Walker(), 0, [], [], {}, [], 0
+    read_bytes, last_read, longest_stall, eof_reads, writer_seen, max_per_read = 0, None, 0.0, 0, False, 0
+    poller = select.poll()
+    poller.register(fd, select.POLLIN)
+    started = time.monotonic()
+    try:
+        while time.monotonic() - started < seconds:
+            poller.poll(100)
+            try:
+                data = os.read(fd, CHUNK)
+            except OSError as exc:
+                if exc.errno in (errno.EAGAIN, errno.EWOULDBLOCK):
+                    continue
+                raise
+            now = time.monotonic()
+            if not data:                          # EOF: no writer (yet, or any more)
+                eof_reads += 1
+                time.sleep(0.05)
+                continue
+            writer_seen = True
+            if last_read is not None:
+                longest_stall = max(longest_stall, now - last_read)
+            last_read = now
+            read_bytes += len(data)
+            whole = walker.feed(data)
+            max_per_read = max(max_per_read, len(whole))
+            for frame in whole:
+                frames += 1
+                arrivals.append(now)
+                ok, seq, why = check_contract(frame) if contract == 'main' else (True, None, '')
+                if not ok:
+                    failures[why] = failures.get(why, 0) + 1
+                if seq is not None:
+                    seqs.append(seq)
+                if save is not None and len(saved) < save_count:
+                    written = save_frame(save, f'frame-{len(saved) + save_skipped:02d}{"-seq%d" % seq if seq is not None else ""}.jpg', frame)
+                    if written:
+                        saved.append(written)
+                    else:
+                        save_skipped += 1
+    finally:
+        os.close(fd)
+    ended = time.monotonic()
+    elapsed = (arrivals[-1] - arrivals[0]) if len(arrivals) > 1 else 0.0
+    window = (ended - arrivals[0]) if arrivals else 0.0   # first frame to the END of the run: a writer that stopped early counts
+    if last_read is not None:
+        longest_stall = max(longest_stall, ended - last_read)   # the trailing silence too
+    gaps = [(b - a) * 1000 for a, b in zip(arrivals, arrivals[1:])]
+    distinct = sorted(set(seqs))
+    out_of_order = sum(1 for a, b in zip(seqs, seqs[1:]) if b <= a)
+    missing = (distinct[-1] - distinct[0] + 1 - len(distinct)) if distinct else 0
+    return {'schema': 'sub01.main-fifo-probe.v1', 'fifo': str(path), 'contract': contract, 'seconds': seconds, 'writer_seen': writer_seen,
+            'bytes': read_bytes, 'frames': frames, 'contract_failures': failures, 'cuts': walker.cuts, 'garbage_runs': walker.garbage,
+            'tail_bytes': len(walker.buffer), 'fps': round((frames - 1) / elapsed, 2) if elapsed > 0 else 0.0,
+            'fps_window': round((frames - 1) / window, 2) if window > 0 and frames > 1 else 0.0,
+            'trailing_idle_ms': round((ended - arrivals[-1]) * 1000, 2) if arrivals else None,
+            'seq': {'first': seqs[0] if seqs else None, 'last': seqs[-1] if seqs else None, 'distinct': len(distinct), 'missing': missing,
+                    'out_of_order': out_of_order, 'unique_fps': round((len(distinct) - 1) / elapsed, 2) if elapsed > 0 and distinct else 0.0,
+                    'unique_fps_window': round((len(distinct) - 1) / window, 2) if window > 0 and distinct else 0.0},
+            # arrival = the time of the read that completed the frame: frames completed by one read share it (max_frames_per_read)
+            'arrival_gap_ms': {'p50': round(percentile(gaps, .5), 2), 'p95': round(percentile(gaps, .95), 2), 'p99': round(percentile(gaps, .99), 2),
+                               'max': round(max(gaps), 2) if gaps else 0.0},
+            'max_frames_per_read': max_per_read, 'longest_read_stall_ms': round(longest_stall * 1000, 2), 'eof_reads': eof_reads, 'saved': saved,
+            'save_skipped_existing': save_skipped}
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--fifo', type=Path, default=Path(DEFAULT_FIFO))
+    parser.add_argument('--seconds', type=float, default=30.0)
+    parser.add_argument('--contract', choices=('main', 'any'), default='main')
+    parser.add_argument('--save', type=Path, help='directory for the first whole frames (.jpg)')
+    parser.add_argument('--save-count', type=int, default=3)
+    parser.add_argument('--force', action='store_true', help='skip the other-reader check (only when you know nobody else reads it)')
+    args = parser.parse_args(argv)
+    if args.save is not None:
+        args.save.mkdir(mode=0o700, parents=True, exist_ok=True)
+        if args.save.is_symlink() or not args.save.is_dir():
+            print(json.dumps({'schema': 'sub01.main-fifo-probe.v1', 'status': 'refused', 'reason': f'--save {args.save} is not a plain directory'}))
+            return 2
+    try:
+        report = probe(args.fifo, args.seconds, args.contract, args.save, args.save_count, args.force)
+    except SystemExit as stop:
+        print(json.dumps({'schema': 'sub01.main-fifo-probe.v1', 'status': 'refused', 'reason': str(stop)}))
+        return 2
+    except FileNotFoundError:
+        print(json.dumps({'schema': 'sub01.main-fifo-probe.v1', 'status': 'refused', 'reason': f'{args.fifo} does not exist'}))
+        return 2
+    report['status'] = 'ok'
+    print(json.dumps(report, indent=2))
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "APPROVE ONE EXACT IMPORT\n\nThe prior BLOCK is closed: both supervisor and importer require `reference_pose_argument == \"skeleton\"`; the importer calls `get_reference_pose(skeleton)` with no adaptive fallback. Mesh or missing arguments therefore fail admission before import.\n\nApproval is limited to the exact pinned packet above, after the existing diagnostic finishes and only with every runtime admission, ownership, STOP/lease, deadline, and cleanup gate passing. No retry or additional import is authorized. This grants no rendering, visual-acceptance, speech-head, provider/network, backend, STOP-removal, Vagon, or public-change approval. This remains a source review, not a claim of a tested Unreal run.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 16642,
+    "completion_tokens": 9036,
+    "total_tokens": 25678,
+    "completion_tokens_details": {
+      "reasoning_tokens": 8878
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 16640
+    }
+  },
+  "seconds": 331.9
+}

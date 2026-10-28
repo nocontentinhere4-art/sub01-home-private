@@ -1,0 +1,83 @@
+<!doctype html>
+<!-- Mock of a Vagon Streams connection page + stream, for tests/test_streamer_desktop_vagon.py (no Vagon code).
+     A "Connect" button, a short "Connecting" state, then a canvas that fills the viewport and records every mouse
+     and keyboard event it receives in window.__events. window.__endSession() shows "Session ended" with a
+     "Reconnect" button (or, with ?noreconnect=1, with no button at all). ?delay=MS sets the connect delay. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mock stream</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #14161a; color: #e8e8e8; font-family: sans-serif; overflow: hidden; }
+  #connect-page { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+  #connect { font-size: 28px; padding: 14px 40px; border-radius: 8px; border: 0; background: #3b7ddd; color: #fff; cursor: pointer; }
+  #stream { position: fixed; inset: 0; width: 100vw; height: 100vh; display: none; outline: none; }
+  .hidden { display: none !important; }
+  #dock { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); display: none; }
+  #dock button { font-size: 12px; margin: 0 4px; }
+</style>
+</head>
+<body>
+<div id="connect-page">
+  <h1 id="headline">Mock Vagon stream</h1>
+  <p id="status">Ready to connect</p>
+  <button id="connect" type="button">Connect</button>
+  <button id="settings" type="button" style="font-size:12px">Settings</button>
+</div>
+<canvas id="stream" tabindex="0" aria-label="remote desktop"></canvas>
+<div id="dock"><button type="button" id="mute">Mute</button><button type="button" id="fullscreen">Full screen</button></div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const delay = Math.max(0, parseInt(params.get('delay') || '300', 10));
+  const noReconnect = params.get('noreconnect') === '1';
+  window.__events = [];
+  window.__moves = 0;
+  window.__state = 'waiting';
+  window.__connects = 0;
+  const page = document.getElementById('connect-page'), status = document.getElementById('status');
+  const btn = document.getElementById('connect'), canvas = document.getElementById('stream'), dock = document.getElementById('dock');
+  const ctx = canvas.getContext('2d');
+  let n = 0;
+  function paint(label) {
+    canvas.width = innerWidth; canvas.height = innerHeight;
+    const hue = (n * 47) % 360;
+    ctx.fillStyle = 'hsl(' + hue + ', 60%, 45%)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ffffff'; ctx.font = '48px sans-serif';
+    ctx.fillText(label || ('event ' + n), 80, 120);
+    ctx.fillText(String(n), 80, 200);
+  }
+  function rec(kind, e) {
+    n++;
+    const r = {kind: kind, n: n};
+    if (e.clientX !== undefined) { r.x = e.clientX; r.y = e.clientY; r.button = e.button; }
+    if (e.key !== undefined) { r.key = e.key; r.code = e.code; r.ctrl = e.ctrlKey; r.alt = e.altKey; r.shift = e.shiftKey; }
+    if (e.deltaY !== undefined) { r.dy = e.deltaY; }
+    window.__events.push(r);
+    paint(kind + ' ' + (r.key !== undefined ? r.key : r.dy !== undefined ? r.dy : (r.x + ',' + r.y)));
+  }
+  for (const k of ['mousedown', 'mouseup', 'click', 'wheel']) canvas.addEventListener(k, e => rec(k, e), {passive: true});
+  canvas.addEventListener('mousemove', () => { window.__moves++; });
+  for (const k of ['keydown', 'keyup']) canvas.addEventListener(k, e => { rec(k, e); e.preventDefault(); });
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  function connect() {
+    window.__state = 'connecting'; window.__connects++;
+    btn.classList.add('hidden'); status.textContent = 'Connecting…';
+    setTimeout(() => {
+      page.classList.add('hidden'); canvas.style.display = 'block'; dock.style.display = 'block';
+      window.__state = 'connected'; paint('connected'); canvas.focus();
+    }, delay);
+  }
+  btn.addEventListener('click', connect);
+  window.__endSession = function () {
+    window.__state = 'ended';
+    canvas.style.display = 'none'; dock.style.display = 'none'; canvas.blur();
+    page.classList.remove('hidden');
+    document.getElementById('headline').textContent = 'Session ended';
+    status.textContent = 'Your session has ended.';
+    btn.textContent = 'Reconnect';
+    if (noReconnect) btn.classList.add('hidden'); else btn.classList.remove('hidden');
+  };
+</script>
+</body>
+</html>

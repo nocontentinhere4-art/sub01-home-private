@@ -1,0 +1,12 @@
+Context: UE 5.8.3 game-module C++ on Linux/Vulkan, the game run with -RenderOffScreen (Slate renders the game window into a texture, no swapchain). Pre-commit review of install_v24.py's generated code: the Slate back buffer -> 3-slot FRHIGPUTextureReadback ring (render thread) -> 2 encoder threads -> in-order release -> output queue of 2 -> 1 writer thread -> the FIFO main.mjpeg. It compiles against a stub with g++/clang++ -Wall -Werror -Wshadow and a runtime driver passes. Answer ONLY the numbered questions, each in at most 3 lines, starting with yes/no (or "ok"/"bug"); quote the line for any bug and give the fix. Do not review anything else. End with "no blocking issue" or "blocking: ...".
+
+Attached: the encoder loop (2 threads). Shared under Mutex: Jobs (JobCv), Outstanding (sequences in release order, pushed by the
+render thread with the job), Done, Out (OutCv), Pool. Check ONLY:
+1. Each non-probe job decrements EncodeInFlight exactly once and releases its sequence exactly once, in Outstanding order, a failed
+   encode releasing its place with an empty frame (skipped, counted DroppedEncode)?
+2. Bounds: Out <= 2 (oldest dropped, DroppedQueue), Done <= 2, Pool <= 4. Any path growing without bound?
+3. Stop: no deadlock or lost wake-up (StopThreads sets Stop, clears the queues under Mutex, notify_all on both cvs, then joins)?
+4. Any data race: the job's pixel buffer, the counters (std::atomic<int64>, += on atomics), LastChecksum/MaxChannel/NonBlack/JpegOk
+   (atomics written by both encoders; diagnostics only)?
+5. CompressImage(TArray64<uint8>&, EImageFormat::JPEG, const FImageView&, int32 Quality) on IImageWrapperModule from two threads at
+   once: safe (5.8.3 creates a new wrapper per call)?

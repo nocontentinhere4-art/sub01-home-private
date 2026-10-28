@@ -1,0 +1,17 @@
+{
+  "http_status": 200,
+  "answer": "Necessary corrections; otherwise approved:\n\n1. **Ensure the copy is consistent.** Copy the Oct15 state only while its writer is stopped, or use a filesystem snapshot/SQLite-supported backup. For SQLite, include or correctly process WAL/SHM companions; a naive live-file copy can silently lose or corrupt memories. Confirm the count of 302 by querying **NEW_COPY**, not the source.\n\n2. **Do not rely on `--data-dir` alone to protect the original.** Before launch, verify that every mutable path\u2014state, logs, caches, temporary files, and any enabled runtime output\u2014resolves under NEW_COPY or another private temporary location. Keep a private before/after manifest or hash listing of the original state/package and confirm it is unchanged after STOP. Do not alter original permissions to achieve this.\n\nIf either prelaunch check fails, stop without starting services or modifying the original.",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 595,
+    "completion_tokens": 1916,
+    "total_tokens": 2511,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1722
+    },
+    "prompt_tokens_details": {
+      "cache_write_tokens": 512
+    }
+  },
+  "seconds": 56.97
+}

@@ -1,0 +1,26 @@
+{
+  "main_inode": [
+    67,
+    6480385251
+  ],
+  "environment": {
+    "PATH": "/home/unreal/venv/bin:/usr/bin:/bin",
+    "HOME": "/home/unreal/.sub01-private/readiness-standalone-20261025",
+    "TMPDIR": "/home/unreal/.sub01-private/readiness-standalone-20261025",
+    "LANG": "C.UTF-8",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "launch": [
+    "env",
+    "-u",
+    "PYTHONOPTIMIZE",
+    "/usr/bin/python3",
+    "-I",
+    "/tmp/sub01-share/supervise-readiness-standalone.py"
+  ],
+  "probe_sha256": "7cfecf27ff4d3b134e9c0ca3bada2ca405af79fe8ce0af5675d3a84ebb3f6bb9",
+  "runner_sha256": "b938189c780c2451010fd9ec601b0afd9a09d229b9651a40db2b4bde8af30d3a",
+  "supervisor_sha256": "714066fcad452e25c1b5a1c6c46696882377fa54cfcc7de4356f9ff44e73d65f",
+  "wrapper_sha256": "68710e0196159a242afdc82377a152f9dea7659dd3da38f7bee49248fb9bdf17",
+  "observer_sha256": "acbf714e8a0466aafb858544bd16e0dd1d7e22cd469984bbbe48afa028bf18ae"
+}

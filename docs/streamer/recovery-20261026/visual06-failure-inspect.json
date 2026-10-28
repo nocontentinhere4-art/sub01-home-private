@@ -1,0 +1,2362 @@
+{
+  "main": {
+    "status": "FAILED",
+    "performance": "NOT_ASSESSED",
+    "visual": "PENDING",
+    "scope": "controlled reconstruction hypothesis; frontal visible-scope only; no full-contact, backend-state/brain, 60fps, or owner acceptance",
+    "failures": [
+      {
+        "kind": "UNEXPLAINED_FAILURE",
+        "error": "Traceback (most recent call last):\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/fifo_observer_collector.py\", line 125, in inspect_one\n    try:row=executable_one(pid,proc) if executable_only else scan_one(pid,proc)\n                                                             ^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/fifo_observer_collector.py\", line 45, in scan_one\n    cwd=path_reference(p/'cwd');root=path_reference(p/'root')\n        ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/fifo_observer_collector.py\", line 33, in path_reference\n    target=os.readlink(path);s=path.stat()\n           ^^^^^^^^^^^^^^^^^\nPermissionError: [Errno 13] Permission denied: '/proc/5682/cwd'\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/visual-supervisor.candidate.py\", line 642, in run\n    try:self.result['status']='PREPARING';self.prepare();self.execute()\n                                                         ^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/visual-supervisor.candidate.py\", line 479, in execute\n    cache_rows=self.observer.corroborate('ddc-cache-open-proof',(warm.pid,),self.game[1])\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/visual-supervisor.candidate.py\", line 254, in corroborate_with_barrier\n    rows=original_corroborate(*args,**kwargs)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/fifo_observer_collector.py\", line 447, in corroborate\n    self.register_descendants();rows=census()\n                                     ^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/fifo_observer_collector.py\", line 145, in census\n    with FD_LOCK:return _census(proc)\n                        ^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/fifo_observer_collector.py\", line 150, in _census\n    try:result.append(inspect_one(pid,proc))\n                      ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/fifo_observer_collector.py\", line 139, in inspect_one\n    need(result['complete'] and result['returncode']==0,'Credentialed FD census failed/incomplete: '+str(pid))\n  File \"/opt/sub01/animation-visual-20261026-attempt06/tools/fifo_observer_collector.py\", line 13, in need\n    if not ok: raise Block(why)\n               ^^^^^^^^^^^^^^^^\nreviewed_visual_observer.Block: Credentialed FD census failed/incomplete: 5682\n"
+      }
+    ],
+    "subreaper": {
+      "enabled": true,
+      "pid": 5660,
+      "ticks": 62296463,
+      "before_any_Popen": true
+    },
+    "ddc_access": {
+      "schema": "sub01.ddc-access.v1",
+      "uid": 1001,
+      "gid": 1001,
+      "groups": [],
+      "cache": {
+        "path": "/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache",
+        "dev": 66,
+        "ino": 4299679611,
+        "uid": 1001,
+        "gid": 1001,
+        "mode": 448
+      },
+      "read_ok": true,
+      "write_ok": true,
+      "cleanup_ok": true,
+      "readback_sha256": "3150b3de1e6da8c0736dc46285ef7ba7de9ab57d49336aacf52c60401d20e256",
+      "engine_pak": {
+        "path": "/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp",
+        "dev": 46,
+        "ino": 210981095,
+        "bytes": 1134102445,
+        "read_ok": true
+      },
+      "cvars_read_sha256": "55bc0a866409e9285c4fb34bb85bfc44be74d54bb449d150d0abd8ec364415a8"
+    },
+    "sdk_prelaunch": {
+      "environment_delta": {
+        "UE_SKIP_UBT_SDK_SETUP": "1"
+      },
+      "source_module_receipts": {
+        "Source/Developer/TargetPlatform/Private/TargetPlatformManagerModule.cpp": {
+          "sha256": "1ab0fb6d8141ee06d80e0190883a30962552ccb0d96e39ca71d8f95f3979efa2",
+          "bytes": 59373
+        },
+        "Binaries/Linux/libUnrealEditor-TargetPlatform.so": {
+          "sha256": "daf409938b14e955c258defc5cf9ec22bcd42a023c803239b098d8ff3b70ee2a",
+          "bytes": 370072
+        },
+        "Build/Build.version": {
+          "sha256": "eab58750e84719489f3ee0d42d05a533ceb357eb3ee511777e9408d27a85f43c",
+          "bytes": 215
+        },
+        "Binaries/Linux/UnrealEditor.modules": {
+          "sha256": "9c60786f45b2ee850c5355706961b5933ee36effd2169d25459562e7bf6f62ba",
+          "bytes": 31321
+        },
+        "Source/Editor/TurnkeySupport/Private/TurnkeySupportModule.cpp": {
+          "sha256": "9637ec95f0ff582f5976530e45e84d40510e35196a8ffee8bec498759b019a99",
+          "bytes": 156547
+        }
+      },
+      "manual_sdk_env_absent": true,
+      "checked_monotonic_ns": 622970426188793,
+      "sdk_status": "ASSUMED_VALID_VALIDATION_SKIPPED_NOT_VERIFIED",
+      "scope": "observed guarded ValidatePlatforms route only; unapproved descendants remain fatal"
+    },
+    "ddc_prelaunch": {
+      "schema": "sub01.ddc-prelaunch.v1",
+      "cvar_proof_kind": "CONTROLLED_STARTUP_SETTER_DERIVATION_NOT_OBSERVED_FUTURE_STATE",
+      "expected_value": "(ProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp),InstalledProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp,Compressed=true),EnginePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp,Compressed=true),EnterprisePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp,Compressed=true),Local=(Type=FileSystem,Path=/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache,ReadOnly=false,UnusedFileAge=34,PromptIfMissing=true,Clean=false,Flush=false,DeleteUnused=false))",
+      "setter": "ConsoleVariablesIni",
+      "priority": 167772160,
+      "pins": {
+        "/workspace/sub01-private-recovered-engine/Engine/Config/BaseEngine.ini": {
+          "sha256": "fed41263defe21a22d74a779a9bf6e545c29c150c67ffad70800770c58156454",
+          "bytes": 258359,
+          "dev": 46,
+          "ino": 210500828
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Config/Linux/LinuxEngine.ini": {
+          "sha256": "6044ed2320517360ecd12226a015aa9028d553bd09a7c7aa6834a963667f047d",
+          "bytes": 950,
+          "dev": 46,
+          "ino": 210660284
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/DerivedDataCache.cpp": {
+          "sha256": "cb0d43bda3314957f1587c3f2c9fb7082913314196b8d3bd26bca0126051a793",
+          "bytes": 34333,
+          "dev": 46,
+          "ino": 684412713
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/DerivedDataCacheModule.cpp": {
+          "sha256": "30007afbcf1dc28d2695a3b38ae829448485acfb8e5d1d521ff846b102ed1190",
+          "bytes": 5136,
+          "dev": 46,
+          "ino": 684413463
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/Zen/Private/ZenServerInterface.cpp": {
+          "sha256": "3e93b433b94948d800a1d9189107e21d91f7118c73404484e2e2db0e81e775b1",
+          "bytes": 171767,
+          "dev": 46,
+          "ino": 39065465
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Engine/Private/ShaderCompiler/ShaderCompiler.cpp": {
+          "sha256": "5319dd99c453727c050fbac258443345e6879a083508a148e526c099b97f9ec4",
+          "bytes": 238264,
+          "dev": 46,
+          "ino": 684747040
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/DerivedDataBackends.cpp": {
+          "sha256": "8f334004e0a6cc90966f0e253d652b624f70d7e2b044dd43b174b2c6ec5fc222",
+          "bytes": 31573,
+          "dev": 46,
+          "ino": 684412602
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/DerivedDataConfig.cpp": {
+          "sha256": "880e5c30e641cbefa8a4f77026f1fb3ddd77190c8f0a36a5686eea2043d47d20",
+          "bytes": 15644,
+          "dev": 46,
+          "ino": 684412843
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Engine/Public/ShaderCompiler.h": {
+          "sha256": "6293e089c00cca65dcff879969614e6d07a1e6f481c5487f01ce5e8d1afa00c0",
+          "bytes": 65091,
+          "dev": 46,
+          "ino": 621574454
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Engine/Private/ShaderCompiler/ShaderCompilerPrivate.h": {
+          "sha256": "23532bc96b421b23780ef01fce1967138eca3ebc6502a64c08075bc644703f21",
+          "bytes": 1983,
+          "dev": 46,
+          "ino": 684746893
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/DerivedDataCacheStoreHierarchy.cpp": {
+          "sha256": "5addbc6922f127c19d0607ed621059746e8f2bc03755b4d88ac89b31278f6a20",
+          "bytes": 55961,
+          "dev": 46,
+          "ino": 684412609
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Engine/Private/ShaderCompiler/ShaderCompilerThreadRunnable.cpp": {
+          "sha256": "f3d07df1c03db050c683b43ac403b2085832ea34998fc54a71668a34d1be5bdd",
+          "bytes": 66361,
+          "dev": 46,
+          "ino": 684747056
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-DerivedDataCache.so": {
+          "sha256": "4405bb3e055b9c3e6f37c4ac13de7f38e27831f7f7e387447b753d83ef2d6da2",
+          "bytes": 5769896,
+          "dev": 46,
+          "ino": 683503633
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-Engine.so": {
+          "sha256": "f9aacc3fab64f0b3ece3c2ecff5f3621e5dadf553cedbc34131364ccebf06b14",
+          "bytes": 95814048,
+          "dev": 46,
+          "ino": 683505046
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp": {
+          "sha256": "9f4a9d61121067662dd880b6f60be3b2fffa64a8f89831bb9c3e1907057474e2",
+          "bytes": 1134102445,
+          "dev": 46,
+          "ino": 210981095
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/Logging/LogSuppressionInterface.cpp": {
+          "sha256": "6aacabef950c6b9117f2729800ef3e0d0fe7f85ea7fa58ac5c2bcad68d73462c",
+          "bytes": 23304,
+          "dev": 46,
+          "ino": 390032897
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/HAL/ConsoleManager.cpp": {
+          "sha256": "3f545c2883f604a5845901596fb42ec17c5e8eb7480e655e3b3a120ea2d5e4d1",
+          "bytes": 197153,
+          "dev": 46,
+          "ino": 684631561
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/Misc/ConfigUtilities.cpp": {
+          "sha256": "963f75029dc708a9840500734f0690ef0abe07937eadcd9da32f6859a0cb4955",
+          "bytes": 22722,
+          "dev": 46,
+          "ino": 315866868
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Launch/Private/LaunchEngineLoop.cpp": {
+          "sha256": "f23b201a530fb87af894aac9f76ce090fab42fe4dccc92267e044f5b6d6cae1d",
+          "bytes": 236996,
+          "dev": 46,
+          "ino": 620500463
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/Misc/ConfigCacheIni.cpp": {
+          "sha256": "905d5f4b568a7fe1007eb81932fd98bb14247190aa32bf0d8a51a3b02d26bc13",
+          "bytes": 252267,
+          "dev": 46,
+          "ino": 684638956
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/FileSystemCacheStore.cpp": {
+          "sha256": "8d56ee922bea53964034db9fc9b4d17b6eb797822b63d79460202883f79107b5",
+          "bytes": 103201,
+          "dev": 46,
+          "ino": 684412763
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Developer/DerivedDataCache/Private/PakFileCacheStore.cpp": {
+          "sha256": "4f225dd18885515c2a94840cd18c72a05644cea4b60cf0afd102b66c53d40d24",
+          "bytes": 50424,
+          "dev": 46,
+          "ino": 684412692
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Public/HAL/IConsoleManager.h": {
+          "sha256": "c4420a8eec58d6f5ca3cde1713680a77163da2db0537f7a12edbdb07672552e1",
+          "bytes": 103132,
+          "dev": 46,
+          "ino": 684654166
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-Core.so": {
+          "sha256": "99a1a9ecf4d46b8bdf6560d47e5da842612ee56ceeec363e6ccbe5e747639b4e",
+          "bytes": 23857528,
+          "dev": 46,
+          "ino": 683502496
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Unix/UnixCommonStartup/Private/UnixCommonStartup.cpp": {
+          "sha256": "53e89a54d15eda5cbb8dfacc11f77bad4ed5f9d228790fb5309be940df3e1084",
+          "bytes": 10821,
+          "dev": 46,
+          "ino": 684762685
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Source/Runtime/Core/Private/Misc/Parse.cpp": {
+          "sha256": "bfc0a1f19e2318a83b1444728da61ed4c09037ffd3c1531f1ae99f97c01b6bd4",
+          "bytes": 47381,
+          "dev": 46,
+          "ino": 684639875
+        },
+        "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/libUnrealEditor-UnixCommonStartup.so": {
+          "sha256": "4c6b8e3c191faf9c29bd23361b78d488c304edb28f4578c0288d0e6881aa92a3",
+          "bytes": 49208,
+          "dev": 46,
+          "ino": 683520929
+        }
+      },
+      "cvars": {
+        "bytes": 1566,
+        "sha256": "55bc0a866409e9285c4fb34bb85bfc44be74d54bb449d150d0abd8ec364415a8",
+        "dev": 66,
+        "ino": 8934584
+      },
+      "cache": {
+        "path": "/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache",
+        "dev": 66,
+        "ino": 4299679611,
+        "uid": 1001,
+        "gid": 1001,
+        "mode": 448
+      },
+      "access_probe": {
+        "schema": "sub01.ddc-access.v1",
+        "uid": 1001,
+        "gid": 1001,
+        "groups": [],
+        "cache": {
+          "path": "/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache",
+          "dev": 66,
+          "ino": 4299679611,
+          "uid": 1001,
+          "gid": 1001,
+          "mode": 448
+        },
+        "read_ok": true,
+        "write_ok": true,
+        "cleanup_ok": true,
+        "readback_sha256": "3150b3de1e6da8c0736dc46285ef7ba7de9ab57d49336aacf52c60401d20e256",
+        "engine_pak": {
+          "path": "/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp",
+          "dev": 46,
+          "ino": 210981095,
+          "bytes": 1134102445,
+          "read_ok": true
+        },
+        "cvars_read_sha256": "55bc0a866409e9285c4fb34bb85bfc44be74d54bb449d150d0abd8ec364415a8"
+      },
+      "optional_paks": {
+        "ProjectPak": {
+          "path": "/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp",
+          "state": "ABSENT"
+        },
+        "InstalledProjectPak": {
+          "path": "/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp",
+          "state": "ABSENT"
+        },
+        "EnterprisePak": {
+          "path": "/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp",
+          "state": "ABSENT"
+        }
+      },
+      "checked_monotonic_ns": 622972783819281
+    },
+    "ddc_runtime": {
+      "schema": "sub01.ddc-runtime-log.v1",
+      "graph": "(ProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp),InstalledProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp,Compressed=true),EnginePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp,Compressed=true),EnterprisePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp,Compressed=true),Local=(Type=FileSystem,Path=/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache,ReadOnly=false,UnusedFileAge=34,PromptIfMissing=true,Clean=false,Flush=false,DeleteUnused=false))",
+      "command_line_index": 425,
+      "reconstructed_logging_argument": "-LogCmds=\"LogDerivedDataCache Verbose,LogConfig Log,LogConsoleManager Verbose\"",
+      "parse_index": 1389,
+      "setter_indices": [
+        787
+      ],
+      "engine_pak_index": 1392,
+      "local_writable_query_store_index": 1399,
+      "optional_paks": {
+        "ProjectPak": {
+          "path": "/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp",
+          "state": "ABSENT",
+          "log_index": 1390
+        },
+        "InstalledProjectPak": {
+          "path": "/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp",
+          "state": "ABSENT",
+          "log_index": 1391
+        },
+        "EnterprisePak": {
+          "path": "/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp",
+          "state": "ABSENT",
+          "log_index": 1393
+        }
+      },
+      "log_bytes": 8902277,
+      "log_sha256": "0b2b6726e275e29f227e7b5371862bcbe5e596388c68efa6d12505432403b868",
+      "scope": "LOG_CORROBORATION_REQUIRES_INDEPENDENT_COMPLETE_PROCESS_FD_CENSUS"
+    },
+    "accepted_actual_event_count": 0,
+    "control_workers_before_teardown": [],
+    "fifo_preservation_location": "/home/unreal/.sub01-private/animation-visual-reading-20261026-attempt06/fifo-evidence/preserved-original-fifo",
+    "teardown_budget": {
+      "started_monotonic": 623132.097480327,
+      "deadline_monotonic": 623139.597480327,
+      "native_deadline_monotonic": 623137.097480327
+    },
+    "teardown_chronology": [
+      {
+        "event": "phase",
+        "monotonic": 623132.097484195,
+        "deadline": 623139.597480327,
+        "phase": "native"
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.099496091,
+        "deadline": 623139.597480327,
+        "phase": "native",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.098586183,
+        "selected": [
+          5682
+        ],
+        "result": {
+          "pending": [
+            5682
+          ],
+          "errors": [],
+          "outcomes": []
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.15216114,
+        "deadline": 623139.597480327,
+        "phase": "native",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.151246092,
+        "selected": [
+          5682
+        ],
+        "result": {
+          "pending": [
+            5682
+          ],
+          "errors": [],
+          "outcomes": []
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.206716997,
+        "deadline": 623139.597480327,
+        "phase": "native",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.204722604,
+        "selected": [
+          5682
+        ],
+        "result": {
+          "pending": [
+            5682
+          ],
+          "errors": [],
+          "outcomes": [
+            {
+              "pid": 5682,
+              "identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "Z",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "comm": "UnrealEditor-Cm"
+              },
+              "state": "PENDING_WAIT",
+              "live_verified": true,
+              "prior_identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "S",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "9ffcd57bb502fd4e5dd8f7afbc215a7ad82d0082dbfae1ad50cce61673e2e30d",
+                "comm": "UnrealEditor-Cm"
+              },
+              "parent_identity": {
+                "pid": 5660,
+                "ticks": 62296463,
+                "ppid": 5655,
+                "sid": 5655,
+                "state": "R",
+                "uids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "gids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "groups": [
+                  "0",
+                  "44",
+                  "993"
+                ],
+                "cap_eff": "00000000a80425fb",
+                "cap_prm": "00000000a80425fb",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 0,
+                "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+                "comm": "python3"
+              },
+              "waited": 0,
+              "wait_status": 0,
+              "monotonic_ns": 623132206164080
+            }
+          ]
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.261509389,
+        "deadline": 623139.597480327,
+        "phase": "native",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.259200295,
+        "selected": [
+          5682
+        ],
+        "result": {
+          "pending": [
+            5682
+          ],
+          "errors": [],
+          "outcomes": [
+            {
+              "pid": 5682,
+              "identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "Z",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "comm": "UnrealEditor-Cm"
+              },
+              "state": "PENDING_WAIT",
+              "live_verified": true,
+              "prior_identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "S",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "9ffcd57bb502fd4e5dd8f7afbc215a7ad82d0082dbfae1ad50cce61673e2e30d",
+                "comm": "UnrealEditor-Cm"
+              },
+              "parent_identity": {
+                "pid": 5660,
+                "ticks": 62296463,
+                "ppid": 5655,
+                "sid": 5655,
+                "state": "R",
+                "uids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "gids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "groups": [
+                  "0",
+                  "44",
+                  "993"
+                ],
+                "cap_eff": "00000000a80425fb",
+                "cap_prm": "00000000a80425fb",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 0,
+                "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+                "comm": "python3"
+              },
+              "waited": 0,
+              "wait_status": 0,
+              "monotonic_ns": 623132260900366
+            }
+          ]
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.315928811,
+        "deadline": 623139.597480327,
+        "phase": "native",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.313946009,
+        "selected": [
+          5682
+        ],
+        "result": {
+          "pending": [
+            5682
+          ],
+          "errors": [],
+          "outcomes": [
+            {
+              "pid": 5682,
+              "identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "Z",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "comm": "UnrealEditor-Cm"
+              },
+              "state": "PENDING_WAIT",
+              "live_verified": true,
+              "prior_identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "S",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "9ffcd57bb502fd4e5dd8f7afbc215a7ad82d0082dbfae1ad50cce61673e2e30d",
+                "comm": "UnrealEditor-Cm"
+              },
+              "parent_identity": {
+                "pid": 5660,
+                "ticks": 62296463,
+                "ppid": 5655,
+                "sid": 5655,
+                "state": "R",
+                "uids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "gids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "groups": [
+                  "0",
+                  "44",
+                  "993"
+                ],
+                "cap_eff": "00000000a80425fb",
+                "cap_prm": "00000000a80425fb",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 0,
+                "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+                "comm": "python3"
+              },
+              "waited": 0,
+              "wait_status": 0,
+              "monotonic_ns": 623132315372527
+            }
+          ]
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.370092583,
+        "deadline": 623139.597480327,
+        "phase": "native",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.368019772,
+        "selected": [
+          5682
+        ],
+        "result": {
+          "pending": [
+            5682
+          ],
+          "errors": [],
+          "outcomes": [
+            {
+              "pid": 5682,
+              "identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "Z",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "comm": "UnrealEditor-Cm"
+              },
+              "state": "PENDING_WAIT",
+              "live_verified": true,
+              "prior_identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "S",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "9ffcd57bb502fd4e5dd8f7afbc215a7ad82d0082dbfae1ad50cce61673e2e30d",
+                "comm": "UnrealEditor-Cm"
+              },
+              "parent_identity": {
+                "pid": 5660,
+                "ticks": 62296463,
+                "ppid": 5655,
+                "sid": 5655,
+                "state": "R",
+                "uids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "gids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "groups": [
+                  "0",
+                  "44",
+                  "993"
+                ],
+                "cap_eff": "00000000a80425fb",
+                "cap_prm": "00000000a80425fb",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 0,
+                "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+                "comm": "python3"
+              },
+              "waited": 0,
+              "wait_status": 0,
+              "monotonic_ns": 623132369540877
+            }
+          ]
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.424017667,
+        "deadline": 623139.597480327,
+        "phase": "native",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.421948413,
+        "selected": [
+          5682
+        ],
+        "result": {
+          "pending": [
+            5682
+          ],
+          "errors": [],
+          "outcomes": [
+            {
+              "pid": 5682,
+              "identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "Z",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "comm": "UnrealEditor-Cm"
+              },
+              "state": "PENDING_WAIT",
+              "live_verified": true,
+              "prior_identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "S",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "9ffcd57bb502fd4e5dd8f7afbc215a7ad82d0082dbfae1ad50cce61673e2e30d",
+                "comm": "UnrealEditor-Cm"
+              },
+              "parent_identity": {
+                "pid": 5660,
+                "ticks": 62296463,
+                "ppid": 5655,
+                "sid": 5655,
+                "state": "R",
+                "uids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "gids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "groups": [
+                  "0",
+                  "44",
+                  "993"
+                ],
+                "cap_eff": "00000000a80425fb",
+                "cap_prm": "00000000a80425fb",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 0,
+                "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+                "comm": "python3"
+              },
+              "waited": 0,
+              "wait_status": 0,
+              "monotonic_ns": 623132423449190
+            }
+          ]
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.477820461,
+        "deadline": 623139.597480327,
+        "phase": "native",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.475882985,
+        "selected": [
+          5682
+        ],
+        "result": {
+          "pending": [
+            5682
+          ],
+          "errors": [],
+          "outcomes": [
+            {
+              "pid": 5682,
+              "identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "Z",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "comm": "UnrealEditor-Cm"
+              },
+              "state": "PENDING_WAIT",
+              "live_verified": true,
+              "prior_identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "S",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "9ffcd57bb502fd4e5dd8f7afbc215a7ad82d0082dbfae1ad50cce61673e2e30d",
+                "comm": "UnrealEditor-Cm"
+              },
+              "parent_identity": {
+                "pid": 5660,
+                "ticks": 62296463,
+                "ppid": 5655,
+                "sid": 5655,
+                "state": "R",
+                "uids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "gids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "groups": [
+                  "0",
+                  "44",
+                  "993"
+                ],
+                "cap_eff": "00000000a80425fb",
+                "cap_prm": "00000000a80425fb",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 0,
+                "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+                "comm": "python3"
+              },
+              "waited": 0,
+              "wait_status": 0,
+              "monotonic_ns": 623132477277011
+            }
+          ]
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.531730326,
+        "deadline": 623139.597480327,
+        "phase": "native",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.529694635,
+        "selected": [
+          5682
+        ],
+        "result": {
+          "pending": [
+            5682
+          ],
+          "errors": [],
+          "outcomes": [
+            {
+              "pid": 5682,
+              "identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "Z",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "comm": "UnrealEditor-Cm"
+              },
+              "state": "PENDING_WAIT",
+              "live_verified": true,
+              "prior_identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "S",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "9ffcd57bb502fd4e5dd8f7afbc215a7ad82d0082dbfae1ad50cce61673e2e30d",
+                "comm": "UnrealEditor-Cm"
+              },
+              "parent_identity": {
+                "pid": 5660,
+                "ticks": 62296463,
+                "ppid": 5655,
+                "sid": 5655,
+                "state": "R",
+                "uids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "gids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "groups": [
+                  "0",
+                  "44",
+                  "993"
+                ],
+                "cap_eff": "00000000a80425fb",
+                "cap_prm": "00000000a80425fb",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 0,
+                "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+                "comm": "python3"
+              },
+              "waited": 0,
+              "wait_status": 0,
+              "monotonic_ns": 623132531171107
+            }
+          ]
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.587701631,
+        "deadline": 623139.597480327,
+        "phase": "native",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.584839719,
+        "selected": [
+          5682
+        ],
+        "result": {
+          "pending": [],
+          "errors": [],
+          "outcomes": [
+            {
+              "pid": 5682,
+              "identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "Z",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "comm": "UnrealEditor-Cm"
+              },
+              "state": "REAPED",
+              "live_verified": true,
+              "prior_identity": {
+                "pid": 5682,
+                "ticks": 62297278,
+                "ppid": 5660,
+                "sid": 5682,
+                "state": "S",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "9ffcd57bb502fd4e5dd8f7afbc215a7ad82d0082dbfae1ad50cce61673e2e30d",
+                "comm": "UnrealEditor-Cm"
+              },
+              "parent_identity": {
+                "pid": 5660,
+                "ticks": 62296463,
+                "ppid": 5655,
+                "sid": 5655,
+                "state": "R",
+                "uids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "gids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "groups": [
+                  "0",
+                  "44",
+                  "993"
+                ],
+                "cap_eff": "00000000a80425fb",
+                "cap_prm": "00000000a80425fb",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 0,
+                "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+                "comm": "python3"
+              },
+              "waited": 5682,
+              "wait_status": 36608,
+              "returncode": 143,
+              "monotonic_ns": 623132587115340
+            }
+          ]
+        }
+      },
+      {
+        "event": "phase",
+        "monotonic": 623132.587710257,
+        "deadline": 623139.597480327,
+        "phase": "reader"
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.589145851,
+        "deadline": 623139.597480327,
+        "phase": "reader",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.588476535,
+        "selected": [
+          5672
+        ],
+        "result": {
+          "pending": [
+            5672
+          ],
+          "errors": [],
+          "outcomes": []
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.642716109,
+        "deadline": 623139.597480327,
+        "phase": "reader",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.640666623,
+        "selected": [
+          5672
+        ],
+        "result": {
+          "pending": [],
+          "errors": [],
+          "outcomes": [
+            {
+              "pid": 5672,
+              "identity": {
+                "pid": 5672,
+                "ticks": 62297004,
+                "ppid": 5660,
+                "sid": 5672,
+                "state": "Z",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "comm": "python3"
+              },
+              "state": "REAPED",
+              "live_verified": true,
+              "prior_identity": {
+                "pid": 5672,
+                "ticks": 62297004,
+                "ppid": 5660,
+                "sid": 5672,
+                "state": "R",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "4795339073cd56bd9428a905b8dd95c62e86e1712686d044ce734bb5995196f1",
+                "comm": "python3"
+              },
+              "parent_identity": {
+                "pid": 5660,
+                "ticks": 62296463,
+                "ppid": 5655,
+                "sid": 5655,
+                "state": "R",
+                "uids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "gids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "groups": [
+                  "0",
+                  "44",
+                  "993"
+                ],
+                "cap_eff": "00000000a80425fb",
+                "cap_prm": "00000000a80425fb",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 0,
+                "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+                "comm": "python3"
+              },
+              "waited": 5672,
+              "wait_status": 0,
+              "returncode": 0,
+              "monotonic_ns": 623132642143535
+            }
+          ]
+        }
+      },
+      {
+        "event": "phase",
+        "monotonic": 623132.642721469,
+        "deadline": 623139.597480327,
+        "phase": "xvfb"
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.644507181,
+        "deadline": 623139.597480327,
+        "phase": "xvfb",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.643386648,
+        "selected": [
+          5677
+        ],
+        "result": {
+          "pending": [
+            5677
+          ],
+          "errors": [],
+          "outcomes": []
+        }
+      },
+      {
+        "event": "pass",
+        "monotonic": 623132.69930337,
+        "deadline": 623139.597480327,
+        "phase": "xvfb",
+        "signal": 15,
+        "signal_decision_monotonic": 623132.697096929,
+        "selected": [
+          5677
+        ],
+        "result": {
+          "pending": [],
+          "errors": [],
+          "outcomes": [
+            {
+              "pid": 5677,
+              "identity": {
+                "pid": 5677,
+                "ticks": 62297028,
+                "ppid": 5660,
+                "sid": 5677,
+                "state": "Z",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "comm": "Xvfb"
+              },
+              "state": "REAPED",
+              "live_verified": true,
+              "prior_identity": {
+                "pid": 5677,
+                "ticks": 62297028,
+                "ppid": 5660,
+                "sid": 5677,
+                "state": "R",
+                "uids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "gids": [
+                  "1001",
+                  "1001",
+                  "1001",
+                  "1001"
+                ],
+                "groups": [],
+                "cap_eff": "0000000000000000",
+                "cap_prm": "0000000000000000",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 1,
+                "cmdline_sha256": "5f5e741f10bed392f04df6c90962e5294c80ba543b7eb9606446e1b122e886a1",
+                "comm": "Xvfb"
+              },
+              "parent_identity": {
+                "pid": 5660,
+                "ticks": 62296463,
+                "ppid": 5655,
+                "sid": 5655,
+                "state": "R",
+                "uids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "gids": [
+                  "0",
+                  "0",
+                  "0",
+                  "0"
+                ],
+                "groups": [
+                  "0",
+                  "44",
+                  "993"
+                ],
+                "cap_eff": "00000000a80425fb",
+                "cap_prm": "00000000a80425fb",
+                "cap_amb": "0000000000000000",
+                "no_new_privs": 0,
+                "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+                "comm": "python3"
+              },
+              "waited": 5677,
+              "wait_status": 0,
+              "returncode": 0,
+              "monotonic_ns": 623132698768847
+            }
+          ]
+        }
+      },
+      {
+        "event": "settled",
+        "monotonic": 623132.699376918,
+        "deadline": 623139.597480327,
+        "mode": "ordered"
+      }
+    ],
+    "lifecycle_cleanup": {
+      "pending": [],
+      "errors": [],
+      "outcomes": [
+        {
+          "pid": 5677,
+          "identity": {
+            "pid": 5677,
+            "ticks": 62297028,
+            "ppid": 5660,
+            "sid": 5677,
+            "state": "Z",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "comm": "Xvfb"
+          },
+          "state": "REAPED",
+          "live_verified": true,
+          "prior_identity": {
+            "pid": 5677,
+            "ticks": 62297028,
+            "ppid": 5660,
+            "sid": 5677,
+            "state": "R",
+            "uids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "gids": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "groups": [],
+            "cap_eff": "0000000000000000",
+            "cap_prm": "0000000000000000",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 1,
+            "cmdline_sha256": "5f5e741f10bed392f04df6c90962e5294c80ba543b7eb9606446e1b122e886a1",
+            "comm": "Xvfb"
+          },
+          "parent_identity": {
+            "pid": 5660,
+            "ticks": 62296463,
+            "ppid": 5655,
+            "sid": 5655,
+            "state": "R",
+            "uids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "gids": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "groups": [
+              "0",
+              "44",
+              "993"
+            ],
+            "cap_eff": "00000000a80425fb",
+            "cap_prm": "00000000a80425fb",
+            "cap_amb": "0000000000000000",
+            "no_new_privs": 0,
+            "cmdline_sha256": "79691043a36b346cd35ea0f3db24739ac49605ae51156b1fe4d0ccf1b17d5f41",
+            "comm": "python3"
+          },
+          "waited": 5677,
+          "wait_status": 0,
+          "returncode": 0,
+          "monotonic_ns": 623132698768847
+        }
+      ]
+    },
+    "teardown_mode": "ordered",
+    "workers": [
+      {
+        "name": "drain-xvfb",
+        "alive": false
+      },
+      {
+        "name": "drain-native",
+        "alive": false
+      }
+    ],
+    "drain_pipes": [
+      {
+        "name": "drain-xvfb",
+        "launch_identity": {
+          "pid": 5677,
+          "ticks": 62297028,
+          "sid": 5677,
+          "uid": 1001,
+          "state": "R"
+        },
+        "pipe_inode": 37183836,
+        "eof": true,
+        "eof_monotonic_ns": 623132648428120
+      },
+      {
+        "name": "drain-native",
+        "launch_identity": {
+          "pid": 5682,
+          "ticks": 62297278,
+          "sid": 5682,
+          "uid": 1001,
+          "state": "S"
+        },
+        "pipe_inode": 37163845,
+        "eof": true,
+        "eof_monotonic_ns": 623132323609567
+      }
+    ],
+    "ddc_runtime_final": {
+      "schema": "sub01.ddc-runtime-log.v1",
+      "graph": "(ProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp),InstalledProjectPak=(Type=ReadPak,Filename=/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp,Compressed=true),EnginePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Engine/DerivedDataCache/Compressed.ddp,Compressed=true),EnterprisePak=(Type=ReadPak,Filename=/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp,Compressed=true),Local=(Type=FileSystem,Path=/home/unreal/.config/Epic/UnrealEngine/Common/DerivedDataCache,ReadOnly=false,UnusedFileAge=34,PromptIfMissing=true,Clean=false,Flush=false,DeleteUnused=false))",
+      "command_line_index": 425,
+      "reconstructed_logging_argument": "-LogCmds=\"LogDerivedDataCache Verbose,LogConfig Log,LogConsoleManager Verbose\"",
+      "parse_index": 1389,
+      "setter_indices": [
+        787
+      ],
+      "engine_pak_index": 1392,
+      "local_writable_query_store_index": 1399,
+      "optional_paks": {
+        "ProjectPak": {
+          "path": "/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/DDC.ddp",
+          "state": "ABSENT",
+          "log_index": 1390
+        },
+        "InstalledProjectPak": {
+          "path": "/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/DerivedDataCache/Compressed.ddp",
+          "state": "ABSENT",
+          "log_index": 1391
+        },
+        "EnterprisePak": {
+          "path": "/workspace/sub01-private-recovered-engine/Enterprise/DerivedDataCache/Compressed.ddp",
+          "state": "ABSENT",
+          "log_index": 1393
+        }
+      },
+      "log_bytes": 8907634,
+      "log_sha256": "4d61ffd8618aeb430c1e2460d66bad4a4fd121d41e68aafc94fcd8ec2e5a04af",
+      "scope": "LOG_CORROBORATION_REQUIRES_INDEPENDENT_COMPLETE_PROCESS_FD_CENSUS"
+    },
+    "access_barrier": "RESTORED_0710"
+  },
+  "latest": {
+    "schema": "sub01.visual-preservation-latest.v1",
+    "generation": "generation-0002",
+    "manifest_sha256": "bc525c045ad3d85f672f445fb50c17ad77de86481151df2df6e88aa85b05959e"
+  },
+  "barrier": [
+    [
+      "001-launch-locked.json",
+      {
+        "event": "launch-locked",
+        "state": "LOCKED",
+        "utc": 1793051272.2165246,
+        "monotonic_ns": 622964675951444,
+        "pid": 5660
+      }
+    ],
+    [
+      "002-pre-chmod.json",
+      {
+        "event": "pre-chmod",
+        "state": "LOCKED",
+        "utc": 1793051277.2196434,
+        "monotonic_ns": 622969679070080,
+        "ancestor": "/home/sub01-recovery-stage-20261026",
+        "expected": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 456,
+          "type": 16384
+        },
+        "original": {
+          "dev": 66,
+          "ino": 4631271,
+          "uid": 1001,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        },
+        "recovery": "Only exact quiescence+FD-bound identity allows restoring0710"
+      }
+    ],
+    [
+      "003-post-chmod.json",
+      {
+        "event": "post-chmod",
+        "state": "ACTIVE",
+        "utc": 1793051277.2203038,
+        "monotonic_ns": 622969679730409,
+        "actual": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        },
+        "path": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        }
+      }
+    ],
+    [
+      "004-probe-active.json",
+      {
+        "event": "probe-active",
+        "state": "ACTIVE",
+        "utc": 1793051277.2356684,
+        "monotonic_ns": 622969695095238,
+        "probe": {
+          "uid": 1001,
+          "euid": 1001,
+          "gid": 1001,
+          "egid": 1001,
+          "groups": [],
+          "status": {
+            "Uid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "Gid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "CapEff": [
+              "0000000000000000"
+            ],
+            "CapPrm": [
+              "0000000000000000"
+            ],
+            "CapAmb": [
+              "0000000000000000"
+            ],
+            "NoNewPrivs": [
+              "1"
+            ]
+          },
+          "ancestor_access": {
+            "r": false,
+            "w": false,
+            "x": false
+          },
+          "descendant": {
+            "read": false,
+            "errno": 13
+          },
+          "positive_control": {
+            "read": true,
+            "errno": null
+          }
+        }
+      }
+    ],
+    [
+      "005-pre-restore.json",
+      {
+        "event": "pre-restore",
+        "state": "ACTIVE",
+        "utc": 1793051447.737076,
+        "monotonic_ns": 623140196502691,
+        "actual": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 448,
+          "type": 16384
+        }
+      }
+    ],
+    [
+      "006-post-restore.json",
+      {
+        "event": "post-restore",
+        "state": "RESTORED",
+        "utc": 1793051447.7377682,
+        "monotonic_ns": 623140197194780,
+        "actual": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 456,
+          "type": 16384
+        },
+        "path": {
+          "dev": 66,
+          "ino": 2149578155,
+          "uid": 0,
+          "gid": 1001,
+          "mode": 456,
+          "type": 16384
+        }
+      }
+    ],
+    [
+      "007-probe-restored.json",
+      {
+        "event": "probe-restored",
+        "state": "RESTORED",
+        "utc": 1793051447.7536604,
+        "monotonic_ns": 623140213087971,
+        "probe": {
+          "uid": 1001,
+          "euid": 1001,
+          "gid": 1001,
+          "egid": 1001,
+          "groups": [],
+          "status": {
+            "Uid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "Gid": [
+              "1001",
+              "1001",
+              "1001",
+              "1001"
+            ],
+            "CapEff": [
+              "0000000000000000"
+            ],
+            "CapPrm": [
+              "0000000000000000"
+            ],
+            "CapAmb": [
+              "0000000000000000"
+            ],
+            "NoNewPrivs": [
+              "1"
+            ]
+          },
+          "ancestor_access": {
+            "r": false,
+            "w": false,
+            "x": true
+          },
+          "descendant": {
+            "read": true,
+            "errno": null
+          },
+          "positive_control": {
+            "read": true,
+            "errno": null
+          }
+        }
+      }
+    ]
+  ],
+  "ancestor": {
+    "dev": 66,
+    "ino": 2149578155,
+    "uid": 0,
+    "gid": 1001,
+    "mode": 456,
+    "type": 16384
+  },
+  "fifo": {
+    "dev": 66,
+    "ino": 4303368925,
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 384,
+    "type": 4096
+  },
+  "fifo_old": null,
+  "native_tail": [
+    "[2026.10.26-21.50.39:047][620]LogHttp: Warning: 0x4a64f269a00: libcurl info message cache 1 (  Trying 127.0.0.1:8832...)",
+    "[2026.10.26-21.50.39:047][620]LogHttp: Warning: 0x4a64f269a00: libcurl info message cache 2 (connect to 127.0.0.1 port 8832 from 127.0.0.1 port 49646 failed: Connection refused)",
+    "[2026.10.26-21.50.39:047][620]LogHttp: Warning: 0x4a64f269a00: libcurl info message cache 3 (Failed to connect to 127.0.0.1 port 8832 after 0 ms: Could not connect to server)",
+    "[2026.10.26-21.50.39:047][620]LogHttp: Warning: 0x4a64f269a00: libcurl info message cache 4 (closing connection #102)",
+    "[2026.10.26-21.50.39:047][620]LogHttp: Warning: 0x4a64f269a00 GET http://127.0.0.1:8832/devices/state completed with reason 'ConnectionError' after 0.00s",
+    "[2026.10.26-21.50.39:196][629]LogHttp: Warning: 0x4a64f26a800: request failed, libcurl error: 7 (Could not connect to server)",
+    "[2026.10.26-21.50.39:196][629]LogHttp: Warning: 0x4a64f26a800: libcurl info message cache 0 (Hostname 127.0.0.1 was found in DNS cache)",
+    "[2026.10.26-21.50.39:196][629]LogHttp: Warning: 0x4a64f26a800: libcurl info message cache 1 (  Trying 127.0.0.1:8832...)",
+    "[2026.10.26-21.50.39:196][629]LogHttp: Warning: 0x4a64f26a800: libcurl info message cache 2 (connect to 127.0.0.1 port 8832 from 127.0.0.1 port 49650 failed: Connection refused)",
+    "[2026.10.26-21.50.39:196][629]LogHttp: Warning: 0x4a64f26a800: libcurl info message cache 3 (Failed to connect to 127.0.0.1 port 8832 after 0 ms: Could not connect to server)",
+    "[2026.10.26-21.50.39:196][629]LogHttp: Warning: 0x4a64f26a800: libcurl info message cache 4 (closing connection #103)",
+    "[2026.10.26-21.50.39:196][629]LogHttp: Warning: 0x4a64f26a800 GET http://127.0.0.1:8832/devices/state completed with reason 'ConnectionError' after 0.00s",
+    "[2026.10.26-21.50.39:264][634]LogHttp: Warning: 0x4a64f267e00: request failed, libcurl error: 7 (Could not connect to server)",
+    "[2026.10.26-21.50.39:264][634]LogHttp: Warning: 0x4a64f267e00: libcurl info message cache 0 (Hostname 127.0.0.1 was found in DNS cache)",
+    "[2026.10.26-21.50.39:264][634]LogHttp: Warning: 0x4a64f267e00: libcurl info message cache 1 (  Trying 127.0.0.1:8831...)",
+    "[2026.10.26-21.50.39:264][634]LogHttp: Warning: 0x4a64f267e00: libcurl info message cache 2 (connect to 127.0.0.1 port 8831 from 127.0.0.1 port 51102 failed: Connection refused)",
+    "[2026.10.26-21.50.39:264][634]LogHttp: Warning: 0x4a64f267e00: libcurl info message cache 3 (Failed to connect to 127.0.0.1 port 8831 after 0 ms: Could not connect to server)",
+    "[2026.10.26-21.50.39:264][634]LogHttp: Warning: 0x4a64f267e00: libcurl info message cache 4 (closing connection #104)",
+    "[2026.10.26-21.50.39:264][634]LogHttp: Warning: 0x4a64f267e00 GET http://127.0.0.1:8831/home/state completed with reason 'ConnectionError' after 0.00s",
+    "[2026.10.26-21.50.39:347][638]LogHttp: Warning: 0x4a64f267700: request failed, libcurl error: 7 (Could not connect to server)",
+    "[2026.10.26-21.50.39:347][638]LogHttp: Warning: 0x4a64f267700: libcurl info message cache 0 (Hostname 127.0.0.1 was found in DNS cache)",
+    "[2026.10.26-21.50.39:347][638]LogHttp: Warning: 0x4a64f267700: libcurl info message cache 1 (  Trying 127.0.0.1:8832...)",
+    "[2026.10.26-21.50.39:347][638]LogHttp: Warning: 0x4a64f267700: libcurl info message cache 2 (connect to 127.0.0.1 port 8832 from 127.0.0.1 port 49660 failed: Connection refused)",
+    "[2026.10.26-21.50.39:347][638]LogHttp: Warning: 0x4a64f267700: libcurl info message cache 3 (Failed to connect to 127.0.0.1 port 8832 after 0 ms: Could not connect to server)",
+    "[2026.10.26-21.50.39:347][638]LogHttp: Warning: 0x4a64f267700: libcurl info message cache 4 (closing connection #105)",
+    "[2026.10.26-21.50.39:347][638]LogHttp: Warning: 0x4a64f267700 GET http://127.0.0.1:8832/devices/state completed with reason 'ConnectionError' after 0.00s",
+    "[2026.10.26-21.50.39:497][647]LogHttp: Warning: 0x4a64f267e00: request failed, libcurl error: 7 (Could not connect to server)",
+    "[2026.10.26-21.50.39:497][647]LogHttp: Warning: 0x4a64f267e00: libcurl info message cache 0 (Hostname 127.0.0.1 was found in DNS cache)",
+    "[2026.10.26-21.50.39:497][647]LogHttp: Warning: 0x4a64f267e00: libcurl info message cache 1 (  Trying 127.0.0.1:8832...)",
+    "[2026.10.26-21.50.39:497][647]LogHttp: Warning: 0x4a64f267e00: libcurl info message cache 2 (connect to 127.0.0.1 port 8832 from 127.0.0.1 port 49668 failed: Connection refused)",
+    "[2026.10.26-21.50.39:497][647]LogHttp: Warning: 0x4a64f267e00: libcurl info message cache 3 (Failed to connect to 127.0.0.1 port 8832 after 0 ms: Could not connect to server)",
+    "[2026.10.26-21.50.39:497][647]LogHttp: Warning: 0x4a64f267e00: libcurl info message cache 4 (closing connection #106)",
+    "[2026.10.26-21.50.39:497][647]LogHttp: Warning: 0x4a64f267e00 GET http://127.0.0.1:8832/devices/state completed with reason 'ConnectionError' after 0.00s",
+    "FUnixPlatformMisc::RequestExitWithStatus",
+    "\u0000FUnixPlatformMisc::RequestExit",
+    "\u0000[2026.10.26-21.50.39:647][656]LogHttp: Warning: 0x4a64f26a800: request failed, libcurl error: 7 (Could not connect to server)",
+    "[2026.10.26-21.50.39:647][656]LogHttp: Warning: 0x4a64f26a800: libcurl info message cache 0 (Hostname 127.0.0.1 was found in DNS cache)",
+    "[2026.10.26-21.50.39:647][656]LogHttp: Warning: 0x4a64f26a800: libcurl info message cache 1 (  Trying 127.0.0.1:8832...)",
+    "[2026.10.26-21.50.39:647][656]LogHttp: Warning: 0x4a64f26a800: libcurl info message cache 2 (connect to 127.0.0.1 port 8832 from 127.0.0.1 port 49682 failed: Connection refused)",
+    "[2026.10.26-21.50.39:647][656]LogHttp: Warning: 0x4a64f26a800: libcurl info message cache 3 (Failed to connect to 127.0.0.1 port 8832 after 0 ms: Could not connect to server)",
+    "[2026.10.26-21.50.39:647][656]LogHttp: Warning: 0x4a64f26a800: libcurl info message cache 4 (closing connection #107)",
+    "[2026.10.26-21.50.39:647][656]LogHttp: Warning: 0x4a64f26a800 GET http://127.0.0.1:8832/devices/state completed with reason 'ConnectionError' after 0.00s",
+    "[2026.10.26-21.50.39:647][657]LogCore: Engine exit requested (reason: EngineExit() was called; note: exit was already requested)",
+    "[2026.10.26-21.50.39:653][657]LogStaticMesh: Abandoning remaining async distance field tasks for shutdown",
+    "[2026.10.26-21.50.39:653][657]LogStaticMesh: Abandoning remaining async card representation tasks for shutdown",
+    "[2026.10.26-21.50.39:653][657]LogInit: Display: PreExit Game.",
+    "[2026.10.26-21.50.39:654][657]LogWorld: BeginTearingDown for /Game/Sub01Home/ActualHome",
+    "[2026.10.26-21.50.39:657][657]LogWorld: UWorld::CleanupWorld for ActualHome, bSessionEnded=true, bCleanupResources=true",
+    "[2026.10.26-21.50.39:665][657]LogSlate: InvalidateAllWidgets triggered.  All widgets were invalidated",
+    "[2026.10.26-21.50.39:669][657]LogRuntimeTelemetry: Recording EnginePreExit events",
+    "[2026.10.26-21.50.39:670][657]LogSlate: Window 'Sub01HomeLab (64-bit Development SF_VULKAN_SM6) ' being destroyed",
+    "[2026.10.26-21.50.39:671][657]LogSlate: Slate User Destroyed.  User Index 0, Is Virtual User: 0",
+    "[2026.10.26-21.50.39:671][657]LogExit: Preparing to exit.",
+    "FUnixPlatformMisc::RequestExit",
+    "\u0000"
+  ],
+  "current_identities": [
+    {
+      "pid": 1,
+      "ticks": 54754026,
+      "ppid": 0,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "8668ab6a69aa0e0a4b04fafad70c6c8ad470a5c75c4763faa12fd877750f14af",
+      "comm": "docker-init"
+    },
+    {
+      "pid": 110,
+      "ticks": 54754071,
+      "ppid": 1,
+      "sid": 110,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "3cf42ddf90e572bc24bf6bbf5670308cfdca841f4623a5678c2681136e056cb9",
+      "comm": "sshd"
+    },
+    {
+      "pid": 115,
+      "ticks": 54754071,
+      "ppid": 57,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "comm": "start.sh"
+    },
+    {
+      "pid": 122,
+      "ticks": 54754071,
+      "ppid": 115,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "6174273fd7c922f2b4f088c4941d8a454a1bd3950a6b9892c457dbb21ac3784f",
+      "comm": "jupyter-lab"
+    },
+    {
+      "pid": 123,
+      "ticks": 54754071,
+      "ppid": 57,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "21e7b0eb0fbfc14a8eab229ae46632be62b33a26ffc0692960b9786c4008934b",
+      "comm": "sleep"
+    },
+    {
+      "pid": 57,
+      "ticks": 54754036,
+      "ppid": 1,
+      "sid": 1,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "7bc3dbb44b9e48780b4931c184bb1c0d00ab7b82be91b19c1747f369f656e6b7",
+      "comm": "start.sh"
+    },
+    {
+      "pid": 5757,
+      "ticks": 62317334,
+      "ppid": 122,
+      "sid": 5757,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "81fb91746a5ba89dadaaa7aaf9553d63ec7c44b4a94db1ec602f61d8c304c668",
+      "comm": "bash"
+    },
+    {
+      "pid": 5762,
+      "ticks": 62317428,
+      "ppid": 5757,
+      "sid": 5757,
+      "state": "R",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "1aa9cf5c0bca8df239eca152d65c19745f1607b3f38766e7b7bef5f353d3c116",
+      "comm": "python3"
+    },
+    {
+      "pid": 88,
+      "ticks": 54754037,
+      "ppid": 1,
+      "sid": 88,
+      "state": "S",
+      "uids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "gids": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "groups": [
+        "0",
+        "44",
+        "993"
+      ],
+      "cap_eff": "00000000a80425fb",
+      "cap_prm": "00000000a80425fb",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "425d48232fe80cc4dd919c5cd3e209e5add5c55c52f0412ad15a3e2eae68a95c",
+      "comm": "nginx"
+    },
+    {
+      "pid": 89,
+      "ticks": 54754037,
+      "ppid": 88,
+      "sid": 88,
+      "state": "S",
+      "uids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "gids": [
+        "65534",
+        "65534",
+        "65534",
+        "65534"
+      ],
+      "groups": [
+        "65534"
+      ],
+      "cap_eff": "0000000000000000",
+      "cap_prm": "0000000000000000",
+      "cap_amb": "0000000000000000",
+      "no_new_privs": 0,
+      "cmdline_sha256": "025bdf92f128055cd3537c294559b6e299388ef1da6a98c4f3118ddc71cb6fe0",
+      "comm": "nginx"
+    }
+  ],
+  "diagnostic_failures": [
+    {
+      "file": "0044-inspection-diagnostic.json",
+      "metadata": {
+        "argv": [
+          "/usr/bin/setpriv",
+          "--no-new-privs",
+          "--reuid=1001",
+          "--regid=1001",
+          "--clear-groups",
+          "/usr/bin/python3",
+          "-I",
+          "/opt/sub01/animation-visual-20261026-attempt06/tools/fifo_observer_collector.py",
+          "--census-one",
+          "5682"
+        ],
+        "complete": false,
+        "finished_ns": 623132090989404,
+        "helper_identity": {
+          "cap_amb": "0000000000000000",
+          "cap_eff": "00000000a80425fb",
+          "cap_prm": "00000000a80425fb",
+          "cmdline_sha256": "8aff8fd7ee1f422df24ef9dcee98b547c950a1b7e8d4d97f4a1bd949916720fa",
+          "comm": "setpriv",
+          "gids": [
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "groups": [
+            "0",
+            "44",
+            "993"
+          ],
+          "no_new_privs": 0,
+          "pid": 5738,
+          "ppid": 5660,
+          "sid": 5655,
+          "state": "R",
+          "ticks": 62313198,
+          "uids": [
+            "0",
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        "helper_pid": 5738,
+        "read_error": null,
+        "returncode": -9,
+        "started_ns": 623131983805287,
+        "timeout": false,
+        "truncated": true
+      },
+      "streams": {
+        "stderr": {
+          "bytes": 0,
+          "retained_bytes": 0,
+          "retained_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "raw_prefix_utf8": ""
+        },
+        "stdout": {
+          "bytes": 65536,
+          "retained_bytes": 65536,
+          "retained_sha256": "14556a7b2902e46116168a27289a219f1f9692f7987f4316f2c044dad6a72565",
+          "sha256": "14556a7b2902e46116168a27289a219f1f9692f7987f4316f2c044dad6a72565",
+          "raw_prefix_utf8": "{\"identity\": {\"pid\": 5682, \"ticks\": 62297278, \"ppid\": 5660, \"sid\": 5682, \"state\": \"S\", \"uids\": [\"1001\", \"1001\", \"1001\", \"1001\"], \"gids\": [\"1001\", \"1001\", \"1001\", \"1001\"], \"groups\": [], \"cap_eff\": \"0000000000000000\", \"cap_prm\": \"0000000000000000\", \"cap_amb\": \"0000000000000000\", \"no_new_privs\": 1, \"cmdline_sha256\": \"9ffcd57bb502fd4e5dd8f7afbc215a7ad82d0082dbfae1ad50cce61673e2e30d\", \"comm\": \"UnrealEditor-Cm\"}, \"fds\": [{\"fd\": 0, \"dev\": 5, \"ino\": 5, \"flags\": 32770, \"socket\": false, \"target\": \"/dev/null\", \"mode\": 8630}, {\"fd\": 1, \"dev\": 14, \"ino\": 37163845, \"flags\": 1, \"socket\": false, \"target\": \"pipe:[37163845]\", \"mode\": 4480}, {\"fd\": 2, \"dev\": 14, \"ino\": 37163845, \"flags\": 1, \"socket\": false, \"target\": \"pipe:[37163845]\", \"mode\": 4480}, {\"fd\": 3, \"dev\": 8, \"ino\": 37185943, \"flags\": 2050, \"socket\": true, \"target\": \"socket:[37185943]\", \"mode\": 49663}, {\"fd\": 4, \"dev\": 66, \"ino\": 6485821300, \"flags\": 557058, \"socket\": false, \"target\": \"/home/sub01-animation-visual-20261026-attempt06/reading-face/Sub01HomeLab/Saved/Logs/Sub01HomeLab.log\", \"mode\": 33188}, {\"fd\": 5, \"dev\": 15, \"ino\": 69, \"flags\": 526338, \"socket\": false, \"target\": \"anon_inode:[eventfd]\", \"mode\": 384}, {\"fd\": 6, \"dev\": 5, \"ino\": 10, \"flags\": 32768, \"socket\": false, \"target\": \"/dev/urandom\", \"mode\": 8630}, {\"fd\": 7, \"dev\": 14, \"ino\": 37174272, \"flags\": 2048, \"socket\": false, \"target\": \"pipe:[37174272]\", \"mode\": 4480}, {\"fd\": 8, \"dev\": 14, \"ino\": 37174272, \"flags\": 2049, \"socket\": false, \"target\": \"pipe:[37174272]\", \"mode\": 4480}, {\"fd\": 9, \"dev\": 66, \"ino\": 4302105219, \"flags\": 32770, \"socket\": false, \"target\": \"/tmp/UnrealEditor-Cmd\", \"mode\": 33152}, {\"fd\": 10, \"dev\": 8, \"ino\": 37195777, \"flags\": 2050, \"socket\": true, \"target\": \"socket:[37195777]\", \"mode\": 49663}, {\"fd\": 11, \"dev\": 8, \"ino\": 37195778, \"flags\": 2050, \"socket\": true, \"target\": \"socket:[37195778]\", \"mode\": 49663}, {\"fd\": 12, \"dev\": 15, \"ino\": 69, \"flags\": 2, \"socket\": false, \"target\": \"anon_inode:[eventpoll]\", \"mode\": 384}, {\"fd\": 13, \"dev\": 14, \"ino\": 37195779, \"flags\": 0, \"socket\": false, \"target\": \"pipe:[37195779]\", \"mode\": 4480}, {\"fd\": 14, \"dev\": 14, \"ino\": 37195779, \"flags\": 1, \"socket\": false, \"target\": \"pipe:[37195779]\", \"mode\": 4480}, {\"fd\": 15, \"dev\": 8, \"ino\": 37195780, \"flags\": 526338, \"socket\": true, \"target\": \"socket:[37195780]\", \"mode\": 49663}, {\"fd\": 16, \"dev\": 8, \"ino\": 37195784, \"flags\": 526338, \"socket\": true, \"target\": \"socket:[37195784]\", \"mode\": 49663}, {\"fd\": 17, \"dev\": 8, \"ino\": 37195785, \"flags\": 526338, \"socket\": true, \"target\": \"socket:[37195785]\", \"mode\": 49663}, {\"fd\": 18, \"dev\": 8, \"ino\": 37192747, \"flags\": 526338, \"socket\": true, \"target\": \"socket:[37192747]\", \"mode\": 49663}, {\"fd\": 19, \"dev\": 8, \"ino\": 37192752, \"flags\": 526338, \"socket\": true, \"target\": \"socket:[37192752]\", \"mode\": 49663}, {\"fd\": 20, \"dev\": 8, \"ino\": 37196827, \"flags\": 526338, \"socket\": true, \"target\": \"socket:[37196827]\", \"mode\": 49663}, {\"fd\": 21, \"dev\": 5, \"ino\": 930, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidiactl\", \"mode\": 8630}, {\"fd\": 22, \"dev\": 5, \"ino\": 936, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia1\", \"mode\": 8630}, {\"fd\": 23, \"dev\": 5, \"ino\": 936, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia1\", \"mode\": 8630}, {\"fd\": 24, \"dev\": 5, \"ino\": 936, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia1\", \"mode\": 8630}, {\"fd\": 25, \"dev\": 5, \"ino\": 930, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidiactl\", \"mode\": 8630}, {\"fd\": 26, \"dev\": 5, \"ino\": 930, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidiactl\", \"mode\": 8630}, {\"fd\": 27, \"dev\": 5, \"ino\": 934, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia-modeset\", \"mode\": 8630}, {\"fd\": 28, \"dev\": 5, \"ino\": 936, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia1\", \"mode\": 8630}, {\"fd\": 29, \"dev\": 5, \"ino\": 936, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia1\", \"mode\": 8630}, {\"fd\": 30, \"dev\": 5, \"ino\": 936, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia1\", \"mode\": 8630}, {\"fd\": 31, \"dev\": 5, \"ino\": 936, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia1\", \"mode\": 8630}, {\"fd\": 32, \"dev\": 66, \"ino\": 6238731, \"flags\": 557058, \"socket\": false, \"target\": \"/home/unreal/.cache/nvidia/GLCache/61cc6783b50e963a9ff2a934904507b7/565982cbdff4b94c/bcefbe80509a8241.toc\", \"mode\": 33152}, {\"fd\": 33, \"dev\": 66, \"ino\": 6238732, \"flags\": 557058, \"socket\": false, \"target\": \"/home/unreal/.cache/nvidia/GLCache/61cc6783b50e963a9ff2a934904507b7/565982cbdff4b94c/bcefbe80509a8241.bin\", \"mode\": 33152}, {\"fd\": 34, \"dev\": 5, \"ino\": 930, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidiactl\", \"mode\": 8630}, {\"fd\": 35, \"dev\": 5, \"ino\": 956, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia-uvm\", \"mode\": 8630}, {\"fd\": 36, \"dev\": 5, \"ino\": 956, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia-uvm\", \"mode\": 8630}, {\"fd\": 37, \"dev\": 5, \"ino\": 936, \"flags\": 557058, \"socket\": false, \"target\": \"/dev/nvidia1\", \"mode\": 8630}, {\"fd\": 38, \"dev\": 5, \"ino\": 936, \"fl"
+        }
+      }
+    }
+  ],
+  "lifecycle": []
+}

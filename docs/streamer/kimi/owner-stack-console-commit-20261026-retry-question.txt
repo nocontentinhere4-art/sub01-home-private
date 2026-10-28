@@ -1,0 +1,334 @@
+Retry after ten minutes: review only the four source/test additions below. Reply APPROVE COMMIT or a short list of blocking bugs. Do not spend the budget on narration. The six consultation archive files listed in the manifest are unchanged evidence. Owner login and paid start have now succeeded; agent live checks are starting. Runtime-only console-default and agent-provider patches are separate and excluded from this commit.
+
+Review this narrow private commit: four new executable/test sources and six step2/console consultation archive files, exactly as manifest and full addition diff below. Give concise APPROVE COMMIT or concrete blocking corrections; output max9000 per owner. No duplicate historical coordinator/backend text is included.
+
+Owner instructions supersede previous method: normal live launch and observed stable>=55FPS accepted, no more cadence/native compilation/header searches, no FD-census/barrier/subreaper/closed-world machinery. Production agent remains STOP-held until live checks; no new provider API polling, guard, purchases, public exposure, Vagon activation or credential changes. Console permits only explicit OWNER input/arm/start; no automated login or invented codes.
+
+Actual runtime facts reported by sole coordinator: backend8830/8831 healthy, sidecars8835/8837/8838/8839/8840 running, agent8836 STOP-held; nativePID7405 actual frame and private HLS, targetmain60/cam2original30. This is not a new measured FPS assertion. Console bridge live on localhost18838; verification of owner login is awaiting the owner's code. No credentials, nonce URL, cookies, config, console stdout/logs or verification code are included. Source reads existing secrets only at runtime; tests use fake literals.
+
+Files are byte-identical copies of current work candidates. Console siblings remain together so their existing imports work when executed/tested from tools/private_console. Stack source exactSHA5e620046214f7f252405162a3858f6257b0ead023d853b5ba224786275bb3e45. The ordinary launcher keeps PID records/health checks and preserves STOP. Console enforces fixed loopback target, exact method/path, host/origin/nonce, bounded single request, no POST replay, redirect/header restrictions and only owned-terminal cleanup.
+
+Validation: four sources parse locally. Six console tests reproduced PASS from the copied repo directory using the existing pod-access-venv Python (aiohttp already installed); no dependencies installed. No network/runtime action performed by packaging agent. Review scope excludes all HANDOFF/POD changes, old evidence, logs and runtime-success reports. Review question/answer will be archived verbatim alongside these ten files when authorized.
+
+EXACT FILE MANIFEST
+{
+  "tools/pod/onpod/start_private_stack.py": {
+    "bytes": 8718,
+    "sha256": "5e620046214f7f252405162a3858f6257b0ead023d853b5ba224786275bb3e45"
+  },
+  "tools/private_console/local_bridge.py": {
+    "bytes": 7127,
+    "sha256": "c01446a2c8f6afe64809fa34cf9eab4e8f773f06a9f1fc0a2adb38156ed49fde"
+  },
+  "tools/private_console/remote_relay.py": {
+    "bytes": 1988,
+    "sha256": "53c9442356bf67072fb151dff7ecb3cd5a78b2c0a04efb223ead0daeca5fbd45"
+  },
+  "tools/private_console/test_bridge.py": {
+    "bytes": 2884,
+    "sha256": "8ff80e2025a8198475ed401db1d7c7f223d1f282a79bb6ff11747e4d5efb6916"
+  },
+  "docs/streamer/kimi/owner-step2-stack-20261026-2248-question.txt": {
+    "bytes": 1904,
+    "sha256": "2be973c161ad679e8fcfe2562408e4e0288adad9da0a7b8185baff4fe9857ed3"
+  },
+  "docs/streamer/kimi/owner-step2-stack-20261026-2248-answer.json": {
+    "bytes": 2078,
+    "sha256": "2a7a6f6db3f1b9d3d50a2dfd74d3c6ae9e6b4f75bfb996e7d9394a3eec2db706"
+  },
+  "docs/streamer/kimi/owner-step2-stack-20261026-2248-answer.raw.txt": {
+    "bytes": 2041,
+    "sha256": "f6b386bee389ddd3761457b7124836d3a53c8061305b90dd8c7108ce82c67a3d"
+  },
+  "docs/streamer/kimi/owner-console-tunnel-20261026-2301-question.txt": {
+    "bytes": 1346,
+    "sha256": "651278aae8404dc579727e359c6a49c0c9658b38b916ff32a31308f1a3b1dbb3"
+  },
+  "docs/streamer/kimi/owner-console-tunnel-20261026-2301-answer.json": {
+    "bytes": 1895,
+    "sha256": "26c106f57c0798cf1ac6e752665bea2b05f6b057412983c39e61879cc795fbe1"
+  },
+  "docs/streamer/kimi/owner-console-tunnel-20261026-2301-answer.raw.txt": {
+    "bytes": 1858,
+    "sha256": "3a878f4d23cd59c44c269bb8d81deb6fe5d71976acd87c542bf4985bb1c4fbfd"
+  }
+}
+FULL NEW-FILE DIFF
+--- /dev/null
++++ tools/pod/onpod/start_private_stack.py
+@@ -0,0 +1,82 @@
++#!/usr/bin/env python3
++"""Ordinary private stack launcher. Offline candidate; coordinator runs after step2 decision.
++No FD census, barrier, subreaper, shim, broad kill, or game lifetime deadline.
++"""
++import argparse,hashlib,json,os,pwd,secrets,shlex,shutil,socket,subprocess,time
++from pathlib import Path
++P=Path('/home/unreal/.sub01-private');PD=P/'streamer';SOURCE=Path('/home/sub01-recovery-stage-20261026/runtime-source')
++IMPORTED=Path('/home/sub01-animation-reconstruction-20261026-attempt02/case-01/Sub01HomeLab')
++ENGINE='/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd'
++PYTHON='/home/unreal/venv/bin/python';VOICE='/home/unreal/voice-rt-venv/bin/python';CHROME='/opt/google/chrome/chrome'
++TUNE_SHA='561656b00848a851fd75bd3ee34e9f7823527c12e1c70ec992b958e30341337a'
++def need(v,msg):
++ if not v:raise RuntimeError(msg)
++def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
++def ticks(pid):return int(Path('/proc',str(pid),'stat').read_text().rsplit(')',1)[1].split()[19])
++def main():
++ ap=argparse.ArgumentParser();ap.add_argument('--launch',action='store_true');ap.add_argument('--run-name',required=True);ap.add_argument('--source',default=str(SOURCE));a=ap.parse_args()
++ need(a.run_name.replace('-','').isalnum(),'simple unique run-name required');out=P/a.run_name;source=Path(a.source)
++ if not a.launch:print(json.dumps({'status':'PLAN_ONLY','out':str(out),'source':str(source),'native_project':'fresh copy of '+str(IMPORTED),'required':'step2 decision, live backend8830/bridge8831, installed Chrome, ancestor ordinary access','agent':'STOP held','game_deadline':None}));return
++ need(os.geteuid()==0,'coordinator root required');need(not out.exists(),'fresh run directory required')
++ for p in (Path(PYTHON),Path(VOICE),Path(CHROME),Path(ENGINE),IMPORTED/'Sub01HomeLab.uproject',P/'operator-token',P/'integrated-cadence61-20261026/voice.json',source/'scripts/streamer_up.py'):need(p.is_file(),'missing prerequisite '+str(p))
++ for port in (8830,8831):
++  with socket.socket()as s:s.settimeout(.3);need(s.connect_ex(('127.0.0.1',port))==0,'backend/bridge not listening '+str(port))
++ for port in (8835,8837,8838,8839,8840):
++  with socket.socket()as s:s.settimeout(.3);need(s.connect_ex(('127.0.0.1',port))!=0,'stack port already occupied '+str(port))
++ for display in (99,103):need(not Path('/tmp/.X11-unix/X'+str(display)).exists(),'display already occupied '+str(display))
++ tune=P/'streamer-visual-face-tuning.json';saved=Path('/workspace/sub01-recovery-20261026/streamer-visual-face-tuning.json')
++ need(sha(tune if tune.exists() else saved)==TUNE_SHA,'p5 differs')
++ user=pwd.getpwnam('unreal');need(user.pw_uid==user.pw_gid==1001,'runtime user mismatch')
++ need(shutil.disk_usage('/home').free>3*1024**3,'less than3GiB free');os.umask(0o077);out.mkdir();os.chown(out,1001,1001)
++ for name in ('logs','recordings','hls'):(out/name).mkdir();os.chown(out/name,1001,1001)
++ project=out/'project/Sub01HomeLab';shutil.copytree(IMPORTED,project,ignore=shutil.ignore_patterns('Saved','Intermediate','DerivedDataCache'))
++ for directory,dirs,files in os.walk(out/'project'):
++  os.chown(directory,1001,1001);os.chmod(directory,0o700)
++  for name in files:
++   copied=Path(directory)/name;os.chown(copied,1001,1001);os.chmod(copied,0o600)
++ PD.mkdir(exist_ok=True);os.chown(PD,1001,1001);(PD/'STOP').touch(exist_ok=True);os.chown(PD/'STOP',1001,1001)
++ if not tune.exists():shutil.copyfile(saved,tune);os.chown(tune,1001,1001);tune.chmod(0o600)
++ vagon=PD/'vagon.json'
++ if not vagon.exists():
++  vagon.write_text(json.dumps({'schema':'sub01.streamer-vagon.v1','kind':'workstation','url':'https://app.vagon.io/workstation'})+'\n');os.chown(vagon,1001,1001);vagon.chmod(0o600)
++ xdg=P/'xdg-runtime';xdg.mkdir(exist_ok=True);xdg.chmod(0o700);os.chown(xdg,1001,1001)
++ auth=out/'xauthority';auth.touch(mode=0o600)
++ cookie=''.join('add :'+str(d)+' MIT-MAGIC-COOKIE-1 '+secrets.token_hex(16)+'\n'for d in (99,103))
++ subprocess.run(['/usr/bin/xauth','-f',str(auth)],input=cookie,text=True,check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=10);os.chown(auth,1001,1001)
++ control=out/'native-control.json';control.write_text('{"revision":0}\n');os.chown(control,1001,1001)
++ base=dict(PATH='/usr/local/bin:/usr/bin:/bin',HOME='/home/unreal',USER='unreal',LANG='C.UTF-8',XAUTHORITY=str(auth))
++ receipt={'status':'LAUNCHING','started_utc':time.time(),'p5_sha256':TUNE_SHA,'project':str(project),'source':str(source),'children':[],'STOP':True,'game_deadline':None,'notes':'Own direct launch PIDs only; supervisor owns its service children. No visual/FPS acceptance inferred.'}
++ def save():
++  temp=out/'receipt.tmp';temp.write_text(json.dumps(receipt,indent=2));os.replace(temp,out/'receipt.json')
++ def drop():os.setgroups([]);os.setgid(1001);os.setuid(1001)
++ def spawn(name,argv,env):
++  with (out/'logs'/f'{name}.log').open('ab')as log:
++   p=subprocess.Popen(argv,env=env,cwd='/home/unreal',stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,preexec_fn=drop,start_new_session=True,close_fds=True)
++  receipt['children'].append({'name':name,'pid':p.pid,'start_ticks':ticks(p.pid),'argv':argv});save();return p
++ save()
++ try:
++  x=spawn('xvfb-game',['/usr/bin/Xvfb',':99','-screen','0','1920x1080x24','-nolisten','tcp','-auth',str(auth)],base)
++  for _ in range(100):
++   if Path('/tmp/.X11-unix/X99').exists():break
++   need(x.poll() is None,'Xvfb exited');time.sleep(.1)
++  need(Path('/tmp/.X11-unix/X99').exists(),'X99 startup failed')
++  env=dict(base,DISPLAY=':99',SDL_VIDEODRIVER='x11',XDG_RUNTIME_DIR=str(xdg),SUB01_ADMIN_TOKEN=(P/'operator-token').read_text().strip(),SUB01_HOME_ORIGIN='http://127.0.0.1:8831',SUB01_PC_ORIGIN='http://127.0.0.1:8838',LD_LIBRARY_PATH='/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu',OMP_NUM_THREADS='4',OPENBLAS_NUM_THREADS='1')
++  game=spawn('native',[ENGINE,str(project/'Sub01HomeLab.uproject'),'/Game/Sub01Home/ActualHome','-game','-Sub01CompletionSandbox','-Sub01ManualView','-Sub01StreamerVisual','-Sub01NativeControl='+str(control),'-vulkan','-unattended','-NoSound','-NoSplash','-NoLiveCoding','-NoHotReloadFromIDE','-corelimit=6','-RenderOffScreen','-windowed','-NoBorder','-ResX=1920','-ResY=1080','-ForceRes','-ExecCmds=t.MaxFPS 60,t.IdleWhenNotForeground 0,r.VSync 0,Slate.bAllowThrottling 0','-stdout','-FullStdOutLogOutput'],env)
++  gamepid=out/'game.pid';gamepid.write_text(str(game.pid)+'\n');os.chown(gamepid,1001,1001)
++  canonical_pid=PD/'game.pid'
++  if canonical_pid.exists():shutil.copyfile(canonical_pid,out/'previous-game.pid')
++  pidtmp=PD/('.game.pid-'+str(os.getpid()));pidtmp.write_text(str(game.pid)+'\n');os.chown(pidtmp,1001,1001);os.replace(pidtmp,canonical_pid)
++  receipt['game_pid_files']=[str(gamepid),str(canonical_pid)];save()
++  cmd=[PYTHON,str(source/'scripts/streamer_up.py'),'start','--source',str(source),'--streamer-dir',str(PD),'--token-file',str(P/'operator-token'),'--display',':103','--game-display',':99.0','--desktop-port','8838','--backend-port','8830','--hf-home','/home/sub01-recovery-stage-20261026/voice-public','--voice-config',str(P/'integrated-cadence61-20261026/voice.json'),'--library-path','/usr/local/cuda/lib64','--hls-dir',str(out/'hls'),'--foreground']
++  for name in ('desktop','agent','director','monitor','hls'):cmd+=['--'+name+'-python',PYTHON]
++  cmd+=['--voice-python',VOICE]
++  extras={'xvfb':['-auth',str(auth)],'desktop':['--data-dir',str(PD/'desktop-vagon'),'--pc-mode','vagon','--vagon-kind','workstation','--chromium',CHROME],'voice':['--offline','--fallback','none','--threads','4','--keep-hours','0'],'director':['--game-source','fifo','--game-pid-file',str(gamepid),'--fps','60','--desktop-fps','60','--encoder','libx264','--layout','webcam_only','--recordings-dir',str(out/'recordings'),'--hls-dir',str(out/'hls'),'--min-free-gb','3','--keep-segments','18']}
++  for name,argv in extras.items():cmd+=['--child-arg',name+'='+shlex.join(argv)]
++  for name in ('director','desktop','monitor'):cmd+=['--child-env',name+'=XAUTHORITY='+str(auth)]
++  for key in ('HF_HUB_OFFLINE','TRANSFORMERS_OFFLINE'):cmd+=['--child-env','voice='+key+'=1']
++  spawn('stack-supervisor',cmd,base)
++  spawn('watchdog',[PYTHON,str(source/'scripts/streamer_watchdog.py'),'--streamer-dir',str(PD),'--token-file',str(P/'operator-token'),'--agent-url','http://127.0.0.1:8836','--desktop-url','http://127.0.0.1:8838','--desktop-data-dir',str(PD/'desktop-vagon')],base)
++  receipt['status']='LAUNCHED_NOT_YET_READY';save();print(json.dumps({'receipt':str(out/'receipt.json'),'logs':str(out/'logs'),'native_pid':game.pid,'STOP':True}))
++ except BaseException as e:
++  receipt['status']='PARTIAL_LAUNCH_REQUIRES_COORDINATOR';receipt['error']=repr(e);save();raise
++if __name__=='__main__':main()
+--- /dev/null
++++ tools/private_console/local_bridge.py
+@@ -0,0 +1,114 @@
++#!/usr/bin/env python3
++"""Private local console over one authenticated Jupyter terminal. No action retries."""
++import argparse,asyncio,base64,json,secrets,ssl,sys
++from pathlib import Path
++import aiohttp
++from aiohttp import web
++from remote_relay import ALLOWED,MAX_REQUEST,MAX_RESPONSE
++class Bridge:
++ def __init__(self,pod_id,config,port):
++  pods=json.loads(Path(config).read_text());pod=next(x for x in pods if x['id']==pod_id)
++  self.secret=pod['env']['JUPYTER_PASSWORD'];self.base=f'https://{pod_id}-8888.proxy.runpod.net';self.port=port
++  self.nonce=secrets.token_hex(24);self.prefix='SUB01RPC'+secrets.token_hex(16)+':'
++  self.origin=f'http://127.0.0.1:{port}';self.terminal=None;self.session=None;self.ws=None;self.reader=None;self.lock=asyncio.Lock();self.pending={};self.ready=None;self.broken=False;self.queued=0
++ async def start(self):
++  sslctx=ssl.create_default_context(cafile='/root/.ccr/ca-bundle.crt')if Path('/root/.ccr/ca-bundle.crt').exists()else ssl.create_default_context()
++  self.session=aiohttp.ClientSession(headers={'Authorization':'token '+self.secret},timeout=aiohttp.ClientTimeout(total=15),connector=aiohttp.TCPConnector(ssl=sslctx))
++  async with self.session.post(self.base+'/api/terminals')as r:r.raise_for_status();self.terminal=(await r.json())['name']
++  self.ws=await self.session.ws_connect(self.base+'/terminals/websocket/'+self.terminal,max_msg_size=4194304)
++  self.ready=asyncio.get_running_loop().create_future();self.reader=asyncio.create_task(self.receive())
++  source=Path(__file__).with_name('remote_relay.py').read_text()+'\nmain('+repr(self.prefix)+')\n'
++  encoded=base64.b64encode(source.encode()).decode();command="python3 -u -c \"import base64;exec(base64.b64decode('"+encoded+"'))\"\n"
++  await self.ws.send_str(json.dumps(['stdin','stty -echo -icanon -onlcr; export HISTFILE=/dev/null\n']));await asyncio.sleep(.5)
++  await self.ws.send_str(json.dumps(['stdin',command]));await asyncio.wait_for(self.ready,15)
++ async def receive(self):
++  buffered=''
++  try:
++   async for msg in self.ws:
++    if msg.type!=aiohttp.WSMsgType.TEXT:raise RuntimeError('terminal transport closed')
++    data=json.loads(msg.data)
++    if data[0]!='stdout':continue
++    buffered+=data[1]
++    if len(buffered)>4194304:raise ValueError('terminal frame bound')
++    while '\n'in buffered:
++     line,buffered=buffered.split('\n',1);line=line.rstrip('\r')
++     if not line.startswith(self.prefix):continue
++     answer=json.loads(line[len(self.prefix):])
++     if answer.get('ready'):
++      if not self.ready.done():self.ready.set_result(True)
++     else:
++      future=self.pending.pop(answer.get('id'),None)
++      if future and not future.done():future.set_result(answer)
++  except Exception:pass
++  finally:
++   self.broken=True
++   for f in [self.ready,*self.pending.values()]:
++    if f is not None and not f.done():f.set_exception(RuntimeError('terminal unavailable; no replay'))
++ def route(self,method,path,host,origin):
++  if host!=f'127.0.0.1:{self.port}':raise web.HTTPForbidden()
++  if origin is not None and origin!=self.origin:raise web.HTTPForbidden()
++  if method=='POST' and origin!=self.origin:raise web.HTTPForbidden()
++  root='/'+self.nonce
++  if not path.startswith(root+'/'):raise web.HTTPNotFound()
++  target=path[len(root):]
++  if (method,target)not in ALLOWED:raise web.HTTPNotFound()
++  return target
++ async def handle(self,request):
++  if self.queued or self.lock.locked():raise web.HTTPTooManyRequests(text='Console busy; request not sent.')
++  self.queued+=1
++  try:return await asyncio.wait_for(self._handle(request),15)
++  except asyncio.TimeoutError:raise web.HTTPGatewayTimeout(text='Console request timed out; do not replay an uncertain input.')
++  finally:self.queued-=1
++ async def _handle(self,request):
++  target=self.route(request.method,request.path,request.host,request.headers.get('Origin'))
++  if request.query_string:raise web.HTTPBadRequest(text='query not supported')
++  if request.content_length is not None and request.content_length>MAX_REQUEST:raise web.HTTPRequestEntityTooLarge(max_size=MAX_REQUEST,actual_size=request.content_length)
++  body=await asyncio.wait_for(request.read(),3)
++  async with self.lock:
++   if self.broken:raise web.HTTPBadGateway(text='Console transport disconnected; no action replay.')
++   request_id=secrets.token_hex(12);f=asyncio.get_running_loop().create_future();self.pending[request_id]=f
++   req={'id':request_id,'method':request.method,'path':target,'body':base64.b64encode(body).decode(),'etag':request.headers.get('If-None-Match','')}
++   try:
++    await self.ws.send_str(json.dumps(['stdin',json.dumps(req,separators=(',',':'))+'\n']))
++    answer=await asyncio.wait_for(f,12)
++   except Exception:
++    self.broken=True;raise web.HTTPBadGateway(text='Request interrupted; action outcome unknown. No automatic retry.')
++   finally:self.pending.pop(request_id,None)
++  if 'error'in answer:raise web.HTTPBadGateway(text=answer['error'])
++  raw=base64.b64decode(answer['body'],validate=True)
++  if len(raw)>MAX_RESPONSE:raise web.HTTPBadGateway()
++  if target=='/operator' and answer['status']==200:
++   text=raw.decode('utf-8');text=text.replace("let token = '';","let token = 'local-console';").replace("token = sessionStorage.getItem(STORE) || '';","token = 'local-console';")
++   # This is a nonsecret local UI sentinel, never the operator/Jupyter credential.
++   text=text.replace('<input id="token"','<input hidden id="token"').replace('<button id="save"','<button hidden id="save"').replace('<button id="forget"','<button hidden id="forget"')
++   begin=text.find('<p id="hint">');end=text.find('</p>',begin)
++   if begin>=0 and end>=0:text=text[:begin]+'<p id="hint">Private local console. Log in directly on the Vagon page below. PC start remains under your control.</p>'+text[end+4:]
++   raw=text.encode()
++  headers=answer.get('headers',{});headers['Cache-Control']='no-store'
++  return web.Response(status=answer['status'],body=raw,headers=headers)
++ async def close(self):
++  if self.ws:await self.ws.close()
++  if self.reader:
++   self.reader.cancel()
++   try:await self.reader
++   except BaseException:pass
++  if self.session:
++   try:
++    if self.terminal:
++     async with self.session.delete(self.base+'/api/terminals/'+self.terminal)as r:r.raise_for_status()
++   finally:await self.session.close()
++async def main(args):
++ b=Bridge(args.pod,args.config,args.port);runner=None
++ try:
++  await b.start();app=web.Application(client_max_size=MAX_REQUEST);app.router.add_route('*','/{tail:.*}',b.handle)
++  runner=web.AppRunner(app,access_log=None);await runner.setup();await web.TCPSite(runner,'127.0.0.1',args.port).start()
++  print(b.origin+'/'+b.nonce+'/operator',flush=True)
++  await asyncio.Event().wait()
++ finally:
++  if runner:await runner.cleanup()
++  await b.close()
++if __name__=='__main__':
++ p=argparse.ArgumentParser();p.add_argument('--pod',default='505jw5ph3dt7ed');p.add_argument('--config',default=str(Path.home()/'.sub01/pods.json'));p.add_argument('--port',type=int,choices=[18838],default=18838);a=p.parse_args()
++ try:asyncio.run(main(a))
++ except KeyboardInterrupt:pass
++ except Exception:print('Console bridge stopped; no request replay.',file=sys.stderr);sys.exit(1)
+--- /dev/null
++++ tools/private_console/remote_relay.py
+@@ -0,0 +1,35 @@
++"""Fixed loopback desktop HTTP relay; launched only inside owned Jupyter terminal."""
++import base64,http.client,json,sys
++from pathlib import Path
++ALLOWED={('GET','/operator'),('GET','/operator/frame.jpg'),('GET','/pc/state'),('POST','/operator/input'),('POST','/pc/vagon/arm'),('POST','/pc/vagon/start')}
++MAX_REQUEST=16384;MAX_RESPONSE=2097152
++SAFE_HEADERS={'content-type','etag','cache-control','content-security-policy','x-frame-options','referrer-policy'}
++def relay(req,token,connection=http.client.HTTPConnection):
++ method=req['method'];path=req['path']
++ if (method,path)not in ALLOWED:raise ValueError('route refused')
++ body=base64.b64decode(req.get('body',''),validate=True)
++ if len(body)>MAX_REQUEST:raise ValueError('request bound')
++ headers={'X-Admin-Token':token,'Content-Type':'application/json','Connection':'close'}
++ if req.get('etag'):headers['If-None-Match']=req['etag'][:256]
++ c=connection('127.0.0.1',8838,timeout=8)
++ try:
++  c.request(method,path,body=body,headers=headers);r=c.getresponse()
++  if 300<=r.status<400 and r.status!=304:raise ValueError('redirect refused')
++  data=r.read(MAX_RESPONSE+1)
++  if len(data)>MAX_RESPONSE:raise ValueError('response bound')
++  return {'status':r.status,'headers':{k:v for k,v in r.getheaders()if k.lower()in SAFE_HEADERS},'body':base64.b64encode(data).decode()}
++ finally:c.close()
++def main(prefix):
++ token=(Path('/home/unreal/.sub01-private/operator-token').read_text()).strip()
++ if len(token)<12:raise ValueError('operator credential unavailable')
++ print(prefix+json.dumps({'ready':True}),flush=True)
++ while True:
++  line=sys.stdin.buffer.readline(32769)
++  if not line:break
++  if len(line)>32768:break
++  req={}
++  try:
++   req=json.loads(line);request_id=req['id'];answer=relay(req,token);answer['id']=request_id
++  except Exception:
++   answer={'id':req.get('id') if 'req' in locals()else None,'error':'desktop request failed; action outcome may be unknown; no retry'}
++  print(prefix+json.dumps(answer,separators=(',',':')),flush=True)
+--- /dev/null
++++ tools/private_console/test_bridge.py
+@@ -0,0 +1,35 @@
++import base64,json,unittest
++from unittest.mock import Mock
++from aiohttp import web
++import local_bridge as l,remote_relay as r
++class Tests(unittest.TestCase):
++ def test_routes_host_origin_and_nonce(self):
++  b=object.__new__(l.Bridge);b.port=18838;b.origin='http://127.0.0.1:18838';b.nonce='abc'
++  self.assertEqual(b.route('GET','/abc/operator','127.0.0.1:18838',None),'/operator')
++  self.assertEqual(b.route('POST','/abc/operator/input','127.0.0.1:18838',b.origin),'/operator/input')
++  for method,path,host,origin in [('GET','/abc/operator','evil',None),('POST','/abc/operator/input','127.0.0.1:18838',None),('GET','/abc/operator','127.0.0.1:18838','http://evil'),('GET','/bad/operator','127.0.0.1:18838',None),('GET','/abc/../../secret','127.0.0.1:18838',None)]:
++   with self.assertRaises(web.HTTPException):b.route(method,path,host,origin)
++ def test_remote_fixed_target_token_and_hop_headers(self):
++  response=Mock(status=200);response.read.return_value=b'jpeg';response.getheaders.return_value=[('Content-Type','image/jpeg'),('Connection','keep-alive'),('Set-Cookie','secret')]
++  conn=Mock();conn.getresponse.return_value=response;factory=Mock(return_value=conn)
++  result=r.relay({'method':'GET','path':'/operator/frame.jpg','body':''},'existing-secret',factory)
++  factory.assert_called_once_with('127.0.0.1',8838,timeout=8);self.assertEqual(conn.request.call_args.kwargs['headers']['X-Admin-Token'],'existing-secret');self.assertEqual(result['headers'],{'Content-Type':'image/jpeg'});conn.close.assert_called_once()
++ def test_remote_routes_and_bounds(self):
++  for path in ['http://evil','/admin','/operator?redirect=evil']:
++   with self.assertRaises(ValueError):r.relay({'method':'GET','path':path},'secret')
++  with self.assertRaises(ValueError):r.relay({'method':'POST','path':'/operator/input','body':base64.b64encode(b'x'*(r.MAX_REQUEST+1)).decode()},'secret')
++ def test_no_post_retry_and_close_on_error(self):
++  conn=Mock();conn.request.side_effect=OSError('lost');factory=Mock(return_value=conn)
++  with self.assertRaises(OSError):r.relay({'method':'POST','path':'/operator/input','body':''},'secret',factory)
++  conn.request.assert_called_once();conn.close.assert_called_once()
++ def test_redirect_rejected_without_follow(self):
++  response=Mock(status=302);conn=Mock();conn.getresponse.return_value=response;factory=Mock(return_value=conn)
++  with self.assertRaises(ValueError):r.relay({'method':'GET','path':'/operator'},'secret',factory)
++  conn.request.assert_called_once();response.read.assert_not_called();conn.close.assert_called_once()
++class AsyncTests(unittest.IsolatedAsyncioTestCase):
++ async def test_busy_fails_before_read_or_send(self):
++  import asyncio
++  b=object.__new__(l.Bridge);b.queued=1;b.lock=asyncio.Lock();req=Mock()
++  with self.assertRaises(web.HTTPTooManyRequests):await b.handle(req)
++  req.read.assert_not_called()
++if __name__=='__main__':unittest.main()

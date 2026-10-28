@@ -1,0 +1,165 @@
+{
+  "utc": "2026-10-26T16:10:29.430821+00:00",
+  "scope": "independent reconstruction readback, no visual/originalprovenance acceptance",
+  "status": "three_assets_independently_verified",
+  "preservation_files_verified": 23,
+  "source_baseline_files_verified": 5640,
+  "original_bytes_unchanged": true,
+  "candidate_baseline_unchanged": true,
+  "assets": {
+    "Content/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.uasset": {
+      "bytes": 880799,
+      "sha256": "c2d019ff57f55706a1e1493119bfca00afd39bf55e39111e7ec4aa25b46a78dc",
+      "persistent_sha256": "c2d019ff57f55706a1e1493119bfca00afd39bf55e39111e7ec4aa25b46a78dc"
+    },
+    "Content/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.uasset": {
+      "bytes": 880787,
+      "sha256": "119e322af180f132d0c645f9e3df4e8238cfbd58b32e76d34a0c9e24467407ca",
+      "persistent_sha256": "119e322af180f132d0c645f9e3df4e8238cfbd58b32e76d34a0c9e24467407ca"
+    },
+    "Content/Sub01Hands/Cinematic20261022/Reach_c8accd7a0070407c8af117eed5df534d/AuthoredReach.uasset": {
+      "bytes": 522308,
+      "sha256": "6515c6022ecc2573bb5f1632b68efaae8d6f20023cbb926e3dd93564c5634af1",
+      "persistent_sha256": "6515c6022ecc2573bb5f1632b68efaae8d6f20023cbb926e3dd93564c5634af1"
+    }
+  },
+  "clips": [
+    {
+      "evidence_status": "Recreated case01 hypothesis, not original asset provenance or visual acceptance",
+      "generated_asset_sha256": "119e322af180f132d0c645f9e3df4e8238cfbd58b32e76d34a0c9e24467407ca",
+      "hips_angle_from_r9_deg": 25.530909275509774,
+      "hips_at_zero": {
+        "q": [
+          -0.6505893179091747,
+          -0.009892366859911123,
+          -0.007034262641444004,
+          0.7593327331608162
+        ],
+        "s": [
+          0.9999999403953552,
+          1.0,
+          0.9999999403953552
+        ],
+        "t": [
+          -0.05939348042011261,
+          -92.65264129638672,
+          73.04924011230469
+        ]
+      },
+      "hips_offset_from_r9_cm": 115.71761808990279,
+      "keys": 166,
+      "max_native_vs_authored_joint_translation_cm": 0.0015560765874614224,
+      "root_flags": {
+        "enable_root_motion": false,
+        "force_root_lock": false,
+        "root_lock": 0
+      },
+      "seconds": 5.5,
+      "source_coherence_threshold_cm": 0.05,
+      "source_coherent": true,
+      "source_fbx_sha256": "d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d",
+      "source_glb_sha256": "1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363",
+      "target": "/Game/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.SupportedWebsite",
+      "variant": "Website-gaze"
+    },
+    {
+      "evidence_status": "Recreated case01 hypothesis, not original asset provenance or visual acceptance",
+      "generated_asset_sha256": "c2d019ff57f55706a1e1493119bfca00afd39bf55e39111e7ec4aa25b46a78dc",
+      "hips_angle_from_r9_deg": 25.530909275509774,
+      "hips_at_zero": {
+        "q": [
+          -0.6505893179091747,
+          -0.009892366859911123,
+          -0.007034262641444004,
+          0.7593327331608162
+        ],
+        "s": [
+          0.9999999403953552,
+          1.0,
+          0.9999999403953552
+        ],
+        "t": [
+          -0.05939348042011261,
+          -92.65264129638672,
+          73.04924011230469
+        ]
+      },
+      "hips_offset_from_r9_cm": 115.71761808990279,
+      "keys": 166,
+      "max_native_vs_authored_joint_translation_cm": 0.0015560765874614224,
+      "root_flags": {
+        "enable_root_motion": false,
+        "force_root_lock": false,
+        "root_lock": 0
+      },
+      "seconds": 5.5,
+      "source_coherence_threshold_cm": 0.05,
+      "source_coherent": true,
+      "source_fbx_sha256": "ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8",
+      "source_glb_sha256": "6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce",
+      "target": "/Game/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.SupportedDeskTyping",
+      "variant": "DeskTyping-contact-clean"
+    },
+    {
+      "evidence_status": "Recreated case01 hypothesis, not original asset provenance or visual acceptance",
+      "generated_asset_sha256": "6515c6022ecc2573bb5f1632b68efaae8d6f20023cbb926e3dd93564c5634af1",
+      "hips_angle_from_r9_deg": 29.504194314812946,
+      "hips_at_zero": {
+        "q": [
+          -0.6740273391018643,
+          0.003107026577881494,
+          0.024583246388581625,
+          0.7382906992005949
+        ],
+        "s": [
+          1.0,
+          0.9999999403953552,
+          1.0
+        ],
+        "t": [
+          -0.18156079947948456,
+          3.606318950653076,
+          61.24176025390625
+        ]
+      },
+      "hips_offset_from_r9_cm": 19.352193834775527,
+      "keys": 91,
+      "max_native_vs_authored_joint_translation_cm": 0.008152253241137783,
+      "root_flags": {
+        "enable_root_motion": false,
+        "force_root_lock": false,
+        "root_lock": 0
+      },
+      "seconds": 3.0,
+      "source_coherence_threshold_cm": 0.05,
+      "source_coherent": true,
+      "source_fbx_sha256": "d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e",
+      "source_glb_sha256": "b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438",
+      "target": "/Game/Sub01Hands/Cinematic20261022/Reach_c8accd7a0070407c8af117eed5df534d/AuthoredReach.AuthoredReach",
+      "variant": "Reach"
+    }
+  ],
+  "asset_hash_comparison": [
+    {
+      "target": "/Game/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.SupportedWebsite",
+      "new_sha256": "119e322af180f132d0c645f9e3df4e8238cfbd58b32e76d34a0c9e24467407ca",
+      "old_sha256": "3206eccc2d3843003eabd877c69541dd0ede3e2d0a981c16995ee6400d8453f8",
+      "same_bytes": false
+    },
+    {
+      "target": "/Game/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.SupportedDeskTyping",
+      "new_sha256": "c2d019ff57f55706a1e1493119bfca00afd39bf55e39111e7ec4aa25b46a78dc",
+      "old_sha256": "a86a4993bed2d2d6343895776c769ab75f55c652639f65b0b0fd8dc5d1498098",
+      "same_bytes": false
+    },
+    {
+      "target": "/Game/Sub01Hands/Cinematic20261022/Reach_c8accd7a0070407c8af117eed5df534d/AuthoredReach.AuthoredReach",
+      "new_sha256": "6515c6022ecc2573bb5f1632b68efaae8d6f20023cbb926e3dd93564c5634af1",
+      "old_sha256": "c12bfd712ab8d098cdd0166a9a58b73cdaa6d77583c978c4ea12056e3d456006",
+      "same_bytes": false
+    }
+  ],
+  "jobs": [],
+  "stop": true,
+  "measuring": false
+}

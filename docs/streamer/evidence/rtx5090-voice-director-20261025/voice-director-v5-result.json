@@ -1,0 +1,30 @@
+{
+  "schema": "sub01.voice-director-diagnostic.v1",
+  "status": "failed",
+  "owner": "codex-voice-director-ecf7a1500fe54781b0ccdb2fed2fe89a",
+  "native": [
+    29950,
+    53274039
+  ],
+  "services_acceptance": false,
+  "inputs": {
+    "controller_sha256": "3b55f3e689ce7de3ca3e90188e920be93dd7c3e475811b3335e40cf7c901de04",
+    "observer_sha256": "acbf714e8a0466aafb858544bd16e0dd1d7e22cd469984bbbe48afa028bf18ae",
+    "wrapper_sha256": "68710e0196159a242afdc82377a152f9dea7659dd3da38f7bee49248fb9bdf17",
+    "voice_source_sha256": "95758eb8fd0a4341d6e6fe1a684c1511ca0c98fc8c6f89a753f226a4f5eefce5",
+    "director_source_sha256": "d7ff873b40ac390c2004c248e5aa825255bcefd49e44684a077b78d91c799b8c",
+    "config_sha256": "bfda98ab5376091bc9fa339fa829e2dfcf60d74e2cf8c1fb66c4b258f9da76fa",
+    "reference_sha256": "d8ce97537faff90e4f37044b2260157bede82775c6c97264ae523f9b775180c0",
+    "cache_manifest_sha256": "56b3bdca9852fb5ecc29c3489071c364271e513f68996622ee1b5af5f4de9021",
+    "tuning_before_sha256": "561656b00848a851fd75bd3ee34e9f7823527c12e1c70ec992b958e30341337a",
+    "main_inode": [
+      67,
+      6480385251
+    ]
+  },
+  "error": "Traceback (most recent call last):\n  File \"/tmp/sub01-share/run-voice-director-check-v5.py\", line 261, in <module>\n    initial=wait_for(ready,45);save(BASE/'director-ready.json',initial)\n            ^^^^^^^^^^^^^^^^^^\n  File \"/tmp/sub01-share/run-voice-director-check-v5.py\", line 190, in wait_for\n    guard()\n  File \"/tmp/sub01-share/run-voice-director-check-v5.py\", line 162, in guard\n    listeners();scan_owned_ffmpeg()\n    ^^^^^^^^^^^\n  File \"/tmp/sub01-share/run-voice-director-check-v5.py\", line 146, in listeners\n    assert inode in user_observation(p.pid)['sockets'],'listener not owned'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: listener not owned\n",
+  "cleanup_complete": true,
+  "cleanup_errors": [],
+  "finished_utc": 1792928262.1347356,
+  "watchdog_fault": []
+}

@@ -1,0 +1,717 @@
+EXACT ONE-CASE IMPORT REVIEW — NOT EXECUTED
+Supersedes the earlier blocked plan. No runtime overlap: finish existing native/cap61 diagnostic before this candidate. No browser/provider/network calls, agent/backend state, STOP removal, Vagon or public changes. Reconstruct only old case01 hypothesis in new isolated project; no original native-byte provenance promise. No garment/mesh changes: rejected hoodie excluded.
+
+Corrections: every script and input resolves under /opt/sub01/animation-reconstruction-20261026/tools (full source below). UID1002 never traverses private canonical STOP. Root supervisor checks canonical STOP and no MEASURING continuously every250ms during preflight/import, publishes root-owned0644 atomic control with supervisorPID/startticks, monotonic heartbeat/deadline, booleans. Importer verifies root-owned unmodifiable receipt, age<=2s, live root process identity and flags before admission/each clip. Private ancestors unchanged. Root terminates only owned UID1002 session members on gate failure/deadline and verifies cleanup. A disappeared lease/STOP leads immediate failure, not retry.
+Preflight admission requires ready true, import_executed false, exact project and UID1002, get_reference_pose API and pinned digest. Full original/candidate manifests and absent three targets rechecked AFTER preflight before import. All10sources now verified in root work/all-animation-input-verification.json; wrapper rechecks every source and staged readback.
+
+Exact root wrapper included: uses new root-only input bundle /root/sub01-animation-reconstruction-20261026-input containing the four hash-pinned manifest/input/import/preflight files. Refuses existing attempt trees. DedicatedUID1002 must be unused or existing EXACT newly specified probe identity (name, home, nologin shell, comment); historical/unrelated occupied account fails closed, no password changes. Root-owned candidate immutable tree; only three new asset directories/caches/results writable. No hardlinks/symlinks, full copied baseline equality, original source cannot be traversed by probe. Requires 15GiB initial/root copy+10GiB and inode reserve. Engine/library traversal checked asUID1002. Six permitted CPUcores. Engine preflight120s/import600s/overall1200s. No second attempt. No rootfs/source move or pointer replacement.
+Success requires original importer coherence/allkey/threefiles/reference-pose/unchangedmesh+map gates plus supervisor independent whole manifests. Persist ACTUAL THREE UASSETS with receipts/logs/manifests on /workspace/sub01-animation-reconstruction-20261026, readback hashes, no volumechown. Compare old generated package hashes from pinned historical result; differing package bytes explicitly reported, not original recovery. Render/fixture, visual acceptance and speech-head route are separate later steps: none is executed here. Canonical baseline native process remains separate, absent during this import.
+
+Known scope: preparation/AST parsing only; not a tested Unreal run. Runtime-specific UID availability, engine traversability, source private permissions, cache-space and native dependency loading are admission gates, not assumed facts. Explicit current one-call plan/result metadata must be stored by root before invocation. All no-jobs/runtime lease checks are snapshots plus continuous lease/STOP guard; root must retain sole runtime ownership for whole operation. No new parallel runtime jobs authorized.
+
+Request APPROVE ONE EXACT IMPORT or concrete BLOCK findings. Review complete sources below; no blanket render/agent/acceptance approval requested.
+
+
+===== FULL FILE root-staging-supervisor.candidate.py SHA256 65604ffafa84da281886eca2777c927604bb0d353ed4821e8fae016d44deec21 =====
+#!/usr/bin/env python3
+"""UNREVIEWED candidate: one isolated import, no rendering/network/provider work."""
+from pathlib import Path
+import hashlib,json,os,pwd,signal,stat,subprocess,time,traceback,shutil
+ROOT=Path('/home/sub01-animation-reconstruction-20261026')
+CASE=ROOT/'case-01';PROJECT=CASE/'Sub01HomeLab';TOOLS=Path('/opt/sub01/animation-reconstruction-20261026/tools')
+# Root must install this reviewed input bundle (scripts, manifest, pins) beforehand.
+BUNDLE=Path('/root/sub01-animation-reconstruction-20261026-input')
+SOURCE=Path('/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab')
+PERSIST=Path('/workspace/sub01-animation-reconstruction-20261026')
+ENGINE=Path('/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd')
+LIB='/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu'
+STOP=Path('/home/unreal/.sub01-private/streamer/STOP');LEASE=Path('/tmp/sub01-share/MEASURING')
+CONTROL=TOOLS/'supervisor-control.json'; SKIP={'Saved','Intermediate','DerivedDataCache'}
+BUNDLE_HASHES={'manifest.json': 'b6934579182ceb874baff435a50f136bb32ba1fc9959d428c7eca27e397efd0c', 'input-pins.json': 'f52b92cd425de4cc94e640fe6b9dbce0ae8382afacabd5177f2e87f9d65c4a75', 'import-animation-candidate.py': '53f7e1dc6b8454cd530840054cfaa29aaace6ad83980466671cffa54c1ebf9a3', 'reference-pose-preflight.py': '6c8355a963357662530425095905918ff4eb78dccf61da034b592a15997698f3'}
+uid=1002;name='sub01probe';started=time.monotonic();overall_deadline=started+1200
+children=[];summary={'status':'preflight','schema':'sub01.animation-reconstruction-supervisor.v1','rendered':False,'backend_replaced':False,'original_provenance':False}
+
+def sha(p):
+ h=hashlib.sha256()
+ with p.open('rb') as f:
+  for b in iter(lambda:f.read(1024*1024),b''):h.update(b)
+ return h.hexdigest()
+def write(p,j,mode=0o644):
+ tmp=p.with_name(p.name+'.root-tmp');fd=os.open(tmp,os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,mode)
+ try:
+  with os.fdopen(fd,'w') as f:json.dump(j,f,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
+  os.chmod(tmp,mode);os.replace(tmp,p)
+ finally:
+  if tmp.exists():tmp.unlink()
+def identity(pid):
+ try:
+  s=Path('/proc',str(pid),'stat').read_text().rsplit(')',1)[1].split()
+  return {'pid':pid,'ticks':int(s[19]),'state':s[0],'pgrp':int(s[2]),'sid':int(s[3]),'uid':Path('/proc',str(pid)).stat().st_uid}
+ except (OSError,ValueError):return None
+SELF=identity(os.getpid())
+def gates():
+ assert os.geteuid()==0
+ assert time.monotonic()<overall_deadline,'overall deadline'
+ st=STOP.lstat();assert stat.S_ISREG(st.st_mode),'canonical STOP missing/invalid'
+ assert not LEASE.exists(),'measurement lease present'
+def heartbeat(active=True):
+ gates()
+ write(CONTROL,{'schema':'sub01.import-supervisor-control.v1','supervisor_pid':SELF['pid'],'supervisor_start_ticks':SELF['ticks'],'heartbeat_monotonic':time.monotonic(),'deadline_monotonic':overall_deadline,'canonical_stop_checked':True,'measurement_absent_checked':True,'active':active})
+def manifest(root,check_gates=True):
+ out={}
+ for p in sorted(root.rglob('*')):
+  if p.relative_to(root).parts[0] in SKIP:continue
+  if check_gates:gates()
+  assert not p.is_symlink(),str(p)
+  if p.is_file():out[str(p.relative_to(root))]=sha(p)
+ return out
+
+def no_jobs():
+ for d in Path('/proc').iterdir():
+  if not d.name.isdigit() or int(d.name)==os.getpid():continue
+  try:
+   argv=(d/'cmdline').read_bytes().split(b'\0')
+  except OSError:continue
+  executable=Path(os.fsdecode(argv[0])).name if argv and argv[0] else ''
+  assert not executable.startswith('UnrealEditor'),f'Unreal job exists: {d.name}'
+  assert not any(Path(os.fsdecode(a)).name in {'voice_server.py','streamer_director.py','streamer_agent.py'} for a in argv[1:3]),f'service exists: {d.name}'
+
+def cleanup(entry):
+ # Only recorded session members, identity rechecked before each signal. No provider stop.
+ owned={}
+ for d in Path('/proc').iterdir():
+  if d.name.isdigit():
+   v=identity(int(d.name))
+   if v and v['uid']==uid and v['sid']==entry['pid']:owned[v['pid']]=v
+ for sig in (signal.SIGTERM,signal.SIGKILL):
+  for pid,expected in owned.items():
+   now=identity(pid)
+   if now and now['ticks']==expected['ticks'] and now['uid']==uid and now['sid']==entry['pid']:
+    try:os.kill(pid,sig)
+    except ProcessLookupError:pass
+  if sig==signal.SIGTERM:time.sleep(2)
+ # A living same-identity member is a cleanup failure, never permission for another run.
+ for pid,expected in owned.items():
+  now=identity(pid);assert not now or now['ticks']!=expected['ticks'] or now['state']=='Z','owned cleanup incomplete'
+
+def run(script,limit):
+ heartbeat();no_jobs()
+ cpus=sorted(os.sched_getaffinity(0))[:6];assert len(cpus)==6
+ account=pwd.getpwnam(name)
+ env={'PATH':'/usr/local/bin:/usr/bin:/bin','HOME':account.pw_dir,'USER':name,'LANG':'C.UTF-8','LD_LIBRARY_PATH':LIB,'OMP_NUM_THREADS':'4','OPENBLAS_NUM_THREADS':'1'}
+ argv=[str(ENGINE),str(PROJECT/'Sub01HomeLab.uproject'),'-run=pythonscript','-script='+str(TOOLS/script),'-NullRHI','-unattended','-NoSound','-NoSplash','-NoLiveCoding','-NoHotReloadFromIDE','-NoCompile','-corelimit=6','-ExecCmds=Interchange.FeatureFlags.Import.FBX 0','-stdout','-FullStdOutLogOutput']
+ def drop():os.sched_setaffinity(0,set(cpus));os.initgroups(name,account.pw_gid);os.setgid(account.pw_gid);os.setuid(uid)
+ with (CASE/'results'/ (script+'.log')).open('xb') as log:
+  child=subprocess.Popen(argv,env=env,cwd=PROJECT,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=drop)
+  entry=identity(child.pid);assert entry and entry['uid']==uid and entry['sid']==child.pid
+  children.append(entry);write(CASE/'results'/'supervisor.json',dict(summary,children=children))
+  deadline=min(overall_deadline,time.monotonic()+limit)
+  try:
+   while child.poll() is None:
+    heartbeat();assert time.monotonic()<deadline,'child deadline';time.sleep(.25)
+   assert child.returncode==0, f'{script} exit {child.returncode}'
+  finally:
+   cleanup(entry);child.wait(timeout=5)
+
+assert os.geteuid()==0;os.umask(0o022);gates();no_jobs()
+for filename,expected in BUNDLE_HASHES.items():
+ p=BUNDLE/filename;st=p.lstat();assert stat.S_ISREG(st.st_mode) and st.st_uid==0 and not(st.st_mode&0o022) and sha(p)==expected
+assert not ROOT.exists() and not TOOLS.parent.exists() and not PERSIST.exists(),'refuse previous attempt outputs'
+# Exact existing role only; never take over an unrelated account or UID.
+try:
+ account=pwd.getpwuid(uid);assert account.pw_name==name and account.pw_dir=='/home/sub01probe' and account.pw_shell=='/usr/sbin/nologin' and account.pw_gecos=='SUB01 isolated animation probe 20261026','existing UID1002 role not independently admitted'
+except KeyError:
+ try:pwd.getpwnam(name);raise RuntimeError('probe account name occupied')
+ except KeyError:pass
+ subprocess.run(['useradd','--uid','1002','--create-home','--shell','/usr/sbin/nologin','--comment','SUB01 isolated animation probe 20261026',name],check=True)
+# User creation does not set/change passwords or credentials.
+account=pwd.getpwnam(name)
+for d in Path('/proc').iterdir():
+ if d.name.isdigit():
+  v=identity(int(d.name));assert not v or v['uid']!=uid,'probe UID already running'
+ROOT.mkdir(mode=0o755);CASE.mkdir(mode=0o755);TOOLS.mkdir(mode=0o755,parents=True);(TOOLS/'inputs').mkdir(mode=0o755)
+(CASE/'results').mkdir(mode=0o700);os.chown(CASE/'results',uid,account.pw_gid)
+baseline=None
+try:
+ heartbeat();baseline=manifest(SOURCE)
+ assert baseline['Binaries/Linux/libUnrealEditor-Sub01HomeLab.so']=='1c78b83cd2afd44436c281a40bb62d4f452077b2b6be7bf8ef5e1d0c7e769b0b'
+ size=sum((SOURCE/p).stat().st_size for p in baseline)
+ assert shutil.disk_usage('/home').free>max(15*1024**3,size+10*1024**3)
+ assert os.statvfs('/home').f_favail>len(baseline)+10000
+ for rel in baseline:
+  gates();src=SOURCE/rel;dest=PROJECT/rel;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dest);dest.chmod(0o555 if src.stat().st_mode&0o111 else 0o444)
+ assert manifest(PROJECT)==baseline;write(TOOLS/'baseline-manifest.json',baseline)
+ assert subprocess.run(['runuser','-u',name,'--','test','-w',str(SOURCE)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode!=0
+ # Private source ancestor must deny traversal, ensuring no writable descendants are reachable.
+ assert subprocess.run(['runuser','-u',name,'--','test','-x',str(SOURCE)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode!=0,'source unexpectedly traversable; assess ACL offline'
+ for file in ('manifest.json','import-animation-candidate.py','reference-pose-preflight.py','input-pins.json'):
+  src=BUNDLE/file;assert src.is_file() and not src.is_symlink() and sha(src)==BUNDLE_HASHES[file];dest=(CASE/'manifest.json') if file=='manifest.json' else TOOLS/file;shutil.copyfile(src,dest);dest.chmod(0o444);assert sha(dest)==BUNDLE_HASHES[file]
+ req=json.loads((CASE/'manifest.json').read_text());assert req['project']==str(PROJECT) and req['output']==str(CASE/'results')
+ for item in json.loads((TOOLS/'input-pins.json').read_text()):
+  gates();src=Path(item['original_path']);dest=Path(item['path']);assert dest.parent==TOOLS/'inputs';assert sha(src)==item['sha256'];shutil.copyfile(src,dest);dest.chmod(0o444);assert sha(dest)==item['sha256']
+ for folder in ('Saved','Intermediate','DerivedDataCache'):
+  p=PROJECT/folder;p.mkdir();os.chown(p,uid,account.pw_gid)
+ for clip in req['clips']:
+  dest=PROJECT/'Content'/(clip['target'].split('.')[0].removeprefix('/Game/')+'.uasset');assert not dest.exists();dest.parent.mkdir(parents=True,exist_ok=True);os.chown(dest.parent,uid,account.pw_gid)
+ for p in [ENGINE,PROJECT/'Sub01HomeLab.uproject',TOOLS/'import-animation-candidate.py']:
+  subprocess.run(['runuser','-u',name,'--','test','-r',str(p)],check=True)
+ subprocess.run(['runuser','-u',name,'--','test','-x',str(ENGINE)],check=True)
+ subprocess.run(['runuser','-u',name,'--','test','-x',LIB],check=True)
+ summary['status']='reference_preflight';run('reference-pose-preflight.py',120)
+ ref=json.loads((CASE/'results'/'refpose-preflight.json').read_text());assert ref.get('ready') is True and ref.get('import_executed') is False and ref.get('project')==str(PROJECT) and ref.get('uid')==1002 and ref['reference_pose_api']=='get_reference_pose' and ref['reference_pose_sha256']=='ae5c67df12bf35ed272d8c3f79d506889617d5e63ce2fd9e4a5fc02cb37f56bf';write(TOOLS/'reference-pose-control.json',ref,0o444)
+ assert manifest(SOURCE)==baseline and manifest(PROJECT)==baseline
+ for clip in req['clips']:
+  assert not (PROJECT/'Content'/(clip['target'].split('.')[0].removeprefix('/Game/')+'.uasset')).exists()
+ summary['status']='import';run('import-animation-candidate.py',600)
+ result=json.loads((CASE/'results'/'import-result.json').read_text());assert result['status']=='three_hypothesis_assets_imported_source_coherent'
+ after=manifest(PROJECT);added=set(after)-set(baseline)
+ expected={'Content/'+c['target'].split('.')[0].removeprefix('/Game/')+'.uasset' for c in req['clips']}
+ assert len(expected)==3 and added==expected and all(after[p]==h for p,h in baseline.items());assert manifest(SOURCE)==baseline
+ # Read historical expected native hashes; retain comparison, never assert original provenance.
+ oldpath=Path('/workspace/sub01-migration-20261025/animation-candidates/case-01-result.json')
+ assert sha(oldpath)=='56a8280ac742e4910d485db97aa14d2786ce1c66edb815e6b83397a255e5fb6b'
+ old=json.loads(oldpath.read_text());oldhash={c['target']:c['generated_asset_sha256'] for c in old['clips']}
+ summary['asset_hash_comparison']=[{'target':c['target'],'new_sha256':c['generated_asset_sha256'],'old_sha256':oldhash[c['target']],'same_bytes':c['generated_asset_sha256']==oldhash[c['target']]} for c in result['clips']]
+ summary['status']='import_verified_not_visually_accepted';summary['added_assets']=sorted(added)
+except BaseException:
+ summary['status']='failed';summary['error']=traceback.format_exc();raise
+finally:
+ for entry in children:
+  try:cleanup(entry)
+  except BaseException:
+   summary['status']='failed';summary.setdefault('cleanup_errors',[]).append(traceback.format_exc())
+ if baseline is not None:
+  # This comparison deliberately bypasses expired time gate only for preservation verification.
+  final=manifest(SOURCE,check_gates=False)
+  summary['baseline_original_bytes_unchanged']=final==baseline
+  if final!=baseline:summary['status']='failed';summary['baseline_error']='original baseline manifest changed'
+ if CONTROL.exists():
+  write(CONTROL,{'schema':'sub01.import-supervisor-control.v1','active':False,'supervisor_pid':SELF['pid'],'supervisor_start_ticks':SELF['ticks'],'heartbeat_monotonic':time.monotonic()})
+ write(CASE/'results'/'supervisor-final.json',summary)
+ # Fresh persistent tree only. Actual asset bytes copied on verified success, failure evidence always retained.
+ PERSIST.mkdir(mode=0o700)
+ artifacts={}
+ for p in (CASE/'results').iterdir():
+  if p.is_file() and not p.is_symlink():artifacts['results/'+p.name]=p
+ for p in (TOOLS/'baseline-manifest.json',TOOLS/'input-pins.json',CASE/'manifest.json',TOOLS/'import-animation-candidate.py',TOOLS/'reference-pose-preflight.py'):
+  if p.is_file():artifacts['metadata/'+p.name]=p
+ if summary['status']=='import_verified_not_visually_accepted' and summary.get('baseline_original_bytes_unchanged') is True:
+  for rel in summary['added_assets']:artifacts['native/'+rel]=PROJECT/rel
+ assert sum(p.stat().st_size for p in artifacts.values()) < 512*1024**2, 'preservation bound exceeded'
+ receipt={}
+ for rel,src in artifacts.items():
+  dest=PERSIST/rel;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dest);digest=sha(src);assert sha(dest)==digest;receipt[rel]={'bytes':src.stat().st_size,'sha256':digest}
+ write(PERSIST/'PRESERVATION-RECEIPT.json',receipt,0o600)
+print(json.dumps(summary))
+assert summary['status']=='import_verified_not_visually_accepted', 'failed attempt; inspect preserved evidence'
+
+
+===== FULL FILE import-animation-candidate.py SHA256 53f7e1dc6b8454cd530840054cfaa29aaace6ad83980466671cffa54c1ebf9a3 =====
+from pathlib import Path
+import hashlib
+import importlib.util
+import json
+import math
+import os
+import stat
+import time
+import traceback
+import unreal as u
+
+TOOLS = Path('/opt/sub01/animation-reconstruction-20261026/tools')
+PROJECT = Path(u.Paths.project_dir()).resolve()
+CASE = PROJECT.parent
+assert CASE == Path('/home/sub01-animation-reconstruction-20261026/case-01')
+
+assert os.getuid() == 1002
+def supervised_gate():
+    control = TOOLS / 'supervisor-control.json'
+    st = control.lstat()
+    assert stat.S_ISREG(st.st_mode) and st.st_uid == 0 and not (st.st_mode & 0o022)
+    assert 0 < st.st_size <= 4096
+    c = json.loads(control.read_text())
+    now = time.monotonic()
+    assert c['schema'] == 'sub01.import-supervisor-control.v1' and c['active'] is True
+    assert c['canonical_stop_checked'] is True and c['measurement_absent_checked'] is True
+    assert 0 <= now - c['heartbeat_monotonic'] <= 2 and now < c['deadline_monotonic']
+    proc = Path('/proc', str(c['supervisor_pid']))
+    assert proc.stat().st_uid == 0
+    fields = (proc / 'stat').read_text().rsplit(')', 1)[1].split()
+    assert int(fields[19]) == c['supervisor_start_ticks'] and fields[0] != 'Z'
+
+supervised_gate()
+REQUEST = json.loads((CASE / 'manifest.json').read_text())
+assert REQUEST['project'] == str(PROJECT)
+OUT = Path(REQUEST['output'])
+assert not (OUT / 'import-result.json').exists()
+CONTROL = json.loads((TOOLS / 'reference-pose-control.json').read_text())
+assert CONTROL['ready'] is True and CONTROL['import_executed'] is False
+assert CONTROL['project'] == str(PROJECT) and CONTROL['uid'] == 1002
+assert CONTROL['reference_pose_api'] == 'get_reference_pose'
+BASELINE = json.loads((TOOLS / 'baseline-manifest.json').read_text())
+
+def sha(path):
+    h = hashlib.sha256()
+    with Path(path).open('rb') as f:
+        for b in iter(lambda: f.read(1048576), b''):
+            h.update(b)
+    return h.hexdigest()
+
+def save(name, data):
+    (OUT / name).write_text(json.dumps(data, sort_keys=True, indent=2) + '\n')
+
+def project_files():
+    assert not any(p.is_symlink() for p in PROJECT.rglob('*') if p.relative_to(PROJECT).parts[0] not in ('Saved', 'Intermediate', 'DerivedDataCache')), 'unexpected candidate symlink'
+    return {str(p.relative_to(PROJECT)): sha(p) for p in PROJECT.rglob('*')
+            if p.is_file() and not p.is_symlink()
+            and p.relative_to(PROJECT).parts[0] not in ('Saved', 'Intermediate', 'DerivedDataCache')}
+
+def package(asset):
+    return PROJECT / 'Content' / (asset.get_path_name().split('.')[0].removeprefix('/Game/') + '.uasset')
+
+def transform(t):
+    return {'t': [t.translation.x, t.translation.y, t.translation.z],
+            'q': [t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w],
+            's': [t.scale3d.x, t.scale3d.y, t.scale3d.z]}
+
+def reference_pose(skeleton):
+    pose = u.AnimPoseExtensions.get_reference_pose(skeleton)
+    rows = []
+    for n in u.AnimPoseExtensions.get_bone_names(pose):
+        t = u.AnimPoseExtensions.get_bone_pose(pose, n, u.AnimPoseSpaces.LOCAL)
+        rows.append({'bone': str(n), 'translation': [t.translation.x, t.translation.y, t.translation.z],
+                     'rotation': [t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w],
+                     'scale': [t.scale3d.x, t.scale3d.y, t.scale3d.z]})
+    digest = hashlib.sha256(json.dumps(rows, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+    return digest, rows
+
+def angle(a, b):
+    aa = [a.x, a.y, a.z, a.w]
+    bb = [b.x, b.y, b.z, b.w]
+    cosine = abs(sum(x*y for x, y in zip(aa, bb))) / math.sqrt(sum(x*x for x in aa) * sum(x*x for x in bb))
+    return math.degrees(2 * math.acos(min(1, max(0, cosine))))
+
+result = {'schema': 'sub01.animation-hypothesis-import-result.v1', 'candidate_id': REQUEST['candidate_id'],
+          'status': 'not_started', 'clips': [], 'migration_accepted': False, 'exact_provenance_proven': False}
+immutable = {}
+before = project_files()
+assert before == BASELINE, 'candidate initial bytes differ from sealed baseline'
+mesh = u.load_asset(REQUEST['mesh'])
+assert isinstance(mesh, u.SkeletalMesh)
+skeleton = mesh.get_editor_property('skeleton')
+assert isinstance(skeleton, u.Skeleton)
+for p, expected in ((package(mesh), REQUEST['mesh_sha256']), (package(skeleton), REQUEST['skeleton_sha256'])):
+    assert sha(p) == expected
+    immutable[str(p)] = expected
+map_path = PROJECT / 'Content/Sub01Home/ActualHome.umap'
+immutable[str(map_path)] = sha(map_path)
+ref_hash, ref_rows = reference_pose(skeleton)
+assert ref_hash == CONTROL['reference_pose_sha256'] == 'ae5c67df12bf35ed272d8c3f79d506889617d5e63ce2fd9e4a5fc02cb37f56bf'
+save('admission.json', {'request_sha256': sha(CASE / 'manifest.json'), 'uid': os.getuid(),
+     'before_manifest_sha256': sha(TOOLS / 'baseline-manifest.json'), 'reference_pose_sha256': ref_hash,
+     'reference_pose': ref_rows, 'immutable_packages': immutable, 'before_first_import': True,
+     'script_sha256': sha(TOOLS / 'import-animation-candidate.py'), 'control_sha256': sha(TOOLS / 'reference-pose-control.json')})
+
+original = REQUEST['original_importers']['unreal_supported_bed_candidate8_cinematic_import.py']
+assert sha(original['path']) == original['sha256']
+spec = importlib.util.spec_from_file_location('sub01_original_reference_math', original['path'])
+helper = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(helper)
+component = u.SkeletalMeshComponent()
+component.set_skeletal_mesh_asset(mesh)
+names = [component.get_bone_name(i) for i in range(component.get_num_bones())]
+parents = {str(n): str(component.get_parent_bone(n)) for n in names}
+hips = next(str(n) for n in names if str(n).endswith('Hips'))
+head = next(str(n) for n in names if str(n).endswith('Head'))
+
+def fk(clip, at):
+    local = {str(n): t for n, t in zip(names, u.AnimationLibrary.get_bone_poses_for_time(clip, names, at, False, mesh))}
+    cache = {}
+    def actual(n):
+        if n not in cache:
+            parent = parents[n]
+            cache[n] = u.MathLibrary.compose_transforms(local[n], actual(parent)) if parent in local else local[n]
+        return cache[n]
+    return {str(n): actual(str(n)) for n in names}
+
+r9_path = '/Game/Sub01Hands/AnatomicalCandidate/DirectPlantedSeat_eaddbc7f5f8c47b58bffe7d3ab24b859/Sitting/R9_Sitting.R9_Sitting'
+r9 = u.load_asset(r9_path)
+assert isinstance(r9, u.AnimSequence)
+r9_hips = fk(r9, .7)[hips]
+assert (r9_hips.translation - u.Vector(.075, 22.727, 64.214)).length() < .01
+save('r9-reference.json', {'clip': r9_path, 'seconds': .7, 'hips': transform(r9_hips), 'package_sha256': sha(package(r9))})
+
+try:
+    world = u.get_editor_subsystem(u.UnrealEditorSubsystem).get_editor_world()
+    u.SystemLibrary.execute_console_command(world, 'Interchange.FeatureFlags.Import.FBX 0')
+    for item in REQUEST['clips']:
+        supervised_gate()
+        inputs = item['input']
+        for entry in (inputs['fbx'], inputs['glb'], inputs['proof']):
+            assert sha(entry['path']) == entry['sha256']
+        proof = json.loads(Path(inputs['proof']['path']).read_text())
+        assert proof['fbx_sha256'] == inputs['fbx']['sha256'] and proof['source_sha256'] == inputs['glb']['sha256']
+        target = item['target']
+        assert not (PROJECT / 'Content' / (target.split('.')[0].removeprefix('/Game/') + '.uasset')).exists()
+        options = u.FbxImportUI()
+        for key, value in [('automated_import_should_detect_type', False), ('mesh_type_to_import', u.FBXImportType.FBXIT_ANIMATION),
+                           ('import_as_skeletal', True), ('import_mesh', False), ('import_animations', True),
+                           ('import_materials', False), ('import_textures', False), ('create_physics_asset', False), ('skeleton', skeleton)]:
+            options.set_editor_property(key, value)
+        skin = options.get_editor_property('skeletal_mesh_import_data')
+        skin.set_editor_property('update_skeleton_reference_pose', False)
+        skin.set_editor_property('use_t0_as_ref_pose', False)
+        data = options.get_editor_property('anim_sequence_import_data')
+        data.set_editor_property('use_default_sample_rate', False)
+        data.set_editor_property('custom_sample_rate', 30)
+        task = u.AssetImportTask()
+        task.filename = inputs['fbx']['path']
+        task.destination_path = target.rsplit('/', 1)[0]
+        task.destination_name = target.rsplit('/', 1)[1].split('.')[0]
+        task.automated = True
+        task.replace_existing = False
+        task.save = False
+        task.options = options
+        u.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+        loaded = [u.load_asset(p) for p in u.EditorAssetLibrary.list_assets(task.destination_path, recursive=True, include_folder=False)]
+        assert len(loaded) == 1 and isinstance(loaded[0], u.AnimSequence)
+        clip = loaded[0]
+        assert clip.get_path_name() == target and clip.get_editor_property('skeleton') == skeleton
+        keys = int(u.AnimationLibrary.get_num_keys(clip))
+        seconds = float(clip.get_editor_property('sequence_length'))
+        assert keys == inputs['samples'] and abs(seconds - inputs['seconds']) < .0001
+        clip.set_editor_property('enable_root_motion', False)
+        clip.set_editor_property('force_root_lock', False)
+        clip.set_editor_property('root_motion_root_lock', u.RootMotionRootLock.REF_POSE)
+        reference = helper.authored_native_reference(Path(inputs['glb']['path']))
+        samples = []
+        maximum_error_cm = 0.
+        for frame in range(keys):
+            at = min(frame / 30., seconds)
+            expected = reference(at)
+            actual = fk(clip, at)
+            for name, value in expected.items():
+                assert name in actual
+                maximum_error_cm = max(maximum_error_cm, (actual[name].translation - u.Vector(*value)).length())
+            pinned_head = u.MathLibrary.compose_transforms(u.MathLibrary.make_relative_transform(actual[head], actual[hips]), r9_hips)
+            samples.append({'seconds': at, 'component_pose': {n: transform(t) for n, t in actual.items()}, 'head_after_static_r9_pelvis_pin': transform(pinned_head)})
+        first = fk(clip, 0.)
+        audit = {'variant': item['variant'], 'target': target, 'keys': keys, 'seconds': seconds,
+                 'source_glb_sha256': inputs['glb']['sha256'], 'source_fbx_sha256': inputs['fbx']['sha256'],
+                 'max_native_vs_authored_joint_translation_cm': maximum_error_cm,
+                 'hips_at_zero': transform(first[hips]), 'hips_offset_from_r9_cm': (first[hips].translation - r9_hips.translation).length(),
+                 'hips_angle_from_r9_deg': angle(first[hips].rotation, r9_hips.rotation),
+                 'source_coherence_threshold_cm': .05, 'source_coherent': maximum_error_cm < .05,
+                 'evidence_status': item['evidence_status'], 'root_flags': {'enable_root_motion': False, 'force_root_lock': False, 'root_lock': 0}}
+        save(item['variant'] + '-audit.json', audit)
+        save(item['variant'] + '-all-key-poses.json', samples)
+        assert maximum_error_cm < .05, 'native/source coherence failed; no substitute or acceptance'
+        assert reference_pose(skeleton)[0] == ref_hash
+        assert all(sha(p) == h for p, h in immutable.items())
+        assert u.EditorAssetLibrary.save_asset(clip.get_path_name(), only_if_is_dirty=False)
+        audit['generated_asset_sha256'] = sha(package(clip))
+        result['clips'].append(audit)
+        save('import-result.json', result)
+    after = project_files()
+    expected_added = {'Content/' + x['target'].split('.')[0].removeprefix('/Game/') + '.uasset' for x in REQUEST['clips']}
+    assert {p for p in after if p not in before} == expected_added
+    assert all(after[p] == h for p, h in before.items()), 'previous project bytes changed'
+    save('after-project-manifest.json', after)
+    result.update(status='three_hypothesis_assets_imported_source_coherent', reference_pose_unchanged=True,
+                  exactly_three_asset_files_added=True, all_previous_project_bytes_unchanged=True)
+except Exception:
+    result.update(status='failed', error=traceback.format_exc())
+    raise
+finally:
+    result['immutable_packages_unchanged'] = all(sha(p) == h for p, h in immutable.items())
+    result['reference_pose_sha256_after'] = reference_pose(skeleton)[0]
+    save('import-result.json', result)
+    assert result['immutable_packages_unchanged'] and result['reference_pose_sha256_after'] == ref_hash
+print('SUB01_HYPOTHESIS_IMPORT ' + json.dumps(result), flush=True)
+
+
+===== FULL FILE reference-pose-preflight.py SHA256 6c8355a963357662530425095905918ff4eb78dccf61da034b592a15997698f3 =====
+from pathlib import Path
+import hashlib,json,os,traceback
+import unreal as u
+P=Path(u.Paths.project_dir()).resolve()
+assert str(P)=='/home/sub01-animation-reconstruction-20261026/case-01/Sub01HomeLab'
+assert os.getuid()==1002
+out=P.parent/'results/refpose-preflight.json'
+owner='/Game/Sub01Hands/AnatomicalCandidate/FBX_V_8027a9849bcf/Attempt_ee925b3f11c64fee8690b28bce56b66f/AnatomicalOwner.AnatomicalOwner'
+j={'project':str(P),'uid':os.getuid(),'classes':{k:hasattr(u,k)for k in ('AnimPoseExtensions','AnimPose','AnimPoseSpaces','AnimationLibrary')},'import_executed':False}
+try:
+    mesh=u.load_asset(owner);assert isinstance(mesh,u.SkeletalMesh)
+    sk=mesh.get_editor_property('skeleton');assert isinstance(sk,u.Skeleton)
+    ext=u.AnimPoseExtensions
+    j['api_names']=[x for x in dir(ext)if not x.startswith('_')]
+    j['reference_api_docs']={x:getattr(ext,x).__doc__ for x in j['api_names']if 'ref'in x.lower()}
+    out.write_text(json.dumps(j,indent=2)+'\n')
+    options=[name for name in ('get_ref_pose','get_reference_pose')if hasattr(ext,name)]
+    assert len(options)==1, 'reference API discovery saved; no import'
+    name=options[0];fn=getattr(ext,name);doc=fn.__doc__ or ''
+    j['reference_pose_api']=name
+    j['get_ref_pose_doc']=doc
+    j['get_bone_pose_doc']=ext.get_bone_pose.__doc__
+    j['get_bone_names_doc']=ext.get_bone_names.__doc__
+    j['spaces']=[x for x in dir(u.AnimPoseSpaces)if not x.startswith('_')]
+    signature=doc.splitlines()[0].lower()
+    if 'skeletal_mesh'in signature:pose=fn(mesh);j['reference_pose_argument']='mesh'
+    elif 'skeleton'in signature:pose=fn(sk);j['reference_pose_argument']='skeleton'
+    else:raise RuntimeError('unrecognized reference-pose signature; no import: '+signature)
+    names=list(ext.get_bone_names(pose));assert len(names)>=65
+    rows=[]
+    for n in names:
+        t=ext.get_bone_pose(pose,n,u.AnimPoseSpaces.LOCAL)
+        rows.append({'bone':str(n),'translation':[t.translation.x,t.translation.y,t.translation.z],
+                     'rotation':[t.rotation.x,t.rotation.y,t.rotation.z,t.rotation.w],'scale':[t.scale3d.x,t.scale3d.y,t.scale3d.z]})
+    j.update(reference_pose=rows,reference_pose_sha256=hashlib.sha256(json.dumps(rows,sort_keys=True,separators=(',',':')).encode()).hexdigest(),ready=True)
+except Exception:
+    j['error']=traceback.format_exc();j['ready']=False
+out.write_text(json.dumps(j,indent=2)+'\n')
+print('SUB01_REFPOSE_PREFLIGHT '+json.dumps({k:v for k,v in j.items()if k not in ('reference_pose',)}))
+assert j['ready'],j.get('error')
+
+
+===== FULL FILE manifest.json SHA256 b6934579182ceb874baff435a50f136bb32ba1fc9959d428c7eca27e397efd0c =====
+{
+  "schema": "sub01.isolated-animation-hypothesis.v1",
+  "candidate_id": "case-01-reconstruction-20261026",
+  "project": "/home/sub01-animation-reconstruction-20261026/case-01/Sub01HomeLab",
+  "output": "/home/sub01-animation-reconstruction-20261026/case-01/results",
+  "clips": [
+    {
+      "variant": "Website-gaze",
+      "target": "/Game/Sub01Hands/Cinematic20261022/Desk7_f6961034aace44a99bb8b0431082264a/SupportedWebsite.SupportedWebsite",
+      "input": {
+        "fbx": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d.fbx",
+          "sha256": "d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/captured-animation-only.fbx"
+        },
+        "glb": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363.glb",
+          "sha256": "1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze.glb"
+        },
+        "proof": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35.json",
+          "sha256": "0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/animation-conversion-proof.json"
+        },
+        "samples": 166,
+        "seconds": 5.5
+      },
+      "evidence_status": "Recreated case01 hypothesis, not original asset provenance or visual acceptance"
+    },
+    {
+      "variant": "DeskTyping-contact-clean",
+      "target": "/Game/Sub01Hands/Cinematic20261022/Desk7_1da89c8bada540468cf190aceb633b1f/SupportedDeskTyping.SupportedDeskTyping",
+      "input": {
+        "fbx": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8.fbx",
+          "sha256": "ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/captured-animation-only.fbx"
+        },
+        "glb": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce.glb",
+          "sha256": "6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean.glb"
+        },
+        "proof": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492.json",
+          "sha256": "a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492",
+          "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/animation-conversion-proof.json"
+        },
+        "samples": 166,
+        "seconds": 5.5
+      },
+      "evidence_status": "Recreated case01 hypothesis, not original asset provenance or visual acceptance"
+    },
+    {
+      "variant": "Reach",
+      "target": "/Game/Sub01Hands/Cinematic20261022/Reach_c8accd7a0070407c8af117eed5df534d/AuthoredReach.AuthoredReach",
+      "input": {
+        "fbx": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e.fbx",
+          "sha256": "d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e",
+          "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/captured-animation-only.fbx"
+        },
+        "glb": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438.glb",
+          "sha256": "b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438",
+          "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/Reach.glb"
+        },
+        "proof": {
+          "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b.json",
+          "sha256": "b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b",
+          "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/animation-conversion-proof.json"
+        },
+        "samples": 91,
+        "seconds": 3.0
+      },
+      "evidence_status": "Recreated case01 hypothesis, not original asset provenance or visual acceptance"
+    }
+  ],
+  "mesh": "/Game/Sub01Hands/AnatomicalCandidate/FBX_V_8027a9849bcf/Attempt_ee925b3f11c64fee8690b28bce56b66f/AnatomicalOwner.AnatomicalOwner",
+  "skeleton": "/Game/Sub01Hands/AnatomicalCandidate/FBX_V_8027a9849bcf/Attempt_ee925b3f11c64fee8690b28bce56b66f/AnatomicalOwner_Skeleton.AnatomicalOwner_Skeleton",
+  "mesh_sha256": "c350dbfb65e82d6bd46770b68debe6c7ceca9ed55501248c58d2b7ccbc6a8781",
+  "skeleton_sha256": "122a8a8d90c1ff73971e9aa5d490a479bbba661dd953f3753b226e0c46c39389",
+  "original_importers": {
+    "unreal_supported_bed_candidate8_cinematic_import.py": {
+      "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad.py",
+      "sha256": "7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad",
+      "original_path": "/workspace/sub01-root-offload/community-demo/bed-supported-candidate8/unreal_supported_bed_candidate8_cinematic_import.py"
+    }
+  },
+  "game_or_migration_accepted": false,
+  "exact_provenance_proven": false
+}
+
+
+===== FULL FILE input-pins.json SHA256 f52b92cd425de4cc94e640fe6b9dbce0ae8382afacabd5177f2e87f9d65c4a75 =====
+[
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d.fbx",
+    "sha256": "d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/captured-animation-only.fbx"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363.glb",
+    "sha256": "1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze.glb"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35.json",
+    "sha256": "0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/animation-conversion-proof.json"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8.fbx",
+    "sha256": "ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/captured-animation-only.fbx"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce.glb",
+    "sha256": "6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean.glb"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492.json",
+    "sha256": "a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492",
+    "original_path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/animation-conversion-proof.json"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e.fbx",
+    "sha256": "d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e",
+    "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/captured-animation-only.fbx"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438.glb",
+    "sha256": "b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438",
+    "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/Reach.glb"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b.json",
+    "sha256": "b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b",
+    "original_path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/animation-conversion-proof.json"
+  },
+  {
+    "path": "/opt/sub01/animation-reconstruction-20261026/tools/inputs/7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad.py",
+    "sha256": "7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad",
+    "original_path": "/workspace/sub01-root-offload/community-demo/bed-supported-candidate8/unreal_supported_bed_candidate8_cinematic_import.py"
+  }
+]
+
+CURRENT READ-ONLY ENVIRONMENT PRECHECK
+{"uid1002": null, "paths": [{"path": "/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab", "ancestry": [{"path": "/", "uid": 0, "gid": 0, "mode": "0o755"}, {"path": "/home", "uid": 0, "gid": 0, "mode": "0o755"}, {"path": "/home/sub01-recovery-stage-20261026", "uid": 0, "gid": 1001, "mode": "0o710"}, {"path": "/home/sub01-recovery-stage-20261026/native", "uid": 1001, "gid": 1001, "mode": "0o700"}, {"path": "/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final", "uid": 1001, "gid": 1001, "mode": "0o700"}, {"path": "/home/sub01-recovery-stage-20261026/native/cinematic-source-v3-final/Sub01HomeLab", "uid": 1001, "gid": 1001, "mode": "0o700"}]}, {"path": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd", "ancestry": [{"path": "/", "uid": 0, "gid": 0, "mode": "0o755"}, {"path": "/workspace", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-private-recovered-engine", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-private-recovered-engine/Engine", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-private-recovered-engine/Engine/Binaries", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-private-recovered-engine/Engine/Binaries/Linux/UnrealEditor-Cmd", "uid": 0, "gid": 0, "mode": "0o777"}]}, {"path": "/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu", "ancestry": [{"path": "/", "uid": 0, "gid": 0, "mode": "0o755"}, {"path": "/workspace", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-home-private", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-home-private/claude-12h", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-home-private/claude-12h/libs", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-home-private/claude-12h/libs/usr", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-home-private/claude-12h/libs/usr/lib", "uid": 0, "gid": 0, "mode": "0o777"}, {"path": "/workspace/sub01-home-private/claude-12h/libs/usr/lib/x86_64-linux-gnu", "uid": 0, "gid": 0, "mode": "0o777"}]}], "root_free": 153303482368}
+root@45b2350a6a96:/# 
+
+Current all10input hash verification:
+{
+  "inputs": [
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/captured-animation-only.fbx",
+      "exists": true,
+      "expected": "d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d",
+      "bytes": 22828380,
+      "sha256": "d2991d84ddec095967fb0c8740b7dab1c8fe585c5eb62204bdd4a5d64e6ea87d",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze.glb",
+      "exists": true,
+      "expected": "1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363",
+      "bytes": 55837140,
+      "sha256": "1bae312637c7a62c579e5b7a80648935087f538575c9c372304c0a2bd9109363",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/Website-gaze-fbx/animation-conversion-proof.json",
+      "exists": true,
+      "expected": "0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35",
+      "bytes": 1163,
+      "sha256": "0b943884176d3f78cc579b9b47be8ee7ace2cc4fd069046800002c37bb494e35",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/captured-animation-only.fbx",
+      "exists": true,
+      "expected": "ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8",
+      "bytes": 22828732,
+      "sha256": "ae2b8c74cb58c0b2ed087a189b2daab9ff7a95c6ed81a083eb9bdd60647000c8",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean.glb",
+      "exists": true,
+      "expected": "6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce",
+      "bytes": 55830696,
+      "sha256": "6e299602abb9683a1716b3b52fea621abd40ef2f51d1fc1d952158b6f4a6adce",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/desk7-body-v5/DeskTyping-contact-clean-fbx/animation-conversion-proof.json",
+      "exists": true,
+      "expected": "a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492",
+      "bytes": 1175,
+      "sha256": "a0c9e9293e2aec9f6967693482c3824ce39d023bf0486f3fa7224c9ee8ab6492",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/captured-animation-only.fbx",
+      "exists": true,
+      "expected": "d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e",
+      "bytes": 22510796,
+      "sha256": "d8781238a6cd7955eb5518b8d6a6167857f613a3d8eccb10dba536b208e1e54e",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/Reach.glb",
+      "exists": true,
+      "expected": "b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438",
+      "bytes": 55045220,
+      "sha256": "b849fdb3bc60d8256bd75d83d300cf6030fcf1376c466a7dd94b9d5e5342f438",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/community-demo/sofa-final-source-stage2/Reach/fbx/animation-conversion-proof.json",
+      "exists": true,
+      "expected": "b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b",
+      "bytes": 1176,
+      "sha256": "b19672578af567aab48c37127985083fbf086b376bd79ee0e32804dd2a45a87b",
+      "matches": true
+    },
+    {
+      "path": "/workspace/sub01-root-offload/community-demo/bed-supported-candidate8/unreal_supported_bed_candidate8_cinematic_import.py",
+      "exists": true,
+      "expected": "7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad",
+      "bytes": 11880,
+      "sha256": "7f1b8c299f8fd0f8a08b448bcd1d00cf1a7e3e8d2de3ed1b29ea7e91735e0fad",
+      "matches": true
+    }
+  ],
+  "all_match": true
+}
+
+Root requests exact corrected isolated execution approval only after cap61 verification cleanup/decode completes. All prior diagnostics cleaned up; full cap61 media decode is currently running. Source private ancestry denies UID1002 traversal, no account currently owns UID1002; engine/library traversal mode0777 is existing volume behavior, no volume ownership change requested. No provider request, renderer, agent or backend launch in this import.

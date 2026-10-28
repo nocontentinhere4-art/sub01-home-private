@@ -11,6 +11,7 @@
 Pure helpers; browse.Browser._shorts drives the feed.
 """
 import re
+import time
 import urllib.parse
 
 from search_sources import _dedup, _result, parse_html, strip_tags
@@ -71,6 +72,29 @@ def watch_seconds(w):
 
 def is_tiktok(host):
     return bool(TIKTOK_HOST.search((host or "").rstrip(".")))
+
+
+SHORT_STALE_S = 3 * SHORTS_MAX_S       # a short shown longer ago than this, with no new one since, is a stalled feed
+
+
+def shows_short(st, now=None):
+    """True when the phone's screen shows a short video now: a TikTok page (a video, a tag feed or an embed card) or a
+    YouTube Shorts page, live, not restarting and not stalled (opened within SHORT_STALE_S). Anything else (a results
+    page, an article, a restart, a refused title, a stalled feed, no status at all) is not a short: home_phone.life_view
+    then shows the chat app, never a blank or a stale glass."""
+    if not isinstance(st, dict) or st.get("restarting") or st.get("device") not in (None, "phone"):
+        return False
+    url = str(st.get("url") or "")
+    if not url:
+        return False
+    opened = st.get("t")
+    if isinstance(opened, (int, float)) and (time.time() if now is None else now) - opened > SHORT_STALE_S:
+        return False
+    try:
+        host = (urllib.parse.urlsplit(url).hostname or "").rstrip(".")
+    except ValueError:                                       # a malformed address is not a short
+        return False
+    return is_tiktok(host) or bool(YT_SHORT.match(url))
 
 
 def caption_ok(page_title):

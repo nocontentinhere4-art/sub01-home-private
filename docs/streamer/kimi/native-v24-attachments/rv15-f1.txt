@@ -1,0 +1,35 @@
+# Walker (the frame cutter): the new method
+    def drop_partial(self) -> None:
+        """The writer closed (EOF): a frame it had not finished can never complete (it never resumes a tail): count it as a cut."""
+        if self.buffer:
+            self.cuts += 1
+            self.buffer.clear()
+
+
+# probe(): the rescan setup, the loop head, the EOF branch, the last look before the descriptor is closed
+    # The scan above is advisory (a reader may still open the FIFO after it): it is repeated every RESCAN_S s and at the end, and a
+    # reader seen at any time makes the run non-exclusive (its numbers then do not count for the go/no-go).
+    target, intruders, rescan_at = (info.st_dev, info.st_ino), set(), time.monotonic() + RESCAN_S
+    poller = select.poll()
+    poller.register(fd, select.POLLIN)
+    started = time.monotonic()
+    try:
+        while time.monotonic() - started < seconds:
+            if not force and time.monotonic() >= rescan_at:
+                intruders.update(other_readers(path, target=target)[0])
+                rescan_at = time.monotonic() + RESCAN_S
+            poller.poll(100)
+            ... (data = os.read(fd, CHUNK); EAGAIN -> continue; now = time.monotonic())
+            if not data:                          # EOF: no writer (yet, or any more)
+                eof_reads += 1
+                walker.drop_partial()             # a frame cut by the writer's close: the next writer starts with a fresh SOI
+                time.sleep(0.05)
+                continue
+            ...
+        if not force:
+            intruders.update(other_readers(path, target=target)[0])   # the last look, while this probe still holds its descriptor
+    finally:
+        os.close(fd)
+
+# the report adds
+            'exclusive': None if force else not intruders, 'other_readers_during_run': sorted(intruders)}

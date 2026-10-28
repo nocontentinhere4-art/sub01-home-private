@@ -1,0 +1,367 @@
+{
+  "utc": "2026-10-26T14:08:16.675669+00:00",
+  "phase": "bounded_recording_complete_requires_decode_and_visual_review",
+  "cleanup_verified": true,
+  "recordings": [
+    {
+      "name": "sub01-20261026-135837-000.mp4",
+      "bytes": 1132163,
+      "sha256": "654c6358f777c432e08721aaaaf77aab6b0ce0823febf0cabc233bb1e8b2644e",
+      "persistent": "/workspace/sub01-integrated-cadence61-20261026-media/sub01-20261026-135837-000.mp4",
+      "ffprobe_exit": 0,
+      "metadata": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "h264",
+            "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "profile": "High",
+            "codec_type": "video",
+            "codec_tag_string": "avc1",
+            "codec_tag": "0x31637661",
+            "width": 1920,
+            "height": 1080,
+            "coded_width": 1920,
+            "coded_height": 1088,
+            "closed_captions": 0,
+            "film_grain": 0,
+            "has_b_frames": 2,
+            "sample_aspect_ratio": "1:1",
+            "display_aspect_ratio": "16:9",
+            "pix_fmt": "yuv420p",
+            "level": 42,
+            "color_range": "tv",
+            "color_space": "bt709",
+            "chroma_location": "left",
+            "field_order": "progressive",
+            "refs": 4,
+            "is_avc": "true",
+            "nal_length_size": "4",
+            "id": "0x1",
+            "r_frame_rate": "60/1",
+            "avg_frame_rate": "60/1",
+            "time_base": "1/15360",
+            "start_pts": 512,
+            "start_time": "0.033333",
+            "duration_ts": 2866688,
+            "duration": "186.633333",
+            "bit_rate": "40862",
+            "bits_per_raw_sample": "8",
+            "nb_read_frames": "11198",
+            "extradata_size": 49,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "VideoHandler",
+              "vendor_id": "[0][0][0][0]",
+              "encoder": "Lavc60.31.102 libx264"
+            }
+          },
+          {
+            "index": 1,
+            "codec_name": "aac",
+            "codec_long_name": "AAC (Advanced Audio Coding)",
+            "profile": "LC",
+            "codec_type": "audio",
+            "codec_tag_string": "mp4a",
+            "codec_tag": "0x6134706d",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "id": "0x2",
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 8960576,
+            "duration": "186.678667",
+            "bit_rate": "2275",
+            "nb_read_frames": "8750",
+            "extradata_size": 5,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "SoundHandler",
+              "vendor_id": "[0][0][0][0]"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/home/unreal/.sub01-private/integrated-cadence61-20261026/recordings/sub01-20261026-135837-000.mp4",
+          "nb_streams": 2,
+          "nb_programs": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "186.678667",
+          "size": "1132163",
+          "bit_rate": "48518",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "iso5",
+            "minor_version": "512",
+            "compatible_brands": "iso5iso6mp41",
+            "encoder": "Lavf60.16.100"
+          }
+        }
+      },
+      "decode_exit": 0,
+      "decode_error": ""
+    },
+    {
+      "name": "sub01-20261026-140146-000.mp4",
+      "bytes": 24398556,
+      "sha256": "c2f6d603b1b38ee1bf152f8de9f6aaad4a21425627a03e99c9696b612f7119cd",
+      "persistent": "/workspace/sub01-integrated-cadence61-20261026-media/sub01-20261026-140146-000.mp4",
+      "ffprobe_exit": 0,
+      "metadata": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "h264",
+            "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "profile": "High",
+            "codec_type": "video",
+            "codec_tag_string": "avc1",
+            "codec_tag": "0x31637661",
+            "width": 1920,
+            "height": 1080,
+            "coded_width": 1920,
+            "coded_height": 1088,
+            "closed_captions": 0,
+            "film_grain": 0,
+            "has_b_frames": 2,
+            "sample_aspect_ratio": "1:1",
+            "display_aspect_ratio": "16:9",
+            "pix_fmt": "yuv420p",
+            "level": 42,
+            "color_range": "tv",
+            "color_space": "bt470bg",
+            "chroma_location": "center",
+            "field_order": "progressive",
+            "refs": 4,
+            "is_avc": "true",
+            "nal_length_size": "4",
+            "id": "0x1",
+            "r_frame_rate": "60/1",
+            "avg_frame_rate": "60/1",
+            "time_base": "1/15360",
+            "start_pts": 512,
+            "start_time": "0.033333",
+            "duration_ts": 4513024,
+            "duration": "293.816667",
+            "bit_rate": "656699",
+            "bits_per_raw_sample": "8",
+            "nb_read_frames": "17629",
+            "extradata_size": 49,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "VideoHandler",
+              "vendor_id": "[0][0][0][0]",
+              "encoder": "Lavc60.31.102 libx264"
+            }
+          },
+          {
+            "index": 1,
+            "codec_name": "aac",
+            "codec_long_name": "AAC (Advanced Audio Coding)",
+            "profile": "LC",
+            "codec_type": "audio",
+            "codec_tag_string": "mp4a",
+            "codec_tag": "0x6134706d",
+            "sample_fmt": "fltp",
+            "sample_rate": "48000",
+            "channels": 2,
+            "channel_layout": "stereo",
+            "bits_per_sample": 0,
+            "initial_padding": 0,
+            "id": "0x2",
+            "r_frame_rate": "0/0",
+            "avg_frame_rate": "0/0",
+            "time_base": "1/48000",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 14105152,
+            "duration": "293.857333",
+            "bit_rate": "2275",
+            "nb_read_frames": "13774",
+            "extradata_size": 5,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "SoundHandler",
+              "vendor_id": "[0][0][0][0]"
+            }
+          }
+        ],
+        "format": {
+          "filename": "/home/unreal/.sub01-private/integrated-cadence61-20261026/recordings/sub01-20261026-140146-000.mp4",
+          "nb_streams": 2,
+          "nb_programs": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "293.857333",
+          "size": "24398556",
+          "bit_rate": "664228",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "iso5",
+            "minor_version": "512",
+            "compatible_brands": "iso5iso6mp41",
+            "encoder": "Lavf60.16.100"
+          }
+        }
+      },
+      "decode_exit": 0,
+      "decode_error": ""
+    }
+  ],
+  "hls": [
+    {
+      "name": "live.m3u8",
+      "bytes": 758,
+      "sha256": "12a8992360f61a1b089afb78aab06d64b0989045fbb51e84c458e56a7a760aac"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023374.ts",
+      "bytes": 396116,
+      "sha256": "35a68bdf5a858fd0c42c533da24b255547d55ec31688cc161389a12774144ff0"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023375.ts",
+      "bytes": 409652,
+      "sha256": "b8bceba14f830e8bced34a9bcd4bc090f6db16d59f414d9cea8472d011b61796"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023376.ts",
+      "bytes": 415104,
+      "sha256": "199d7de856384fe2957b6e5f9d1327e56bfe406baab2fb0f7d73b368dd758540"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023377.ts",
+      "bytes": 403824,
+      "sha256": "cdfc9b9cb0e12facd641b6484dfd49256c02f87bba539499544b47ab1d8180e2"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023378.ts",
+      "bytes": 413412,
+      "sha256": "f77304a6396cd0a90118f201c75ba5a680bbf923ccffae78b2afdee720db38ce"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023379.ts",
+      "bytes": 389536,
+      "sha256": "c887a7b572de0b58ac075954985a18fc85467377c4a0cfcc0fa475af506f3fc0"
+    },
+    {
+      "name": "sub01-20261026-140146-1793023380.ts",
+      "bytes": 183676,
+      "sha256": "f55abeedb8d3a3a07800c63b45e1147b08806c4b0ba51ffdf3cf8605f2df731d"
+    }
+  ],
+  "scope": "Limited native/K07-ready/recording/HLS proof; no full acceptance",
+  "last180s": {
+    "seconds": 179.348153591156,
+    "unique_frames": 10507,
+    "unique_fps": 58.584377868488524,
+    "counter_deltas": {
+      "gaps": 0,
+      "bad": 0,
+      "cut": 0,
+      "repeated": 0,
+      "noseq": 0,
+      "overflows": 0
+    },
+    "core_mean": 5.294544444444444,
+    "cpu_budget": 13.6,
+    "throttled_usec_delta": 0
+  },
+  "real_fifo_span_s": 299.97947216033936,
+  "bootstrap_restarts": 1,
+  "post_ready_run_ids": [
+    "sub01-20261026-140146"
+  ],
+  "recording_decode_pass": true,
+  "main_60fps_gate": false
+}

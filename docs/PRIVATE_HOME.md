@@ -5,26 +5,108 @@ repository, connect it to Railway, or modify the public SUB-01 service.
 
 ## Run locally
 
-Use a Python environment with `requirements-server.txt` installed. The browser
-also requires the official Playwright Chromium installation. The local browser
-launcher uses the existing local environment and cache when available:
+Requirements:
+
+- Python 3.12. CI and the Docker image use 3.12; 3.13 also works locally. Create
+  the environment with `python3.12 -m venv .venv`, activate it, and run
+  `pip install -r requirements-server.txt`.
+- The official Playwright Chromium for the screens: `python -m playwright install
+  chromium`. The browser launcher below uses the existing environment and cache
+  when available.
+- Node.js on the PATH. The home's Linux computer needs it; without it the
+  computer reports "Node.js is not installed".
+
+Start the isolated browser first (macOS, leave it running):
 
 ```sh
-./scripts/start-private-browser.command
+./scripts/start-private-browser.command        # 127.0.0.1:8799
 ```
 
-Leave that process running. In another terminal, from this repository:
+In another terminal, from this repository:
 
 ```sh
 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python scripts/start_home_local.py \
-  --browser-service http://127.0.0.1:8799
+  --browser-service http://127.0.0.1:8799     # 127.0.0.1:8798
 ```
 
-Open `http://127.0.0.1:8798/house`. Both services bind only to loopback. The
-browser uses an isolated profile, not the operator's personal Chrome profile.
-The launcher disables paid AI integrations, coin trading, and cloud pod startup.
-Its fixed operator token is for local development only and must never be used
-for a public deployment.
+Open `http://127.0.0.1:8798/house`. The launcher sets `HOME_ENABLED=1`,
+`HOME_ENTRYPOINT=1` and `BROWSE=1`; it blanks the paid keys and turns off the
+mind, clips, the trade feed and cloud pod startup. Both services bind only to
+loopback. The browser uses an isolated profile, not the operator's personal
+Chrome profile. Its fixed operator token is for local development only and must
+never be used for a public deployment. Without `--browser-service` the home
+starts its own Chromium child process, if Playwright is installed. The CPU spiking process runs with
+500,000 neurons by default: `--neurons` changes the count and `--no-spiking`
+skips it.
+
+### Without a browser (BROWSE=0)
+
+Use this when Chromium is not installed or the screens are not needed. There is
+no screen image: `/api/screen/desk.jpg` and `/api/screen/phone.jpg` answer 404,
+and `GET /api/screens` gives the reason. This direct run does not blank API keys
+as the launcher does, so do not export them in this shell.
+
+```sh
+HOME_ENABLED=1 BROWSE=0 MIND=0 CLIPS=0 SUB01_SPIKING_LIVE=0 \
+  python live_server.py --demo --data-dir data/house-no-browser
+```
+
+Open `http://127.0.0.1:8765/` for the house, or `/room-classic` for the classic
+room. Without `HOME_ENABLED=1`, `/` is the classic room.
+
+### Ports
+
+| Port | Process | Bind |
+|---|---|---|
+| 8798 | the private home (`scripts/start_home_local.py`, `--port`) | 127.0.0.1 |
+| 8799 | isolated browser service (`scripts/start-private-browser.command`) | 127.0.0.1 |
+| 8765 | `live_server.py` run directly (`PORT` changes it) | `HOST`, default 127.0.0.1 |
+
+## Troubleshooting
+
+**Black monitor**
+
+- `http://127.0.0.1:8798/api/screens` says whether the browser is up and why not.
+  Common reasons: `the browser is turned off (BROWSE=0)`, which means start
+  through the launcher or set `BROWSE=1` (`live_server.py:2302`); and
+  `playwright is not installed`, which means run `python -m playwright install
+  chromium` in the environment that starts the server (`live_server.py:2312`).
+- With `--browser-service`, start `scripts/start-private-browser.command` first;
+  the browser service must answer on 8799.
+- The script keeps the browser under `/private/tmp/sub01-house-chromium`. If that
+  folder was cleared, reinstall Chromium with the command above.
+- Bathroom privacy is on: the screen images answer 409 on purpose
+  (`live_server.py:2325-2349`; the privacy gate is also in `home_api.py:53-56`).
+- The computer shows "Node.js is not installed" (`home_computer.py:191-193`):
+  install Node.js and restart.
+
+**404 on assets**
+
+- `/house/assets/bath-fixtures-original/`, `bath-light-original/` or
+  `bath-door-original/`: the eight bathroom files are not in the repo. The
+  console says `Bath <name> stays procedural` (`web/house/home.js:978`), or
+  `Bath light fallback` / `Bath door fallback` (`home.js:1009, 1016`), and the
+  bathroom is drawn in code. Restore the files from where they were built, or
+  rebuild them in Blender with `blender -b --python tools/build_home_bath_fixtures.py`
+  (then the `build_home_bath_light.py` and `build_home_bath_door.py` scripts).
+- Any other 404 under `/house/assets/`: the file is not under `web/`, which is the
+  only static root (`live_server.py:2471`). The other asset files named in the
+  house code existed on 2026-10-23.
+- `/house` answers "Home is not enabled": `HOME_ENABLED` is not `1`
+  (`home_api.py:49-51`).
+
+**No reactions**
+
+- The house page (`/`) does not show reactions. It shows "Impulse received. He
+  chooses what to do." (`web/house/home.js:2771-2772`). Open `/life.html`.
+- The page prints "not sent: <reason>" when the server refuses a message
+  (`web/life.html:307`). Common reasons: "one message every 10 s" (rate limit),
+  "duplicate", "links are not allowed" (`chat.py:309-326`).
+- With the PC bridge off, a link gets the reply "I cannot open links yet."
+  (`live_server.py:643`). That reply is a reaction, so it does show.
+- Reactions are broadcast to every open page, and the duplicate copy is removed
+  (`web/life.html:337-347`). If nothing arrives at all, check the browser console
+  for the `/ws` connection; the page retries with backoff.
 
 ## What is running
 

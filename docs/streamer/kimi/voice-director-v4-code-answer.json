@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "**APPROVE ONE RUN** — exact reviewed v4 controller only; no retry and no post-review edits.\n\nThe supplied diff matches the approved delta, and I find no blocking Python/Linux UAPI defect:\n\n- CUDA preflight pins the complete evidence SHA-256 and validates return code 0, verified cleanup, one run, `cuInit == 0`, successful device count with `count == 1`, fixture success, acknowledged non-`comm_only` residual scope, and absence of all listed owned PIDs.\n- Preflight and postcondition checks reject TCP/TCP6 listeners; `SO_REUSEADDR` probes retain active-listener failure and close their sockets. Existing listener identity/ownership guards remain intact.\n- The v2 wrapper’s Landlock and seccomp structures, constants, syscall numbers, TCP bind-only grant, and inherited restrictions are consistent with x86-64 Linux UAPI.\n- Observer hash, v2 wrapper hash, source/config/reference/cache/tuning gates, native PID/start-ticks/STOP/receipt checks, fresh v4 root, and absent lease remain enforced.\n- Execution remains bounded to one `/speak` request, 10-second utterance cap, 5-second request deadline, 90-second capture, and 300-second controller hard deadline. Failure enters owned cleanup without automatic retry.\n\nLaunch exactly:\n\n```bash\nenv -u PYTHONOPTIMIZE /usr/bin/python3 -I /tmp/sub01-share/run-voice-director-check-v4.py\n```\n\nApproval applies only to controller SHA-256 `b956769dd0501680f309d9aeee6142a4913968ad887632fcabe6bab98713ce47`. This is launch authorization, not a claim that the diagnostic has executed or passed.",
+ "finish_reason": "stop",
+ "prompt_tokens": 10970,
+ "completion_tokens": 3365,
+ "reasoning_tokens": 2991,
+ "seconds": 102.0
+}

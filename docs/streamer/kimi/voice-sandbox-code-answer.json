@@ -1,0 +1,10 @@
+{
+ "reasoning_effort": "high",
+ "model": "kimi-k3.1-pro",
+ "answer": "APPROVE SELFTEST\n\nStatic review finds no blocking defect for the single described run. The seccomp BPF fails closed on non-x86_64 and x32, restricts INET/INET6 sockets to stream protocol 0 or TCP 6, denies SCTP/MPTCP through domain/type/protocol checks, and returns EPERM for io_uring syscalls 425–427. Landlock handles both TCP bind/connect, grants only bind on the selected 8855/8856 port and no connect rights; its filesystem rights and path rules match the isolated-write and control-denial tests. The test binds 8855 without listening, closes its sockets, performs no GPU/service operations, and rechecks the control contents.\n\nRun exactly once with port 8855 and the new private paths. The parent runner must enforce the 30-second watchdog, capture the JSON stdout receipt, and clean up only its own child and test artifacts; those parent controls are not shown in these files. No approval is given for voice/director/ffmpeg/native changes, GPU tests, listeners, or further runs.",
+ "finish_reason": "stop",
+ "prompt_tokens": 2852,
+ "completion_tokens": 6974,
+ "reasoning_tokens": 6738,
+ "seconds": 213.3
+}
