@@ -631,3 +631,21 @@ def test_talk_beats_move_the_head_while_speaking():
     yaws = [o["gaze_yaw_deg"] for o in rows[16:]]
     assert max(yaws) - min(yaws) >= 3.0                               # visible phrase-level head movement
     assert all(abs(b - a) / 0.25 <= 30.0 for a, b in zip(yaws, yaws[1:]))   # eased, never a snap
+
+
+def test_calm_profile_moves_slower_and_less_often():
+    def run(defaults):
+        md = SM.MotionDirector(random.Random(31), defaults=defaults)
+        r = random.Random(32)
+        rows = simulate(20 * 60, lambda t: {"action": r.choice(["read", "none", "scroll"]), "speaking": (t - 1000.0) % 40 < 9},
+                        md=md)
+        yaw = [o["gaze_yaw_deg"] for _, o in rows]
+        step = max(abs(b - a) for a, b in zip(yaw, yaw[1:]))
+        nods, _ = onsets(rows, lambda o: o["nod_strength"] > 0.05)
+        gest, _ = onsets(rows, lambda o: o["motion"]["hand_left"] == "gesture" or o["motion"]["hand_right"] == "gesture")
+        return step, nods, gest
+    assert set(SM.PROFILES) == {"default", "calm"} and set(SM.CALM) <= set(SM.DEFAULTS)
+    d_step, d_nods, d_gest = run(None)
+    c_step, c_nods, c_gest = run(SM.CALM)
+    assert c_step < d_step / 2, (c_step, d_step)          # head aims settle 3-5x slower
+    assert c_nods < d_nods and c_gest < d_gest, (c_nods, d_nods, c_gest, d_gest)

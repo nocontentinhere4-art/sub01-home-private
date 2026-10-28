@@ -3948,3 +3948,15 @@ def test_camera_directing_shows_the_face_only_for_chat_answers_and_reactions(tmp
 def _director_layouts_by_default(monkeypatch):
     """Most tests here check the director-layout path; camera directing (the live default) has its own test."""
     monkeypatch.setattr(SA, "CAMERA_DIRECTING", False)
+
+
+def test_motion_profile_file_picks_the_calm_profile(tmp_path):
+    agent, *_ = make(tmp_path / "a")
+    assert agent.motion_profile == "default" and agent.status()["motion_profile"] == "default"
+    (tmp_path / "b" / "streamer").mkdir(parents=True)
+    (tmp_path / "b" / "streamer" / "motion-profile").write_text("calm\n")
+    agent, *_ = make(tmp_path / "b")
+    assert agent.motion_profile == "calm" and agent.visual.motion.d["gaze_tau_s"] == SA.streamer_motion.CALM["gaze_tau_s"]
+    (tmp_path / "b" / "streamer" / "motion-profile").write_text("wild")
+    agent, *_ = make(tmp_path / "b")
+    assert agent.motion_profile == "default"                                # an unknown name falls back

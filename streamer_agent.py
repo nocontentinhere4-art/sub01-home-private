@@ -2924,10 +2924,19 @@ class Agent:
         self.visual.speaking_fn = self.speaking_now
         if cfg.mouse_state not in MOUSE_STATES:
             cfg.mouse_state = "mouse"
+        self.motion_profile = "off"
         if streamer_motion is not None and os.environ.get("STREAMER_MOTION", "1") != "0":
             # 2026-10-23: the native build maps "mouse" to the sitting loop (confirmed on the pod); --mouse-state reading
             # is the fallback that keeps the reading pose on clicks
-            self.visual.motion = streamer_motion.MotionDirector(self.rng, camera=CAMERA, mouse_state=cfg.mouse_state)
+            try:                                              # the owner's motion profile (streamer_motion.PROFILES)
+                profile = (Path(cfg.streamer_dir) / "motion-profile").read_text().strip()
+            except OSError:
+                profile = os.environ.get("STREAMER_MOTION_PROFILE", "default")
+            if profile not in streamer_motion.PROFILES:
+                profile = "default"
+            self.motion_profile = profile
+            self.visual.motion = streamer_motion.MotionDirector(self.rng, camera=CAMERA, mouse_state=cfg.mouse_state,
+                                                                defaults=streamer_motion.PROFILES[profile])
         self.started = clock()
         self.chat_since = self.memory.chat_since
         self.pending = {}                                     # seq -> classified chat item waiting for a batch
@@ -5701,7 +5710,7 @@ class Agent:
                 "chat": {"pending": len(self.pending), "since": self.chat_since,
                          "quiet_minute_s": round(max(0.0, self.hush_until - now))}, "requests": self.requests.summary(),
                 "pc": self.pc.summary(now, self.cfg.pc_allow_games),
-                "inject_armed": bool(self.inject_armed or (self.dir / "inject_error").exists()),
+                "inject_armed": bool(self.inject_armed or (self.dir / "inject_error").exists()), "motion_profile": self.motion_profile,
                 "shadow": self.shadow_status(), "lease": self.lease_status(), "hands_off": self.hands_off_reason(now),
                 "guards": {"held": self.held, "frozen": self.frozen, "probation": self.probation,
                            "fail_streak": self.fail_streak, "actions_last_minute": self.actions_last_minute(now),

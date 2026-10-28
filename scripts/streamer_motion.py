@@ -174,6 +174,27 @@ DEFAULTS = {
 }
 
 
+# "calm" profile (owner 2026-10-28: "si muove troppo veloce, deve essere 10 volte piu lento e naturale"): every voluntary
+# move 3-5x slower, accents smaller, glances/nods/gestures/fidgets 2-3x rarer, fewer state flips. Picked by the agent from
+# `<streamer-dir>/motion-profile` (one word) or STREAMER_MOTION_PROFILE; "default" = DEFAULTS.
+CALM = {
+    "state_min_dwell_s": 2.0,
+    "reading_gaze_max_yaw_deg": 2.0, "reading_gaze_smooth_s": 4.0,
+    "gaze_tau_s": 2.0,
+    "chat_glance_every_s": (120.0, 240.0), "chat_glance_s": (2.0, 3.5),
+    "lens_check_every_s": (400.0, 800.0), "lens_check_s": (1.5, 2.5),
+    "talk_beat_every_s": (8.0, 14.0), "talk_beat_yaw_deg": 1.2, "talk_beat_pitch_deg": 0.6,
+    "talk_beat_nod_p": 0.1, "talk_beat_nod_strength": (0.08, 0.16), "speech_start_nod": 0.14, "nod_decay_s": 2.5,
+    "lean_rise_s": 4.0, "lean_fall_s": 6.0,
+    "posture_shift_every_s": (480.0, 900.0), "weight_shift_every_s": (150.0, 300.0), "weight_shift_s": 6.0,
+    "bored_rise_s": 4.0, "surprise_back_rise_s": 0.6, "laugh_back_rise_s": 0.8, "reaction_recover_s": 3.0,
+    "gesture_every_chat_s": (16.0, 28.0), "gesture_every_talk_s": (30.0, 60.0), "gesture_s": (2.0, 3.0),
+    "fidget_every_s": (300.0, 600.0),
+    "intensity_by_state": {"idle": 0.11, "reading": 0.24, "typing": 0.36, "mouse": 0.3, "talking": 0.41, "reacting": 0.33},
+}
+PROFILES = {"default": {}, "calm": CALM}
+assert set(CALM) <= set(DEFAULTS)
+
 def clamp(x, lo, hi):
     return lo if x < lo else hi if x > hi else x
 
