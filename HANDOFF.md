@@ -149,6 +149,29 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   games as code (a 1-10 rating or vote the code tallies from chat, so it is real, not invented); (5) memory of
   regulars' names.
 
+### 13:40-14:40 UTC (owner awake): continuous run, latency, content, cartoon mode
+- 04:49-13:43 the frozen latch held him hands-off (a static ad) and the loop died with the session. Frozen auto-clear
+  deployed 13:52 with the owner's explicit OK (120 s, max 3/h; black/held stay manual).
+- Latency: the pod produces segments ~5 s after the voice; the site player started 10 s behind and drifted to 1-2 min.
+  The public relay (`live-preview/relay.py`, copy `tools/pod/onpod/live_relay.py`) now serves only the newest 4
+  segments with EXT-X-START -4 (Kimi APPROVE). Site-side patch for Codex: `docs/streamer/proposals/site-player-latency-20261028.md`.
+  The relay sends every chat line as nick "viewer": the site needs a name field to greet people / track regulars.
+- Content: no documentaries/cooking/nature; chat suggestions, viral, memes, fails, music, highlights, games; he picks
+  the next thing himself (never autoplay). Honesty in a streamer's voice: no "simulated character" disclaimers; a
+  sincere what-are-you question gets one honest playful line (Kimi APPROVE).
+- CARTOON MODE (owner, hybrid; generator = this Claude session via Higgsfield, 2.5 credits per 5 s clip, max 100/day):
+  - `scripts/cartoon_feed.py` on 127.0.0.1:8842 -> FIFO `streamer/cartoon.mjpeg` (30 fps, idle poster
+    `streamer/cartoon/poster.jpg`); started by hand (not supervised): restart it after a pod restart.
+  - director: `--cartoon-fifo` via flag file `streamer/cartoon-on`; `streamer/layout-follow` is set (it follows
+    layout.jsonl, last = webcam_only); cartoon input queue 16 frames (clip shows within ~1 s).
+  - agent: chat "cartoon: <action>" -> fail-closed moderation -> `streamer/cartoon/queue.jsonl` -> the generator
+    reviews the request, renders (start image = the cartoon room, Higgsfield job bf9625ac-08ac-409f-87e0-d7322b0b7d33,
+    seedance_2_0_mini 480p 5 s), reviews a contact sheet, uploads `cartoon/clips/<id>.mp4` and writes
+    `cartoon/done/<id>.json`; the agent plays it (feeder + director layout "cartoon"), then restores the layout.
+  - Generator tools (scratchpad): `cartoon_watch.sh` (Monitor on the queue), `cartoon_deliver.sh ID MP4|-`.
+  - Live tests OK: the owner's "throw the PC out the window" clip and a brick clip aired with captions.
+- RunPod balance 23.05 at 13:50 UTC, 1.26/h: the 15-dollar stop line is ~20:15 UTC.
+
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
    - In the shot from behind the wrists still cross towards the keyboard centre. The IK elbow guard slides them 8-12
