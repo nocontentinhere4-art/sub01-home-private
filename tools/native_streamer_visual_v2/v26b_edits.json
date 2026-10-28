@@ -1,0 +1,12 @@
+[
+ {
+  "file": "Sub01HomeHands.cpp",
+  "anchor": "  {const float Rate=FMath::Clamp(Hands->StreamerVisualClipRate,.1f,1.f);if(Current.GetPlayRate()>0&&Current.GetPlayRate()!=Rate)Current.SetPlayRate(Rate);} // SUB01_STREAMER_VISUAL_V2_V26: clip_rate every frame (a frozen clip keeps rate 0)\n",
+  "replacement": "  // SUB01_STREAMER_VISUAL_V2_V26B: clip_rate moved below, after TargetRate (here it was overwritten every frame)\n"
+ },
+ {
+  "file": "Sub01HomeHands.cpp",
+  "anchor": "  StreamerV2Dt=DeltaSeconds;if(StreamerVisualActive&&StreamerV2)StreamerV2LoopSeam(DeltaSeconds);",
+  "replacement": "  if(StreamerVisualActive&&StreamerV2&&Current.GetPlayRate()>0)Current.SetPlayRate(FMath::Clamp(Hands->StreamerVisualClipRate,.1f,1.f)); // SUB01_STREAMER_VISUAL_V2_V26B: clip_rate after TargetRate and the v2 clip setup (a frozen clip keeps rate 0)\n  StreamerV2Dt=DeltaSeconds;if(StreamerVisualActive&&StreamerV2)StreamerV2LoopSeam(DeltaSeconds);"
+ }
+]

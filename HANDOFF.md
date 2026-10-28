@@ -113,6 +113,17 @@ code that runs; the pod's runtime copy is `/home/sub01-recovery-stage-20261026/r
 - 1-hour stability watch 02:19-03:19: no service restarts except my 2 agent deploys, game unchanged, fps median 59.6
   (min 52.3), RSS 6041 -> 6223 MB (+182 MB/h: watch it), HLS age max 2.2 s, relay always 200.
 
+### 04:01-04:12 UTC: v26 then v26b LIVE (owner OK "Sì, riavvia con la v26")
+- v26 swapped in at 04:01 (game pid 65127) but clip_rate had no effect: later in the same PreUpdate the proxy sets
+  `Current.SetPlayRate(Hands->TargetRate)` every frame. v26b (Kimi APPROVE) applies clip_rate after it; swapped in at
+  04:08, game pid 67627, log `owner-stack-20261026/logs/native-v26b.log`, 59.3 fps.
+- Measured: clip_rate 0.5 -> clip time 0.51 s/s, head 2.3 cm/s median (was 5.1); clip_rate 0.25 (KEPT) -> head 1.2
+  cm/s median, 4.8 p90 (was 17). Lower values make typing look like slow motion.
+- Rollback: `Binaries/Linux.old-20261028T040802` (v26) and `.old-20261028T040109` (v25) beside the live project, swap
+  them back by rename and relaunch with `<private>/relaunch-v26b/launch.py`; or simply `tune_set.py clip_rate=1`.
+- Build note: copying a build dir copies absolute paths in Intermediate; delete Intermediate in the copy. UBA stalled
+  with memory over-committed: build with `-NoUBA -MaxParallelActions=4`.
+
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
    - In the shot from behind the wrists still cross towards the keyboard centre. The IK elbow guard slides them 8-12
