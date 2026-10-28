@@ -1069,7 +1069,8 @@ class ChatGate:
 # ---- viewer requests: what a chat line asks him to do on the computer, and whether he does it --------------------------
 # The shape of a request: an action verb at the start of a clause once the filler is gone ("can you please", "hey",
 # "quickly"), or a request marker (impulse.REQUEST_RE: "can you", "please", "let's") with such a verb somewhere.
-FILLER = re.compile(r"\b(?:sub[\s-]?01|hey|hi|yo|bro|bruh|dude|ok(?:ay)?|please|pls|plz|kindly|real\s+quick|quick(?:ly)?|just|maybe|"
+SUB_VOCATIVE = re.compile(r"^\W*sub[\s-]?01\b[\s,:!-]*|[\s,]+sub[\s-]?01\W*$", re.I)
+FILLER = re.compile(r"\b(?:hey|hi|yo|bro|bruh|dude|ok(?:ay)?|please|pls|plz|kindly|real\s+quick|quick(?:ly)?|just|maybe|"
                     r"for\s+(?:me|us)|thanks?|thx|ty|also|too|now|again|then|a\s+bit|a\s+little|if\s+you\s+can|"
                     r"when\s+you\s+can|right\s+now|would\s+you\s+mind(?:\s+to)?|do\s+me\s+a\s+favou?r\s+and)\b|"
                     r"\b(?:can|could|would|will|may|do)\s+(?:you|u|ya)\b|\b(?:i\s+want\s+you\s+to|i'?d\s+like\s+you\s+to|"
@@ -1199,6 +1200,8 @@ LOOK_REF = (r"(?:that|this|those|these|it|the\s+(?:first|second|third|1st|2nd|3r
             r"(?:article|video|link|result|results|comments?|picture|image|photo|chart|map|headline|story|post|thread|"
             r"tab|button|menu|one|ones|page|clip|trailer|source)\b)")
 LOOK = re.compile(r"^\W*(" + LOOK_VERB + r")\s+(?:on\s+)?(" + LOOK_REF + r".*)$", re.I)
+# "click sub-01 coin", "tap the red button", "select Shorts" (owner 10-28): a click on anything he can name on the page
+CLICK_ANY = re.compile(r"^\W*(click|tap|press|select|hit)(?:\s+on)?\s+(.{2,60})$", re.I)
 LOOK_READ = re.compile(r"^read", re.I)
 LOOK_PLAY = re.compile(r"^(?:play|watch)", re.I)
 NAV_LOOSE = re.compile(r"^\W*(?:open(?:\s+up)?|go\s+(?:to|on)|visit|navigate\s+to|browse(?:\s+to)?|head\s+(?:to|over\s+to)|"
@@ -1441,6 +1444,7 @@ def strip_filler(text):
     youtube.com". Quotes go too (a quoted request is still the request)."""
     t = re.sub(r"[\"“”‘’`*_]+", " ", str(text or ""))
     t = FILLER.sub(" ", t)
+    t = SUB_VOCATIVE.sub(" ", " ".join(t.split()))
     return " ".join(t.split()).strip(" ,.!?;:-")
 
 
@@ -1766,6 +1770,9 @@ def parse_request(text, pc=False, installs=False, sources=None):
         return search_doable(request_query(m.group(1)))
     if (m := LOOK.match(s)):
         return look_doable(m)
+    if (m := CLICK_ANY.match(s)):
+        thing = " ".join(m.group(2).strip(" .,!?;:").split()[:5])[:40]
+        return doable("look", None, intent="click", thing=(thing[:1].upper() + thing[1:]) if thing else None)
     if leaves_desk(text):
         return refused("leave_desk")
     if (m := NAV_LOOSE.match(s)):
@@ -1774,7 +1781,7 @@ def parse_request(text, pc=False, installs=False, sources=None):
         if site:
             return doable("navigate", {"action": "navigate", "url": site}, url=site)
         return search_doable(request_query(rest))
-    return refused("not_doable")
+    return None                     # owner 10-28: not "can't do that from here"; the model reads it as chat and may act
 
 
 class Requests:

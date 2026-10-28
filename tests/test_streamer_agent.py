@@ -1221,7 +1221,7 @@ def test_parse_request_leaves_questions_and_remarks_to_the_voice(text):
     ("look up John Smith's home address", "personal_data"), ("find the phone number of John Smith", "personal_data"),
     ("open bet365.com", "blocked_domain"), ("open http://localhost:8830/x", "blocked_domain"),
     ("open file:///etc/passwd", "bad_url"),
-    ("type hello world in the search box", "typing"), ("zoom in on the map", "not_doable")])
+    ("type hello world in the search box", "typing")])
 def test_parse_request_refused_classes_with_their_reason(text, reason):
     r = SA.parse_request(text)
     assert r["kind"] == "refused" and r["action"] is None and r["refused"] == reason
@@ -4629,3 +4629,12 @@ def test_a_vague_search_takes_its_subject_from_the_chat_before_it(tmp_path):
     asyncio.run(sim(agent, clock, 6, dt=2))
     ctx = [e for e in events(agent) if e["kind"] == "request_context"]
     assert ctx and ctx[0]["resolved"].startswith("GTA 6")
+
+
+def test_an_unparsed_request_reaches_the_model_and_any_named_thing_can_be_clicked():
+    """Owner 10-28: "Click sub-01 coin" was answered "Can't do that from here"; "search for the SUB-01 coin" lost SUB-01."""
+    assert SA.parse_request("zoom in on the map") is None                    # chat for the model, not a refusal
+    r = SA.parse_request("Click sub-01 coin", pc=True)
+    assert (r["kind"], r["intent"], r["thing"]) == ("look", "click", "Sub-01 coin")
+    assert SA.parse_request("Search for the SUB-01 coin", pc=True)["query"].lower().startswith("sub-01 coin")
+    assert SA.parse_request("hey sub-01 open youtube", pc=True)["kind"] == "navigate"
