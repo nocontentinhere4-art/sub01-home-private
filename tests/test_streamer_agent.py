@@ -3989,7 +3989,15 @@ def test_camera_directing_shows_the_face_only_for_chat_answers_and_reactions(tmp
         posted.append(name)
     monkeypatch.setattr(agent.services, "layout", layout)
     asyncio.run(agent.set_layout("webcam", clock()))
-    assert posted == [] and agent.layout_now == "webcam"                 # no director POST, the model's pick is logged
+    assert posted == ["webcam_only"] and agent.layout_now == "webcam"    # owner 10-28: him alone, no PiP of the PC
+    asyncio.run(agent.set_layout("room", clock()))
+    assert posted == ["webcam_only"]                                     # already there: no second POST
+    asyncio.run(agent.set_layout("desktop", clock()))
+    assert posted == ["webcam_only", "desktop"] and agent.visual.screen_big
+    assert agent.visual.snapshot()["camera"] == "face"                  # the PiP is his face, not the PC again
+    asyncio.run(agent.set_layout("webcam", clock()))
+    assert posted[-1] == "webcam_only" and not agent.visual.screen_big
+    clock.t += SA.CAMERA_MIN_HOLD_S
     v = agent.visual
     assert v.snapshot()["camera"] == "spectator"                        # browsing: the shot from behind
     v.chat_until = clock() + 6
@@ -4002,7 +4010,7 @@ def test_camera_directing_shows_the_face_only_for_chat_answers_and_reactions(tmp
     assert v.snapshot()["camera"] == "spectator"
     monkeypatch.setattr(SA, "CAMERA_DIRECTING", False)
     asyncio.run(agent.set_layout("room", clock()))
-    assert posted == ["room"]                                           # the old director path, unchanged
+    assert posted[-1] == "room"                                         # the old director path, unchanged
 
 
 @pytest.fixture(autouse=True)
@@ -4638,3 +4646,25 @@ def test_an_unparsed_request_reaches_the_model_and_any_named_thing_can_be_clicke
     assert (r["kind"], r["intent"], r["thing"]) == ("look", "click", "Sub-01 coin")
     assert SA.parse_request("Search for the SUB-01 coin", pc=True)["query"].lower().startswith("sub-01 coin")
     assert SA.parse_request("hey sub-01 open youtube", pc=True)["kind"] == "navigate"
+
+
+def test_with_camera_directing_a_privacy_end_restores_the_directors_layout_and_a_big_pc_gets_the_face_cam(tmp_path, monkeypatch):
+    """Owner 10-28 ("where did he go?"): a privacy end put the model's pick "desktop" on air instead of webcam_only, and
+    in the desktop layout the PiP showed him from behind, hidden by the monitor."""
+    monkeypatch.setattr(SA, "CAMERA_DIRECTING", True)
+    agent, world, prov, clock = make(tmp_path)
+    world.director = {"layout": "webcam_only", "live_layout": "webcam_only"}
+    asyncio.run(agent.set_layout("desktop", clock()))                     # the model's pick: never sent to the director
+    asyncio.run(agent.privacy_on("test", clock()))
+    assert agent.privacy["previous"] == "webcam_only"
+    asyncio.run(agent.set_layout("desktop", clock()))
+    assert agent.privacy["previous"] == "webcam_only"                     # a pick during the cut does not replace it
+    asyncio.run(agent.director_poll(clock()))
+    assert agent.visual.screen_big is False
+    world.director = {"layout": "desktop", "live_layout": "desktop"}
+    clock.t += SA.DIRECTOR_POLL_S
+    asyncio.run(agent.director_poll(clock()))
+    assert agent.visual.screen_big is True
+    agent.visual.camera_at = -1e9
+    agent.visual.snapshot()
+    assert agent.visual.camera == "face"

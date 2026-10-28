@@ -122,6 +122,8 @@ CAMERA = os.environ.get("STREAMER_CAMERA", "face") if os.environ.get("STREAMER_C
 # (spectator = the cinematic shot from behind him at the PC; face = the frontal webcam for chat answers and reactions)
 CAMERA_DIRECTING = os.environ.get("STREAMER_CAMERA_DIRECTING", "1") != "0"
 LAYOUT_CAMERA = {"webcam": "face", "webcam_only": "face", "room": "spectator", "desktop": "spectator", "split": "spectator"}
+SCREEN_BIG_LAYOUTS = ("desktop", "split")  # the PC picture is big: the game view (PiP / half) shows his face
+DIRECTOR_POLL_S = 5.0
 CAMERA_MIN_HOLD_S = 4.0                 # a camera shot stays at least this long (no flicker between face and spectator)
 SCHEMA = "sub01.private-streamer-visual-event.v2"
 STATE_SCHEMA = "sub01.streamer-agent-state.v1"
@@ -3112,6 +3114,7 @@ class Visual:
         self.errors = 0
         # motion direction (docs/streamer/ANIMATION-REFERENCES.md): set by the agent when scripts/streamer_motion is present
         self.motion, self.action_kind, self.chat_until, self.reaction, self.base_since = None, "none", 0.0, "none", clock()
+        self.screen_big = False                               # the director shows the PC big: the game view is the PiP
         self.camera, self.camera_at = CAMERA, -1e9            # the game camera the agent asks for (CAMERA_DIRECTING)
 
     def poke(self):
@@ -3190,7 +3193,8 @@ class Visual:
         now = self.clock()
         state = self.state(now)
         if CAMERA_DIRECTING and state != "paused":         # owner 10-28: his face only while he answers chat or reacts,
-            want = "face" if now < self.chat_until or state == "reacting" else "spectator"   # the shot from behind otherwise
+            want = "face" if now < self.chat_until or state == "reacting" or self.screen_big else "spectator"   # from behind
+            # otherwise; owner 10-28: with the PC big the PiP is a face cam (from behind the monitor hid him)
             if want != self.camera and now - self.camera_at >= CAMERA_MIN_HOLD_S:
                 self.camera, self.camera_at = want, now
                 if self.motion is not None:
@@ -3378,6 +3382,8 @@ class Agent:
                         "last_accept": -1e9, "last_line": -1e9, "last_line_text": None, "day": "", "count": 0, "unreadable": {},
                         "library": [], "library_mtime": None}
         self.cartoon_direct = 0                               # the last negative seq given to a POST /cartoon line
+        self.director_polled = -1e9                           # director_poll: the last look at what the director shows
+        self.director_layout = None                           # what the director shows (director_poll, set_layout)
         self.chat_direct = 0                                  # POST /chat lines: DIRECT_SEQ_BASE + this
         self.cartoon_load(self.clock())
         self.pending = {}                                     # seq -> classified chat item waiting for a batch
@@ -4856,7 +4862,7 @@ class Agent:
         if p is not None:
             p["clear"], p["clear_t"] = 0, None
             return
-        prev = self.layout_now or "webcam"
+        prev = (await self.cartoon_previous_layout()) if CAMERA_DIRECTING else (self.layout_now or "webcam")
         self.counters["privacy"] += 1
         pid = f"p{self.counters['privacy']}-{os.urandom(3).hex()}"   # the director acknowledges this very cut
         self.privacy = {"since": now, "why": why, "previous": prev, "clear": 0, "clear_t": None, "acked": False, "id": pid}
@@ -5220,6 +5226,7 @@ class Agent:
         await self.cartoon_lifecycle(self.clock())
         self.viewers.save(self.clock())
         self.frozen_auto_clear(self.clock())
+        await self.director_poll(self.clock())
         if self.paused:                                       # keep observing; chat sent meanwhile is stale on return
             try:
                 self.obs = self.normalize(await self.services.observe())
@@ -5903,20 +5910,45 @@ class Agent:
         self.visual.chat_until = max(self.visual.chat_until, now + CHAT_READ_BEAT_S)
         self.visual.poke()
 
+    async def director_poll(self, now):
+        """Every DIRECTOR_POLL_S: what the director shows, so the camera knows when the game view is only the PiP."""
+        if now - self.director_polled < DIRECTOR_POLL_S:
+            return
+        self.director_polled = now
+        fn = getattr(self.services, "director_state", None)
+        try:
+            d = await fn() if fn else {}
+        except ServiceError:
+            return
+        name = d.get("layout") if isinstance(d, dict) else None
+        self.director_layout = LAYOUT_ALIASES.get(name, name)
+        self.visual.screen_big = self.director_layout in SCREEN_BIG_LAYOUTS
+
     async def set_layout(self, name, now):
         if self.privacy is not None:                          # the privacy cut wins (even a plain webcam POST would end it
-            self.privacy["previous"] = name                   # at the director); this layout comes back when it ends
-            self.log("layout_held", layout=name, why="privacy screen")
+            if not CAMERA_DIRECTING:                          # at the director); this layout comes back when it ends (with
+                self.privacy["previous"] = name               # camera directing the model's pick never reaches the director:
+            self.log("layout_held", layout=name, why="privacy screen")   # owner 10-28, a privacy end put "desktop" on air)
             return
         play = self.cartoon["playing"]
         if play is not None:                                  # a cartoon is on air: this layout comes back after it
-            play["after"] = name
+            if not CAMERA_DIRECTING:
+                play["after"] = name
             self.log("layout_held", layout=name, why="cartoon")
             return
-        if CAMERA_DIRECTING:                                  # no director POST; the camera follows chat answers and
-            self.layout_at, self.layout_now = now, name       # reactions in Visual.snapshot (the model's pick is noisy)
-            self.counters["layout_changes"] += 1
-            self.log("camera", layout=name, camera=LAYOUT_CAMERA.get(name, CAMERA), applied=False)
+        if CAMERA_DIRECTING:                                  # the camera follows chat answers and reactions (Visual.snapshot);
+            self.layout_at, self.layout_now = now, name       # owner 10-28 "it can switch, without the PC twice": browsing ->
+            target = "desktop" if name in SCREEN_BIG_LAYOUTS else "webcam_only"   # the PC big + his face as the PiP; else
+            self.counters["layout_changes"] += 1              # him alone, full frame (no PiP showing the PC again)
+            self.log("camera", layout=name, camera=LAYOUT_CAMERA.get(name, CAMERA), applied=False, director=target)
+            if target != self.director_layout:
+                try:
+                    await self.services.layout(target)
+                    self.director_layout = target
+                    self.visual.screen_big = target in SCREEN_BIG_LAYOUTS
+                except ServiceError as e:
+                    self.counters["layout_errors"] += 1
+                    self.log("layout_error", layout=target, error=str(e)[:80])
             return
         self.layout_at = now
         try:
