@@ -110,3 +110,18 @@ def test_typing_that_barely_changes_the_picture_is_judged_by_the_model(tmp_path)
 
 def test_the_prompt_explains_a_chess_move_is_two_clicks():
     assert "never click the same piece twice" in SA.SYSTEM_PC or "never click the same piece twice" in SA.SYSTEM
+
+
+def test_a_sign_up_is_finished_through_the_gmail_confirmation():
+    on = SA.system_prompt(pc=True, allow_credentials=True)
+    assert "mail.google.com" in on and "never dropped halfway" in on and "confirmation link" in on
+
+
+def test_confirming_the_sign_up_mail_opens_gmail_with_logins_on():
+    on, off = SA.ChatGate(pc=True, logins=True), SA.ChatGate(pc=True)
+    for i, text in enumerate(("Open gmail and confirm the lichess email", "go to gmail and click the lichess link",
+                              "verify the account from the email")):
+        r = on.classify({"seq": i, "text": text, "nick": f"m{i}"})["request"]
+        assert r["kind"] == "navigate" and r["url"] == "https://mail.google.com", text
+    r = off.classify({"seq": 9, "text": "Open gmail and confirm the lichess email", "nick": "z"})["request"]
+    assert not r or r.get("url") != "https://mail.google.com"

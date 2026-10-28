@@ -482,8 +482,11 @@ SYSTEM_IDENTITY = ("His one identity (owner 10-28, a dedicated account): to type
                    "inbox is a private screen. Signing in is not posting: comments and posts follow the usual rules. "
                    "Signing up is how he gets in anywhere (owner 10-28: \"chess was the example of how he registers, so "
                    "he can do it on other sites\"): fill the form with these placeholders, tick the required boxes, "
-                   "submit, confirm the e-mail from his inbox when asked, then use the site; on game sites he plays "
-                   "whoever he likes (the owner's choice).")
+                   "submit, then use the site; on game sites he plays whoever he likes (the owner's choice). A sign-up "
+                   "is done only when the account works, never dropped halfway for something else: when the site sends "
+                   "an e-mail, open Gmail at once (mail.google.com, already signed in in this Chrome), open the site's "
+                   "newest e-mail, click its confirmation link or type its code (secret true; the inbox is a private "
+                   "screen), then go back to the site.")
 SYSTEM_CREDS_OLD = "Never enter credentials, personal data or payment details; no logins, downloads or purchases."
 SYSTEM_CREDS_NEW = ("Never enter payment details or anyone else's personal data; no downloads or purchases. His own logins \
 are allowed (the owner's choice): prefer signed-in sessions and the browser's saved logins, never guess or invent a \
@@ -1182,6 +1185,8 @@ CREDS_SECRET = re.compile(r"\b(pass(?:word|code|phrase)s?|credentials?|seed\s*ph
                           r"card))\b", re.I)    # CREDS without the log-in words: a sign-up request is no injection
 R_LOGIN_ASK = re.compile(r"\b(?:log\s*in|login|log\s+into|sign\s*in|sign\s*up|register|create\s+an?\s+account|"
                          r"make\s+an?\s+account)\b", re.I)
+CONFIRM_MAIL = re.compile(r"\b(?:gmail|inbox|e-?mail|mail)\b.*\b(?:confirm\w*|verif\w*|link|code|activat\w*)\b|"
+                          r"\b(?:confirm\w*|verif\w*|activat\w*)\b.*\b(?:gmail|inbox|e-?mail|mail|account)\b", re.I)
 SITE_NAMES = {"lichess": "https://lichess.org", "chess.com": "https://www.chess.com", "chess": "https://lichess.org"}
 # a viewer directing an account change (owner's rule: chat never does): signing out of something, or changing, removing
 # or adding an account, profile, user name, e-mail, phone number, recovery, security or 2FA setting (refused as
@@ -1846,7 +1851,7 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         if not (WEATHER_Q.match(s) or LANGUAGE_REQ.match(s) or IMPRESSION_REQ.search(s) or FACE_REQ.match(s) or HUSH_REQ.match(s)
                 or STEAM_REQ.match(s) or REACT_TO.match(s) or PLAY_ONLINE.match(s) or EXIT_FULLSCREEN.match(s) or ENTER_FULLSCREEN.match(s) or (pc and (GAME_PLAY.match(s) or GAME_STOP.match(s) or PC_MONEY_WORDS.search(s)))
                 or (pc and installs and INSTALL_REQ.match(s)) or R_ACCOUNT.search(s) or LOGOUT_REQ.match(s)
-                or (logins and R_LOGIN_ASK.search(s))):
+                or (logins and (R_LOGIN_ASK.search(s) or CONFIRM_MAIL.search(s)))):
             return None
     why = refused_class(text, logins) or ("credentials" if account_change(text) else None)   # owner: no account change by chat
     if why in (None, "code_or_download") and pc and installs and INSTALL_REQ.match(s) and not PC_MONEY_WORDS.search(s):
@@ -1855,6 +1860,9 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
             return inst
     if why:
         return refused(why)
+    if logins and CONFIRM_MAIL.search(text):                  # owner 10-28: the sign-up's e-mail link or code, in Gmail
+        return doable("navigate", {"action": "navigate", "url": "https://mail.google.com"}, url="https://mail.google.com",
+                      login=True)
     if logins and R_LOGIN_ASK.search(text):                   # owner 10-28: sign up / log in with his one identity
         site = next((url for name, url in SITE_NAMES.items() if re.search(rf"\b{re.escape(name)}\b", text, re.I)), None)
         if site:                                              # the model signs up there next ({{email}}, {{password}})
