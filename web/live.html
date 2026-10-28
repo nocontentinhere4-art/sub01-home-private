@@ -76,6 +76,23 @@ textarea{display:block;width:100%;min-height:42px;max-height:120px;resize:vertic
 textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-items:center;gap:8px;margin-top:8px}
 #count{color:var(--dim);font-size:12px;margin-right:auto}#send{height:34px;padding:0 16px;border:0;border-radius:8px;background:var(--accent);color:#0b0c0f;font-weight:800}#send:disabled{opacity:.5;cursor:default}
 #feedback{min-height:18px;margin:6px 0 0;color:var(--muted);font-size:12px}.rules{color:var(--dim);font-size:11px;margin:4px 0 0}
+/* names, sounds, hype, queue (owner 10-28) */
+.nick{display:flex;gap:6px;align-items:center;margin-bottom:8px}.nick input{flex:1;min-width:0;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:0 10px;font:inherit}
+.nick input:focus{border-color:var(--accent);outline:none}.nick input:invalid{border-color:#eb040080}
+.sfx{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 8px}.sfx button{border:1px solid var(--line);background:#0b0c0f;border-radius:6px;padding:2px 7px;font:12px var(--mono);color:var(--accent2)}
+.sfx button:hover{border-color:var(--accent)}.sfx button:disabled{opacity:.45;cursor:default}
+.hypebtn{background:linear-gradient(135deg,#ff6a00,#ff2d55)!important;color:#fff!important;border:0!important;font-weight:800}.hypebtn:disabled{opacity:.55}
+.hypebar{display:flex;align-items:center;gap:10px;margin:10px 0 0;font-size:12px;color:var(--muted)}.hypebar .meter{display:block;flex:1;max-width:320px;height:8px;border-radius:999px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
+.hypebar .fill{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff6a00,#ff2d55);transition:width .6s}.hypebar.train b{color:#ff2d55}
+.qform{display:flex;gap:8px;max-width:640px}.qform input{flex:1;min-width:0;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:0 12px;font:inherit}
+.qform input:focus{border-color:var(--accent);outline:none}#qfb{min-height:18px;color:var(--muted);font-size:12px;margin:6px 0 10px}
+.qlist{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-width:640px}.qlist li{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.qlist .tile{flex:none;width:44px;height:28px;border-radius:5px;background:#000;display:grid;place-items:center;color:var(--accent2);font-size:12px}.qlist .now{border-color:#ff6a0070}
+.qlist .pos{font:700 11px var(--mono);color:var(--dim);width:58px}.qlist .now .pos{color:var(--accent)}.qlist a{color:var(--muted);font:12px var(--mono);margin-left:auto}.qlist a:hover{color:var(--fg)}
+.qempty{color:var(--dim);font-size:13px}.lead2{color:var(--muted);margin:0 0 10px;max-width:640px}
+.confetti{position:fixed;top:-12px;width:8px;height:12px;z-index:50;pointer-events:none;animation:fall 2.6s linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.2}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}.hypebar .fill{transition:none}}
 /* responsive */
 @media (max-width:1280px){.app{grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"main chat" "after chat"}.rail{display:none}}
 @media (max-width:900px){.app{display:flex;flex-direction:column}.chat{position:static;height:auto;border-left:0;border-top:1px solid var(--line);order:2}
@@ -117,9 +134,11 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
         <div class="title">AI streamer live 24/7 · reacts, browses, plays and takes requests from chat</div>
         <div class="tags"><span class="cat">Just Chatting</span><span>AI</span><span>React</span><span>Cartoon mode</span><span>English</span></div>
         <div id="mode"></div>
+        <div class="hypebar" id="hypebar"><span>Hype</span><span class="meter" aria-hidden="true"><span class="fill" id="hypefill"></span></span><b id="hypetxt"></b></div>
       </div>
       <div class="acts">
         <a class="btn pri" href="https://x.com/SUBZERONE01" target="_blank" rel="noopener noreferrer">Follow on 𝕏</a>
+        <button class="btn hypebtn" id="hype" type="button" title="Free: hype SUB-01 up">🔥 Hype</button>
         <button class="btn" id="share" type="button">Share</button>
       </div>
     </section>
@@ -128,6 +147,11 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
     <header>Stream chat</header>
     <div id="messages" aria-live="polite" aria-label="Recent messages"><p class="empty">Say hi to SUB-01 👋</p></div>
     <form class="compose" id="chat">
+      <div class="nick"><label for="nick" style="position:absolute;left:-9999px">Your name</label><input id="nick" maxlength="16" pattern="[A-Za-z0-9_.\-]{2,16}" placeholder="Your name (optional, SUB-01 will remember it)" autocomplete="nickname" spellcheck="false"></div>
+      <div class="sfx" aria-label="Sound effects: click to play on stream">
+        <button type="button" data-s="!airhorn">!airhorn</button><button type="button" data-s="!drumroll">!drumroll</button><button type="button" data-s="!rimshot">!rimshot</button><button type="button" data-s="!sad">!sad</button>
+        <button type="button" data-s="!boom">!boom</button><button type="button" data-s="!applause">!applause</button><button type="button" data-s="!crickets">!crickets</button><button type="button" data-s="!win">!win</button>
+      </div>
       <div class="hints" aria-label="Try these">
         <button type="button" data-t="cartoon: do a backflip">cartoon: do a backflip</button>
         <button type="button" data-t="open youtube and find something funny">open youtube</button>
@@ -138,16 +162,26 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
       <textarea id="text" maxlength="280" required placeholder="Send a message"></textarea>
       <div class="row"><span id="count">0/280</span><button id="send" type="submit">Chat</button></div>
       <p id="feedback" role="status"></p>
-      <p class="rules">Chat is public. SUB-01 reads it live. Your message does not give control of anything.</p>
+      <p class="rules">Chat is public. SUB-01 reads it live. Names are not verified: anyone can pick any name. Your message does not give control of anything.</p>
     </form>
   </aside>
   <div class="after">
+    <section class="sec" id="queue">
+      <h2>Video queue</h2>
+      <p class="lead2">Send a YouTube link and SUB-01 watches and reacts to it when chat is quiet. Your name and the video are shown here publicly.</p>
+      <form class="qform" id="qform"><label for="qurl" style="position:absolute;left:-9999px">YouTube link</label><input id="qurl" type="url" inputmode="url" maxlength="300" placeholder="https://youtu.be/…" required><button class="btn pri" id="qsend" type="submit">Send video</button></form>
+      <p id="qfb" role="status"></p>
+      <ol class="qlist" id="qlist"><li class="qempty">The queue is empty. Be the first!</li></ol>
+    </section>
     <section class="sec">
       <h2>How to interact</h2>
       <div class="cards">
         <div class="card"><b>Talk to him</b><p>Write in chat: he answers out loud in a few seconds.</p></div>
         <div class="card"><b>Cartoon mode</b><p>Type <code>cartoon: &lt;action&gt;</code> and an AI clip of it airs on stream.</p></div>
         <div class="card"><b>Send him somewhere</b><p>Ask him to open a site, a video or a game: he clicks around and reacts.</p></div>
+        <div class="card"><b>Send a video</b><p>Paste a YouTube link in the Video queue: he reacts to it, with your name.</p></div>
+        <div class="card"><b>Sound effects</b><p>Click a sound in chat (<code>!airhorn</code>, <code>!rimshot</code>…): it plays live on stream.</p></div>
+        <div class="card"><b>Hype</b><p>Press 🔥 Hype (free). Enough of you together start a hype train.</p></div>
         <div class="card"><b>SUB-01 coin</b><p>His coin. The contract address is in the top bar. Not financial advice.</p></div>
       </div>
     </section>
@@ -182,16 +216,37 @@ function start(){if(attached||retryTimer||!base)return;attached=true;const src=b
 const COLORS=['#ff8a33','#5fb7ff','#b28cff','#2fd27a','#ff6fa8','#ffd23f','#7ee0d2'];let lastKey='';
 function renderMessages(list){const key=JSON.stringify(list);if(key===lastKey)return;lastKey=key;const atBottom=messages.scrollHeight-messages.scrollTop-messages.clientHeight<40;
 if(!list.length){messages.replaceChildren(Object.assign(document.createElement('p'),{className:'empty',textContent:'Say hi to SUB-01 👋'}));return;}
-messages.replaceChildren(...list.map(m=>{const p=document.createElement('p');p.className='msg';const w=document.createElement('span');w.className='who';w.textContent='viewer:';w.style.color=COLORS[(m.at||0)%COLORS.length];p.append(w,document.createTextNode(m.text));return p;}));
+messages.replaceChildren(...list.map(m=>{const p=document.createElement('p');p.className='msg';const w=document.createElement('span');w.className='who';w.textContent=(m.nick||'viewer')+':';w.style.color=COLORS[(m.nick?[...m.nick].reduce((a,c)=>a+c.charCodeAt(0),0):(m.at||0))%COLORS.length];p.append(w,document.createTextNode(m.text));return p;}));
 if(atBottom)messages.scrollTop=messages.scrollHeight;}
 async function refresh(){try{const r=await fetch(base+'/status',{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error();const s=await r.json();const on=!!s.online&&!retryTimer&&!video.error;
 statusEl.textContent=s.online?(retryTimer||video.error?'Reconnecting video':'24/7 AI stream'):'Video temporarily offline';setLive(on);mode.textContent=s.agent==='paused'?'Manual control · agent paused':'';
-pcLayoutBig=(s.layout==='desktop'||s.layout==='split'||s.layout==='cartoon');applyPC();renderMessages(s.messages||[]);if(s.online)start();}catch{statusEl.textContent='Connection unavailable';setLive(false);}setTimeout(refresh,5000)}
+pcLayoutBig=(s.layout==='desktop'||s.layout==='split'||s.layout==='cartoon');applyPC();renderMessages(s.messages||[]);renderQueue(s.queue);renderHype(s.hype);if(s.online)start();}catch{statusEl.textContent='Connection unavailable';setLive(false);}setTimeout(refresh,5000)}
 const text=document.querySelector('#text'),count=document.querySelector('#count');text.addEventListener('input',()=>{count.textContent=text.value.length+'/280'});
 text.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.querySelector('#chat').requestSubmit();}});
 document.querySelectorAll('.hints button').forEach(b=>b.addEventListener('click',()=>{text.value=b.dataset.t;count.textContent=text.value.length+'/280';text.focus();}));
-document.querySelector('#chat').addEventListener('submit',async e=>{e.preventDefault();const b=document.querySelector('#send'),f=document.querySelector('#feedback');if(!text.value.trim()||b.disabled)return;b.disabled=true;try{const r=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'text/plain'},body:text.value,signal:AbortSignal.timeout(15000)}),d=await r.json();f.textContent=d.ok?'Sent. SUB-01 will see it in a moment.':d.code==='duplicate'?'Already sent. Try a different message.':r.status===429?'Slow down: wait a few seconds.':r.status===503?'Chat unavailable. Try again later.':'Message not accepted.';if(d.ok){text.value='';count.textContent='0/280';}}catch{f.textContent='Message not confirmed. Check your connection.';}setTimeout(()=>b.disabled=false,12000)});
+document.querySelector('#chat').addEventListener('submit',async e=>{e.preventDefault();const b=document.querySelector('#send'),f=document.querySelector('#feedback');if(!text.value.trim()||b.disabled)return;b.disabled=true;try{const r=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({nick:nickVal(),text:text.value}),signal:AbortSignal.timeout(15000)}),d=await r.json();f.textContent=d.ok?'Sent. SUB-01 will see it in a moment.':d.code==='duplicate'?'Already sent. Try a different message.':r.status===429?'Slow down: wait a few seconds.':r.status===503?'Chat unavailable. Try again later.':'Message not accepted.';if(d.ok){text.value='';count.textContent='0/280';}}catch{f.textContent='Message not confirmed. Check your connection.';}setTimeout(()=>b.disabled=false,12000)});
 document.querySelector('#share').addEventListener('click',async()=>{const u=location.origin+'/',b=document.querySelector('#share');if(navigator.share){try{await navigator.share({title:'SUB-01 live',url:u});}catch(e){}return;}try{await navigator.clipboard.writeText(u);b.textContent='Link copied';}catch(e){b.textContent='Copy failed';}setTimeout(()=>b.textContent='Share',1600);});
+const nickEl=document.querySelector('#nick');try{nickEl.value=localStorage.getItem('sub01Nick')||''}catch(e){}
+function nickVal(){const v=nickEl.value.trim();return /^[A-Za-z0-9_.-]{2,16}$/.test(v)?v:'';}
+nickEl.addEventListener('change',()=>{try{nickVal()?localStorage.setItem('sub01Nick',nickVal()):localStorage.removeItem('sub01Nick')}catch(e){}});
+async function post(path,payload,ms){const r=await fetch(base+path,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload),signal:AbortSignal.timeout(ms||12000)});let d={};try{d=await r.json()}catch(e){}return [r,d];}
+document.querySelectorAll('.sfx button').forEach(b=>b.addEventListener('click',async()=>{const f=document.querySelector('#feedback'),all=document.querySelectorAll('.sfx button');all.forEach(x=>x.disabled=true);
+try{const [r,d]=await post('/chat',{nick:nickVal(),text:b.dataset.s});f.textContent=d.ok?b.dataset.s+' sent. It plays if the sound is free.':r.status===429?'Slow down: wait a few seconds.':'Sound not sent.';}catch(e){f.textContent='Sound not sent. Check your connection.';}
+setTimeout(()=>all.forEach(x=>x.disabled=false),12000);}));
+const hypeBtn=document.querySelector('#hype');hypeBtn.addEventListener('click',async()=>{hypeBtn.disabled=true;try{const [r,d]=await post('/hype',{nick:nickVal()});if(d.ok)renderHype(d);else if(r.status===429)hypeBtn.textContent='🔥 Wait…';}catch(e){}
+setTimeout(()=>{hypeBtn.disabled=false;hypeBtn.textContent='🔥 Hype';},10000);});
+let trainOn=false;function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const c=['#ff6a00','#ff2d55','#ffd23f','#5fb7ff','#2fd27a'];for(let i=0;i<80;i++){const e=document.createElement('i');e.className='confetti';e.style.left=Math.random()*100+'vw';e.style.background=c[i%c.length];e.style.animationDelay=Math.random()*0.8+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),3600);}}
+function renderHype(h){if(!h)return;const lv=Math.max(0,Math.min(1,+h.level||0));document.querySelector('#hypefill').style.width=Math.round(lv*100)+'%';const bar=document.querySelector('#hypebar');bar.classList.toggle('train',!!h.train);
+document.querySelector('#hypetxt').textContent=h.train?'HYPE TRAIN!':lv?Math.round(lv*100)+'%':'';if(h.train&&!trainOn)confetti();trainOn=!!h.train;}
+function renderQueue(q){if(!q)return;const list=document.querySelector('#qlist'),items=[];if(q.now)items.push(Object.assign({},q.now,{now:true}));(q.waiting||[]).forEach(e=>items.push(e));
+if(!items.length){list.replaceChildren(Object.assign(document.createElement('li'),{className:'qempty',textContent:'The queue is empty. Be the first!'}));return;}
+list.replaceChildren(...items.map((e,i)=>{const li=document.createElement('li');if(e.now)li.className='now';const tile=Object.assign(document.createElement('span'),{className:'tile',textContent:'▶'});
+const pos=Object.assign(document.createElement('span'),{className:'pos',textContent:e.now?'NOW':'#'+(q.now?i:i+1)});const who=document.createElement('span');who.textContent=(e.nick||'a viewer')+"'s video";
+const a=document.createElement('a');if(/^[A-Za-z0-9_-]{11}$/.test(e.id||'')){a.href='https://www.youtube.com/watch?v='+e.id;a.target='_blank';a.rel='noopener noreferrer';a.textContent='open';}
+li.append(tile,pos,who,a);return li;}));}
+document.querySelector('#qform').addEventListener('submit',async ev=>{ev.preventDefault();const u=document.querySelector('#qurl'),b=document.querySelector('#qsend'),f=document.querySelector('#qfb');if(!u.value.trim()||b.disabled)return;b.disabled=true;
+try{const [r,d]=await post('/queue',{nick:nickVal(),url:u.value.trim()});f.textContent=d.ok?'Added: position '+(d.position||'?')+'. He plays it when chat is quiet.':(d.why||(r.status===429?'Wait 30 seconds between videos.':'Not added.'));if(d.ok)u.value='';}
+catch(e){f.textContent='Not sent. Check your connection.';}setTimeout(()=>b.disabled=false,3000);});
 refresh();
 </script><script>
 const pcFrame=document.querySelector('#pc-frame'),pcState=document.querySelector('#pc-state'),pcPanel=document.querySelector('.pc-screen'),pcExpand=document.querySelector('#pc-expand');let pcURL=null,pcAbort=null,pcGeneration=0,pcExpiry=null;
