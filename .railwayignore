@@ -1,0 +1,12 @@
+# railway up uploads only what the Dockerfile copies (the upload limit refused the 300 MB tree with docs/)
+docs/
+tests/
+room_build/
+analysis/
+tools/
+gpu/
+.github/
+out/*
+!out/connectome.npz
+!out/atlas_names.json
+!out/rest/
