@@ -346,3 +346,6 @@ pre-existing ones (no API keys locally).
 - `STREAMER_CAMERA_DIRECTING=0` restores the old path.
 - Deployed at 00:52 (agent restart, lease re-armed until 01:52).
 - First result: camera `spectator`, and the frame matches the owner's reference.
+- 01:05 UTC: owner "avvicinalo alla tastiera di più": `seat_back_cm` 36 -> 26 (tuning, live; backup `face-tuning.bak-20261028T0058.json`).
+  The wrist slide of the elbow guard dropped from 15 to 10-11 cm; the hands sit on the keyboard in the spectator shot.
+  58.9 fps.
