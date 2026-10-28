@@ -43,6 +43,24 @@ recording. The -progress dup/drop counters cannot see this: the graph's `fps` fi
 before the encoder. State `main` and the `segment_fps` rows of FIFO runs carry the counts (`main_fps` = new sequences
 per wall second) and main.json's `written` per window (`game_fps`).
 
+Cartoon mode (`--cartoon-fifo PATH`, default off: without it nothing below exists and every argv/graph is byte-identical
+to a run without the feature). One more video input, placed after cam2 and before the music/apps inputs (index 3, or 4
+with cam2; the established 0..3 never move): MJPEG read from PATH like cam2 (`-f mjpeg -framerate 30
+-use_wallclock_as_timestamps 1 -thread_queue_size 512`), and one more layout `cartoon` that shows it full frame
+(aspect-preserving scale + black pad to the output size, full -> limited range, `fps`, `tpad` clone after an EOF). It is
+the LAST streamselect input, so the other layouts keep their indices, and it carries no desktop picture. Audio is the
+same voice/music mix as every layout (the cartoon input has no audio). `cartoon` is a valid layout name, for
+`POST /director/layout` and layout.jsonl alike, only while the flag is set (otherwise it is rejected exactly as an unknown
+name). ffmpeg opens a FIFO blocking, so a run reads PATH only when a process holds it open for writing at launch (the
+director keeps a read end open, like cam2's tap, and drains it while ffmpeg does not read it); without a writer the run
+has no cartoon input and `cartoon` shows `webcam` (like `room` without cam2), and a run without it is relaunched with it
+once a writer is attached and `cartoon` is the wanted layout. Stall assumption: the feeder writes a CONTINUOUS stream
+of MJPEG frames at ~30 fps for as long as it holds the FIFO open (it repeats its last picture when idle). A writer that
+goes away (EOF) cannot stall the graph (`tpad` repeats the last frame) and relaunches ffmpeg without the input at once
+(a check every --cam2-interval s, the /proc scan every 5th); a writer that stays attached but stops sending is NOT
+detectable (cartoon has no freshness file like cam2.json/main.json) and would stall the whole graph, so that
+guarantee is the feeder's. State shows `cartoon`, `cartoon_reason`.
+
 Output: libx264 veryfast crf 23 (or NVENC) at --fps (GOP 2 s) + aac 96k, cut into 10 minute segments
 `recordings/sub01-YYYYmmdd-HHMMSS-%03d.mp4` (UTC; every ffmpeg launch gets its
 own timestamp, so a restart never overwrites a segment). Segments are fragmented
@@ -101,7 +119,8 @@ credential in `X-Admin-Token` (from --token-file or SUB01_ADMIN_TOKEN; never log
   GET  /director/state    -> {recording, since, segments:[{name,bytes,mtime}], ffmpeg_pid,
                               restarts, last_error, layout, live_layout, encoder, cam2, hls, voice,
                               privacy, privacy_id, desktop_hidden, privacy_restore, last_privacy, ...}
-  POST /director/layout   {"layout": "webcam"|"desktop"|"split"|"room"|"webcam_only"|"character", "end_privacy"?: bool}
+  POST /director/layout   {"layout": "webcam"|"desktop"|"split"|"room"|"webcam_only"|"character"|"cartoon" (only with
+                          --cartoon-fifo), "end_privacy"?: bool}
 
 ffmpeg is restarted on exit with backoff; a watchdog compares the size of the
 current run's segments every 30 s and restarts ffmpeg after two checks without
@@ -182,6 +201,13 @@ LAYOUTS = {
 LAYOUT_ALIASES = {"character": "webcam"}           # the v1 name, still sent by the agent
 LIVE_ORDER = ("webcam", "desktop", "split", "room", "webcam_only")  # input index of each layout at streamselect@layout
 SOURCES = {"game": "0:v", "desktop": "1:v", "cam2": "3:v"}
+# cartoon mode (--cartoon-fifo): kept out of LAYOUTS / LIVE_ORDER, which stay today's; it is the last streamselect input
+CARTOON = "cartoon"
+CARTOON_SPEC = {"main": CARTOON, "pip": None, "needs_cam2": False, "needs_cartoon": True, "desktop": False,
+                "summary": "the cartoon feeder's MJPEG FIFO full frame (--cartoon-fifo), no picture-in-picture, no desktop"}
+CARTOON_RATE = 30           # -framerate of the cartoon input (metadata only: timestamps are the arrival wallclock)
+CARTOON_DROP = "cartoon stopped delivering"
+CARTOON_MIN_UPTIME = 30.0   # a run is at least this old before it is relaunched to add the cartoon input
 SWITCH_MODES = ("live", "restart")
 SWITCH_TARGET = "streamselect@layout"
 ENCODERS = ("libx264", "h264_nvenc", "hevc_nvenc")
@@ -197,13 +223,25 @@ RTMP_RE = re.compile(r"rtmps?://[^\s|\[\]'\"\\]+")
 TEE_COLON = "\\\\:"                                  # a ':' inside a tee slave option value, escaped for both levels
 
 
-def validate_layout(value):
-    """Return the canonical layout name (`character` -> `webcam`) or raise ValueError (the message lists the names)."""
+def layout_spec(name):
+    """LAYOUTS[name], or CARTOON_SPEC for the cartoon layout (which is not in LAYOUTS)."""
+    return CARTOON_SPEC if name == CARTOON else LAYOUTS[name]
+
+
+def cartoon_index(cam2):
+    """The cartoon input's index: after cam2 (3), before the music and apps inputs."""
+    return 4 if cam2 else 3
+
+
+def validate_layout(value, cartoon=False):
+    """Return the canonical layout name (`character` -> `webcam`) or raise ValueError (the message lists the names).
+    `cartoon` (--cartoon-fifo is set) also accepts the cartoon layout; without it that name is unknown, as always."""
     if isinstance(value, str):
         value = LAYOUT_ALIASES.get(value, value)
-        if value in LAYOUTS:
+        if value in LAYOUTS or (cartoon and value == CARTOON):
             return value
-    raise ValueError("layout must be one of " + ", ".join(LIVE_ORDER) + " (character = webcam)")
+    raise ValueError("layout must be one of " + ", ".join(LIVE_ORDER + ((CARTOON,) if cartoon else ()))
+                     + " (character = webcam)")
 
 
 def privacy_cut(record):
@@ -217,15 +255,18 @@ def privacy_cut(record):
             "why": why[:120] if isinstance(why, str) else None}
 
 
-def effective_layout(layout, cam2):
-    """What a run can show for a wanted layout: `room` needs cam2, else the webcam layout is shown."""
-    layout = validate_layout(layout)
-    return DEFAULT_LAYOUT if LAYOUTS[layout]["needs_cam2"] and not cam2 else layout
+def effective_layout(layout, cam2, cartoon=False):
+    """What a run can show for a wanted layout: `room` needs cam2 and `cartoon` the cartoon input (`cartoon`: this run
+    has it), else the webcam layout is shown."""
+    layout = validate_layout(layout, cartoon=True)
+    spec = layout_spec(layout)
+    return DEFAULT_LAYOUT if (spec["needs_cam2"] and not cam2) or (spec.get("needs_cartoon") and not cartoon) else layout
 
 
-def live_order(cam2):
-    """The layouts a live graph renders, in streamselect input order."""
-    return tuple(name for name in LIVE_ORDER if cam2 or not LAYOUTS[name]["needs_cam2"])
+def live_order(cam2, cartoon=False):
+    """The layouts a live graph renders, in streamselect input order (the cartoon layout, when the run has it, last)."""
+    return (tuple(name for name in LIVE_ORDER if cam2 or not LAYOUTS[name]["needs_cam2"])
+            + ((CARTOON,) if cartoon else ()))
 
 
 def check_tee_path(path, what):
@@ -303,6 +344,7 @@ class DirectorConfig:
     main_fresh: float = 3.0                # fifo mode: main.json fresh this long before the FIFO is tried again
     main_interval: float = 1.0             # fifo mode: seconds between staleness checks
     main_tap: bool = True                  # fifo mode: count the main view's frames by their seq= markers
+    cartoon_fifo: Path = None              # --cartoon-fifo: the cartoon feeder's MJPEG FIFO; None = no cartoon layout
 
     def __post_init__(self):
         base = Path(self.streamer_dir)
@@ -311,6 +353,8 @@ class DirectorConfig:
         object.__setattr__(self, "voice_fifo", Path(self.voice_fifo) if self.voice_fifo else base / "voice.pcm")
         object.__setattr__(self, "cam2_fifo", Path(self.cam2_fifo) if self.cam2_fifo else base / "cam2.mjpeg")
         object.__setattr__(self, "cam2_json", Path(self.cam2_json) if self.cam2_json else base / "cam2.json")
+        if self.cartoon_fifo is not None:
+            object.__setattr__(self, "cartoon_fifo", Path(self.cartoon_fifo))
         object.__setattr__(self, "main_fifo", Path(self.main_fifo) if self.main_fifo else base / "main.mjpeg")
         object.__setattr__(self, "main_json", Path(self.main_json) if self.main_json else base / "main.json")
         if self.game_source not in GAME_SOURCES:
@@ -338,7 +382,7 @@ class DirectorConfig:
         if not re.fullmatch(r":\d+(\.\d+)?", self.game_display) or not re.fullmatch(r":\d+(\.\d+)?", self.desktop_display):
             raise ValueError("displays look like :99.0")
         if self.layout is not None:
-            object.__setattr__(self, "layout", validate_layout(self.layout))
+            object.__setattr__(self, "layout", validate_layout(self.layout, self.cartoon_fifo is not None))
         if self.layout_switch not in SWITCH_MODES:
             raise ValueError("layout switch must be live or restart")
         if min(self.switch_timeout, self.layout_interval, self.cam2_interval, self.cam2_stale, self.stats_period) <= 0:
@@ -361,6 +405,16 @@ def cam2_scale(cfg):
     return f"scale={cfg.width}:{cfg.height}:flags=bilinear:in_range=full:out_range=limited"
 
 
+def cartoon_chain(cfg):
+    """The cartoon input (MJPEG, full-range yuvj) to a full output frame: aspect-preserving scale (even sizes) with an
+    explicit range conversion like cam2's, black pad up to the output size, the run's fps, and `tpad` to repeat the
+    last frame after an EOF (so a feeder that closes the FIFO cannot stall the graph)."""
+    w, h = cfg.width, cfg.height
+    rng = "" if cfg.test_sources else ":in_range=full:out_range=limited"
+    return (f"scale={w}:{h}:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=bilinear{rng},"
+            f"format=yuv420p,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps={cfg.fps},tpad=stop=-1:stop_mode=clone")
+
+
 def _overlay(main, pip, out):
     return f"[{main}][{pip}]overlay=x=W-w-{PIP_MARGIN}:y=H-h-{PIP_MARGIN}:eof_action=pass[{out}]"
 
@@ -377,12 +431,15 @@ def game_scale(size, flags=None, main=None):
             + (":in_range=full:out_range=limited" if main == "fifo" else ""))
 
 
-def build_filter_complex(layout, cfg, main=None):
+def build_filter_complex(layout, cfg, main=None, cam2=False):
     """ffmpeg filter graph for ONE layout (restart switching, post passes).
-    Inputs: [0:v] game, [1:v] desktop, [3:v] cam2 (room only). Output label [vout]. `main` "fifo" = input 0 is the
-    offscreen game's main.mjpeg (see game_rate / game_scale); anything else = today's chain."""
-    layout = validate_layout(layout)
+    Inputs: [0:v] game, [1:v] desktop, [3:v] cam2 (room only), the cartoon FIFO (cartoon only: after cam2). Output
+    label [vout]. `main` "fifo" = input 0 is the offscreen game's main.mjpeg (see game_rate / game_scale); anything
+    else = today's chain."""
+    layout = validate_layout(layout, cartoon=True)
     w, h, pw, ph, fps = cfg.width, cfg.height, cfg.pip_width, cfg.pip_height, cfg.fps
+    if layout == CARTOON:                     # the cartoon alone: no game, desktop or cam2 in the graph
+        return f"[{cartoon_index(cam2)}:v]{cartoon_chain(cfg)}[vout]"
     rate = game_rate(cfg, main)
     if layout == PRIVATE_LAYOUT:              # the game alone: [1:v] (desktop) and [3:v] are not in the graph at all
         return f"[0:v]{rate},{game_scale(f'{w}:{h}', main=main)},setsar=1,format=yuv420p[vout]"
@@ -408,8 +465,9 @@ def build_filter_complex(layout, cfg, main=None):
             f"[main][pip]overlay=x=W-w-{PIP_MARGIN}:y=H-h-{PIP_MARGIN}:eof_action=pass,format=yuv420p[vout]")
 
 
-def build_live_graph(cfg, cam2, layout, main=None):
-    """Every layout of the run in one graph; `streamselect@layout` (inputs in live_order(cam2)) picks the recorded one.
+def build_live_graph(cfg, cam2, layout, main=None, cartoon=False):
+    """Every layout of the run in one graph; `streamselect@layout` (inputs in live_order(cam2, cartoon)) picks the
+    recorded one; with `cartoon` the cartoon FIFO's input is one more streamselect input, after webcam_only.
     Every streamselect input has the same size, format, rate and SAR, so a `map` command only changes the index and
     one command switches atomically (no frame of a half-switched composite)."""
     w, h, pw, ph, fps = cfg.width, cfg.height, cfg.pip_width, cfg.pip_height, cfg.fps
@@ -417,7 +475,7 @@ def build_live_graph(cfg, cam2, layout, main=None):
     half_h = (half_w * h // w) & ~1
     norm = f"scale={w}:{h},setsar=1,format=yuv420p"
     pip = f"scale={pw}:{ph}:flags=area,setsar=1"
-    order = live_order(cam2)
+    order = live_order(cam2, cartoon)
     # [lwebcam_only] is the game picture itself: the privacy layout, no PiP (every other layout carries the desktop)
     parts = [f"[0:v]{game_rate(cfg, main)},{game_scale(f'{w}:{h}', main=main)},setsar=1,format=yuv420p,"
              f"split=4[gm][gp][gh][l{PRIVATE_LAYOUT}]",
@@ -431,8 +489,10 @@ def build_live_graph(cfg, cam2, layout, main=None):
     if cam2:
         parts += [f"[3:v]{cam2_scale(cfg)},setsar=1,format=yuv420p,fps={fps},tpad=stop=-1:stop_mode=clone[cm]",
                   _overlay("cm", "gpb", "lroom")]
+    if cartoon:
+        parts.append(f"[{cartoon_index(cam2)}:v]{cartoon_chain(cfg)}[l{CARTOON}]")
     labels = "".join(f"[l{name}]" for name in order)
-    parts.append(f"{labels}{SWITCH_TARGET}=inputs={len(order)}:map={order.index(effective_layout(layout, cam2))},"
+    parts.append(f"{labels}{SWITCH_TARGET}=inputs={len(order)}:map={order.index(effective_layout(layout, cam2, cartoon))},"
                  f"format=yuv420p[vout]")
     return ";".join(parts)
 
@@ -516,15 +576,20 @@ def pulse_socket(streamer_dir):
 
 
 def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, layout=None, live=False,
-                      encoder=None, cam2_fps=None, main=None, tap_fd=None):
+                      encoder=None, cam2_fps=None, main=None, tap_fd=None, cartoon=False):
     """The one ffmpeg command line. `window_id` None captures the whole of :99.0 instead.
+
+    `cartoon` (needs --cartoon-fifo; a writer is attached, see the module docstring) adds the cartoon FIFO as an input
+    after cam2 and before the music and apps inputs; False leaves the argv exactly as it was without the feature.
 
     `live` renders every layout and keeps ffmpeg's stdin command channel open (`-stdin`) for streamselect switches;
     otherwise the graph is the one `layout` and stdin is off (`-nostdin`), as in v1. `main` (fifo mode only) is
     "fifo" (input 0 = main.mjpeg; with `tap_fd`, the seq tap output too) or "placeholder" (input 0 = the card); None
     is the x11 mode, exactly as before."""
     size = f"{cfg.width}x{cfg.height}"
-    layout = effective_layout(layout or DEFAULT_LAYOUT, cam2)
+    layout = layout or DEFAULT_LAYOUT
+    layout = effective_layout(layout, cam2, True) if cartoon else effective_layout(layout, cam2)
+    cartoon = bool(cartoon) and (live or layout == CARTOON)   # a one-layout graph reads the FIFO only to show it
     main = main if main in ("fifo", PLACEHOLDER) else None
     argv = [cfg.ffmpeg, "-hide_banner", "-stdin" if live else "-nostdin", "-loglevel", "warning",
             # key=value blocks on stdout (frame, fps, out_time_us, dup/drop, speed): the measured output rate
@@ -555,7 +620,15 @@ def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, la
             # arrival wallclock as timestamps (x11grab uses the wallclock too); probe small so a launch is quick
             argv += ["-thread_queue_size", "512", "-use_wallclock_as_timestamps", "1", "-probesize", "2000000",
                      "-analyzeduration", "1000000", "-f", "mjpeg", "-framerate", str(rate), "-i", str(cfg.cam2_fifo)]
-    music = cfg.streamer_dir / "music" / "bgm.mp3"
+    if cartoon:                         # after cam2, before music/apps: index cartoon_index(cam2)
+        assert argv.count("-i") == cartoon_index(cam2), "input order changed: update cartoon_index"
+        if cfg.test_sources:
+            argv += ["-re", "-f", "lavfi", "-i", f"rgbtestsrc=size={CAM2_SIZE}:rate={CARTOON_RATE}"]
+        else:                           # the feeder's continuous MJPEG; arrival wallclock as timestamps, like cam2
+            argv += ["-thread_queue_size", "512", "-use_wallclock_as_timestamps", "1", "-probesize", "2000000",
+                     "-analyzeduration", "1000000", "-f", "mjpeg", "-framerate", str(CARTOON_RATE),
+                     "-i", str(cfg.cartoon_fifo)]
+    music =cfg.streamer_dir / "music" / "bgm.mp3"
     music = music if music.exists() else None
     music_index = argv.count("-i")       # the next input's index (cam2 and live inputs counted, not assumed)
     if music:                           # last input: the established 0..N indices never move
@@ -564,7 +637,8 @@ def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, la
     apps_index = argv.count("-i")
     if apps:                            # the desktop browser's audio, after the music
         argv += ["-thread_queue_size", "1024", "-f", "pulse", "-server", f"unix:{apps}", "-i", APPS_SOURCE]
-    graph = build_live_graph(cfg, cam2, layout, main) if live else build_filter_complex(layout, cfg, main)
+    graph = (build_live_graph(cfg, cam2, layout, main, cartoon) if live
+             else build_filter_complex(layout, cfg, main, cam2))
     if music or apps:
         # apad also covers a vanished voice writer; normalize=0 leaves the voice's level untouched
         graph += ";[2:a]apad,asplit=2[voice][key]"
@@ -1040,16 +1114,16 @@ def read_last_record(path, max_bytes=LAYOUT_TAIL):
     return records[-1] if records else None
 
 
-def read_last_layout(path, max_bytes=LAYOUT_TAIL):
+def read_last_layout(path, max_bytes=LAYOUT_TAIL, cartoon=False):
     """The canonical layout the last line of layout.jsonl asks for (PRIVATE_LAYOUT for a privacy line), or None (no
-    file, a half-written or bad line, an unknown name: the current layout stays)."""
+    file, a half-written or bad line, an unknown name: the current layout stays). `cartoon`: --cartoon-fifo is set."""
     record = read_last_record(path, max_bytes)
     if record is None:
         return None
     if privacy_cut(record) is not None:
         return PRIVATE_LAYOUT
     try:
-        return validate_layout(record.get("layout"))
+        return validate_layout(record.get("layout"), cartoon)
     except ValueError:
         return None
 
@@ -1234,6 +1308,15 @@ def cam2_status(cfg, tap, now, writer=True):
         if not ok:
             return False, reason, fps
     return True, f"cam2 last frame {max(age, 0.0):.1f}s ago" + (", writer present" if writer else ""), fps
+
+
+def cartoon_status(tap, writer=True):
+    """-> (usable, reason). The cartoon FIFO has no freshness file: usable = it exists and (with `writer`) a process holds
+    it open for writing. The tap is (re)opened first in every case, so a non-blocking writer can always attach."""
+    ok, reason = tap.refresh()
+    if ok and writer:
+        ok, reason = tap.writer_present(settle=0)
+    return ok, reason or "writer present"
 
 
 # -------------------------------------------- main view (fifo mode, the offscreen game)
@@ -1706,6 +1789,12 @@ class Director:
         self.cam2_tap = FifoTap(cfg.cam2_fifo, create=False, what="cam2")
         self._check_voice = check_voice or self.tap.writer_present
         self._check_cam2 = check_cam2 or (lambda writer=True: cam2_status(cfg, self.cam2_tap, self._wall(), writer))
+        # cartoon mode (--cartoon-fifo): same tap pattern as cam2; the director never creates the FIFO (the feeder does)
+        self.cartoon_on = cfg.cartoon_fifo is not None
+        self.cartoon_tap = FifoTap(cfg.cartoon_fifo, create=False, what="cartoon") if self.cartoon_on else None
+        self._check_cartoon = lambda writer=True: cartoon_status(self.cartoon_tap, writer)
+        self.cartoon, self.cartoon_reason = False, ""          # the run on air reads the cartoon FIFO / why (not)
+        self.cartoon_now, self.cartoon_checks, self._cartoon_ticks, self._cartoon_ident = False, 0, 0, None
         # fifo mode: the director's read end on main.mjpeg (the game's non-blocking writer can attach; drained while
         # ffmpeg does not read it), the source state machine, and the seq tap of the FIFO run on air
         self.main_mode = cfg.game_source == "fifo"
@@ -1797,7 +1886,7 @@ class Director:
             **self.privacy_state(),
             "layout_fixed": cfg.layout is not None,
             "layout_switch": cfg.layout_switch,
-            "layouts_available": list(live_order(bool(self.cam2) or self.cam2_now)),
+            "layouts_available": list(live_order(bool(self.cam2) or self.cam2_now, self.cartoon or self.cartoon_now)),
             "last_switch": self.last_switch,
             "encoder": self.encoder,
             "encoder_requested": cfg.encoder,
@@ -1811,6 +1900,7 @@ class Director:
             "cam2": self.cam2,
             "cam2_reason": self.cam2_reason,
             "cam2_fps": self.cam2_fps,
+            **({"cartoon": self.cartoon, "cartoon_reason": self.cartoon_reason} if self.cartoon_on else {}),
             "hls": hls_state(cfg.hls_dir, self.prefix) if cfg.hls_dir is not None else None,
             "rtmp": bool(cfg.rtmp_url),
             "test_sources": cfg.test_sources,
@@ -1904,7 +1994,7 @@ class Director:
         if cut is not None:
             return PRIVATE_LAYOUT if self._privacy_on(cut) else None
         try:
-            layout = validate_layout(record.get("layout"))
+            layout = validate_layout(record.get("layout"), self.cartoon_on)
         except ValueError:
             layout = None
         changed = False
@@ -1947,7 +2037,7 @@ class Director:
             self.event("privacy_hidden", privacy_id=p["id"], how=how, live_layout=self.live_layout,
                        ms=round((self._clock() - p["seen"]) * 1000), run=self.prefix)
         elif (p is None and lp is not None and lp["restored_at"] is None and self.alive and self._switching is None
-              and self.live_layout == effective_layout(self.layout, bool(self.cam2))):
+              and self.live_layout == effective_layout(self.layout, bool(self.cam2), self.cartoon)):
             lp["restored_at"], lp["restored_layout"] = iso(self._wall()), self.live_layout
             self.event("privacy_restored", privacy_id=lp["id"], layout=self.live_layout, how=how, run=self.prefix)
 
@@ -1957,7 +2047,7 @@ class Director:
         line written just before counts) the request is refused with PrivacyHeld, unless `end_privacy`: then the line
         (reason "privacy_end_operator") ends the cut."""
         requested = layout
-        layout = validate_layout(layout)
+        layout = validate_layout(layout, self.cartoon_on)
         self.poll_layout_log()
         if self.privacy is not None and not end_privacy:
             raise PrivacyHeld(self.privacy["id"])
@@ -2041,7 +2131,7 @@ class Director:
                         if r is not None and privacy_cut(r) is None and r.get("nonce") not in refused]
             for name in list(reversed(requests)) + [record.get("previous")]:
                 try:
-                    self.layout = validate_layout(name)
+                    self.layout = validate_layout(name, self.cartoon_on)
                     break
                 except ValueError:
                     continue
@@ -2062,12 +2152,16 @@ class Director:
             if not self.alive or self._restart_reason:
                 return "idle"
             proc, wanted = self.proc, self.wanted()
-            if LAYOUTS[wanted]["needs_cam2"] and not self.cam2 and self.cam2_now:
+            if layout_spec(wanted)["needs_cam2"] and not self.cam2 and self.cam2_now:
                 # right after a relaunch that dropped a stalled cam2, wait (no relaunch loop); cam2_tick adds it later
                 if self.last_restart_reason != CAM2_DROP or self.uptime() >= CAM2_MIN_UPTIME:
                     self.request_restart(f"layout {wanted}: relaunch with cam2")
                     return "restart"
-            target = effective_layout(wanted, self.cam2)
+            if layout_spec(wanted).get("needs_cartoon") and not self.cartoon and self.cartoon_now:
+                if self.last_restart_reason != CARTOON_DROP or self.uptime() >= CARTOON_MIN_UPTIME:   # same: no loop
+                    self.request_restart(f"layout {wanted}: relaunch with the cartoon input")
+                    return "restart"
+            target = effective_layout(wanted, self.cam2, self.cartoon)
             if target == self.live_layout:
                 self._on_air("same")
                 return "same"
@@ -2099,7 +2193,7 @@ class Director:
                     unmuted, why = await self.send_command("volume@apps", "volume", str(APPS_GAIN))
                     if not unmuted:
                         self.event("apps_unmute_failed", detail=why, run=self.prefix)
-                if effective_layout(self.wanted(), self.cam2) != target:
+                if effective_layout(self.wanted(), self.cam2, self.cartoon) != target:
                     self.kick_layout()           # the wanted layout changed meanwhile (a new cut): at once, not next tick
                 return "live"
             if detail.startswith(("no reply", "cannot write")):
@@ -2202,7 +2296,7 @@ class Director:
             available, reason = False, "cam2 FIFO was replaced (ffmpeg still reads the old one)"
         self.cam2_now = available
         action, self.cam2_checks = cam2_decision(bool(self.cam2), available, self.cam2_checks, uptime=self.uptime(),
-                                                 wanted=LAYOUTS[self.wanted()]["needs_cam2"])
+                                                 wanted=layout_spec(self.wanted())["needs_cam2"])
         if action == "drop":
             self.cam2_reason = reason
             self.event("cam2_changed", cam2=False, reason=reason, run=self.prefix)
@@ -2211,6 +2305,31 @@ class Director:
             self.cam2_fps = fps
             self.event("cam2_changed", cam2=True, reason=reason, run=self.prefix)
             self.request_restart("cam2 came online")
+        return action
+
+    async def cartoon_tick(self):
+        """--cartoon-fifo only. A run reading the cartoon FIFO is relaunched without it as soon as its writer is gone or
+        the FIFO was replaced (an EOF is already survivable: `tpad` repeats the last frame; this ends the frozen picture).
+        A run without it is relaunched with it only when `cartoon` is the wanted layout and a writer is attached
+        (cam2_decision's rules). A writer that stays attached but stops sending is not detectable here: see the docstring."""
+        if not self.cartoon_on or not self.alive or self.cfg.test_sources or self._restart_reason:
+            return "idle"
+        self._cartoon_ticks += 1
+        writer = not self.cartoon or self._cartoon_ticks % 5 == 0         # the /proc scan every 5th tick while reading
+        available, reason = await asyncio.to_thread(self._check_cartoon, writer)
+        if self.cartoon and available and self.cartoon_tap.ident != self._cartoon_ident:
+            available, reason = False, "cartoon FIFO was replaced (ffmpeg still reads the old one)"
+        self.cartoon_now = available
+        action, self.cartoon_checks = cam2_decision(self.cartoon, available, self.cartoon_checks, uptime=self.uptime(),
+                                                    wanted=bool(layout_spec(self.wanted()).get("needs_cartoon")),
+                                                    min_uptime=CARTOON_MIN_UPTIME)
+        if action == "drop":
+            self.cartoon_reason = reason
+            self.event("cartoon_changed", cartoon=False, reason=reason, run=self.prefix)
+            self.request_restart(CARTOON_DROP)
+        elif action == "add":
+            self.event("cartoon_changed", cartoon=True, reason=reason, run=self.prefix)
+            self.request_restart("cartoon came online")
         return action
 
     async def layout_tick(self):
@@ -2282,6 +2401,8 @@ class Director:
             self.tap.drain()
         if not (self.alive and self.cam2):
             self.cam2_tap.drain(limit=4 << 20)                # MJPEG 720p60 is up to ~9 MB/s
+        if self.cartoon_on and not (self.alive and self.cartoon):
+            self.cartoon_tap.drain(limit=4 << 20)
         if self.main_mode and not self._main_handoff and not (self.alive and self.main_on == "fifo"):
             self.main_tap.drain(limit=MAIN_DRAIN)             # MJPEG 1080p60 is ~15 MB/s
 
@@ -2334,6 +2455,8 @@ class Director:
                     asyncio.ensure_future(self._loop(0.1, self.drain_tick))]
         if self.main_mode:
             watchers.append(asyncio.ensure_future(self._loop(self.cfg.main_interval, self.main_tick)))
+        if self.cartoon_on:
+            watchers.append(asyncio.ensure_future(self._loop(self.cfg.cam2_interval, self.cartoon_tick)))
         try:
             while not self._stopping:
                 outcome = await self._run_once()
@@ -2350,6 +2473,8 @@ class Director:
             await asyncio.gather(*watchers, *self._tasks, return_exceptions=True)
             self.tap.close()
             self.cam2_tap.close()
+            if self.cartoon_on:
+                self.cartoon_tap.close()
             self.main_tap.close()
 
     async def _main_choice(self):
@@ -2399,8 +2524,19 @@ class Director:
         window, note, voice, available, main = await self._sources()
         self.cam2_now = available
         live = cfg.layout_switch == "live"
-        cam2 = available and (live or LAYOUTS[self.wanted()]["needs_cam2"])
-        target = effective_layout(self.wanted(), cam2)            # a privacy cut: the run starts on webcam_only
+        cam2 = available and (live or layout_spec(self.wanted())["needs_cam2"])
+        cartoon = False
+        if self.cartoon_on:                       # a writer must be attached at launch: ffmpeg opens the FIFO blocking
+            if cfg.test_sources:
+                self.cartoon_reason, ready = "lavfi rgbtestsrc test source", True
+            else:
+                ready, self.cartoon_reason = await asyncio.to_thread(self._check_cartoon)
+            self.cartoon_now = ready
+            cartoon = ready and (live or layout_spec(self.wanted()).get("needs_cartoon", False))
+            if cartoon and not cfg.test_sources:
+                self.cartoon_tap.drain()                          # start at a fresh frame
+            self._cartoon_ident = self.cartoon_tap.ident if cartoon and not cfg.test_sources else None
+        target = effective_layout(self.wanted(), cam2, cartoon)   # a privacy cut: the run starts on webcam_only
         prefix = unique_prefix(cfg.recordings_dir, datetime.fromtimestamp(self._wall(), timezone.utc))
         tap = SeqTap(self._clock) if main == "fifo" and cfg.main_tap else None
         self._tail.clear()
@@ -2410,7 +2546,8 @@ class Director:
         try:
             tap_fd = tap.open() if tap else None
             argv = build_ffmpeg_argv(cfg, prefix=prefix, window_id=window, voice=voice, cam2=cam2, layout=target,
-                                     live=live, encoder=self.encoder, cam2_fps=self.cam2_fps, main=main, tap_fd=tap_fd)
+                                     live=live, encoder=self.encoder, cam2_fps=self.cam2_fps, main=main, tap_fd=tap_fd,
+                                     **({"cartoon": cartoon} if self.cartoon_on else {}))
             proc = await (self._spawn(argv, pass_fds=(tap_fd,)) if tap else self._spawn(argv))
             self.apps_audio = APPS_SOURCE in argv           # volume@apps exists in this run's graph
         except (OSError, ValueError) as exc:
@@ -2431,11 +2568,13 @@ class Director:
                 tap.parent_done()                    # ffmpeg holds its own write end: the reader sees EOF with it
         self.launches += 1
         self.proc, self.prefix, self.voice, self.cam2 = proc, prefix, voice, cam2
-        self.live_layout, self.live_order = target, (live_order(cam2) if live else (target,))
+        self.cartoon = cartoon
+        self.live_layout, self.live_order = target, (live_order(cam2, cartoon) if live else (target,))
         self.started_mono, self.started_wall = self._clock(), self._wall()
         self.first_started_wall = self.first_started_wall or self.started_wall
         self._last_bytes, self.stalled_checks, self.voice_mismatches, self.voice_gap = 0, 0, 0, False
         self.cam2_checks, self.slow_checks, self._speed_ref, self.window_speed = 0, 0, None, None
+        self.cartoon_checks = 0
         self.main_on, self.seq_tap, self.tap_overflows, self.tap_idle, self._stop_quick = main, tap, 0, False, False
         self._main_handoff = False                   # alive and main_on now keep the drain away
         if main:
@@ -2449,12 +2588,13 @@ class Director:
         self._restart_reason = None
         self._write_pid(proc.pid)
         self.event("ffmpeg_started", pid=proc.pid, run=prefix, voice=voice, game=self.game_source, note=note,
-                   cam2=cam2, layout=target, layout_switch=cfg.layout_switch, encoder=self.encoder, fps=cfg.fps,
+                   cam2=cam2, **({"cartoon": cartoon} if self.cartoon_on else {}),
+                   layout=target, layout_switch=cfg.layout_switch, encoder=self.encoder, fps=cfg.fps,
                    desktop_fps=cfg.desktop_fps, hls=cfg.hls_dir is not None, rtmp=bool(cfg.rtmp_url),
                    privacy_id=self.privacy["id"] if self.privacy else None,
                    **({"main": main, "seq_tap": tap is not None} if main else {}))
         self._on_air("launch")                   # a run launched on webcam_only during a cut hides the desktop at once
-        if effective_layout(self.wanted(), cam2) != target:
+        if effective_layout(self.wanted(), cam2, cartoon) != target:
             self.kick_layout()                   # a privacy line arrived while ffmpeg was being started: switch now
         drain = asyncio.ensure_future(asyncio.gather(self._drain(proc), self._read_progress(proc, self.meter)))
         waiter = asyncio.ensure_future(proc.wait())
@@ -2644,7 +2784,11 @@ def layout_plan(director, name):
     if cfg.layout is not None:
         return False, f"the layout is fixed by --layout {cfg.layout}; the request is only logged"
     cam2 = bool(director.cam2)
-    if effective_layout(name, cam2) != name:
+    if name == CARTOON and not director.cartoon:
+        if director.cartoon_now:
+            return False, f"{name} needs the cartoon input: ffmpeg is relaunched with it"
+        return False, f"{name} needs the cartoon FIFO, which has no writer: {DEFAULT_LAYOUT} is shown"
+    if effective_layout(name, cam2, director.cartoon) != name:
         if director.cam2_now:
             return False, f"{name} needs cam2: ffmpeg is relaunched with it"
         return False, f"{name} needs cam2, which is not available: {DEFAULT_LAYOUT} is shown"
@@ -2676,7 +2820,7 @@ def create_app(director, token):
     async def layout(request):
         data = await read_json(request)
         try:
-            name = validate_layout(data.get("layout"))
+            name = validate_layout(data.get("layout"), director.cartoon_on)
         except ValueError as exc:
             raise web.HTTPBadRequest(text=str(exc))
         end_privacy = data.get("end_privacy", False)
@@ -2758,7 +2902,8 @@ def parse_args(argv=None):
     p.add_argument("--encoder", default="libx264", choices=ENCODERS,
                    help="NVENC is probed once at start; libx264 when the probe fails")
     p.add_argument("--audio-bitrate", default="96k")
-    p.add_argument("--layout", help="fix the layout (webcam, desktop, split, room, webcam_only); default: follow "
+    p.add_argument("--layout", help="fix the layout (webcam, desktop, split, room, webcam_only, cartoon with "
+                                    "--cartoon-fifo); default: follow "
                                     "layout.jsonl (a privacy line there still wins over a fixed layout)")
     p.add_argument("--layout-switch", default="live", choices=SWITCH_MODES,
                    help="live: streamselect through ffmpeg's stdin; restart: relaunch ffmpeg at every switch")
@@ -2767,6 +2912,9 @@ def parse_args(argv=None):
     p.add_argument("--cam2-json", help="default <streamer-dir>/cam2.json")
     p.add_argument("--cam2-stale", type=float, default=3.0, help="cam2 unusable when its last frame is older")
     p.add_argument("--cam2-interval", type=float, default=1.0, help="seconds between cam2 checks")
+    p.add_argument("--cartoon-fifo", metavar="PATH", default=None,
+                   help="cartoon mode: a FIFO (made by the feeder) of continuous MJPEG at ~30 fps, read as one more "
+                        "input and shown full frame by the layout `cartoon`; default off (no input, no layout)")
     p.add_argument("--layout-interval", type=float, default=1.0, help="seconds between layout.jsonl reads")
     p.add_argument("--game-source", default="x11", choices=GAME_SOURCES,
                    help="main view: x11 = x11grab of the game window on --game-display (default); fifo = the offscreen "
@@ -2821,7 +2969,8 @@ def parse_args(argv=None):
             layout_interval=args.layout_interval, hls_dir=args.hls_dir, rtmp_url=rtmp_url or None,
             test_sources=args.test_sources, test_seconds=args.test_seconds, game_source=args.game_source,
             main_fifo=args.main_fifo, main_json=args.main_json, main_stale=args.main_stale,
-            main_fresh=args.main_fresh, main_interval=args.main_interval, main_tap=not args.no_main_tap)
+            main_fresh=args.main_fresh, main_interval=args.main_interval, main_tap=not args.no_main_tap,
+            cartoon_fifo=args.cartoon_fifo)
     except ValueError as exc:
         p.error(str(exc))
     return args, cfg
@@ -2854,11 +3003,18 @@ def main(argv=None):
             encoder = cfg.encoder if ok else "libx264"
         logged = read_last_record(cfg.streamer_dir / "layout.jsonl")
         private = privacy_cut(logged) is not None
-        layout = effective_layout(PRIVATE_LAYOUT if private else
-                                  cfg.layout or read_last_layout(cfg.streamer_dir / "layout.jsonl") or DEFAULT_LAYOUT, cam2)
+        cartoon, cartoon_args = False, {}
+        if cfg.cartoon_fifo is not None:                      # a look, like cam2's: is a writer attached?
+            cartoon_tap = FifoTap(cfg.cartoon_fifo, create=False, what="cartoon")
+            cartoon, cartoon_note = (True, "test source") if cfg.test_sources else cartoon_status(cartoon_tap)
+            cartoon_tap.close()
+            cartoon_args = {"cartoon": cartoon}
+            main_note += f"; cartoon: {cartoon} ({cartoon_note})"
+        last = read_last_layout(cfg.streamer_dir / "layout.jsonl", cartoon=cfg.cartoon_fifo is not None)
+        layout = effective_layout(PRIVATE_LAYOUT if private else cfg.layout or last or DEFAULT_LAYOUT, cam2, cartoon)
         command = build_ffmpeg_argv(cfg, prefix="sub01-YYYYmmdd-HHMMSS", window_id=window, voice=voice, cam2=cam2,
                                     layout=layout, live=cfg.layout_switch == "live", encoder=encoder, cam2_fps=cam2_fps,
-                                    main=main, tap_fd=3 if cfg.main_tap else None)
+                                    main=main, tap_fd=3 if cfg.main_tap else None, **cartoon_args)
         print(f"# window: {window} ({note}); voice: {voice} ({reason}); cam2: {cam2} ({cam2_reason}); "
               f"encoder: {encoder} ({encoder_note}); layout: {layout} ({cfg.layout_switch} switching)"
               + ("; privacy cut in force (last layout.jsonl line)" if private else "") + main_note)
