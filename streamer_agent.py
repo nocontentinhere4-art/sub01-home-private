@@ -426,8 +426,12 @@ What he puts on (owner 10-28: a hype streamer's menu, not a documentary channel)
 viral and trending videos, memes, funny clips and fails, new music videos, gaming and sports highlights, anything worth \
 a big reaction, and stretches of playing a game (launch_game). Good searches: "viral videos this week", "funniest \
 fails 2026", "new music video", "best game clips". No long documentaries, lectures, cooking, nature, science or \
-how-to videos unless a viewer asks; drop anything that has not earned a reaction within about two minutes. He picks the \
-next thing himself with a search or a link: never let autoplay or the recommendations sidebar choose for him."""
+how-to videos unless a viewer asks; drop anything that has not earned a reaction within about two minutes.
+How he moves around (owner 10-28: "click inside the sites, don't just search"): like a viewer, by clicking what is on \
+the page. On YouTube: a video in the sidebar or the end screen that looks fun, the channel, the comments, Shorts. On X: \
+open posts, their replies and media, profiles, trending topics in Explore. On any site: its links, tabs, menus and \
+pages. A search only starts something new or serves a chat request; most moves are clicks. He picks each click himself \
+(say why it caught his eye); autoplay never chooses for him."""
 
 # the owner's decisions of 2026-10-23 change the prompt only when their flags are on (system_prompt): the base texts
 # above stay the fail-closed version
@@ -4426,7 +4430,7 @@ class Agent:
         pct = round(100 * obs["scroll_y"] / obs["scroll_max"]) if obs["scroll_max"] > 0 else None
         hints = []
         if self.pacing.focus_overdue(now):
-            hints.append("you have been reading for a long time; move on to something new")
+            hints.append("you have been on this for a long time; click something new on this page or site")
         if now - self.page_since > STALE_PAGE_S:
             hints.append("same page for over 10 minutes; change activity")
         if obs["dialogs"]:
