@@ -163,6 +163,7 @@ SPEECH_GAP_S = 4.0                      # silence between the end of one unsolic
 COMMENT_READING_S = (7.0, 13.0)         # unsolicited remark while reading (was 15-28 s, then 35-70 s; owner 10-28: he talks ~30% of a video, a hype streamer far more; Kimi GO)
 COMMENT_OTHER_S = (5.0, 10.0)           # ... while browsing, typing, idle (was 8-16 s, 12-25 s, before that 30-70 s)
 REACT_COOLDOWN_S = 15.0
+DECIDE_AHEAD_S = 5.0                    # the model's answer arrives about this much later: its speech rights are judged for then
 POLL_S = 30.0                           # a chat poll collects answers this long (owner 10-28: real interaction; Kimi poll)
 POLL_COOLDOWN_S = 180.0                 # ... and the next one may open this long after the last one closed
 POLL_RESULT_S = 90.0                    # the result is in the state this long, then it is stale
@@ -3902,6 +3903,13 @@ class Agent:
     def voice_busy(self, now):
         return bool(self.voice.get("speaking") or self.voice.get("queue") or now < self.speak_until or self.speech_q)
 
+    def prompt_plan(self, now):
+        """The pacing the model is told (owner 10-28: he talked ~30% of a video): its line is spoken about DECIDE_AHEAD_S
+        later, so the current line ending by then does not hold it back. apply() judges the line again when it arrives."""
+        t = now + DECIDE_AHEAD_S
+        busy = bool(self.speech_q or self.voice.get("queue") or t < self.speak_until)
+        return self.pacing.plan(t, busy, quiet=self.quiet.on)
+
     def enqueue(self, text, kind, priority="normal", seqs=(), nick="", words=SAY_MAX_WORDS, ttl=25.0, hush_ok=False):
         if self.paused or not text:
             return False
@@ -5153,7 +5161,7 @@ class Agent:
             await self.routine_step(obs, now)
             return
         win = self.window(now)
-        plan = self.pacing.plan(now, self.voice_busy(now), quiet=self.quiet.on)
+        plan = self.prompt_plan(now)
         if win and not win["ok"] and not self.quiet.on:        # only refusals / fixed answers: no model needed
             await self.apply_chat(win, [], now)
             win = None
@@ -5258,6 +5266,9 @@ class Agent:
             self.say(f"dropped {d}")
         self.seen_dialog = bool(obs["dialogs"])
         failed = False
+        early = bool(action) and action["action"] == "wait"  # nothing to verify: the line goes out before the wait, not 4 s late
+        if early:
+            self.apply_say(dec, plan, reacted, level, False, now)
         if action:
             out = await self.act(action, obs, bind=dec.get("_bind"))
             failed = out["verdict"] in ("error",) + REFUSED_VERDICTS or (out["verdict"] == "unchanged" and
@@ -5269,16 +5280,8 @@ class Agent:
                 await self.act({"action": "back"}, obs, bind=dec.get("_bind"))
                 failed = True
         cur = self.requests.current
-        if dec["say"]:
-            if failed:
-                self.drop_say(dec["say"], "its action failed: nothing is claimed without a verified outcome")
-            elif self.privacy is not None:                    # never a word about a private screen (Kimi)
-                self.drop_say(dec["say"], "private screen")
-            elif cur and not cur["commented"]:                # the answer to the viewer's request: not pacing's business
-                cur["commented"] = True
-                self.enqueue(dec["say"], "request", "normal", (cur["seq"],), cur["nick"], words=REPLY_MAX_WORDS, ttl=60.0)
-            elif self.queue_comment(dec["say"], plan, reacted, level) and dec.get("poll"):
-                self.open_poll(dec["poll"], dec["say"], now)
+        if not early:
+            self.apply_say(dec, plan, reacted, level, failed, now)
         if cur:
             if dec["request_done"] or (cur["commented"] and not action) or (cur.get("quick") and cur["steps"] and not action):
                 cur["done"] = True                            # a scroll/key/back request ends with the model's one look
@@ -5329,6 +5332,21 @@ class Agent:
         if self.pc.playing is not None or self.pc.routine is not None or state in ("idle", "reading"):
             return "room"
         return None
+
+    def apply_say(self, dec, plan, reacted, level, failed, now):
+        """The decision's own line: to the viewer whose request is being served, or through the pacing gates."""
+        cur = self.requests.current
+        if not dec["say"]:
+            return
+        if failed:
+            self.drop_say(dec["say"], "its action failed: nothing is claimed without a verified outcome")
+        elif self.privacy is not None:                        # never a word about a private screen (Kimi)
+            self.drop_say(dec["say"], "private screen")
+        elif cur and not cur["commented"]:                    # the answer to the viewer's request: not pacing's business
+            cur["commented"] = True
+            self.enqueue(dec["say"], "request", "normal", (cur["seq"],), cur["nick"], words=REPLY_MAX_WORDS, ttl=60.0)
+        elif self.queue_comment(dec["say"], plan, reacted, level) and dec.get("poll"):
+            self.open_poll(dec["poll"], dec["say"], now)
 
     def drop_say(self, text, why):
         self.counters["say_dropped"] += 1
@@ -5844,7 +5862,7 @@ class Agent:
         for stale in self.requests.expire(now):
             self.log_request("dropped", "waited too long", stale)
         win = self.window(now)
-        plan = self.pacing.plan(now, self.voice_busy(now), quiet=self.quiet.on)
+        plan = self.prompt_plan(now)
         if win and not win["ok"] and not self.quiet.on:
             await self.apply_chat(win, [], now)
             win = None
@@ -6096,7 +6114,7 @@ class Agent:
             if not self.quiet.on:
                 await self.apply_chat(win, [], now)
             win = None
-        plan = self.pacing.plan(now, self.voice_busy(now), quiet=self.quiet.on)
+        plan = self.prompt_plan(now)
         bad = self.model_unavailable("routine")
         if bad:
             self.enter_quiet(bad[0], bad[1], now)

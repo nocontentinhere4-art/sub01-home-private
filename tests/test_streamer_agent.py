@@ -220,7 +220,50 @@ def test_no_speech_while_reading_and_cadence(tmp_path):
     assert agent.counters["say_dropped"] >= 15
     assert world.overlaps == 0
     told = [c["state"]["pacing"] for c in prov.calls if c["state"]["pacing"]["reading_focus"]]
-    assert told and sum(not p["say_allowed"] for p in told) >= len(told) / 5   # still often told to hold (owner 10-28: a hype streamer talks a lot)
+    assert told                                                         # the model is told the pacing (judged DECIDE_AHEAD_S on)
+
+
+def test_prompt_pacing_looks_ahead_and_a_wait_does_not_delay_the_line(tmp_path):
+    """Owner 10-28 (he talked ~30% of a video): the model is told the speech rights its answer will find (the current
+    line ending within DECIDE_AHEAD_S does not hold it back), and a line that comes with a "wait" is queued before the
+    wait instead of after it; apply() still judges the line when it arrives."""
+    agent, world, prov, clock = make(tmp_path)
+    agent.quiet.on = False
+    p = agent.pacing
+    p.opened, p.wait_other, p.wait_reading = True, 5.0, 5.0
+    now = clock()
+    p.last_speech_end = agent.speak_until = now + SA.DECIDE_AHEAD_S - 3.0
+    assert agent.voice_busy(now) and not agent.prompt_plan(now)["voice_busy"]
+    assert agent.prompt_plan(now)["say_allowed"] is False               # the answer lands 3 s after the line: gap not over
+    p.last_speech_end, agent.speak_until = now - 1.0, now - 1.0
+    assert agent.prompt_plan(now)["say_allowed"] and not agent.pacing.plan(now, False)["say_allowed"]
+    agent.speak_until = now + SA.DECIDE_AHEAD_S + 1.0                   # still talking when the answer lands: hold
+    assert not agent.prompt_plan(now)["say_allowed"]
+
+    agent, world, prov, clock = make(tmp_path / "b", lambda st: decision(state="idle", action={"action": "wait", "seconds": 4},
+                                                                         say=next(lines, "")))
+    lines = iter(LINES)
+    order, enqueue, act = [], agent.enqueue, agent.act
+
+    def enq(text, kind, *a, **k):
+        order.append(("say", kind))
+        return enqueue(text, kind, *a, **k)
+
+    async def act_(action, *a, **k):
+        order.append(("act", action["action"]))
+        return await act(action, *a, **k)
+    agent.enqueue, agent.act = enq, act_
+    asyncio.run(sim(agent, clock, 120, hook=lambda: order.append(("step", ""))))
+    steps, cur = [], []
+    for o in order:
+        if o[0] == "step":
+            steps.append(cur)
+            cur = []
+        else:
+            cur.append(o)
+    both = [st for st in steps if ("act", "wait") in st and any(o[0] == "say" and o[1] in ("open", "comment") for o in st)]
+    assert len(both) >= 3                                               # in one step: the line, then the wait
+    assert all(st.index(("act", "wait")) > min(i for i, o in enumerate(st) if o[0] == "say") for st in both)
 
 
 def test_a_gap_between_unsolicited_lines_when_not_reading(tmp_path):
