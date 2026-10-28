@@ -288,6 +288,10 @@ FROZEN_RETRY_S = 120.0                  # a "frozen" latch (not "black") clears 
 FROZEN_AUTO_MAX = 3                     # probation, at most this many times per rolling hour; then a human POST /resume
                                         # (owner asleep 10-28: static ads/pages latched it twice in 4 min; Kimi frozen2 GO)
 BLACK_LUMA = 0.03                       # remote PC: mean luminance below this = a black stream
+# owner 10-28: a playing video changes every frame, so "exit full screen" or a search stayed stale_refused forever;
+# only a click (a point) and typing (the focused field) depend on the picture
+PICTURE_BOUND = ("click", "type")
+NEW_DESTINATION = ("search", "navigate")    # opens its own page: the page under it does not matter
 NO_INPUT = ("wait", "zoom")             # kinds that send no input: no freshness test, not in the rate cap or the streak
 PC_DISPATCH = ("click", "type", "key", "scroll", "navigate", "search", "back", "wait")   # what may reach the PC's runner
 EVENTS_ROTATE_BYTES = 20_000_000        # events.jsonl is rotated to a new, unique name past this size (never overwritten)
@@ -431,7 +435,13 @@ What he puts on (owner 10-28: a hype streamer's menu, not a documentary channel)
 viral and trending videos, memes, funny clips and fails, new music videos, gaming and sports highlights, anything worth \
 a big reaction, and stretches of playing a game (launch_game). Good searches: "viral videos this week", "funniest \
 fails 2026", "new music video", "best game clips". No long documentaries, lectures, cooking, nature, science or \
-how-to videos unless a viewer asks; drop anything that has not earned a reaction within about two minutes.
+how-to videos unless a viewer asks; drop anything that has not earned a reaction within about two minutes. \
+Chat asking for something to watch or do on screen gets it, right away (owner 10-28: "he does whatever chat tells \
+him"): other creators' videos too (Kai Cenat clips, other streamers, YouTubers, reaction videos): he puts them on and \
+reacts in his own words; he only never imitates them or repeats their catchphrases. "Exit/leave full screen" is the \
+key Escape, never a refusal. The only no's are the limits above and below (adult, purchases, downloads, logins). \
+Poker, blackjack and casino games (owner 10-28): free play only, as a guest or with play chips; he never deposits, \
+buys chips or bets real money, and never makes an account.
 How he moves around (owner 10-28: "click inside the sites, don't just search"): like a viewer, by clicking what is on \
 the page. On YouTube: a video in the sidebar or the end screen that looks fun, the channel, the comments, Shorts. On X: \
 open posts, their replies and media, profiles, trending topics in Explore. On any site: its links, tabs, menus and \
@@ -1184,6 +1194,23 @@ R_CODE = re.compile(r"\b(?:download|install|torrent|\w+\.(?:exe|zip|dmg|apk|msi|
                     r"the\s+)?(?:terminal|shell|console|cmd|powershell|bash)|sudo|pip\s+install|npm\s+(?:i|install)|curl\s+|"
                     r"wget\s+|rm\s+-rf|python\s+-c)\b", re.I)
 R_TYPE = re.compile(r"^\W*(?:type|write|post|comment|tweet|send|reply\s+to|paste|enter|fill\s+(?:in|out)|submit)\b", re.I)
+ON_SCREEN_WORDS = re.compile(r"\b(?:full\s*-?\s*scr[a-z]{0,2}n|scr[a-z]{0,2}n|games?|gaming|youtube|yt|video|videos|trailers?|gameplays?|clips?|tab|page|"
+                             r"site|website|browser|search|google|stream|twitch|kick|online|chess|poker|cards)\b", re.I)
+PLAY_ONLINE = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go|and)[\s,]+)*(?:play|start|"
+                         r"try)\s+(?:some\s+|a\s+(?:game\s+of\s+|round\s+of\s+|match\s+of\s+)?|an?\s+)?(chess|poker|texas\s+hold\s*'?em|"
+                         r"blackjack|checkers|solitaire|uno|sudoku|minesweeper|tetris|wordle|geoguessr|connect\s+four)\b", re.I)
+EXIT_FULLSCREEN = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?)[\s,]+)*(?:exit|leave|close|quit|escape|"
+                             r"get\s+out\s+of|come\s+out\s+of|out\s+of)\s+(?:the\s+)?full\s*-?\s*scr[a-z]{0,2}n\b", re.I)
+REACT_TO = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go)[\s,]+)*react\s+(?:to|on)\s+"
+                      r"(?:some\s+|a\s+|an\s+|the\s+)?(?!(?:this|that|it|me|us|chat|my|what)\b)(.{3,60})$", re.I)
+ENTER_FULLSCREEN = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?)[\s,]+)*(?:open|go|put\s+it|make\s+it|"
+                              r"switch\s+to|enter|watch\s+(?:it|this)\s+in|do)?\s*(?:in\s+|to\s+)?full\s*-?\s*scr[a-z]{0,2}n\b", re.I)
+OFF_DESK = re.compile(r"\b(?:stand\s+up|get\s+up|go\s+(?:out|outside|away|home|to\s+(?:sleep|bed|the\s+(?:park|kitchen|gym|store|"
+                      r"bathroom|toilet)))|step\s+(?:out|away)|lie\s+down|take\s+a\s+(?:break|walk|nap|shower)|turn\s+around|"
+                      r"(?:leave|get\s+out\s+of)\s+(?:the|your|ur|this)\s+(?:desk|room|chair|house|seat|setup)|"
+                      r"(?:go|get)\s+(?:sleep|some\s+sleep)|sleep|nap|shower)\b|"
+                      r"(?:^|\b(?:you|and|now|pls|please|bro|then|go|up|can\s+you)\s+)(?:dance|sing|stretch|wave)\b"
+                      r"(?!\s+(?:videos?|clips?|challenges?|trends?|songs?|music|battles?|tutorials?|moves?))", re.I)
 LEAVE_WORDS = re.compile(r"\b(?:leave|stand\s+up|get\s+up|get\s+out|take\s+a\s+(?:break|walk|nap)|go\s+(?:out|outside|"
                          r"away|home)|step\s+(?:out|away)|lie\s+down|dance|sing|stretch|turn\s+around|wave)\b", re.I)
 # doable kinds, in the order they are tried (scroll and back before the activity words: impulse reads "scroll" as the phone)
@@ -1597,7 +1624,12 @@ def model_url_problem(url, chat_texts=(), allow_credentials=False, allow_install
 
 
 def leaves_desk(text):
-    """A request for an activity away from the PC (the site's impulse parser: park, bed, TV, phone, food...), or to get up."""
+    """A request for an activity away from the PC (the site's impulse parser: park, bed, TV, phone, food...), or to get up.
+    Never when it is about the screen ("leave full screen", "watch some other games on youtube": owner 10-28)."""
+    if OFF_DESK.search(text):                                 # explicit, whatever screen word comes with it (Kimi)
+        return True
+    if ON_SCREEN_WORDS.search(text):
+        return False
     if LEAVE_WORDS.search(text):
         return True
     if _impulse is None:
@@ -1764,7 +1796,7 @@ def parse_request(text, pc=False, installs=False, sources=None):
         # on the remote PC a money word is a request shape of its own ("add funds to your wallet": refused as payment);
         # "say something in Italian", "do an xQc impression", "show your face", "stop talking" have no action verb either
         if not (WEATHER_Q.match(s) or LANGUAGE_REQ.match(s) or IMPRESSION_REQ.search(s) or FACE_REQ.match(s) or HUSH_REQ.match(s)
-                or STEAM_REQ.match(s) or (pc and (GAME_PLAY.match(s) or GAME_STOP.match(s) or PC_MONEY_WORDS.search(s)))
+                or STEAM_REQ.match(s) or REACT_TO.match(s) or PLAY_ONLINE.match(s) or EXIT_FULLSCREEN.match(s) or ENTER_FULLSCREEN.match(s) or (pc and (GAME_PLAY.match(s) or GAME_STOP.match(s) or PC_MONEY_WORDS.search(s)))
                 or (pc and installs and INSTALL_REQ.match(s)) or R_ACCOUNT.search(s) or LOGOUT_REQ.match(s)):
             return None
     why = refused_class(text) or ("credentials" if account_change(text) else None)   # owner: no account change by chat
@@ -1815,6 +1847,17 @@ def parse_request(text, pc=False, installs=False, sources=None):
         return search_doable(request_query(m.group(1)))
     if (m := LOOK.match(s)):
         return look_doable(m)
+    if EXIT_FULLSCREEN.match(s):
+        return doable("key", {"action": "key", "key": "Escape"})
+    if (m := PLAY_ONLINE.match(s)):   # owner 10-28 "play chess/poker online": in the browser (chess: lichess, no account needed)
+        game = " ".join(m.group(1).lower().split())
+        if game == "chess":
+            return doable("navigate", {"action": "navigate", "url": "https://lichess.org"}, url="https://lichess.org")
+        return search_doable(query_clean(f"{game} online free") or game)
+    if (m := REACT_TO.match(s)) and (q := request_query(m.group(1))):   # "react to some kai cenat": find it and put it on
+        return search_doable(q)
+    if ENTER_FULLSCREEN.match(s):                             # the model presses f or clicks the button (not a search)
+        return doable("look", None, intent="click", thing="Full screen")
     if (m := CLICK_ANY.match(s)):
         thing = " ".join(m.group(2).strip(" .,!?;:").split()[:5])[:40]
         return doable("look", None, intent="click", thing=(thing[:1].upper() + thing[1:]) if thing else None)
@@ -1972,10 +2015,16 @@ def url_problem(url, chat_texts=(), files_ok=False):
     return None
 
 
+CARD_GAMES = re.compile(r"\b(?:poker|texas\s+hold\s*'?em|hold\s*'?em|blackjack|casino|roulette|slots?)\b", re.I)
+
+
 def query_clean(q):
     q = " ".join(str(q or "").split()[:6])        # the eyes rule allows at most 6 words: keep the head of a long query
     if _mind is not None:
-        return _mind.E.query_ok(q)
+        ok = _mind.E.query_ok(q)
+        if ok is None and CARD_GAMES.search(q) and _mind.E.query_ok(CARD_GAMES.sub("cards", q)):
+            return q                    # owner 10-28 "play poker online": free-play card games pass (the rest still checked)
+        return ok
     return q if 2 <= len(q) <= 60 and len(q.split()) <= 6 and not chat_blocked(q) else None
 
 
@@ -5142,7 +5191,7 @@ class Agent:
             luma = now_frame.get("luma")
             if luma is not None and luma < cfg.black_luminance:
                 return ("stale_refused", f"black frame (luminance {luma:.3f})"), now_frame
-        if now_frame is frame:
+        if now_frame is frame or kind in NEW_DESTINATION:
             return None, now_frame
         if frame.get("mode") != "vagon" and now_frame.get("url") != frame.get("url"):
             return ("stale_refused", "the page changed since the decision"), now_frame
@@ -5156,8 +5205,7 @@ class Agent:
             point = (ob[0] + ob[2] / 2, ob[1] + ob[3] / 2)
         elif kind == "click":
             point = action.get("point")
-        game_key = (pc.playing is not None and kind == "key" and action.get("key") in ("w", "a", "s", "d", "Space"))
-        if not game_key:                                      # Kimi: only w/a/s/d/space while playing skip the picture test
+        if kind in PICTURE_BOUND:                             # keys, scroll, back: the page (URL) test above is enough
             d = frame_diff(frame.get("sig"), now_frame.get("sig"))
             if d is not None and d > cfg.stale_diff:
                 return ("stale_refused", f"the screen changed since the decision (diff {d:.1f})"), now_frame
