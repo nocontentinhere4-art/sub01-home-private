@@ -229,6 +229,11 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   password). The owner signs the account in himself at the operator console
   `https://505jw5ph3dt7ed-8888.proxy.runpod.net/proxy/8838/operator` (operator token); the password never goes through
   chat or git. Ask for a privacy cut (webcam_only) while he types it on stream.
+- Login identity (d2829fd, agent new28 19:05): owner "one password everywhere, Google login too". The owner writes
+  `/home/unreal/.sub01-private/sub01-login.json` himself with `python3 /home/unreal/.sub01-private/set_sub01_login.py`
+  (Jupyter terminal, hidden input); the model types {{email}}/{{username}}/{{password}}, filled in at dispatch behind
+  the privacy cut; {{password}} only on a page marked private_screen. Not created yet at 19:15.
+- Chat context across viewers (0df4382, agent new29 19:15): vague follow-ups continue the last viewer search.
 - Railway: the 2nd `railway up` (site UI rebuild 3678126) was stuck in "Performing healthchecks"; logs requested.
 
 ### To-do (owner's open items, most visible first)
