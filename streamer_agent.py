@@ -117,6 +117,10 @@ KIMI_MODELS = ("kimi-k3.1-pro", "kimi-k3.1-pro-highspeed", "kimi-k3", "kimi-k2.6
 KIMI_MAX_TOKENS = int(os.environ.get("STREAMER_KIMI_MAX_TOKENS", "4000"))   # a thinking model spends part of it on reasoning
 FALLBACK_WINDOW_S = 600.0                                     # on the fallback this long, then the primary is tried again
 CAMERA = os.environ.get("STREAMER_CAMERA", "face") if os.environ.get("STREAMER_CAMERA", "face") in ("face", "monitor", "spectator") else "face"
+# owner 2026-10-28: the director stays on the full game view and the layout choice picks the GAME camera instead
+# (spectator = the cinematic shot from behind him at the PC; face = the frontal webcam for chat answers and reactions)
+CAMERA_DIRECTING = os.environ.get("STREAMER_CAMERA_DIRECTING", "1") != "0"
+LAYOUT_CAMERA = {"webcam": "face", "webcam_only": "face", "room": "spectator", "desktop": "spectator", "split": "spectator"}
 SCHEMA = "sub01.private-streamer-visual-event.v2"
 STATE_SCHEMA = "sub01.streamer-agent-state.v1"
 STATES = ("idle", "reading", "typing", "mouse", "talking", "reacting")
@@ -2676,6 +2680,7 @@ class Visual:
         self.errors = 0
         # motion direction (docs/streamer/ANIMATION-REFERENCES.md): set by the agent when scripts/streamer_motion is present
         self.motion, self.action_kind, self.chat_until, self.reaction, self.base_since = None, "none", 0.0, "none", clock()
+        self.camera = CAMERA                                  # the game camera the agent asks for (CAMERA_DIRECTING)
 
     def poke(self):
         if self.wake is not None:
@@ -2770,7 +2775,7 @@ class Visual:
                    "gaze_yaw_deg": round(clamp(self.yaw, -20.0, 20.0), 2),
                    "gaze_pitch_deg": round(clamp(self.pitch, -10.0, 10.0), 2),
                    "nod_strength": round(clamp(nod, 0.0, 1.0), 3), "intensity": round(inten, 2),
-                   "camera": CAMERA}   # the stream's framing: "face" = frontal webcam shot (owner's reference, 2026-10-23)
+                   "camera": self.camera}   # the stream's framing: "face" = frontal webcam shot (owner's reference, 2026-10-23)
         if self.motion is not None and state != "paused":      # the motion director refines the six fields and adds `motion`
             m = self.motion.tick(now, action=self.action_kind if now < self.act_until else ("read" if self.base == "reading" else "none"),
                                  speaking=state == "talking", chat_addressed=now < self.chat_until,
@@ -4992,6 +4997,15 @@ class Agent:
         if self.privacy is not None:                          # the privacy cut wins (even a plain webcam POST would end it
             self.privacy["previous"] = name                   # at the director); this layout comes back when it ends
             self.log("layout_held", layout=name, why="privacy screen")
+            return
+        if CAMERA_DIRECTING:                                  # no director POST: the game camera changes (1 s blend)
+            cam = LAYOUT_CAMERA.get(name, CAMERA)
+            self.visual.camera = cam
+            if self.visual.motion is not None:
+                self.visual.motion.camera = cam
+            self.layout_at, self.layout_now = now, name
+            self.counters["layout_changes"] += 1
+            self.log("camera", layout=name, camera=cam)
             return
         self.layout_at = now
         try:

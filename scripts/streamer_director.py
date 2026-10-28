@@ -163,6 +163,7 @@ TAP_OVERFLOW = "FIFO queue full"    # ffmpeg's fifo muxer, once per overflow (it
 
 DEFAULT_LAYOUT = "webcam"
 PRIVATE_LAYOUT = "webcam_only"
+LAYOUT_FOLLOW_FILE = "layout-follow"    # <streamer-dir>/layout-follow present: a --layout given at launch is ignored
 PRIVACY_REASON = "privacy"
 PIP_MARGIN = 24
 # `desktop`: the layout shows a picture of the desktop somewhere (room too: cam 2 sees the in-game monitor, which shows it)
@@ -2797,6 +2798,11 @@ def parse_args(argv=None):
             rtmp_url = Path(args.rtmp_url_file).read_text().strip()
         except OSError as exc:
             p.error(f"cannot read --rtmp-url-file: {exc.strerror}")
+    layout = args.layout
+    follow = Path(args.streamer_dir) / LAYOUT_FOLLOW_FILE
+    if layout and follow.exists():          # operator flag: drop a launch-time --layout without restarting the supervisor
+        print(f"streamer director: --layout {layout} ignored: {follow} exists (following layout.jsonl)", file=sys.stderr)
+        layout = None
     try:
         width, height = (int(v) for v in args.size.lower().split("x"))
         pip_width, pip_height = (int(v) for v in args.pip_size.lower().split("x"))
@@ -2809,7 +2815,7 @@ def parse_args(argv=None):
             desktop_fps=args.desktop_fps, segment_seconds=args.segment_seconds, keep_segments=args.keep_segments,
             min_free_gb=args.min_free_gb, crf=args.crf, preset=args.preset,
             audio_bitrate=args.audio_bitrate, watchdog_interval=args.watchdog_interval,
-            voice_interval=args.voice_interval, encoder=args.encoder, layout=args.layout,
+            voice_interval=args.voice_interval, encoder=args.encoder, layout=layout,
             layout_switch=args.layout_switch, switch_timeout=args.switch_timeout, cam2_fifo=args.cam2_fifo,
             cam2_json=args.cam2_json, cam2_stale=args.cam2_stale, cam2_interval=args.cam2_interval,
             layout_interval=args.layout_interval, hls_dir=args.hls_dir, rtmp_url=rtmp_url or None,

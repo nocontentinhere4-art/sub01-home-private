@@ -3900,3 +3900,29 @@ def test_scroll_a_little_bit_scrolls_instead_of_refusing_to_leave_the_desk():
         req = A.parse_request(text, pc=True)
         assert req and req["kind"] == "scroll" and req["action"]["direction"] == direction, (text, req)
     assert A.parse_request("stand up", pc=True)["refused"] == "leave_desk"   # real desk-leaving still refused
+
+
+def test_camera_directing_turns_a_layout_choice_into_the_game_camera(tmp_path, monkeypatch):
+    agent, world, prov, clock = make(tmp_path, decision())
+    monkeypatch.setattr(SA, "CAMERA_DIRECTING", True)
+    posted = []
+    async def layout(name):
+        posted.append(name)
+    monkeypatch.setattr(agent.services, "layout", layout)
+    asyncio.run(agent.set_layout("room", clock()))
+    assert agent.visual.camera == "spectator" and agent.layout_now == "room" and posted == []   # no director POST
+    if agent.visual.motion is not None:
+        assert agent.visual.motion.camera == "spectator"
+    asyncio.run(agent.set_layout("webcam", clock()))
+    assert agent.visual.camera == "face" and posted == []
+    assert [e["camera"] for e in events(agent) if e["kind"] == "camera"] == ["spectator", "face"]
+    monkeypatch.setattr(SA, "CAMERA_DIRECTING", False)
+    asyncio.run(agent.set_layout("room", clock()))
+    assert posted == ["room"]                                           # the old director path, unchanged
+
+
+
+@pytest.fixture(autouse=True)
+def _director_layouts_by_default(monkeypatch):
+    """Most tests here check the director-layout path; camera directing (the live default) has its own test."""
+    monkeypatch.setattr(SA, "CAMERA_DIRECTING", False)

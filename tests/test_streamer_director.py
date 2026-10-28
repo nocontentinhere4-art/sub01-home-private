@@ -2015,3 +2015,10 @@ def test_privacy_cut_mutes_the_desktop_audio_before_the_picture_and_unmutes_afte
         assert await director.apply_layout() == "restart"
         assert director._restart_reason == "privacy: apps mute failed" and proc.stdin.lines == [b"cvolume@apps -1 volume 0\n"]
     run(body())
+
+
+def test_layout_follow_file_drops_a_launch_time_fixed_layout(tmp_path):
+    base = ["--streamer-dir", str(tmp_path), "--layout", "webcam_only"]
+    assert sd.parse_args(base)[1].layout == "webcam_only"               # fixed, as launched
+    (tmp_path / sd.LAYOUT_FOLLOW_FILE).write_text("")
+    assert sd.parse_args(base)[1].layout is None                        # the operator flag: follow layout.jsonl

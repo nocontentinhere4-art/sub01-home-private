@@ -313,3 +313,36 @@ pre-existing ones (no API keys locally).
 
 **Roll back to v24:** stop the game, copy `binaries-v24-backup-20261027T214652/Linux/.` back into
 `project/Sub01HomeLab/Binaries/Linux/`, and relaunch the same way.
+
+## 00:38-00:53 UTC (10-28): framing, and the "view from behind" back
+
+**Hands**
+- The owner reported buggy, crossed hands.
+- On the fixed `webcam_only` stream the face camera (fov 95) showed them cut off and distorted at the bottom edge. The
+  receipt showed fingertips 0.5-0.8 cm into the keys and the elbow guard sliding both wrists the full 15 cm.
+- Kimi: reframe, do not touch the IK live.
+- Face camera: `fov_deg` 95 -> 60, and `aim_drop_cm` -2 -> -16 after the owner asked three times to raise it. The hands
+  are now out of the face shot.
+- Tuning backup: `face-tuning.bak-20261028T0040.json`.
+
+**Layout switching**
+- The stack was launched on 10-26 with `--layout webcam_only`, a privacy stop-gap while Vagon showed its login. The
+  director has ignored every layout request since.
+- I added a director flag file `<streamer-dir>/layout-follow` that ignores a launch-time `--layout` (Kimi APPROVE).
+  `room` then turned out to be the flat cam2 composite with a PiP, which is not what the owner meant. The flag file is
+  removed again.
+- During that director restart, viewers saw a few seconds of colour bars (the placeholder card).
+
+**The view the owner wants**
+- It is the native `spectator` camera: the cinematic shot from behind him at the PC, in the full main view.
+- It was on air before only when the agent was paused, because the agent always asked for `face`.
+
+**Camera directing**
+- Change in `streamer_agent.py` (Kimi APPROVE): the director stays fixed on `webcam_only`, and the agent's layout choice
+  picks the game camera instead of POSTing a director layout:
+  - webcam -> `face`;
+  - room, desktop, split -> `spectator`.
+- The native camera switch blends over 1 s; the 45 s / 8 s dwell still applies.
+- `STREAMER_CAMERA_DIRECTING=0` restores the old path.
+- Deployed at 00:52 (agent restart, lease re-armed until 01:52).
+- First result: camera `spectator`, and the frame matches the owner's reference.
