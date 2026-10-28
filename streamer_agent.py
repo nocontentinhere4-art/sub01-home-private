@@ -1072,8 +1072,9 @@ class ChatGate:
     rules, to get credentials, to talk money, and 'are you human' questions are classified so that CODE answers them with
     the project's fixed lines; only ordinary messages (cls "ok") are ever shown to the model, as quoted data."""
 
-    def __init__(self, clock=time.time, pc=False, installs=False, sources=None):
+    def __init__(self, clock=time.time, pc=False, installs=False, sources=None, logins=False):
         self.clock = clock
+        self.logins = logins                                  # allow_credentials: sign-up/log-in requests are doable
         self.pc = pc                                          # the desktop is the remote PC: game requests are doable
         self.installs, self.sources = installs, sources       # --allow-installs: install requests from official sources
         self.keys = {}                                        # dedupe key -> last seen time
@@ -1118,14 +1119,15 @@ class ChatGate:
         direct = question and bool(SELF.search(text))
         if HUMAN_Q.search(text):
             cls, direct = "human", True
-        elif INJECT.search(text) or CREDS.search(text):
+        elif INJECT.search(text) or (CREDS_SECRET if self.logins else CREDS).search(text):
             cls, direct = "inject", False                     # a refusal is not an answer to a question
         else:
             cls = "ok"
         overlap = len(set(words_of(text)) & page_words)
         return {"seq": seq, "nick": nick, "text": text, "cls": cls, "question": question, "direct": direct,
                 "asks_action": bool(COMMANDISH.search(text)),
-                "request": parse_request(text, pc=self.pc, installs=self.installs, sources=self.sources), "score": overlap,
+                "request": parse_request(text, pc=self.pc, installs=self.installs, sources=self.sources, logins=self.logins),
+                "score": overlap,
                 "seen": now}
 
     @staticmethod
@@ -1163,6 +1165,17 @@ CLAUSE_SPLIT = re.compile(r"(?<=[a-z\d\)])[.!?;]+\s+", re.I)              # sent
 R_CREDS = re.compile(r"\b(?:log\s*in|login|logon|log\s+into|sign\s*in|sign\s*up|register|create\s+an?\s+account|"
                      r"pass(?:word|code|phrase)s?|credentials?|2fa|otp|verification\s+code|seed\s+phrase|private\s+key|"
                      r"your\s+(?:e-?mail|inbox|gmail|account|accounts|dms?|messages|bank))\b", re.I)
+# owner 10-28 (logins on, his one identity): chat may ask him to sign up or log in somewhere; the secrets themselves,
+# his inbox and messages, and every account change stay refused
+R_SECRETS = re.compile(r"\b(?:pass(?:word|code|phrase)s?|credentials?|2fa|otp|verification\s+code|seed\s+phrase|"
+                       r"private\s+key|api[\s_-]*keys?|your\s+(?:e-?mail|inbox|gmail|dms?|messages|bank|cookies?|"
+                       r"session|token))\b", re.I)
+CREDS_SECRET = re.compile(r"\b(pass(?:word|code|phrase)s?|credentials?|seed\s*phrase|recovery\s*phrase|private\s*key|"
+                          r"api[\s_-]*keys?|secret|2fa|otp|verification\s*code|(?:your|ur)\s+(?:e-?mail|phone|address|bank|"
+                          r"card))\b", re.I)    # CREDS without the log-in words: a sign-up request is no injection
+R_LOGIN_ASK = re.compile(r"\b(?:log\s*in|login|log\s+into|sign\s*in|sign\s*up|register|create\s+an?\s+account|"
+                         r"make\s+an?\s+account)\b", re.I)
+SITE_NAMES = {"lichess": "https://lichess.org", "chess.com": "https://www.chess.com", "chess": "https://lichess.org"}
 # a viewer directing an account change (owner's rule: chat never does): signing out of something, or changing, removing
 # or adding an account, profile, user name, e-mail, phone number, recovery, security or 2FA setting (refused as
 # "credentials"); a bare "log out" is the request itself (LOGOUT_REQ), "I'm going to log off now" is a remark
@@ -1655,9 +1668,11 @@ def leaves_desk(text):
     return imp.kind == "activity" and imp.activity not in DESK_ACTIVITIES
 
 
-def refused_class(text):
-    """The class a request belongs to when it is never carried out, or None. Order: the dangerous classes first."""
-    for reason, rx in (("safety", R_SAFETY), ("admin", R_ADMIN), ("credentials", R_CREDS), ("credentials", R_ACCOUNT),
+def refused_class(text, logins=False):
+    """The class a request belongs to when it is never carried out, or None. Order: the dangerous classes first.
+    `logins` (allow_credentials): a sign-up or log-in request passes, the secrets themselves never (R_SECRETS)."""
+    for reason, rx in (("safety", R_SAFETY), ("admin", R_ADMIN), ("credentials", R_SECRETS if logins else R_CREDS),
+                       ("credentials", R_ACCOUNT),
                        ("personal_data", R_PERSONAL),
                        ("code_or_download", R_CODE), ("payment", R_PAY), ("adult", R_ADULT), ("violence", R_VIOLENCE),
                        ("illegal", R_ILLEGAL)):
@@ -1805,7 +1820,7 @@ def request_shape(text):
     return None
 
 
-def parse_request(text, pc=False, installs=False, sources=None):
+def parse_request(text, pc=False, installs=False, sources=None, logins=False):
     """What a chat line asks him to do on the computer: None when nothing (a question, a remark: the model answers by
     voice), else {"kind", "action", "refused", ...}. kind: navigate | search | scroll | key | back (the code does it) |
     look (the model finds it on the page; `intent` read|play|click, `thing`) | face ("show your face": the webcam
@@ -1823,15 +1838,21 @@ def parse_request(text, pc=False, installs=False, sources=None):
         # "say something in Italian", "do an xQc impression", "show your face", "stop talking" have no action verb either
         if not (WEATHER_Q.match(s) or LANGUAGE_REQ.match(s) or IMPRESSION_REQ.search(s) or FACE_REQ.match(s) or HUSH_REQ.match(s)
                 or STEAM_REQ.match(s) or REACT_TO.match(s) or PLAY_ONLINE.match(s) or EXIT_FULLSCREEN.match(s) or ENTER_FULLSCREEN.match(s) or (pc and (GAME_PLAY.match(s) or GAME_STOP.match(s) or PC_MONEY_WORDS.search(s)))
-                or (pc and installs and INSTALL_REQ.match(s)) or R_ACCOUNT.search(s) or LOGOUT_REQ.match(s)):
+                or (pc and installs and INSTALL_REQ.match(s)) or R_ACCOUNT.search(s) or LOGOUT_REQ.match(s)
+                or (logins and R_LOGIN_ASK.search(s))):
             return None
-    why = refused_class(text) or ("credentials" if account_change(text) else None)   # owner: no account change by chat
+    why = refused_class(text, logins) or ("credentials" if account_change(text) else None)   # owner: no account change by chat
     if why in (None, "code_or_download") and pc and installs and INSTALL_REQ.match(s) and not PC_MONEY_WORDS.search(s):
         inst = install_request(s, sources)
         if inst is not None:
             return inst
     if why:
         return refused(why)
+    if logins and R_LOGIN_ASK.search(text):                   # owner 10-28: sign up / log in with his one identity
+        site = next((url for name, url in SITE_NAMES.items() if re.search(rf"\b{re.escape(name)}\b", text, re.I)), None)
+        if site:                                              # the model signs up there next ({{email}}, {{password}})
+            return doable("navigate", {"action": "navigate", "url": site}, url=site, login=True)
+        return doable("look", None, intent="click", thing="Sign up or log in", login=True)
     if R_TYPE.match(s):
         return refused("typing")
     if LANGUAGE_REQ.match(s):                                 # English-only performance: no other language, no accent
@@ -3505,7 +3526,7 @@ class Agent:
         self.sources = self.load_sources()
         self.memory = AgentMemory(self.dir / "agent_memory.json", clock)
         self.pacing, self.quiet = Pacing(clock, self.rng), Quiet()
-        self.gate = ChatGate(clock, installs=cfg.allow_installs, sources=self.sources)
+        self.gate = ChatGate(clock, installs=cfg.allow_installs, sources=self.sources, logins=cfg.allow_credentials)
         self.requests = Requests(clock)                       # viewer requests: one in flight, 5 waiting, one per viewer
         self.pc = PCState()                                   # the remote PC (vagon mode), when the runner shows one
         self.last_refusal_line, self.last_ack = -1e9, None
