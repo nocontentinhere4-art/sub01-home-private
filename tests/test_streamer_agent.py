@@ -2224,7 +2224,9 @@ PROMPT_PC = SA.SYSTEM_PC.replace("\\\n", "")
 
 
 def test_system_prompt_carries_the_adopted_lines_and_none_of_the_rejected_ones():
-    for needle in ("20-year-old streamer", "selective about what deserves a comment", "not an assistant giving a demonstration",
+    for needle in ("20-year-old hype streamer", "Chat comes first", "Big reactions only for genuinely unusual things",
+                   "not in shouting or in moving his body", "never a viewer's identity", "one shared hello, never a roll call",
+                   "never about who they are", "dropped at once if they don't like it", "not an assistant giving a demonstration",
                    "never a real streamer's name", "no accents, no claims of fluency", "Never claim to have heard tab audio",
                    "Doing, not narrating", "a quiet screen is a reason to look for", "Do not narrate mouse moves",
                    "Never infer an article from its headline", "at most two short utterances and 35 words", "no invented tea",
@@ -2233,7 +2235,7 @@ def test_system_prompt_carries_the_adopted_lines_and_none_of_the_rejected_ones()
                    "clean and pronounceable", "Three of you caught the same typo", "Answer every viewer message quickly",
                    "Keep exploring", "Keep a layout for at least 45 seconds",
                    "Level is intensity, not permission to speak", "never screaming, fake outrage or panic",
-                   "one plain correction, not an apology speech", "at most one joke per utterance", "1-8 words", "8-20 words",
+                   "one plain correction, not an apology speech", "no jokes in bad news, failures", "1-8 words", "8-20 words",
                    "12-28 by habit", "Never on air", '"as an AI"', '"let\'s dive in"', '"smash that like"', '"in summary"',
                    "a verified finding or a verified failure, never a generic success", "never the raw request, URL or wording",
                    "tone only; never reuse a line", "Rome weather. I'll check the forecast.", "This is going nowhere. Back to the map."):
@@ -2246,7 +2248,8 @@ def test_system_prompt_carries_the_adopted_lines_and_none_of_the_rejected_ones()
                    "chat_replies", "say_allowed", "last_outcome", "chat_request", "request_done", "never type a viewer's words",
                    'Reply with one JSON object and nothing else', '"request_done": false}'):
         assert needle in PROMPT, needle
-    for once in ("English only", "medical", "is anyone there", "fakes volume", "faked laughter", "tickers", "at most 30 words"):
+    for once in ("English only", "medical", "is anyone there", "laughter at nothing funny", "faked crying", "tickers",
+                 "at most 30 words"):
         assert PROMPT.count(once) == 1, once                                                       # no duplicated rule
     assert len(PROMPT.split()) <= 1800                     # owner 10-27: the interactive persona added ~60 words
     assert "without narrating each click or key" in PROMPT_PC and "never as if you heard its sound" in PROMPT_PC
