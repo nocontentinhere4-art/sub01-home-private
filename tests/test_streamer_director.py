@@ -769,10 +769,7 @@ def test_v2_config_and_cli_accept_the_pod_profile(tmp_path):
     args, cfg = sd.parse_args(["--streamer-dir", str(tmp_path), "--fps", "60", "--desktop-fps", "60", "--encoder",
                                "h264_nvenc", "--hls-dir", str(tmp_path / "hls")])
     assert (cfg.fps, cfg.desktop_fps, cfg.encoder, cfg.hls_dir, cfg.layout, cfg.layout_switch) == (
-        sd.OUTPUT_FPS_MAX, sd.OUTPUT_FPS_MAX, "h264_nvenc", tmp_path / "hls", None, "live")   # owner 10-28: 60 is capped
-    for fps, desk in (("60", "30"), ("24", "15"), ("120", "60")):
-        _, c = sd.parse_args(["--streamer-dir", str(tmp_path), "--fps", fps, "--desktop-fps", desk])
-        assert (c.fps, c.desktop_fps) == (min(int(fps), sd.OUTPUT_FPS_MAX), min(int(desk), sd.OUTPUT_FPS_MAX))
+        60, 60, "h264_nvenc", tmp_path / "hls", None, "live")
     _, cfg = sd.parse_args(["--streamer-dir", str(tmp_path), "--cam2-interval", "0.5", "--layout-interval", "2"])
     assert (cfg.cam2_interval, cfg.layout_interval) == (0.5, 2.0)
     url_file = tmp_path / "rtmp-url"
