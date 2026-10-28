@@ -744,7 +744,7 @@ def test_v2_live_graph_without_cam2_and_the_restart_mode_graph(tmp_path):
     argv = sd.build_ffmpeg_argv(cfg, prefix="p", window_id=7, cam2=True, layout="room", live=False)
     graph = value_after(argv, "-filter_complex")
     assert "-nostdin" in argv and "streamselect" not in graph and argv.count("-i") == 4
-    assert graph.startswith("[3:v]scale=1920:1080:flags=bilinear:in_range=full:out_range=limited,setsar=1,fps=30,tpad=")
+    assert graph.startswith("[3:v]" + sd.WALL_PTS + ",scale=1920:1080:flags=bilinear:in_range=full:out_range=limited,setsar=1,fps=30,tpad=")
     assert "[0:v]scale=480:270" in graph
     assert sd.build_filter_complex("webcam", cfg) == sd.build_filter_complex("character", cfg)
     assert sd.effective_layout("room", False) == "webcam" and sd.effective_layout("room", True) == "room"

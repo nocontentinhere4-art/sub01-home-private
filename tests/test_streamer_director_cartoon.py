@@ -110,7 +110,7 @@ def test_live_graph_has_cartoon_as_the_last_streamselect_input(tmp_path):
             assert f"{labels}streamselect@layout=inputs={count}:map={order.index(layout)},format=yuv420p[vout]" in graph
             part = [p for p in graph.split(";") if p.endswith("[lcartoon]")][0]
             # full frame: aspect-preserving scale + pad to the output size, full -> limited range, the run's fps, tpad clone
-            assert part == (f"[{sd.cartoon_index(cam2)}:v]scale=1280:720:force_original_aspect_ratio=decrease:"
+            assert part == (f"[{sd.cartoon_index(cam2)}:v]{sd.WALL_PTS},scale=1280:720:force_original_aspect_ratio=decrease:"
                             "force_divisible_by=2:flags=bilinear:in_range=full:out_range=limited,format=yuv420p,"
                             "pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30,tpad=stop=-1:stop_mode=clone[lcartoon]")
         # the other layouts keep their indices: today's graph is a prefix of the cartoon graph (up to the selector)
@@ -122,7 +122,7 @@ def test_restart_mode_graph_of_the_cartoon_layout_is_the_cartoon_alone(tmp_path)
     cfg = cfg_for(tmp_path, layout_switch="restart")
     argv = sd.build_ffmpeg_argv(cfg, prefix="p", window_id=7, layout="cartoon", live=False, cartoon=True)
     assert "-nostdin" in argv and argv.count("-i") == 4 and input_paths(argv)[3] == FIFO
-    assert graph_of(argv).startswith("[3:v]scale=1920:1080:force_original_aspect_ratio=decrease") and "[vout];" in graph_of(argv)
+    assert graph_of(argv).startswith("[3:v]" + sd.WALL_PTS + ",scale=1920:1080:force_original_aspect_ratio=decrease") and "[vout];" in graph_of(argv)
     assert "streamselect" not in graph_of(argv) and "[0:v]" not in graph_of(argv) and "[1:v]" not in graph_of(argv)
     # any other layout in restart mode does not open the FIFO at all
     other = sd.build_ffmpeg_argv(cfg, prefix="p", window_id=7, layout="webcam", live=False, cartoon=True)

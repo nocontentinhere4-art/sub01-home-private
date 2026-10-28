@@ -104,7 +104,7 @@ def test_fifo_input_follows_the_spec_plus_follow_and_the_tap_output(tmp_path):
     assert di == ":102.0" and value_after(desk, "-f") == "x11grab" and "-window_id" not in argv   # no game window grab
     assert vi.endswith("voice.pcm") and ci.endswith("cam2.mjpeg")
     graph = value_after(argv, "-filter_complex")
-    assert graph.startswith("[0:v]fps=60,tpad=stop=-1:stop_mode=clone,scale=1920:1080:in_range=full:out_range=limited,"
+    assert graph.startswith("[0:v]" + sd.WALL_PTS + ",fps=60,tpad=stop=-1:stop_mode=clone,scale=1920:1080:in_range=full:out_range=limited,"
                             "setsar=1,format=yuv420p,split=4[gm][gp][gh][lwebcam_only]")
     assert "[lwebcam][ldesktop][lsplit][lroom][lwebcam_only]streamselect@layout=inputs=5:map=3," in graph
     # the recording output first (so -progress reports it), then the tap: input 0 copied as multipart JPEG to fd 7
@@ -151,9 +151,9 @@ def test_every_restart_mode_graph_converts_the_fifo_main_view(tmp_path, layout):
     assert card == x11                                                 # the card goes through today's chain
     game = re.findall(r"\[0:v\]([^\[;]*)", fifo)
     assert len(game) == 1 and "in_range=full:out_range=limited" in game[0]
-    assert game[0].startswith("fps=60,tpad=stop=-1:stop_mode=clone,scale=")   # main picture or PiP: rate, then tpad
+    assert game[0].startswith(sd.WALL_PTS + ",fps=60,tpad=stop=-1:stop_mode=clone,scale=")   # wallclock stamps, rate, tpad
     pip = layout in ("desktop", "room")                                # x11's game PiP has no fps step of its own
-    plain = re.sub(r"(\[0:v\][^\[;]*)", lambda m: m.group(1).replace(",tpad=stop=-1:stop_mode=clone", "")
+    plain = re.sub(r"(\[0:v\][^\[;]*)", lambda m: m.group(1).replace(sd.WALL_PTS + ",", "").replace(",tpad=stop=-1:stop_mode=clone", "")
                    .replace(":in_range=full:out_range=limited", "").replace("[0:v]fps=60,", "[0:v]" if pip else
                                                                             "[0:v]fps=60,"), fifo)
     assert plain == x11                                                # nothing else in the graph changes

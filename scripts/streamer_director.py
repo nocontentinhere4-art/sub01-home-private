@@ -172,6 +172,10 @@ MAIN_DRAIN = 8 << 20        # bytes the director drains per 0.1 s tick while ffm
 MAIN_LAUNCH_GRACE = 3.0     # a FIFO run's first seconds: an old main.json / last write / missing writer is not acted on
 MAIN_WRITER_CONFIRM = 0.6   # "no writer" is confirmed by a second /proc scan this much later (a game reopening its fd)
 MAIN_STOP_NUDGE = (1.0, 2.0)   # stale FIFO run: second SIGINT after 1 s, SIGKILL after 2 s (normal relaunch: 4 s, 8 s)
+# The mjpeg demuxer stamps FIFO frames by -framerate, not by -use_wallclock_as_timestamps (ffmpeg 6.1, reproduced 10-28):
+# a main view at 56 fps read as 60 ran the stream's clock at 94% of real time, so players stalled ~0.13 s every segment
+# and fell ~4 s behind per minute, and the voice FIFO was read too slowly (cut audio). Restamp with the wallclock:
+WALL_PTS = "setpts=(RTCTIME-RTCSTART)/(TB*1000000)"
 TAP_QUEUE = "60"            # packets the tap's fifo muxer holds (~1 s, refcounted) before it drops instead of blocking
 SEQ_HEAD = 4096             # bytes of each tapped JPEG kept to find its COM segment (JFIF, DQT, SOF, DHT come first)
 SEQ_MAX_PART = 32 << 20     # a tapped part announcing more than this is a broken header, not a frame
@@ -407,13 +411,19 @@ def cam2_scale(cfg):
     return f"scale={cfg.width}:{cfg.height}:flags=bilinear:in_range=full:out_range=limited"
 
 
+def cam2_wall(cfg):
+    """cam2 is an MJPEG FIFO too: wallclock stamps (WALL_PTS) unless the run uses test sources."""
+    return "" if cfg.test_sources else WALL_PTS + ","
+
+
 def cartoon_chain(cfg):
     """The cartoon input (MJPEG, full-range yuvj) to a full output frame: aspect-preserving scale (even sizes) with an
     explicit range conversion like cam2's, black pad up to the output size, the run's fps, and `tpad` to repeat the
     last frame after an EOF (so a feeder that closes the FIFO cannot stall the graph)."""
     w, h = cfg.width, cfg.height
     rng = "" if cfg.test_sources else ":in_range=full:out_range=limited"
-    return (f"scale={w}:{h}:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=bilinear{rng},"
+    wall = "" if cfg.test_sources else WALL_PTS + ","
+    return (f"{wall}scale={w}:{h}:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=bilinear{rng},"
             f"format=yuv420p,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps={cfg.fps},tpad=stop=-1:stop_mode=clone")
 
 
@@ -424,7 +434,9 @@ def _overlay(main, pip, out):
 def game_rate(cfg, main=None):
     """The `fps` step of input 0. The fifo mode's main view (`main` "fifo") also repeats its last frame after an EOF
     (`tpad`, as cam2); the x11 grab and the placeholder card keep today's chain."""
-    return f"fps={cfg.fps}" + (",tpad=stop=-1:stop_mode=clone" if main == "fifo" else "")
+    if main == "fifo":
+        return f"{WALL_PTS},fps={cfg.fps},tpad=stop=-1:stop_mode=clone"
+    return f"fps={cfg.fps}"
 
 
 def game_scale(size, flags=None, main=None):
@@ -457,7 +469,7 @@ def build_filter_complex(layout, cfg, main=None, cam2=False):
         top = f"[{main_src}]{rate},{game_scale(f'{w}:{h}', main=main)},setsar=1[main];"
     else:                                   # slower sources: scale at their own rate, then repeat frames up to fps
         if spec["main"] == "cam2":
-            top = f"[{main_src}]{cam2_scale(cfg)},setsar=1,fps={fps},tpad=stop=-1:stop_mode=clone[main];"
+            top = f"[{main_src}]{cam2_wall(cfg)}{cam2_scale(cfg)},setsar=1,fps={fps},tpad=stop=-1:stop_mode=clone[main];"
         else:
             top = f"[{main_src}]scale={w}:{h},setsar=1,fps={fps}[main];"
     pip = f"scale={pw}:{ph}:flags=area"
@@ -489,7 +501,7 @@ def build_live_graph(cfg, cam2, layout, main=None, cartoon=False):
              f"[gh]scale={half_w}:{half_h}:flags=area,setsar=1[gl];[dh]scale={half_w}:{half_h}:flags=area,setsar=1[dr];"
              f"[gl][dr]hstack=inputs=2,pad={w}:{h}:0:(oh-ih)/2:black,setsar=1[lsplit]"]
     if cam2:
-        parts += [f"[3:v]{cam2_scale(cfg)},setsar=1,format=yuv420p,fps={fps},tpad=stop=-1:stop_mode=clone[cm]",
+        parts += [f"[3:v]{cam2_wall(cfg)}{cam2_scale(cfg)},setsar=1,format=yuv420p,fps={fps},tpad=stop=-1:stop_mode=clone[cm]",
                   _overlay("cm", "gpb", "lroom")]
     if cartoon:
         parts.append(f"[{cartoon_index(cam2)}:v]{cartoon_chain(cfg)}[l{CARTOON}]")
