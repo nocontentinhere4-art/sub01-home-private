@@ -216,6 +216,7 @@ CARTOON_SPEC = {"main": CARTOON, "pip": None, "needs_cam2": False, "needs_cartoo
                 "summary": "the cartoon feeder's MJPEG FIFO full frame (--cartoon-fifo), no picture-in-picture, no desktop"}
 CARTOON_RATE = 30           # -framerate of the cartoon input (metadata only: timestamps are the arrival wallclock)
 CARTOON_DROP = "cartoon stopped delivering"
+CARTOON_LAUNCH_WAIT_S = 3.0  # a launch waits this long for the cartoon feeder to reattach (it does within ~1 s)
 CARTOON_MIN_UPTIME = 30.0   # a run is at least this old before it is relaunched to add the cartoon input
 SWITCH_MODES = ("live", "restart")
 SWITCH_TARGET = "streamselect@layout"
@@ -2555,6 +2556,11 @@ class Director:
                 self.cartoon_reason, ready = "lavfi rgbtestsrc test source", True
             else:
                 ready, self.cartoon_reason = await asyncio.to_thread(self._check_cartoon)
+                waited = 0.0                      # owner 10-28: after a restart the feeder reattaches ~1 s late; a run that
+                while not ready and waited < CARTOON_LAUNCH_WAIT_S:   # starts without it adds it later with a relaunch,
+                    await asyncio.sleep(0.25)     # and clips froze on the poster in every such run: wait for it instead
+                    waited += 0.25
+                    ready, self.cartoon_reason = await asyncio.to_thread(self._check_cartoon)
             self.cartoon_now = ready
             cartoon = ready and (live or layout_spec(self.wanted()).get("needs_cartoon", False))
             if cartoon and not cfg.test_sources:
