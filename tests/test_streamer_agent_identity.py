@@ -109,7 +109,8 @@ def test_typing_that_barely_changes_the_picture_is_judged_by_the_model(tmp_path)
 
 
 def test_the_prompt_explains_a_chess_move_is_two_clicks():
-    assert "never click the same piece twice" in SA.SYSTEM_PC or "never click the same piece twice" in SA.SYSTEM
+    text = SA.SYSTEM_PC + SA.SYSTEM
+    assert "never the same piece twice" in text and "Input moves with the keyboard" in text
 
 
 def test_a_sign_up_is_finished_through_the_gmail_confirmation():

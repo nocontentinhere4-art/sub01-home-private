@@ -447,9 +447,12 @@ the last concrete request or what is on screen; connect them and act on the comb
 as a new topic when it names one. \
 Poker, blackjack and casino games (owner 10-28): free play only, against the computer, as a guest or with play \
 chips; he never deposits, buys chips or bets real money. Chess and other games: \
-against the computer or people, his pick or chat's. A chess move on lichess is two \
-clicks: the piece (its square only lights up a little, that is success, outcome_ok true), then at once the target \
-square; never click the same piece twice (the second click drops it). Wait for the computer's reply before the next move.
+against the computer or people, his pick or chat's. On lichess he moves by \
+typing (live 10-28: square clicks barely change the picture and read as failures): the move box under the board takes \
+the move in algebraic notation (e4, Nf3, exd5, O-O) and Enter; if there is no box, turn it on once at \
+lichess.org/account/preferences/game-behavior ("Input moves with the keyboard": Yes). Only without it a move is two \
+clicks, the piece (a small highlight is success) then the target square, never the same piece twice. Wait for the \
+reply before the next move.
 How he moves around (owner 10-28: "click inside the sites, don't just search"): like a viewer, by clicking what is on \
 the page. On YouTube: a video in the sidebar or the end screen that looks fun, the channel, the comments, Shorts. On X: \
 open posts, their replies and media, profiles, trending topics in Explore. On any site: its links, tabs, menus and \
@@ -1233,7 +1236,8 @@ R_CODE = re.compile(r"\b(?:download|install|torrent|\w+\.(?:exe|zip|dmg|apk|msi|
                     r"wget\s+|rm\s+-rf|python\s+-c)\b", re.I)
 R_TYPE = re.compile(r"^\W*(?:type|write|post|comment|tweet|send|reply\s+to|paste|enter|fill\s+(?:in|out)|submit)\b", re.I)
 ON_SCREEN_WORDS = re.compile(r"\b(?:full\s*-?\s*scr[a-z]{0,2}n|scr[a-z]{0,2}n|games?|gaming|youtube|yt|video|videos|trailers?|gameplays?|clips?|tab|page|"
-                             r"site|website|browser|search|google|stream|twitch|kick|online|chess|poker|cards)\b", re.I)
+                             r"sites?|websites?|browsers?|pages?|tabs?|apps?|search|google|stream|twitch|kick|online|chess|poker|cards|casinos?|"
+                             r"x|twitter|tiktok|reddit|instagram)\b", re.I)
 PLAY_ONLINE = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go|and)[\s,]+)*(?:play|start|"
                          r"try)\s+(?:some\s+|a\s+(?:game\s+of\s+|round\s+of\s+|match\s+of\s+)?|an?\s+)?(chess|poker|texas\s+hold\s*'?em|"
                          r"blackjack|checkers|solitaire|uno|sudoku|minesweeper|tetris|wordle|geoguessr|connect\s+four)\b", re.I)
@@ -1249,7 +1253,9 @@ OFF_DESK = re.compile(r"\b(?:stand\s+up|get\s+up|go\s+(?:out|outside|away|home|t
                       r"(?:go|get)\s+(?:sleep|some\s+sleep)|sleep|nap|shower)\b|"
                       r"(?:^|\b(?:you|and|now|pls|please|bro|then|go|up|can\s+you)\s+)(?:dance|sing|stretch|wave)\b"
                       r"(?!\s+(?:videos?|clips?|challenges?|trends?|songs?|music|battles?|tutorials?|moves?))", re.I)
-LEAVE_WORDS = re.compile(r"\b(?:leave|stand\s+up|get\s+up|get\s+out|take\s+a\s+(?:break|walk|nap)|go\s+(?:out|outside|"
+LEAVE_AND = re.compile(r"^\W*(?:(?:bro|yo|ok(?:ay)?|now)[\s,]+)*(?:leave|exit|close|quit)(?:\s+(?:(?:this|that|the)\s+"
+                       r"(?:video|page|site|tab|game|one)|this|that|it|here))?\s*(?:,\s*)?(?:and|then|&)\s+", re.I)
+LEAVE_WORDS = re.compile(r"\b(?:stand\s+up|get\s+up|get\s+out|take\s+a\s+(?:break|walk|nap)|go\s+(?:out|outside|"
                          r"away|home)|step\s+(?:out|away)|lie\s+down|dance|sing|stretch|turn\s+around|wave)\b", re.I)
 # doable kinds, in the order they are tried (scroll and back before the activity words: impulse reads "scroll" as the phone)
 # ("bit": strip_filler turns "scroll up a little bit" into "scroll up bit"; live check 2026-10-27)
@@ -1843,6 +1849,8 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
     install request is carried out from an official source only (install_request: kind install, `name`, `source`,
     `hosts`); a pasted URL or file name is refused (official_source)."""
     text = " ".join(str(text or "").split())
+    # "leave and go on some casino websites" (live 10-28): the lead-in leaves the page, the rest is the request
+    text = LEAVE_AND.sub("", text) or text
     s = request_shape(text)
     if s is None:
         s = strip_filler(text)

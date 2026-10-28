@@ -107,3 +107,11 @@ def test_a_click_beside_a_playing_video_goes_through(tmp_path):
     prov.script, prov.n = [T.slow_decision(clock, lambda: setattr(world, "frame", playing), click, state="mouse", say="")], 0
     asyncio.run(T.decide_once(agent, clock, dt=3))
     assert world.acts == [click], agent.last_outcome
+
+
+def test_leave_and_another_request_is_that_request_not_the_desk_line():
+    r = SA.parse_request("leave and go on some casino websites", pc=True)
+    assert r["kind"] == "search" and r["query"] == "casino websites"
+    assert SA.parse_request("leave this video and search kai cenat", pc=True)["query"] == "kai cenat"
+    assert SA.parse_request("leave the desk and play games")["refused"] == "leave_desk"
+    assert not SA.leaves_desk("leave") and SA.leaves_desk("leave the room and go outside")
