@@ -242,6 +242,11 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   anywhere, plays whoever he likes (owner overruled the computer-only rule); a sign-up is finished through Gmail (link
   or code); "open gmail and confirm..." navigates to Gmail. Verified live 20:50: lichess account Subzerone01 created,
   confirmed by the Gmail link, game in progress.
+- 20:55-21:12: agent new35-new37 (5fc3913, b0ccbc9, fd1f563): "leave and <request>" is the request (bare "leave" no
+  longer the desk line; plural screen words); lichess moves typed with keyboard input (enabled on the account); queries
+  drop "open youtube and find something about ... to react to"; video searches open YouTube results, long ones are
+  written by the model as 2-5 title words (verified: "crazy gameplay moments reaction"). Hood: live key `hide_slot`
+  back to -1 (slot 4 hood_lining was hidden since 03:03 and made the hood look see-through); owner to confirm.
 - 19:55 LOOP STOPPED: RunPod balance $15.39 at $1.26/h (below $15 ~20:13; owner rule). Stream delay flat (segment
   59.99 fps, no lag_restart since 18:43). Pending for the owner: top-up decision, run set_sub01_login.py for logins,
   Railway healthcheck logs. Runtime: director = 503c236 + live-layouts file; agent = new30 (git f5530be + the two
