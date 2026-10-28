@@ -902,7 +902,7 @@ def parse_cartoon(text):
 
 _PEOPLE = (r"(?:him|her|them|someone|somebody|anyone|anybody|everyone|everybody|people|persons?|(?:wo)?m[ae]n|guys?|gals?|girls?|boys?|"
            r"kids?|child|children|babies|baby|toddlers?|teachers?|students?|police\w*|cops?|officers?|soldiers?|guards?|waiters?|"
-           r"chefs?|dad|mom|mum|mother|father|brother|sister|grandma|grandpa|friends?|neighbou?rs?|you|me|us|chat|viewers?|"
+           r"chefs?|dad|mom|mum|mother|father|brother|sister|grandma|grandpa|friends?|neighbou?rs?|me|us|chat|viewers?|"
            r"streamers?|humans?|dogs?|puppy|puppies|cats?|kittens?|animals?|birds?|horses?|cows?|pigs?|sheep|ducks?|rabbits?|"
            r"mice|mouse|fish|monkeys?|bears?)")
 _HARM = (r"(?:throw\w*|threw|thrown|toss\w*|hurl\w*|fling\w*|flung|chuck\w*|launch\w*|drop\w*|kick\w*|punch\w*|slap\w*|smack\w*|"
@@ -915,7 +915,7 @@ _AIM = (r"(?:throw\w*|threw|thrown|toss\w*|hurl\w*|fling\w*|flung|chuck\w*|launc
         r"hit|hits|hitting|punch\w*|slap\w*|smack\w*|whack\w*|ram|rams|ramming|rammed|run(?:s|ning)?|ran|drive[sn]?|driving|drove|"
         r"roll\w*|crash\w*|fall\w*|fell|land\w*|pour\w*|splash\w*|charge\w*|attack\w*|zap\w*|blast\w*|slash\w*|stab\w*|"
         r"swat\w*|flick\w*|catapult\w*|slingshot\w*)")
-_TARGET_OK = (r"(?:the\s+|an?\s+|that\s+|this\s+|its\s+)?(?:[\w'-]+\s+){0,1}?(?:walls?|floors?|ground|ceilings?|tables?|desks?|stage|"
+_TARGET_OK = (r"(?:the\s+|an?\s+|that\s+|this\s+|its\s+)?(?:[\w'-]+\s+){0,1}?(?:you|yourself|sub-?01|walls?|floors?|ground|ceilings?|tables?|desks?|stage|"
               r"moon|sun|sky|clouds?|targets?|bullseye|windows?|doors?|roofs?|trees?|mountains?|hills?|oceans?|sea|lakes?|rivers?|"
               r"pools?|water|grass|fields?|roads?|castles?|towers?|houses?|buildings?|pianos?|cars?|trucks?|buses|bus|trains?|"
               r"boats?|ships?|chairs?|couch|sofa|beds?|benches|bench|cakes?|pies?|pizzas?|balls?|boxes|box|hats?|buckets?|"
@@ -932,7 +932,8 @@ CARTOON_CLASSES = (                                          # (class, pattern):
         r"(?:pants|trousers|shorts|underwear)\s+(?:down|off)|(?:pull|drop|take)\w*\s+(?:down\s+|off\s+)?(?:his|her|their|your|the)\s+"
         r"(?:pants|trousers|shorts|underwear|clothes|shirt)|(?:with)?out\s+(?:any\s+)?clothes|no\s+clothes)\b", re.I)),
     ("violence", re.compile(
-        r"\b(?:kill\w*|murder\w*|slaughter\w*|massacre\w*|assassin\w*|execut\w*|behead\w*|decapitat\w*|dismember\w*|mutilat\w*|"
+        r"\b(?:shoot(?:s|ing)?\s+(?:you|yourself|sub-?01|him|her|them)\b|shot\s+(?:you|him|her)\b|hang(?:s|ing|ed)?\s+(?:you|yourself)\b|"
+        r"kill\w*|murder\w*|slaughter\w*|massacre\w*|assassin\w*|execut\w*|behead\w*|decapitat\w*|dismember\w*|mutilat\w*|"
         r"disembowel\w*|tortur\w*|stab\w*|strangl\w*|suffocat\w*|chok(?:e|es|ed|ing)|drown\w*|poison\w*|electrocut\w*|lynch\w*|"
         r"gore|gory|blood\w*|bleed\w*|bled|guts|intestines?|splatter\w*|corpses?|dead\s+bod(?:y|ies)|body\s+bags?|cadavers?|"
         r"death|dead|dying|dies|die|died|deadly|lethal|fatal\w*|hurt(?:s|ing)?|harm(?:s|ed|ing|ful)?|injur\w*|wound\w*|maim\w*|"
@@ -989,7 +990,9 @@ CARTOON_BLOCK = re.compile("|".join(f"(?:{rx.pattern})" for _, rx in CARTOON_CLA
 _HARM_OK = re.compile(r"(?:it|pcs?|computers?|monitors?|screens?|keyboards?|laptops?|phones?|tvs?|televisions?|consoles?|"
                       r"controllers?|headsets?|headphones?|speakers?|lamps?|bricks?|pillows?|cushions?|cups?|mugs?|plates?|"
                       r"bottles?|books?|papers?|plants?|pots?|bananas?|apples?|eggs?|tomato(?:es)?|shoes?|socks?|cans?|"
-                      r"stuff|things?|trash|garbage|coins?|bitcoins?|crypto|money|cash|dollars?|bills?|gold|confetti|" + _TARGET_OK[_TARGET_OK.index("(?:walls?"):] + r")$", re.I)
+                      r"stuff|things?|trash|garbage|coins?|bitcoins?|crypto|money|cash|dollars?|bills?|gold|confetti|"
+                      # owner 10-28: slapstick on SUB-01 himself ("punch you in the face"), never on a viewer or a real person
+                      r"" + _TARGET_OK[_TARGET_OK.index("(?:you|yourself|sub-?01|walls?"):] + r")$", re.I)
 _HARM_SKIP = {"the", "a", "an", "his", "her", "their", "my", "your", "some", "that", "this", "its", "our", "big", "little",
               "small", "giant", "huge", "tiny", "old", "new", "whole", "entire", "red", "blue", "green", "yellow", "black",
               "white", "gaming", "wooden", "fat", "heavy", "on", "onto", "into", "in", "at", "to", "through", "with", "from"}

@@ -4676,3 +4676,12 @@ def test_he_may_talk_memecoins_but_never_gives_buy_advice():
     assert SA.reply_problem("You should buy SUB-01 now.") == "coins or finance"
     assert SA.reply_problem("Visit pump.fun for more.") == "chat filter"
     assert SA.ACTION_CLAIM.search("Nah, I'm clicking the bike guy") and not SA.ACTION_CLAIM.search("That pile is winning.")
+
+
+def test_slapstick_on_sub01_himself_passes_but_not_on_others_or_real_violence():
+    """Owner 10-28: "someone spawns and punch you in the face" was refused as aimed; he is the cartoon's own target."""
+    for a in ("someone spawns and punch you in the face", "throw a pie at you", "a guy slaps you"):
+        assert SA.cartoon_problem(a) is None, a
+    for a, cls in (("punch kei in the face", "aimed"), ("throw a brick at the viewer", "aimed"), ("punch me", "aimed"),
+                   ("kill you", "violence"), ("shoot you", "violence"), ("stab you", "violence"), ("hang you", "violence")):
+        assert SA.cartoon_problem(a) == cls, a
