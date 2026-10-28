@@ -276,10 +276,26 @@ def effective_layout(layout, cam2, cartoon=False):
     return DEFAULT_LAYOUT if (spec["needs_cam2"] and not cam2) or (spec.get("needs_cartoon") and not cartoon) else layout
 
 
-def live_order(cam2, cartoon=False):
-    """The layouts a live graph renders, in streamselect input order (the cartoon layout, when the run has it, last)."""
-    return (tuple(name for name in LIVE_ORDER if cam2 or not LAYOUTS[name]["needs_cam2"])
+def live_order(cam2, cartoon=False, only=None, launch=None):
+    """The layouts a live graph renders, in streamselect input order (the cartoon layout, when the run has it, last).
+    `only` (--live-layouts) keeps just those, plus webcam_only (a privacy cut stays an instant switch) and `launch`
+    (the run's first layout); a request for any other layout relaunches into a graph that has it."""
+    keep = None if only is None else {*only, PRIVATE_LAYOUT, launch}
+    if keep is not None and not keep & {"webcam", "desktop", "split"}:
+        keep.add("desktop")             # the desktop input is always read (an unread input stalls the graph)
+    return (tuple(name for name in LIVE_ORDER
+                  if (cam2 or not LAYOUTS[name]["needs_cam2"]) and (keep is None or name in keep))
             + ((CARTOON,) if cartoon else ()))
+
+
+def renders_cam2(cfg, layout):
+    """A live run reads cam2 only when its graph renders room (an unread input would stall the graph)."""
+    return cfg.live_layouts is None or "room" in cfg.live_layouts or layout == "room"
+
+
+def _fan(labels):
+    """The end of a chain feeding `labels`: a split when there is more than one."""
+    return (f",split={len(labels)}" if len(labels) > 1 else "") + "".join(f"[{label}]" for label in labels)
 
 
 def check_tee_path(path, what):
@@ -337,6 +353,7 @@ class DirectorConfig:
     encoder: str = "libx264"
     layout: str = None                    # fixed layout; None follows layout.jsonl
     layout_switch: str = "live"
+    live_layouts: tuple = None            # the layouts a live graph renders (+ webcam_only and the launch layout); None = all
     layout_interval: float = 1.0
     switch_timeout: float = 3.0
     cam2_fifo: Path = None
@@ -398,6 +415,10 @@ class DirectorConfig:
             object.__setattr__(self, "layout", validate_layout(self.layout, self.cartoon_fifo is not None))
         if self.layout_switch not in SWITCH_MODES:
             raise ValueError("layout switch must be live or restart")
+        if self.live_layouts is not None:
+            names = self.live_layouts.split(",") if isinstance(self.live_layouts, str) else self.live_layouts
+            object.__setattr__(self, "live_layouts", tuple(dict.fromkeys(
+                validate_layout(str(name).strip()) for name in names if str(name).strip())))
         if min(self.switch_timeout, self.layout_interval, self.cam2_interval, self.cam2_stale, self.stats_period) <= 0:
             raise ValueError("intervals and timeouts must be positive")
         if self.test_seconds < 0:
@@ -499,18 +520,27 @@ def build_live_graph(cfg, cam2, layout, main=None, cartoon=False):
     half_h = (half_w * h // w) & ~1
     norm = f"scale={w}:{h},setsar=1,format=yuv420p"
     pip = f"scale={pw}:{ph}:flags=area,setsar=1"
-    order = live_order(cam2, cartoon)
+    order = live_order(cam2, cartoon, cfg.live_layouts, effective_layout(layout, cam2, cartoon))
+    on = set(order)          # owner 10-28: only rendered layouts cost CPU (all six at 1080p60 fell behind real time)
+    game = [label for label, name in (("gm", "webcam"), ("gp", "desktop"), ("gh", "split")) if name in on]
+    if "room" in on and "gp" not in game:
+        game.insert(len(game) - ("gh" in game), "gp")
+    desk = [label for label, name in (("dm", "desktop"), ("dp", "webcam"), ("dh", "split")) if name in on]
+    gpip = [label for label, name in (("gpa", "desktop"), ("gpb", "room")) if name in on]
     # [lwebcam_only] is the game picture itself: the privacy layout, no PiP (every other layout carries the desktop)
-    parts = [f"[0:v]{game_rate(cfg, main)},{game_scale(f'{w}:{h}', main=main)},setsar=1,format=yuv420p,"
-             f"split=4[gm][gp][gh][l{PRIVATE_LAYOUT}]",
-             f"[1:v]{norm},fps={fps},split=3[dm][dp][dh]",
-             f"[gp]{pip},split=2[gpa][gpb]" if cam2 else f"[gp]{pip}[gpa]",
-             f"[dp]{pip}[dpip]",
-             _overlay("gm", "dpip", "lwebcam"),
-             _overlay("dm", "gpa", "ldesktop", left=PIP_LEFT_DESKTOP),
-             f"[gh]scale={half_w}:{half_h}:flags=area,setsar=1[gl];[dh]scale={half_w}:{half_h}:flags=area,setsar=1[dr];"
-             f"[gl][dr]hstack=inputs=2,pad={w}:{h}:0:(oh-ih)/2:black,setsar=1[lsplit]"]
-    if cam2:
+    parts = [f"[0:v]{game_rate(cfg, main)},{game_scale(f'{w}:{h}', main=main)},setsar=1,format=yuv420p"
+             + _fan(game + [f"l{PRIVATE_LAYOUT}"]),
+             f"[1:v]{norm},fps={fps}{_fan(desk)}"]
+    if gpip:
+        parts.append(f"[gp]{pip}{_fan(gpip)}")
+    if "webcam" in on:
+        parts += [f"[dp]{pip}[dpip]", _overlay("gm", "dpip", "lwebcam")]
+    if "desktop" in on:
+        parts.append(_overlay("dm", "gpa", "ldesktop", left=PIP_LEFT_DESKTOP))
+    if "split" in on:
+        parts.append(f"[gh]scale={half_w}:{half_h}:flags=area,setsar=1[gl];[dh]scale={half_w}:{half_h}:flags=area,setsar=1[dr];"
+                     f"[gl][dr]hstack=inputs=2,pad={w}:{h}:0:(oh-ih)/2:black,setsar=1[lsplit]")
+    if cam2:                 # build_ffmpeg_argv reads cam2 only for a graph that renders room
         parts += [f"[3:v]{cam2_wall(cfg)}{cam2_scale(cfg)},setsar=1,format=yuv420p,fps={fps},tpad=stop=-1:stop_mode=clone[cm]",
                   _overlay("cm", "gpb", "lroom")]
     if cartoon:
@@ -612,6 +642,8 @@ def build_ffmpeg_argv(cfg, *, prefix, window_id=None, voice=True, cam2=False, la
     is the x11 mode, exactly as before."""
     size = f"{cfg.width}x{cfg.height}"
     layout = layout or DEFAULT_LAYOUT
+    if live and cam2 and not renders_cam2(cfg, effective_layout(layout, cam2, cartoon)):
+        cam2 = False                    # --live-layouts without room: an input no layout reads would stall the graph
     layout = effective_layout(layout, cam2, True) if cartoon else effective_layout(layout, cam2)
     cartoon = bool(cartoon) and (live or layout == CARTOON)   # a one-layout graph reads the FIFO only to show it
     main = main if main in ("fifo", PLACEHOLDER) else None
@@ -875,6 +907,10 @@ def watchdog_decision(prev_bytes, cur_bytes, stalled_checks, *, alive, uptime,
 SLOW_SPEED = 0.95          # output media seconds per wall second below which a check counts as slow
 SLOW_LIMIT = 3             # slow checks in a row (3 x 30 s) before ffmpeg is relaunched
 SLOW_RESTART_GAP = 600.0   # at most one relaunch for slowness per 10 minutes (no loop on a machine that cannot keep up)
+# owner 10-28: at 0.994x (CPU quota bursts on the shared pod) the stream fell ~0.5 s behind per minute, far above
+# SLOW_SPEED; the delay the output gathered since the end of the grace period is bounded instead
+LAG_LIMIT = 10.0           # seconds of delay gathered since the reference before ffmpeg is relaunched
+LAG_RESTART_GAP = 600.0    # at most one relaunch for delay per 10 minutes
 
 
 def window_speed(prev, cur):
@@ -884,6 +920,20 @@ def window_speed(prev, cur):
     if not prev or not cur or prev[1] is None or cur[1] is None or cur[0] <= prev[0]:
         return None
     return (cur[1] - prev[1]) / (cur[0] - prev[0])
+
+
+def lag_growth(ref, cur):
+    """Seconds the output fell behind the wall clock between two meter clocks `(wall_s, out_time_s)`; None if unknown."""
+    if not ref or not cur or ref[1] is None or cur[1] is None or cur[0] < ref[0]:
+        return None
+    return (cur[0] - ref[0]) - (cur[1] - ref[1])
+
+
+def lag_decision(lag, *, since_restart, limit=LAG_LIMIT, gap=LAG_RESTART_GAP):
+    """-> ok | restart | held (behind by more than `limit`, but a relaunch for delay happened less than `gap` s ago)."""
+    if lag is None or lag <= limit:
+        return "ok"
+    return "held" if since_restart is not None and since_restart < gap else "restart"
 
 
 def speed_decision(speed, slow_checks, *, uptime, since_restart, grace=WATCHDOG_GRACE, floor=SLOW_SPEED,
@@ -1864,6 +1914,7 @@ class Director:
         self.stalled_checks = 0
         self.slow_checks, self._speed_ref, self.window_speed = 0, None, None   # output speed between watchdog ticks
         self._slow_restart_mono = None                    # the last relaunch for slowness (one per SLOW_RESTART_GAP)
+        self._lag_ref, self.lag_s, self._lag_restart_mono, self._lag_held = None, None, None, False
         self.voice_mismatches = 0
         self.voice_gap = False
         self.last_restart_reason = None
@@ -1922,6 +1973,7 @@ class Director:
             "output": self.meter.latest if self.alive and self.meter else None,
             "window_speed": self.window_speed,
             "slow_checks": self.slow_checks,
+            "lag_s": self.lag_s,
             "segments_fps": list(self.fps_history)[-12:],
             "cam2": self.cam2,
             "cam2_reason": self.cam2_reason,
@@ -2291,6 +2343,20 @@ class Director:
             self.request_restart("output below real time")
         elif slow == "held" and self.slow_checks == SLOW_LIMIT:
             self.event("speed_restart_held", run=self.prefix, speed=self.window_speed)
+        if self._lag_ref is None and clock and clock[1] is not None and self.uptime() >= WATCHDOG_GRACE:
+            self._lag_ref = clock                         # the delay at start (probe, queues) is not counted
+        lag = lag_growth(self._lag_ref, clock)
+        self.lag_s = None if lag is None else round(lag, 2)
+        since = None if self._lag_restart_mono is None else self._clock() - self._lag_restart_mono
+        behind = lag_decision(lag, since_restart=since) if slow == "ok" else "ok"   # far below real time: speed's job
+        if behind == "restart" and action != "restart":
+            self.last_error = f"output {self.lag_s} s behind the wall clock"
+            self.event("lag_restart", run=self.prefix, lag_s=self.lag_s)
+            self._lag_restart_mono = self._clock()
+            self.request_restart("output fell behind the wall clock")
+        elif behind == "held" and not self._lag_held:
+            self.event("lag_restart_held", run=self.prefix, lag_s=self.lag_s)
+        self._lag_held = behind == "held"
         if self.cfg.hls_dir is not None and self.prefix:
             prune_hls(self.cfg.hls_dir, self.prefix, self._wall())
         if not self.cfg.test_sources:
@@ -2552,7 +2618,7 @@ class Director:
         window, note, voice, available, main = await self._sources()
         self.cam2_now = available
         live = cfg.layout_switch == "live"
-        cam2 = available and (live or layout_spec(self.wanted())["needs_cam2"])
+        cam2 = available and ((live and renders_cam2(cfg, self.wanted())) or layout_spec(self.wanted())["needs_cam2"])
         cartoon = False
         if self.cartoon_on:                       # a writer must be attached at launch: ffmpeg opens the FIFO blocking
             if cfg.test_sources:
@@ -2602,12 +2668,14 @@ class Director:
         self.launches += 1
         self.proc, self.prefix, self.voice, self.cam2 = proc, prefix, voice, cam2
         self.cartoon = cartoon
-        self.live_layout, self.live_order = target, (live_order(cam2, cartoon) if live else (target,))
+        self.live_layout, self.live_order = target, (live_order(cam2, cartoon, cfg.live_layouts, target) if live
+                                                      else (target,))
         self.started_mono, self.started_wall = self._clock(), self._wall()
         self.first_started_wall = self.first_started_wall or self.started_wall
         self._last_bytes, self.stalled_checks, self.voice_mismatches, self.voice_gap = 0, 0, 0, False
         self.cam2_checks, self.slow_checks, self._speed_ref, self.window_speed = 0, 0, None, None
         self.cartoon_checks = 0
+        self._lag_ref, self.lag_s, self._lag_held = None, None, False
         self.main_on, self.seq_tap, self.tap_overflows, self.tap_idle, self._stop_quick = main, tap, 0, False, False
         self._main_handoff = False                   # alive and main_on now keep the drain away
         if main:
@@ -2825,8 +2893,10 @@ def layout_plan(director, name):
         if director.cam2_now:
             return False, f"{name} needs cam2: ffmpeg is relaunched with it"
         return False, f"{name} needs cam2, which is not available: {DEFAULT_LAYOUT} is shown"
-    if cfg.layout_switch == "live":
+    if cfg.layout_switch == "live" and (cfg.live_layouts is None or name in director.live_order):
         return True, "switched live (streamselect)"
+    if cfg.layout_switch == "live":
+        return False, "ffmpeg is relaunched with this layout (not in --live-layouts)"
     return False, "ffmpeg is relaunched with this layout (--layout-switch restart)"
 
 
@@ -2950,6 +3020,9 @@ def parse_args(argv=None):
                    help="cartoon mode: a FIFO (made by the feeder) of continuous MJPEG at ~30 fps, read as one more "
                         "input and shown full frame by the layout `cartoon`; default off (no input, no layout)")
     p.add_argument("--layout-interval", type=float, default=1.0, help="seconds between layout.jsonl reads")
+    p.add_argument("--live-layouts", default=None, metavar="A,B",
+                   help="live switching renders only these layouts (plus webcam_only, the cartoon and the run's first "
+                        "layout); another layout relaunches ffmpeg; default: every layout")
     p.add_argument("--game-source", default="x11", choices=GAME_SOURCES,
                    help="main view: x11 = x11grab of the game window on --game-display (default); fifo = the offscreen "
                         "game's <streamer-dir>/main.mjpeg, with a placeholder card while it is stale. Never inferred")
@@ -3002,7 +3075,8 @@ def parse_args(argv=None):
             min_free_gb=args.min_free_gb, crf=args.crf, preset=args.preset,
             audio_bitrate=args.audio_bitrate, watchdog_interval=args.watchdog_interval,
             voice_interval=args.voice_interval, encoder=args.encoder, layout=layout,
-            layout_switch=args.layout_switch, switch_timeout=args.switch_timeout, cam2_fifo=args.cam2_fifo,
+            layout_switch=args.layout_switch, live_layouts=args.live_layouts, switch_timeout=args.switch_timeout,
+            cam2_fifo=args.cam2_fifo,
             cam2_json=args.cam2_json, cam2_stale=args.cam2_stale, cam2_interval=args.cam2_interval,
             layout_interval=args.layout_interval, hls_dir=args.hls_dir, rtmp_url=rtmp_url or None,
             test_sources=args.test_sources, test_seconds=args.test_seconds, game_source=args.game_source,
