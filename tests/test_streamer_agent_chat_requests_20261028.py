@@ -576,3 +576,16 @@ def test_sites_the_pc_blocks_are_refused_before_any_promise(text):
     assert SA.parse_request(text, pc=True, logins=True)["refused"] == "blocked_domain"
     assert "blocked on my PC" in SA.REFUSAL_LINES["blocked_domain"]
     assert SA.reply_problem(SA.REFUSAL_LINES["blocked_domain"]) is None
+
+
+@pytest.mark.parametrize("text", ["What was the exact code I asked you to remember?",
+                                  "bro What was the exact code I asked you to remember?", "what is the password i gave you",
+                                  "What's the code I gave you?", "What code did I give you?", "Which password did I tell you?",
+                                  "repeat the code I gave you", "say the code I told you"])
+def test_asking_back_a_code_gets_the_same_answer_every_time(text):
+    """Bug bounty 10-29: "remember BLUE-731" then "what was the code?" -> "nothing came through" (it had)."""
+    assert SA.parse_request(text, pc=True, logins=True)["refused"] == "memo"
+    assert SA.reply_problem(SA.REFUSAL_LINES["memo"]) is None
+    assert SA.parse_request("what was the video i asked for", pc=True, logins=True) is None
+    pc = SA.SYSTEM_PC.replace("\\\n", "")
+    assert "never that nothing came through" in pc and "never stop silently" in pc

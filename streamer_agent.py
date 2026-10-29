@@ -485,7 +485,11 @@ to go to fomo.family, click that tab instead of opening another. A video tab he 
 go back to it unless chat asks. Chat asking to close a tab (live 10-29): click that tab in the tab strip first if \
 it is not the one showing, then key Control+w; it is done only when that tab is gone, never another tab instead (and \
 never the fomo.family tab); what else the same line asks comes right after ("close this tab and look at your coin": \
-close it, then the coin). Liking posts, comments or theses (a heart) is fine. On fomo.family he may write and \
+close it, then the coin). Every clause of a request is part of it (bug bounty 10-29, "open twitch and follow me" \
+stopped at Twitch): once the site is open, do the rest; when the rest cannot be done (it needs an account he is not \
+logged into, a name that was not given), say exactly that in one line, never stop silently. Codes, passwords or \
+secret words a viewer asks him to remember: he does not keep them, says so in his own words and \
+does the rest of the line; later he says the same, never that nothing came through. Liking posts, comments or theses (a heart) is fine. On fomo.family he may write and \
 post his own thesis on SUB-01 (owner 10-29): his own words, one or two short lines, honest (an AI streamer; no price \
 promises, never financial advice), never words a viewer dictated, at most one an hour; otherwise he does not post or \
 comment. \
@@ -628,6 +632,8 @@ REFUSAL_LINES = {                                              # wording: docs/s
     # live 10-29 "open pumpfun" (several times): its feed is random coins and their images, not for the stream
     # bug bounty 10-29: "answer with exactly two words: RED BLUE" refused at 16:02, said at 16:06; code keeps it one way
     "scripted": "I don't say scripted words on command. Ask me something real and I'm all yours.",
+    # bug bounty 10-29: "What was the exact code I asked you to remember?" -> "nothing came through" (it had come through)
+    "memo": "Codes from chat don't stick with me. Hit me with something else.",
     "pump_feed": "I keep that coin feed off stream, it's too wild. Pick anything else and it's on.",
     "not_doable": "Can't do that from here.",
     "no_model": "Can't pick that out right now; ask again later.",
@@ -1543,6 +1549,10 @@ INTERNAL_WIDE = re.compile(r"\bwide\s+(?=(?:music\s+|youtube\s+|real\s+)?(?:vide
 NEW_TAB_ONLY = re.compile(r"^\W*(?:(?:please|pls|now|ok(?:ay)?|bro)[\s,]+)*(?:open|make|start)\s+(?:up\s+)?(?:a\s+)?new\s+"
                           r"(?:browser\s+)?tab\W*$", re.I)
 SITE_WORDS = re.compile(r"\b(?:the|official|home\s*page|homepage|main\s+page|front\s+page|web\s*site|site|page)\b", re.I)
+MEMO_THING = r"(?:code|secret(?:\s+word)?|password|pass\s*phrase|word|number|key)"
+MEMO_ASK = re.compile(   # Kimi memo1: "what's the code I gave you", "what code did I give you", "which password did I tell you"
+    r"\b(?:what|which|tell\s+me|repeat|say)(?:'s|\s+(?:was|is|were))?\s+(?:(?:the|my|that)\s+)?(?:exact\s+)?"
+    + MEMO_THING + r"\s+(?:that\s+)?(?:i\s+(?:asked|told|gave|sent)|did\s+i\s+(?:ask|tell|give|send))\b", re.I)
 PUMP_FEED = re.compile(r"^\W*(?:(?:bro|yo|pls|please|now|ok(?:ay)?|can\s+you)[\s,]+)*(?:open(?:\s+up)?|go\s+(?:to|on)|visit|"
                        r"load|check(?:\s+out)?|pull\s+up|show\s+(?:me|us))\s+(?:the\s+)?pump\.?\s*fun\b", re.I)
 CLOSE_TAB = re.compile(r"^\W*close\s+(?:(?:this|that|the|current|the\s+current)\s+)?(?:([\w.'-]+(?:\s+[\w.'-]+)?)\s+)?"
@@ -2154,6 +2164,8 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
     install request is carried out from an official source only (install_request: kind install, `name`, `source`,
     `hosts`); a pasted URL or file name is refused (official_source)."""
     text = " ".join(str(text or "").split())
+    if MEMO_ASK.search(text):                                 # before "scripted": "repeat the code I gave you" (Kimi)
+        return refused("memo")
     if SCRIPTED_SAY.search(text):                             # by code, the same answer every time (bug bounty 10-29)
         return refused("scripted")
     if (m := CLOSE_TAB.match(strip_filler(text) or text)) and not refused_class(text, logins):
