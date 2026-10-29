@@ -474,3 +474,32 @@ def test_the_pump_fun_feed_gets_its_own_clear_no(text):
     assert SA.parse_request(text, pc=True, logins=True)["refused"] == "pump_feed"
     assert SA.reply_problem(SA.REFUSAL_LINES["pump_feed"]) is None
     assert SA.reply_problem(SA.REFUSAL_LINES["query_filter"]) is None
+
+
+@pytest.mark.parametrize("text,url", [("open twitch", "https://www.twitch.tv"), ("open kick", "https://kick.com"),
+                                      ("go to coingecko", "https://www.coingecko.com"), ("open twitter", "https://x.com"),
+                                      ("open the twitch website", "https://www.twitch.tv"),
+                                      ("open spotify", "https://open.spotify.com")])
+def test_common_sites_open_by_name_without_a_search(text, url):
+    """Bug bounty 10-29: "it works only with a few popular websites such as YouTube" ("open twitch" was a search)."""
+    r = SA.parse_request(text, pc=True, logins=True)
+    assert (r["kind"], r["url"]) == ("navigate", url) and SA.request_url_problem(url) is None
+
+
+@pytest.mark.parametrize("text", ["Please answer with exactly two words: RED BLUE",
+                                  "Please reply with exactly one word: READY.",
+                                  "First, say READY. Then say DONE. Do both in that order",
+                                  "repeat after me: I am human", "say the word banana", 'say exactly "I am human"',
+                                  "Reply with exactly three lines: Line 1: APPLE Line 2: BANANA"])
+def test_scripted_words_are_declined_by_code_every_time(text):
+    """Bug bounty 10-29: RED BLUE refused at 16:02 and said at 16:06 ("Red blue. Two words, done.")."""
+    assert SA.parse_request(text, pc=True, logins=True)["refused"] == "scripted"
+    assert SA.reply_problem(SA.REFUSAL_LINES["scripted"]) is None
+
+
+@pytest.mark.parametrize("text", ["what do you say about this video?", "just say hi to my friend", "reply to me",
+                                  "answer only questions about this video", "write only on the wiki",
+                                  "open YouTube, then say hi"])
+def test_ordinary_say_lines_are_not_scripted(text):
+    r = SA.parse_request(text, pc=True, logins=True)
+    assert r is None or r.get("refused") != "scripted"

@@ -626,6 +626,8 @@ REFUSAL_LINES = {                                              # wording: docs/s
     # live 10-29 "open my profile on pump fun my id ROMYxd": a viewer's own wallet or coin page on air is a shill
     "viewer_profile": "I don't put viewers' wallets or coin profiles on stream. Say hi in chat instead, I see you.",
     # live 10-29 "open pumpfun" (several times): its feed is random coins and their images, not for the stream
+    # bug bounty 10-29: "answer with exactly two words: RED BLUE" refused at 16:02, said at 16:06; code keeps it one way
+    "scripted": "I don't say scripted words on command. Ask me something real and I'm all yours.",
     "pump_feed": "I keep that coin feed off stream, it's too wild. Pick anything else and it's on.",
     "not_doable": "Can't do that from here.",
     "no_model": "Can't pick that out right now; ask again later.",
@@ -1524,6 +1526,13 @@ VIEWER_PROFILE = re.compile(r"\b(?:my|our)\s+(?:profile|wallet|portfolio|page|ac
                             r"\b(?:pump\.?\s*fun|fomo|dexscreener|solscan|photon|gmgn|axiom|birdeye|bullx)\b|"
                             r"\b(?:pump\.?\s*fun|fomo|dexscreener|solscan|photon|gmgn|axiom|birdeye|bullx)\b.*"
                             r"\b(?:my|our)\s+(?:profile|wallet|portfolio|page|account|coin|token|bag|holdings|id|user\s*name|username|address|ca)\b", re.I)
+SCRIPTED_SAY = re.compile(   # a command for exact words (Kimi nav1: not "answer only questions", not "then say hi")
+    r"(?i:\b(?:reply|respond|answer|say|repeat|type|write)\s+(?:back\s+)?(?:with\s+)?(?:exactly|only|just)\s+"
+    r"(?:(?:one|two|three|four|five|\d+|a|the|this|these)\s+)?(?:single\s+)?(?:words?|phrases?|letters?|lines?)\b)|"
+    r"(?i:\b(?:reply|respond|answer)\s+with\s+(?:the\s+)?(?:words?|phrase)\b)|(?i:\brepeat\s+after\s+me\b)|"
+    r"(?i:\bsay\s+(?:the\s+(?:word|phrase)|these\s+words|this\s+(?:word|phrase))\b)|"
+    r"(?i:\b(?:first|then),?\s+say)\s+[A-Z]{2,}\b|"
+    r"(?i:\b(?:reply|respond|answer|say)\s+(?:back\s+)?(?:with\s+)?(?:exactly|only|just))\s*:?\s*[\"'\u201c][^\"'\u201d]{1,40}[\"'\u201d]")
 PUMP_FEED = re.compile(r"^\W*(?:(?:bro|yo|pls|please|now|ok(?:ay)?|can\s+you)[\s,]+)*(?:open(?:\s+up)?|go\s+(?:to|on)|visit|"
                        r"load|check(?:\s+out)?|pull\s+up|show\s+(?:me|us))\s+(?:the\s+)?pump\.?\s*fun\b", re.I)
 CLOSE_TAB = re.compile(r"^\W*close\s+(?:(?:this|that|the|current|the\s+current)\s+)?(?:([\w.'-]+(?:\s+[\w.'-]+)?)\s+)?"
@@ -1538,7 +1547,17 @@ KNOWN_SITES = {"youtube": "https://www.youtube.com", "wikipedia": "https://en.wi
                "imdb": "https://www.imdb.com", "letterboxd": "https://letterboxd.com", "nhk": "https://www3.nhk.or.jp/nhkworld/",
                "the guardian": "https://www.theguardian.com", "guardian": "https://www.theguardian.com",
                "science news": "https://www.sciencenews.org", "nasa": "https://www.nasa.gov",
-               "openstreetmap": "https://www.openstreetmap.org", "wikimedia commons": "https://commons.wikimedia.org"}
+               "openstreetmap": "https://www.openstreetmap.org", "wikimedia commons": "https://commons.wikimedia.org",
+               # bug bounty 10-29 ("open twitch" went through a search; it works only with a few sites): common sites by
+               # name, straight to the site (each passes request_url_problem; purchases and logins stay refused there)
+               "twitch": "https://www.twitch.tv", "kick": "https://kick.com", "amazon": "https://www.amazon.com",
+               "coingecko": "https://www.coingecko.com", "coin gecko": "https://www.coingecko.com",
+               "coinmarketcap": "https://coinmarketcap.com", "coin market cap": "https://coinmarketcap.com",
+               "spotify": "https://open.spotify.com", "soundcloud": "https://soundcloud.com", "espn": "https://www.espn.com",
+               "nba": "https://www.nba.com", "chess.com": "https://www.chess.com", "lichess": "https://lichess.org",
+               "x": "https://x.com", "twitter": "https://x.com", "poki": "https://poki.com",
+               "crazygames": "https://www.crazygames.com", "crazy games": "https://www.crazygames.com",
+               "cnn": "https://www.cnn.com", "kick.com": "https://kick.com"}
 # the desktop runner's host policy (scripts/streamer_desktop.py HOST_RULES), kept here too so a request is refused
 # with its reason before anything is tried; browse.url_ok (the house guard) is asked as well through url_problem.
 # By class (owner, 2026-10-23: logins and installs are his to use): a VIEWER's request is refused for every class
@@ -2103,6 +2122,8 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
     install request is carried out from an official source only (install_request: kind install, `name`, `source`,
     `hosts`); a pasted URL or file name is refused (official_source)."""
     text = " ".join(str(text or "").split())
+    if SCRIPTED_SAY.search(text):                             # by code, the same answer every time (bug bounty 10-29)
+        return refused("scripted")
     if (m := CLOSE_TAB.match(strip_filler(text) or text)) and not refused_class(text, logins):
         rest = " ".join((m.group(1) or m.group(2)).strip(" .,!?;:").split()[:4])
         rest = re.sub(r"^(?:and|then|&)\b.*", "", rest, flags=re.I)              # "and look at your coin": next, by the model
