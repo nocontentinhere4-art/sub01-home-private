@@ -158,7 +158,7 @@ def test_submit_saves_a_clean_photo_for_the_owner_and_keeps_the_daily_limits(tmp
                 "consent": True, "photo_b64": photo()}
         async with TestClient(TestServer(app)) as c:
             for bad, why in (({"consent": False}, "confirm"), ({"voice": "elvis"}, "voice"), ({"name": "x"}, "name"),
-                             ({"photo_b64": "!!"}, "photo"), ({"photo_b64": photo(100, 100)}, "256"),
+                             ({"photo_b64": "!!"}, "photo"), ({"photo_b64": photo(500, 900)}, "512"),
                              ({"photo_b64": base64.b64encode(b"GIF89a" + b"0" * 900).decode()}, "JPEG")):
                 r = await c.post("/submit", json={**good, **bad})
                 assert r.status == 400 and why in (await r.json())["why"], bad.keys()

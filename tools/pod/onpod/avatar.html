@@ -98,7 +98,7 @@ button.go:disabled { opacity:.45; cursor:default }
   <form class="new" id="create" role="tabpanel" hidden>
     <p class="sub">Send a photo and pick a personality and a voice. We review every submission by hand and turn the good
       ones into avatars anyone here can talk to. Nothing is published automatically.</p>
-    <label class="f" for="nPhoto">Photo (a clear, front-facing face, good light)
+    <label class="f" for="nPhoto">Photo (a clear, front-facing face, good light, at least 512×512)
       <input id="nPhoto" type="file" accept="image/jpeg,image/png,image/webp" required></label>
     <img class="preview" id="nPreview" alt="" hidden>
     <label class="f" for="nName">Avatar name<input id="nName" maxlength="24" minlength="2" required autocomplete="off"></label>
@@ -228,7 +228,7 @@ async function shrink(file) {                     // longest side 1600 px, JPEG:
   const k = Math.min(1, 1600 / Math.max(img.width, img.height));
   const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
   c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-  if (Math.min(c.width, c.height) < 256) throw new Error("small");
+  if (Math.min(c.width, c.height) < 512) throw new Error("small");   // Simli needs 512x512 at least
   const url = c.toDataURL("image/jpeg", 0.9);
   return { url, b64: url.slice(url.indexOf(",") + 1) };
 }
@@ -237,7 +237,7 @@ async function pickPhoto() {
   photo = null; $("nPreview").hidden = true; $("nStatus").textContent = "";
   const f = $("nPhoto").files[0]; if (!f) return;
   try { photo = await shrink(f); $("nPreview").src = photo.url; $("nPreview").hidden = false; }
-  catch (e) { $("nStatus").textContent = "That photo can't be used: send a JPEG, PNG or WebP at least 256 pixels wide."; }
+  catch (e) { $("nStatus").textContent = "That photo can't be used: send a JPEG, PNG or WebP at least 512×512 pixels."; }
 }
 async function submitNew(e) {
   e.preventDefault();

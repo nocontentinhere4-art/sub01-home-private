@@ -49,7 +49,7 @@ MAX_TEXT, MAX_NAME, MAX_STYLE, MAX_HISTORY = 280, 24, 300, 8
 VOICES = {"juno": "Juno (female)", "maeve": "Maeve (female)", "luna": "Luna (female)", "roxie": "Roxie (female)",
           "kaia": "Kaia (female)", "dylan": "Dylan (male)", "marcus": "Marcus (male)", "knox": "Knox (male)",
           "julian": "Julian (male)", "brooks": "Brooks (male)"}
-PHOTO_MAX_BYTES, PHOTO_MIN_SIDE, PHOTO_MAX_SIDE = 3 * 1024 * 1024, 256, 1600
+PHOTO_MAX_BYTES, PHOTO_MIN_SIDE, PHOTO_MAX_SIDE = 3 * 1024 * 1024, 512, 1600   # Simli: faces from 512x512 up
 PHOTO_MAX_PIXELS = 24_000_000             # checked from the header, before anything is decoded
 SUBMIT_PER_CLIENT_DAY, SUBMIT_PER_DAY, SUBMIT_PENDING_MAX = 3, 30, 200
 CLIENT_RE = re.compile(r"[0-9a-f]{8,32}")
