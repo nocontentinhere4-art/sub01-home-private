@@ -1,0 +1,1 @@
+APPROVE. The helper preserves the 200-character viewer limit while allowing the full 498-character X-session instructions through, and both model-state construction paths now use it. The 600-character cap is appropriate.

@@ -801,3 +801,11 @@ def test_x_text_joined_with_earlier_text_is_refused():
     long_prior = "a" * (SA.X_TEXT_MAX - 5)
     a, why = SA.clean_pc_action({"action": "type", "text": "chat is great today"}, x_typing=long_prior)
     assert a is None and "joined" in why
+
+
+def test_x_session_text_reaches_the_model_whole():
+    # live 10-29 18:11 and 18:13: the state cut it at 200 chars, so he never read "post" and posted nothing
+    assert len(SA.X_SESSION_TEXT) > 200 and len(SA.X_SESSION_TEXT) <= 600
+    assert SA.request_text({"kind": "x_session", "text": SA.X_SESSION_TEXT}) == SA.X_SESSION_TEXT
+    assert "click Post" in SA.request_text({"kind": "x_session", "text": SA.X_SESSION_TEXT})
+    assert SA.request_text({"kind": "navigate", "text": "y" * 500}) == "y" * 200

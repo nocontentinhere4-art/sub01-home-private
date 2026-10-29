@@ -1617,6 +1617,12 @@ AI_TYPE_REST = re.compile(r"^.*\b(?:type|write|send|say)\s+(?!(?:this|that|the|a
 PHONE_RE = re.compile(r"\+?\d[\d\s().-]{7,}\d")
 
 
+def request_text(cur):
+    """A request's text in the model's state: a viewer's line cut at 200 chars; an X session's own instructions whole
+    (live 10-29 18:11: cut at 200, the model never read the reply and post part)."""
+    return cur["text"][:600 if cur.get("kind") == "x_session" else 200]
+
+
 def x_text_problem(text):
     """Why a text is never typed on X in a session (Kimi x1), or None: too long, a link other than subzerone.live, money
     or coin talk, bait/politics words, the owner's account, a line his speech filter refuses."""
@@ -5337,7 +5343,7 @@ class Agent:
                          "reaction_speech_needs_level": 2 if plan["reading"] else 1},
               "memory": self.memory.lines(12), "recent_said": self.memory.said(6), "hints": hints, **self.poll_state(now)}
         if cur:
-            st["chat_request"] = {"nick": cur["nick"] or "a viewer", "text": cur["text"][:200], "kind": cur["kind"],
+            st["chat_request"] = {"nick": cur["nick"] or "a viewer", "text": request_text(cur), "kind": cur["kind"],
                                   "phase": cur["phase"], "step": cur["steps"], "steps_max": self.request_budget(cur)[0],
                                   "code_did": action_label(cur["action"]) if cur["action"] else None,
                                   "commented": cur["commented"],
@@ -7521,7 +7527,7 @@ class Agent:
             st["game"] = {"name": pc.playing["name"], "minutes": round((now - pc.playing["since"]) / 60, 1),
                           "inputs": pc.playing["inputs"], "keys": list(GAME_KEYS), "actions": list(GAME_ALLOWED)}
         if cur:
-            st["chat_request"] = {"nick": cur["nick"] or "a viewer", "text": cur["text"][:200], "kind": cur["kind"],
+            st["chat_request"] = {"nick": cur["nick"] or "a viewer", "text": request_text(cur), "kind": cur["kind"],
                                   "phase": cur["phase"], "step": cur["steps"], "steps_max": self.request_budget(cur)[0],
                                   "code_did": action_label(cur["action"]) if cur["action"] else None,
                                   "commented": cur["commented"],
