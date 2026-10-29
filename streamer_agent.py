@@ -1605,6 +1605,10 @@ def ai_request(text):
                   ai={"chatgpt": "ChatGPT"}.get(name, name.title()))
 
 
+# bug bounty 10-29 16:56: "open YouTube, click the first video, tell me its exact title and how long it is": his one
+# request line went on "taking the first real video", the answer was then blocked by pacing and never said
+ASKS_ANSWER = re.compile(r"\b(?:tell\s+(?:me|us)|let\s+(?:me|us)\s+know|what|which|who|how\s+(?:long|many|much|old|big)|"
+                         r"is\s+(?:it|there|he|she|that)|are\s+there|read\s+(?:me|us|out)|report)\b", re.I)
 PUMP_FEED = re.compile(r"^\W*(?:(?:bro|yo|pls|please|now|ok(?:ay)?|can\s+you)[\s,]+)*(?:open(?:\s+up)?|go\s+(?:to|on)|visit|"
                        r"load|check(?:\s+out)?|pull\s+up|show\s+(?:me|us))\s+(?:the\s+)?pump\.?\s*fun\b", re.I)
 CLOSE_TAB = re.compile(r"^\W*close\s+(?:(?:this|that|the|current|the\s+current)\s+)?(?:([\w.'-]+(?:\s+[\w.'-]+)?)\s+)?"
@@ -4650,7 +4654,7 @@ class Agent:
             return
         silent = req["kind"] in REQUEST_ACK_SILENT            # a scroll, a key or "back" done at once: no spoken acknowledgement
         req.update(started=now, steps=0, commented=False, done=False, phase="act" if req["action"] is None else "report",
-                   quick=silent)
+                   quick=silent, answer_due=bool(ASKS_ANSWER.search(req.get("text") or "")))
         self.requests.current = req
         self.log_request("executed", req["kind"], req,
                          action=action_label(req["action"]) if req["action"] else "the model picks it on the page")
@@ -5236,7 +5240,7 @@ class Agent:
         if hushed:
             hints.append("a viewer asked for a quiet minute: say nothing until it is over; keep browsing")
         hushed = hushed or self.guard_hints(hints, now)       # a private screen: nothing said about it either
-        request_say = bool(cur) and not cur["commented"]      # the answer to a request is not an unsolicited remark
+        request_say = bool(cur) and (not cur["commented"] or bool(cur.get("answer_due")))   # the answer: not a remark
         st = {"now": {"tokyo": tokyo_label(now), "uptime_min": round((now - self.started) / 60, 1)},
               "phase": "open" if not self.pacing.opened else "running", "why_now": reason,
               "page": {"url": obs["url"][:200], "title": obs["title"], "loading": obs["loading"],
@@ -6292,7 +6296,9 @@ class Agent:
             self.drop_say(dec["say"], "its action failed: nothing is claimed without a verified outcome")
         elif self.privacy is not None:                        # never a word about a private screen (Kimi)
             self.drop_say(dec["say"], "private screen")
-        elif cur and not cur["commented"]:                    # the answer to the viewer's request: not pacing's business
+        elif cur and (not cur["commented"] or cur.get("answer_due")):   # the answer to the viewer's request: not pacing's
+            if cur["commented"]:                              # business; a request that asks something gets one more line
+                cur["answer_due"] = False                     # for the answer (bug bounty 10-29: "tell me its exact title")
             cur["commented"] = True
             self.enqueue(dec["say"], "request", "normal", (cur["seq"],), cur["nick"], words=REPLY_MAX_WORDS, ttl=60.0)
         elif self.queue_comment(dec["say"], plan, reacted, level) and dec.get("poll"):
@@ -7269,7 +7275,7 @@ class Agent:
                              "request_done true")
             else:
                 hints.append("chat_request: finish it (one more useful step at most), then set request_done true")
-        request_say = bool(cur) and not cur["commented"]
+        request_say = bool(cur) and (not cur["commented"] or bool(cur.get("answer_due")))
         private = self.guard_hints(hints, now)
         st = {"now": {"tokyo": tokyo_label(now), "uptime_min": round((now - self.started) / 60, 1)},
               "phase": "open" if not self.pacing.opened else "running", "why_now": reason,

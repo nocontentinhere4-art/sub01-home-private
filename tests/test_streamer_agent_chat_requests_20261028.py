@@ -665,3 +665,10 @@ def test_a_failed_page_is_reported_and_an_alternative_only_offered():
     pc = SA.SYSTEM_PC.replace("\\\n", "")
     assert "say so plainly in one line, naming the site, and offer one alternative" in pc
     assert "do the alternative only once chat says yes, never silently" in pc
+
+
+def test_a_request_that_asks_something_gets_its_answer_past_pacing():
+    """Bug bounty 10-29 16:56: "...click the first video. Tell me its exact title and how long the video is." - he said
+    "taking the first real video", then the answer was blocked (speech not allowed) and the request ended."""
+    assert SA.ASKS_ANSWER.search("Tell me its exact title and how long the video is.")
+    assert not SA.ASKS_ANSWER.search("put some drake")
