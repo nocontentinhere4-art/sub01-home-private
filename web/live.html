@@ -227,7 +227,24 @@ pcLayoutBig=(s.layout==='desktop'||s.layout==='split'||s.layout==='cartoon');app
 const text=document.querySelector('#text'),count=document.querySelector('#count');text.addEventListener('input',()=>{count.textContent=text.value.length+'/280'});
 text.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.querySelector('#chat').requestSubmit();}});
 document.querySelectorAll('.hints button').forEach(b=>b.addEventListener('click',()=>{text.value=b.dataset.t;count.textContent=text.value.length+'/280';text.focus();}));
-document.querySelector('#chat').addEventListener('submit',async e=>{e.preventDefault();const b=document.querySelector('#send'),f=document.querySelector('#feedback');if(!text.value.trim()||b.disabled)return;b.disabled=true;try{const r=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({nick:nickVal(),text:text.value}),signal:AbortSignal.timeout(15000)}),d=await r.json();f.textContent=d.ok?'Sent. SUB-01 will see it in a moment.':d.code==='duplicate'?'Already sent. Try a different message.':r.status===429?'Slow down: wait a few seconds.':r.status===503?'Chat unavailable. Try again later.':'Message not accepted.';if(d.ok){text.value='';count.textContent='0/280';}}catch{f.textContent='Message not confirmed. Check your connection.';}setTimeout(()=>b.disabled=false,12000)});
+// bug bounty 10-29 ("I have to click 2-3 times before it is sent"): the relay takes one chat line (or sound) per 12 s;
+// the button shows the wait, and a message sent during it goes out by itself when the wait is over
+const sendBtn=document.querySelector('#send'),CHAT_GAP_MS=12500;let chatReadyAt=0,chatTimer=null,chatQueued=null;
+function chatCooldown(ms){chatReadyAt=Math.max(chatReadyAt,Date.now()+(ms||CHAT_GAP_MS));chatTick();}
+function chatTick(){clearTimeout(chatTimer);const left=Math.ceil((chatReadyAt-Date.now())/1000);
+if(left>0){sendBtn.textContent='Chat · '+left+'s';if(chatQueued)document.querySelector('#feedback').textContent='Sending in '+left+'s…';chatTimer=setTimeout(chatTick,250);return;}
+sendBtn.textContent='Chat';if(chatQueued){const q=chatQueued;chatQueued=null;postChat(q);}}
+function queueChat(){const f=document.querySelector('#feedback');if(chatQueued){f.textContent='One message is already waiting to be sent.';return;}   // the text as typed now, kept (Kimi chatq1)
+chatQueued={nick:nickVal(),text:text.value};text.value='';count.textContent='0/280';chatTick();}
+async function postChat(payload){const f=document.querySelector('#feedback');sendBtn.disabled=true;
+try{const r=await fetch(base+'/chat',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload),signal:AbortSignal.timeout(15000)}),d=await r.json();
+if(d.ok){f.textContent='Sent. SUB-01 will see it in a moment.';chatCooldown();}
+else if(r.status===429&&d.code!=='duplicate'&&!chatQueued){chatQueued=payload;chatCooldown();}
+else f.textContent=d.code==='duplicate'?'Already sent. Try a different message.':r.status===503?'Chat unavailable. Try again later.':'Message not accepted.';}
+catch{f.textContent='Message not confirmed. Check your connection.';}sendBtn.disabled=false;}
+function sendChat(){if(!text.value.trim())return;if(Date.now()<chatReadyAt){queueChat();return;}
+const payload={nick:nickVal(),text:text.value};text.value='';count.textContent='0/280';postChat(payload);}
+document.querySelector('#chat').addEventListener('submit',e=>{e.preventDefault();if(!sendBtn.disabled)sendChat();});
 document.querySelector('#share').addEventListener('click',async()=>{const u=location.origin+'/',b=document.querySelector('#share');if(navigator.share){try{await navigator.share({title:'SUB-01 live',url:u});}catch(e){}return;}try{await navigator.clipboard.writeText(u);b.textContent='Link copied';}catch(e){b.textContent='Copy failed';}setTimeout(()=>b.textContent='Share',1600);});
 const nickEl=document.querySelector('#nick');try{nickEl.value=localStorage.getItem('sub01Nick')||''}catch(e){}
 function nickVal(){const v=nickEl.value.trim();return /^[A-Za-z0-9_.-]{2,16}$/.test(v)?v:'';}
@@ -235,7 +252,8 @@ nickEl.addEventListener('input',()=>{const v=nickEl.value;document.querySelector
 nickEl.addEventListener('change',()=>{try{nickVal()?localStorage.setItem('sub01Nick',nickVal()):localStorage.removeItem('sub01Nick')}catch(e){}});
 async function post(path,payload,ms){const r=await fetch(base+path,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload),signal:AbortSignal.timeout(ms||12000)});let d={};try{d=await r.json()}catch(e){}return [r,d];}
 document.querySelectorAll('.sfx button').forEach(b=>b.addEventListener('click',async()=>{const f=document.querySelector('#feedback'),all=document.querySelectorAll('.sfx button');all.forEach(x=>x.disabled=true);
-try{const [r,d]=await post('/chat',{nick:nickVal(),text:b.dataset.s});f.textContent=d.ok?b.dataset.s+' sent. It plays if the sound is free.':r.status===429?'Slow down: wait a few seconds.':'Sound not sent.';}catch(e){f.textContent='Sound not sent. Check your connection.';}
+if(Date.now()<chatReadyAt){f.textContent='Sounds share the chat wait: '+Math.ceil((chatReadyAt-Date.now())/1000)+'s.';all.forEach(x=>x.disabled=false);return;}
+try{const [r,d]=await post('/chat',{nick:nickVal(),text:b.dataset.s});f.textContent=d.ok?b.dataset.s+' sent. It plays if the sound is free.':r.status===429?'Slow down: wait a few seconds.':'Sound not sent.';if(d.ok||r.status===429)chatCooldown();}catch(e){f.textContent='Sound not sent. Check your connection.';}
 setTimeout(()=>all.forEach(x=>x.disabled=false),12000);}));
 const hypeBtn=document.querySelector('#hype');hypeBtn.addEventListener('click',async()=>{hypeBtn.disabled=true;try{const [r,d]=await post('/hype',{nick:nickVal()});if(d.ok)renderHype(d);else if(r.status===429)hypeBtn.textContent='🔥 Wait…';}catch(e){}
 setTimeout(()=>{hypeBtn.disabled=false;hypeBtn.textContent='🔥 Hype';},10000);});
