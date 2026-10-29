@@ -291,6 +291,14 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   run sub01-20261029-035940). Needs the owner's OK like any stream restart.
 - **PC speed:** agent looks at an action's outcome after 1.0 s (was 2.5 s); the next chat request starts in the step
   the previous one ends. The call cap stays 450/h (owner chose, 10-29). Vagon: 5 stale tabs closed by operator input.
+- **Costs (10-29 04:30-05:10, owner chose):** Kimi shadow off (file `streamer/shadow-off`); relay writes
+  `streamer/watching.json`, and with <= 1 viewer (the owner counts as none) for 5 min and nothing asked the agent looks
+  once a minute (event `audience_idle`); a PC "wait" re-looks after 4-6 s. Estimate: ~$4.8/h -> ~$2.7/h with viewers,
+  ~$1.6/h without. Owner 10-29: keep Sonnet for everything (no Haiku hybrid, no smaller screenshot); pod/Vagon
+  changes only on his explicit order (study in the chat: 5090/4090 Community Cloud, smaller Vagon tier).
+- Also 10-29: rotating `idea` when chat asks nothing (not only fail compilations); thesis on fomo by operator-only
+  `POST /fomo/thesis` (one an hour; first one posted 04:28); a failures hold clears itself after 90 s (3/hour);
+  an unchanged key is a focus check. Runtime agent: **new55** (git 154aaa2).
 - Site branch `claude/live-control-20261027`: 36a4d72 (viewer count badge) and 48a09b0 (SUB-01 logo in the round
   orange avatar) wait for the owner's `railway up`.
 - Open: "open twich" should open twitch.tv; "put <video>" / "look some X video" are not parsed as requests; a chat
