@@ -1,3 +1,4 @@
+import json
 """Owner 10-28, live chat: "leave full screen", "watch some other games", "react to some kai cenat", "play poker online"
 were refused or never carried out (a playing video made every key and search stale_refused)."""
 import asyncio
@@ -741,3 +742,62 @@ def test_a_talk_segment_starts_at_a_boundary_extends_while_talking_and_ends(tmp_
     agent.requests.current = {"kind": "search"}                       # a request needs the PC: preempted at once
     assert agent.talk_tick(now + 705) is None
     assert "talk_segment" in SA.SYSTEM_PC.replace("\\\n", "")
+
+
+@pytest.mark.parametrize("text,ok", [
+    ("Live now on subzerone.live, come hang. Chat picks the videos.", True),
+    ("Just watched a guy juggle two Rubik's cubes on stream. Unreal.", True),
+    ("Buy $SUB01 before it moons", False), ("check https://pump.fun/coin/xyz", False),
+    ("follow @SUBZERONE01", False), ("x" * 281, False), ("vote trump", False)])
+def test_x_text_gate(text, ok):
+    """Owner 10-29 + Kimi x1: on X only his own clean words, one link: subzerone.live."""
+    assert (SA.x_text_problem(text) is None) is ok
+
+
+def test_x_sessions_are_scheduled_capped_and_switchable(tmp_path):
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    agent.pc.mode = "vagon"
+    agent.hands_off_reason = lambda now: None
+    now = clock()
+    assert agent.x_session_request(now) is None                        # off until the owner's x-on file
+    (agent.dir / "x-on").write_text("")
+    req = agent.x_session_request(now)
+    assert req and req["kind"] == "x_session" and "@subzeroneperson" in req["text"]
+    agent.requests.waiting.clear()
+    assert agent.x_session_request(now + 60) is None                   # one an hour
+    agent.requests.current = req
+    ctx = agent.pc_context()
+    assert ctx["allowed"] == SA.X_ACTIONS and ctx["x_typing"] == "" and ctx["url_ok"]("https://pump.fun") is not None
+    assert ctx["url_ok"]("https://x.com/notifications") is None and ctx["url_ok"]("https://x.com/SUBZERONE01") is not None
+    (agent.dir / "x-off").write_text("")
+    assert agent.pc_context()["allowed"] == ("wait",)                  # the switch, checked every step
+    a, why = SA.clean_pc_action({"action": "type", "text": "Buy $SUB01 now"}, x_typing="")
+    assert a is None and why                                           # refused (purchase or the X gate)
+    a, why = SA.clean_pc_action({"action": "type", "text": "{{password}}"}, x_typing="", allow_credentials=True)
+    assert a is None and "log-in" in why                               # already logged in: no identity typing
+    a, why = SA.clean_pc_action({"action": "type", "text": "ok"}, x_typing="")
+    assert a is None and "too short" in why                            # one whole text per type
+    a, why = SA.clean_pc_action({"action": "type", "text": "Live now with chat, come say hi"}, x_typing="")
+    assert a and a["text"] == "Live now with chat, come say hi"
+    (agent.dir / "x-off").unlink()
+    for i in range(SA.X_TEXTS_PER_SESSION):                            # the act hook records each typed text
+        agent.requests.current["x_typed"].append(f"text {i}")
+    assert "type" not in agent.pc_context()["allowed"]                 # four texts per session
+    assert agent.pc_context()["x_typing"].startswith("text 0 text 1")
+    agent.x_day.update(texts=SA.X_POSTS_PER_DAY + SA.X_REPLIES_PER_DAY)
+    agent.requests.current = None
+    assert agent.x_session_request(now + 4000) is None                 # daily text cap reached
+    saved = json.loads((agent.dir / "x_state.json").read_text())
+    assert saved["sessions"] == 1 and saved["last"] == now             # persisted when the session was queued
+    agent.x_day["texts"] = 0
+    agent.x_load()                                                     # a restart reloads the counters
+    assert agent.x_day["sessions"] == 1 and agent.x_last == now
+
+
+def test_x_text_joined_with_earlier_text_is_refused():
+    # the second text is checked alone and joined with the earlier ones of the session (Kimi x2)
+    a, why = SA.clean_pc_action({"action": "type", "text": "x.com/SUBZERONE01 hi"}, x_typing="hello chat")
+    assert a is None and why
+    long_prior = "a" * (SA.X_TEXT_MAX - 5)
+    a, why = SA.clean_pc_action({"action": "type", "text": "chat is great today"}, x_typing=long_prior)
+    assert a is None and "joined" in why

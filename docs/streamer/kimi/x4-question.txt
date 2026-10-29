@@ -1,0 +1,4 @@
+Small follow-up to the X-session diff you approved (x3). Live just now a viewer wrote "Open X and post something" and SUB-01 said "Posting there is a no from me, I only post on fomo.family" (stale now that he has his own X sessions). I changed one prompt sentence, old -> new:
+OLD: "...at most one an hour; otherwise he does not post or comment."
+NEW: "...at most one an hour. On X he posts only in his own x_session, as @subzeroneperson: chat asking him to post on X hears that he posts there himself, in his own words (follow @subzeroneperson), never a viewer's dictated text; otherwise he does not post or comment."
+Viewer-triggered posting stays off by design (viewers could dictate content). APPROVE or CHANGES?

@@ -1,0 +1,1 @@
+APPROVE. The new wording removes the stale refusal, limits X posting to SUB-01s own x_session and voice, preserves the hourly cap, and explicitly rejects viewer-dictated content.
