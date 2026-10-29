@@ -299,6 +299,15 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
 - Also 10-29: rotating `idea` when chat asks nothing (not only fail compilations); thesis on fomo by operator-only
   `POST /fomo/thesis` (one an hour; first one posted 04:28); a failures hold clears itself after 90 s (3/hour);
   an unchanged key is a focus check. Runtime agent: **new55** (git 154aaa2).
+- **Avatars for everyone (owner 10-29 05:00-06:00, paused for the night):** the 2-loop demo (Higgsfield Kling idle +
+  talk loops, browser voice; artifact https://claude.ai/artifact/VroAkgXKU6zjUpEEfNnJPa) was judged "lame e fake".
+  Chosen next: Simli real-time lip-synced face (owner has a Simli account, pricing ~$0.01/min; custom avatars per
+  month limited by plan; faces are created in app.simli.com). Owner's Simli agent "Poised Moose", Face ID
+  fb78d7f5-37ad-4b04-9789-8712dcaa791d (check it is the girl's photo, not a preset). Simli API key saved by the owner
+  in `/home/unreal/.sub01-private/simli-key` (unreal 600, 22 bytes; never print it). Next: a server route that mints a
+  Simli session token (`simli-client` generateSimliSessionToken / POST /compose/token, header x-simli-api-key, config
+  faceId, maxSessionLength, maxIdleTime) and a page that streams our TTS PCM16 16 kHz mono into SimliClient;
+  persona replies by our model. Needs Kimi design review and the owner's OK before any public endpoint.
 - Site branch `claude/live-control-20261027`: 36a4d72 (viewer count badge) and 48a09b0 (SUB-01 logo in the round
   orange avatar) wait for the owner's `railway up`.
 - Open: "open twich" should open twitch.tv; "put <video>" / "look some X video" are not parsed as requests; a chat
