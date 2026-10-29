@@ -1,0 +1,339 @@
+Review hw2 (Halloween skin; your hw1 CHANGES applied). What changed since hw1:
+- Strip, "Halloween" tag and the how-to card are static markup in live.html (no JS insertion => no layout shift); the strip's avatar link is visible from the start and only gets its href from live-config.js (hidden if the origin is not a plain https host).
+- Decorations: all absolute/fixed, aria-hidden + focusable=false SVG, pointer-events:none on the elements and their descendants; never over the video controls, chat or inputs (checked with elementFromPoint on #send #hype #share #hw-close #nick #text video: all reachable).
+- Player glow is a static box-shadow (no animated shadow/blur); animations are transform/opacity only (bats, spider, fog, lantern opacity); all off with prefers-reduced-motion; decor off in forced-colors; one bat on phones; bats skip while the tab is hidden.
+- Creepster only for logo word, section headings, chat header, rail headings, strip title; the strip title has a fixed line height so the font swap cannot move the page.
+- Measured CLS (Chromium, after load+4.5 s): 320x700 0.0001, 390x844 0.0000, 1024x768 0.0038, 1440x900 0.0016 (current site without the skin: 320 0.0045, 1440 0.0009).
+- Other pages: a fixed bottom-left pill linking to https://subzerone.live/ (not on the avatar page). The relay's /avatar page loads the same files from https://subzerone.live (no CSP there) and has the strip in its HTML; pumpkins next to its title; nothing over the avatar video or its controls.
+- Announcement wording kept as "joins SUB-01 as his AI avatar" (AI avatar is explicit; the avatar page itself says the avatar is an AI).
+Diff follows (site files, then the avatar page). APPROVE or CHANGES?
+diff --git a/web/about.html b/web/about.html
+index ece5368..547c694 100644
+--- a/web/about.html
++++ b/web/about.html
+@@ -46,7 +46,7 @@
+     th, td { padding:6px 4px; font-size:12px; }
+   }
+ </style>
+-</head>
++<link rel="stylesheet" href="/halloween.css"><script src="/halloween.js" defer></script></head>
+ <body>
+ <header><h1>SUB-01</h1><div class="sub">about · <a href="/">life</a> · <a href="/brain">brain</a> · <a href="/diary">diary</a> · <a href="/world.html">world</a></div></header>
+ <main>
+diff --git a/web/diary.html b/web/diary.html
+index 68f093f..480a2a8 100644
+--- a/web/diary.html
++++ b/web/diary.html
+@@ -54,7 +54,7 @@
+   @media (max-width: 900px) { header, #nights, main, #empty, #note { padding-left:16px; padding-right:16px; }
+     main { grid-template-columns:1fr; } #title { font-size:21px; } #cap { font-size:14px; } }
+ </style>
+-</head>
++<link rel="stylesheet" href="/halloween.css"><script src="/halloween.js" defer></script></head>
+ <body>
+ <header><h1>SUB-01</h1><div class="sub">dream diary · <a href="/">room</a> · <a href="/brain">brain</a> · <a href="/world.html">sees</a> · <a href="https://city.subzerone.live/" target="_blank" rel="noopener">city</a></div></header>
+ <div id="nights"></div>
+diff --git a/web/fibres.html b/web/fibres.html
+index 8cda90e..a5de6d9 100644
+--- a/web/fibres.html
++++ b/web/fibres.html
+@@ -13,7 +13,7 @@
+   #foot { position:absolute; left:22px; right:22px; bottom:16px; color:#6e6e80; font-size:11px; pointer-events:none; }
+   body.clean #hud, body.clean #foot { display:none; }
+ </style>
+-</head>
++<link rel="stylesheet" href="/halloween.css"><script src="/halloween.js" defer></script></head>
+ <body>
+ <div id="hud"><h1>SUB-01</h1><div id="count">loading fibres…</div>
+   <div>colour = fibre direction · red left–right · green front–back · blue up–down</div></div>
+diff --git a/web/halloween.css b/web/halloween.css
+new file mode 100644
+index 0000000..1b89e65
+--- /dev/null
++++ b/web/halloween.css
+@@ -0,0 +1,74 @@
++/* Halloween skin (owner 10-29: "tutta la piattaforma in stile halloween, con zucche"). Every page loads it with
++   <link rel="stylesheet" href="/halloween.css"> + <script src="/halloween.js" defer>; live.html also has the strip, the
++   tag and the card in its HTML (hw-*). Roll back by removing those. Kimi hw1: decorations take no clicks, sit outside
++   the layout (absolute/fixed), animate only transform/opacity, stop with reduced motion. */
++@import url("https://fonts.googleapis.com/css2?family=Creepster&display=swap");
++html.hw{--bg:#0a0710;--panel:#15101d;--panel2:#1d1628;--line:#2c2238;--muted:#a49bb4;--dim:#7d7390;
++  --accent:#ff7a1a;--accent2:#ffa04d;--witch:#8b5cf6;--slime:#84cc16;--spook:"Creepster","Impact","Arial Black",fantasy}
++html.hw body{background:radial-gradient(1200px 500px at 50% -120px,#2a1240 0%,transparent 70%),var(--bg)}
++html.hw body::before{content:"";position:fixed;left:-10%;right:-10%;bottom:-40px;height:220px;z-index:-1;pointer-events:none;
++  background:radial-gradient(40% 60% at 20% 80%,#8b5cf622,transparent 70%),radial-gradient(35% 55% at 70% 85%,#ff7a1a14,transparent 70%),
++  radial-gradient(30% 50% at 45% 90%,#e9e4ff12,transparent 70%);animation:hw-fog 18s ease-in-out infinite alternate}
++@keyframes hw-fog{to{transform:translateX(4%)}}
++.hw-deco,.hw-deco *,.hw-web,.hw-web *,.hw-hat,.hw-hat *{pointer-events:none}
++
++/* type: the spooky face only for short display headings (never buttons, chat, badges or body copy) */
++html.hw .logo span,html.hw .sec h2,html.hw .chat header,html.hw .rail h3,.hw-strip b,.hw-card b{font-family:var(--spook);font-weight:400;letter-spacing:.06em}
++html.hw .logo span{font-size:24px;color:var(--accent)}
++html.hw .logo b{background:linear-gradient(180deg,#ff9a3c,#ff6a00 60%,#c94f00);box-shadow:0 0 14px #ff7a1a55}
++html.hw .sec h2{font-size:22px;color:var(--accent2)}html.hw .chat header{font-size:20px;color:var(--accent2);position:relative;overflow:hidden}
++html.hw .rail h3{font-size:16px;color:#b49cff}
++
++/* the announcement strip (static markup in live.html) */
++.hw-strip{position:relative;z-index:19;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:8px 48px 8px 16px;min-height:44px;
++  background:linear-gradient(90deg,#2a0f3d,#4a1d0a 50%,#2a0f3d);border-bottom:1px solid #ff7a1a55;color:#ffe9d6;font-weight:600;text-align:center}
++.hw-strip[hidden]{display:none}
++.hw-strip b{font-size:20px;line-height:24px;height:24px;overflow:hidden;color:#ffb066}.hw-strip .k{color:#a3e635;font-weight:800}
++.hw-strip a{color:#0a0710;background:var(--accent);border-radius:999px;padding:3px 12px;font-weight:800;white-space:nowrap}.hw-strip a[hidden]{display:none}
++.hw-strip button{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:1px solid #ffe9d655;border-radius:50%;background:#0008;color:#ffe9d6;font-size:16px;line-height:1}
++.hw-strip svg{width:22px;height:22px;flex:none}
++.hw-pill{text-decoration:none;position:fixed;left:12px;bottom:12px;z-index:30;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;
++  background:#1d1628ee;border:1px solid #ff7a1a66;color:#ffe9d6;font:600 13px/1.2 -apple-system,Segoe UI,Inter,sans-serif;box-shadow:0 6px 24px #000a}
++.hw-pill svg{width:22px;height:22px}
++
++/* player: a static candle glow (no animated shadow) */
++html.hw .stage{border-color:#ff7a1a66;box-shadow:0 0 22px #ff7a1a40,0 0 52px #8b5cf626}
++/* channel: witch hat, candy corn hype, pumpkins */
++html.hw .channel{position:relative}
++html.hw .big .hw-hat{position:absolute;left:50%;top:-30px;width:58px;transform:translateX(-46%) rotate(-12deg);filter:drop-shadow(0 3px 4px #000a)}
++html.hw .big .av{border-color:var(--accent)}
++html.hw .hypebar .fill{background:linear-gradient(90deg,#fff6d8 0 33%,#ffb000 33% 66%,#ff6a00 66%)}
++html.hw .hypebtn{background:linear-gradient(135deg,#ff7a1a,#7c3aed)!important}
++html.hw .hypebtn svg{width:18px;height:18px;margin-left:-2px}
++.tags .hw-tag{background:#ff7a1a22;color:var(--accent2)}
++html.hw .soon{color:#e4dbff;background:#8b5cf62a;border-color:#8b5cf677}
++html.hw .btn.pri,html.hw #send{box-shadow:0 0 0 1px #ff7a1a55,0 4px 14px #ff7a1a33}
++html.hw .msg:hover{background:#8b5cf612}
++html.hw textarea:focus,html.hw .nick input:focus,html.hw .qform input:focus{border-color:var(--witch)}
++.hw-pumpkins{display:flex;align-items:flex-end;gap:6px}.hw-pumpkins svg{flex:none}
++.hw-pumpkins .lit{animation:hw-lit 2.4s ease-in-out infinite}.hw-pumpkins .lit:nth-child(2n){animation-delay:-1.1s}
++@keyframes hw-lit{0%,100%{opacity:1}50%{opacity:.78}}
++.hw-rail-pk{margin:20px 6px 0}
++.hw-ch-pk{position:absolute;right:8px;bottom:2px;z-index:1}
++/* cobwebs, spider, bats */
++.hw-web{position:absolute;opacity:.5}
++.chat header .hw-web{right:-2px;top:-2px;width:64px}
++html.hw .sec{position:relative}html.hw .sec>.hw-web{right:-1px;top:-1px;width:70px;opacity:.32}
++.hw-spider{position:absolute;left:206px;top:100%;width:2px;z-index:21;animation:hw-drop 7s ease-in-out infinite}
++.hw-spider i{display:block;width:1px;height:46px;margin:0 auto;background:linear-gradient(#e9e4ff00,#e9e4ff88)}
++.hw-spider svg{position:absolute;left:-13px;top:42px;width:28px}
++@keyframes hw-drop{0%,100%{transform:translateY(-18px)}50%{transform:translateY(0)}}
++.hw-bats{position:fixed;inset:0;z-index:40;overflow:hidden}
++.hw-bat{position:absolute;left:-60px;width:44px;opacity:.85;animation:hw-fly 5.5s linear forwards}
++.hw-bat svg{width:100%;animation:hw-flap .22s ease-in-out infinite alternate}
++@keyframes hw-fly{0%{transform:translate(0,0)}25%{transform:translate(28vw,-3vh)}50%{transform:translate(55vw,2vh)}75%{transform:translate(82vw,-2vh)}100%{transform:translate(112vw,1vh)}}
++@keyframes hw-flap{from{transform:scaleY(1)}to{transform:scaleY(.45)}}
++.cards .hw-card{background:linear-gradient(135deg,#2a0f3d,#3a1606);border-color:#ff7a1a66}.hw-card b{font-size:18px;color:#ffb066}
++@media (max-width:1280px){.hw-rail-pk{display:none}}
++@media (max-width:900px){.hw-spider,.hw-ch-pk{display:none}.hw-strip{padding:8px 44px 8px 12px;font-size:13px;gap:4px 8px}.hw-strip b{font-size:17px;flex-basis:calc(100% - 30px);text-align:left}.hw-bat{width:32px}}
++@media (prefers-reduced-motion:reduce){html.hw body::before,.hw-pumpkins .lit,.hw-spider,.hw-bat svg{animation:none}.hw-bats{display:none}}
++@media (forced-colors:active){.hw-deco,.hw-web,.hw-hat,.hw-bats{display:none}}
++/* the relay's avatar page */
++html.hw-avatar .hw-strip{margin:-20px calc(-1 * max(16px,env(safe-area-inset-right))) 18px calc(-1 * max(16px,env(safe-area-inset-left)))}
++html.hw-avatar h1{font-family:var(--spook);font-weight:400;letter-spacing:.05em;font-size:32px}html.hw-avatar h1 b{font-family:var(--mono);font-weight:600;font-size:26px}
++html.hw-avatar .cover{background:radial-gradient(circle at 50% 45%,#2a1240,#050608)}
+diff --git a/web/halloween.js b/web/halloween.js
+new file mode 100644
+index 0000000..9af5fd1
+--- /dev/null
++++ b/web/halloween.js
+@@ -0,0 +1,87 @@
++// Halloween skin (owner 10-29), see halloween.css. Decorations only: absolute/fixed, aria-hidden, no clicks, static
++// markup (never user content). The live page carries the announcement strip, tag and card in its own HTML (no layout
++// shift); this script adds the decor, the strip's close button and its avatar link. Kimi hw1.
++(function () {
++  "use strict";
++  var d = document, root = d.documentElement;
++  root.classList.add("hw");
++  var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
++  var phone = window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
++  var A = ' aria-hidden="true" focusable="false"';
++  var PUMPKIN = function (w, face) {
++    return '<svg viewBox="0 0 64 56" width="' + w + '"' + A + (face ? ' class="lit"' : "") + '>' +
++      '<path d="M30 9c0-5 3-8 7-8l1 3c-3 0-4 2-4 5z" fill="#3f6212"/>' +
++      '<ellipse cx="18" cy="32" rx="14" ry="20" fill="#e2580b"/><ellipse cx="46" cy="32" rx="14" ry="20" fill="#e2580b"/>' +
++      '<ellipse cx="32" cy="32" rx="15" ry="22" fill="#ff7a1a"/>' +
++      '<path d="M32 11v42M20 14c-4 10-4 26 0 36M44 14c4 10 4 26 0 36" stroke="#c2410c" stroke-width="1.5" fill="none" opacity=".6"/>' +
++      (face ? '<path d="M18 27l6-6 6 6zM34 27l6-6 6 6z" fill="#ffd166"/><path d="M17 37c5 7 25 7 30 0l-4 1-3 3-3-3-4 3-4-3-3 3-3-3z" fill="#ffd166"/>' : "") +
++      "</svg>";
++  };
++  var BAT = '<svg viewBox="0 0 64 28"' + A + '><path d="M32 8c2-3 3-4 4-7 1 3 1 5 0 7 6-1 10-5 13-8 0 6 5 9 11 9-4 2-7 6-8 11-3-3-7-4-11-2-2-3-6-4-9-4s-7 1-9 4c-4-2-8-1-11 2-1-5-4-9-8-11 6 0 11-3 11-9 3 3 7 7 13 8-1-2-1-4 0-7 1 3 2 4 4 7z" fill="#120b1c" stroke="#8b5cf6" stroke-width=".8"/></svg>';
++  var WEB = '<svg viewBox="0 0 100 100"' + A + ' class="hw-web" fill="none" stroke="#e9e4ff" stroke-width=".8">' +
++    '<path d="M0 0l100 100M0 0l100 40M0 0l40 100M0 0l100 70M0 0l70 100"/>' +
++    '<path d="M0 18q9 4 13 13 5-1 12 3 4-6 15-6"/><path d="M0 36q17 6 25 25 8-3 21 4 8-12 27-12"/><path d="M0 56q26 9 38 38 12-5 30 6 12-18 32-18"/></svg>';
++  var SPIDER = '<svg viewBox="0 0 40 40"' + A + '><g stroke="#120b1c" stroke-width="2.2" fill="none" stroke-linecap="round">' +
++    '<path d="M14 18L4 10M14 21L2 20M14 24L4 32M26 18l10-8M26 21l12-1M26 24l10 8"/></g>' +
++    '<ellipse cx="20" cy="22" rx="8" ry="9" fill="#120b1c" stroke="#8b5cf6" stroke-width=".8"/><circle cx="17" cy="19" r="1.6" fill="#ff7a1a"/><circle cx="23" cy="19" r="1.6" fill="#ff7a1a"/></svg>';
++  var HAT = '<svg viewBox="0 0 80 60" class="hw-hat"' + A + '><path d="M8 50c14-6 50-6 64 0-10 6-54 6-64 0z" fill="#1b1030" stroke="#8b5cf6"/>' +
++    '<path d="M24 47L44 4c4 9 10 16 14 20-8 1-10 4-8 23z" fill="#1b1030" stroke="#8b5cf6"/><path d="M25 43c9-3 18-3 26 0l-1 5c-8-2-16-2-24 0z" fill="#ff7a1a"/></svg>';
++  function el(html) { var t = d.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; }
++  function add(parent, html) { if (parent) parent.appendChild(el(html)); }
++  function closedStrip() { try { return sessionStorage.getItem("hw-strip") === "closed"; } catch (e) { return false; } }
++
++  try {                                                    // favicon: a jack-o-lantern
++    var ico = d.querySelector('link[rel="icon"]') || d.head.appendChild(d.createElement("link"));
++    ico.rel = "icon";
++    ico.href = "data:image/svg+xml," + encodeURIComponent(PUMPKIN(64, true).replace(A, ' xmlns="http://www.w3.org/2000/svg"'));
++  } catch (e) {}
++
++  var strip = d.getElementById("hw-strip");
++  if (strip) {                                             // the live page
++    if (closedStrip()) strip.hidden = true;
++    var close = d.getElementById("hw-close");
++    if (close) close.addEventListener("click", function () {
++      strip.hidden = true; try { sessionStorage.setItem("hw-strip", "closed"); } catch (e) {}
++    });
++    var link = d.getElementById("hw-avatar-link"), o = window.SUB01_PREVIEW_ORIGIN;
++    if (link) {                                            // the avatar page lives on the relay (live-config.js)
++      if (o && /^https:\/\/[a-z0-9.-]+$/i.test(String(o).replace(/\/$/, ""))) link.href = String(o).replace(/\/$/, "") + "/avatar";
++      else link.hidden = true;
++    }
++    if (d.getElementById("talk")) {                        // the relay's avatar page: pumpkins by its title
++      root.classList.add("hw-avatar");
++      add(d.querySelector(".wrap > header"), '<div class="hw-deco hw-pumpkins">' + PUMPKIN(30, true) + PUMPKIN(22) + PUMPKIN(36, true) + "</div>");
++    }
++    add(d.querySelector("header.top"), '<div class="hw-deco hw-spider"><i></i>' + SPIDER + "</div>");
++    add(d.querySelector(".big"), HAT);
++    var hype = d.getElementById("hype");
++    if (hype && hype.firstChild && hype.firstChild.nodeType === 3) {   // "🔥 Hype" -> a lantern + " Hype"
++      hype.firstChild.nodeValue = hype.firstChild.nodeValue.replace(/^\s*\S+\s*/, " ");
++      hype.insertBefore(el(PUMPKIN(18, true)), hype.firstChild);
++    }
++    add(d.querySelector(".rail"), '<div class="hw-deco hw-pumpkins hw-rail-pk">' + PUMPKIN(34, true) + PUMPKIN(24) + PUMPKIN(30, true) + "</div>");
++    add(d.getElementById("channel"), '<div class="hw-deco hw-pumpkins hw-ch-pk">' + PUMPKIN(22) + PUMPKIN(30, true) + PUMPKIN(40, true) + PUMPKIN(26) + "</div>");
++    add(d.querySelector(".chat header"), WEB);
++    d.querySelectorAll(".after .sec").forEach(function (s, i) { if (i % 2 === 0) add(s, WEB); });
++    var empty = d.querySelector("#messages .empty"); if (empty) empty.textContent = "Say boo to SUB-01 👻";
++  } else if (!closedStrip() && d.body) {                   // the other pages: a small fixed pill to the live page
++    add(d.body, '<a class="hw-pill" href="https://subzerone.live/">' + PUMPKIN(22, true) + "<span>HALLOWEEN SPECIAL · Sat Oct 31 · guest KIMCHI</span></a>");
++  }
++
++  if (still || !d.body) return;                            // bats: never with reduced motion; one on a phone
++  var layer = el('<div class="hw-deco hw-bats"></div>'); d.body.appendChild(layer);
++  function flock() {
++    if (!d.hidden) {
++      for (var i = 0; i < (phone ? 1 : 3); i++) {
++        var b = el('<div class="hw-bat">' + BAT + "</div>");
++        b.style.top = (8 + Math.random() * 30) + "vh";
++        b.style.animationDelay = (i * 0.45) + "s";
++        b.style.animationDuration = (4.6 + Math.random() * 1.6) + "s";
++        b.addEventListener("animationend", function (e) { if (e.target.classList.contains("hw-bat")) e.target.remove(); });
++        layer.appendChild(b);
++      }
++    }
++    setTimeout(flock, 30000 + Math.random() * 15000);
++  }
++  setTimeout(flock, 2500);
++})();
+diff --git a/web/index.html b/web/index.html
+index 3f7c12e..22033d4 100644
+--- a/web/index.html
++++ b/web/index.html
+@@ -167,7 +167,7 @@
+   }
+ </style>
+ <link rel="stylesheet" href="/neurons.css">
+-</head>
++<link rel="stylesheet" href="/halloween.css"><script src="/halloween.js" defer></script></head>
+ <body>
+ <script>if (new URLSearchParams(location.search).has("mini")) document.body.classList.add("mini");</script>
+ <div id="scene"></div><div id="vignette"></div>
+diff --git a/web/life.html b/web/life.html
+index 3f6c7b5..cd307d6 100644
+--- a/web/life.html
++++ b/web/life.html
+@@ -68,7 +68,7 @@
+   #neurons { min-width:0; }
+ </style>
+ <link rel="stylesheet" href="/neurons.css">
+-</head>
++<link rel="stylesheet" href="/halloween.css"><script src="/halloween.js" defer></script></head>
+ <body>
+ <div id="wrap">
+   <div id="scene">
+diff --git a/web/live.html b/web/live.html
+index a797fcf..3e506a1 100644
+--- a/web/live.html
++++ b/web/live.html
+@@ -100,7 +100,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
+ #messages{max-height:320px;min-height:180px}main{order:1;padding:12px 12px 0}.after{order:3;padding:0 12px 32px}.nav,.search,.cta .lbl{display:none}
+ .channel{flex-wrap:wrap}.acts{justify-content:flex-start;width:100%}.pc-screen{width:42%}}
+ @media (max-width:520px){.chip .mono{display:none}.top{gap:8px;padding:0 10px}.logo span{display:none}.pc-screen{display:none}#pc-show{display:none}}
+-</style></head><body>
++</style><link rel="stylesheet" href="/halloween.css"><script src="/halloween.js" defer></script></head><body>
+ <header class="top">
+   <a class="logo" href="/" aria-label="SUB-01 home"><b>SUB-01</b><span>LIVE</span></a>
+   <nav class="nav" aria-label="Sections"><span class="on">Live</span><span aria-disabled="true">Browse <i class="soon">Soon</i></span></nav>
+@@ -111,6 +111,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
+     <button class="chip" id="ca" type="button" title="Copy contract address" data-ca="6WCtKQfkWurd77tCCAYWuL5TwyAvuovTzworfnfupump">CA <span class="mono hcav">6WCtKQfkWurd77tCCAYWuL5TwyAvuovTzworfnfupump</span></button>
+   </div>
+ </header>
++<aside class="hw-strip" id="hw-strip" aria-label="Halloween special"><svg viewBox="0 0 64 56" width="22" aria-hidden="true" focusable="false" class="hw-pk"><path d="M30 9c0-5 3-8 7-8l1 3c-3 0-4 2-4 5z" fill="#3f6212"/><ellipse cx="18" cy="32" rx="14" ry="20" fill="#e2580b"/><ellipse cx="46" cy="32" rx="14" ry="20" fill="#e2580b"/><ellipse cx="32" cy="32" rx="15" ry="22" fill="#ff7a1a"/><path d="M18 27l6-6 6 6zM34 27l6-6 6 6z" fill="#ffd166"/><path d="M17 37c5 7 25 7 30 0l-4 1-3 3-3-3-4 3-4-3-3 3-3-3z" fill="#ffd166"/></svg><b>HALLOWEEN SPECIAL</b><span>Sat Oct 31 · live guest: <span class="k">KIMCHI</span> joins SUB-01 as his AI avatar</span><a id="hw-avatar-link" href="/" target="_blank" rel="noopener">Talk to the avatars</a><button type="button" id="hw-close" aria-label="Hide the Halloween banner">×</button></aside>
+ <div class="app">
+   <aside class="rail" aria-label="Channels">
+     <h3>Live now</h3>
+@@ -133,7 +134,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
+       <div class="info">
+         <h1>SUB-01</h1>
+         <div class="title">AI streamer live 24/7 · reacts, browses, plays and takes requests from chat</div>
+-        <div class="tags"><span class="cat">Just Chatting</span><span>AI</span><span>React</span><span>Cartoon mode</span><span>English</span></div>
++        <div class="tags"><span class="cat">Just Chatting</span><span>AI</span><span>React</span><span>Cartoon mode</span><span>English</span><span class="hw-tag">Halloween</span></div>
+         <div id="mode"></div>
+         <div class="hypebar" id="hypebar"><span>Hype</span><span class="meter" aria-hidden="true"><span class="fill" id="hypefill"></span></span><b id="hypetxt"></b></div>
+       </div>
+@@ -177,6 +178,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
+     <section class="sec">
+       <h2>How to interact</h2>
+       <div class="cards">
++        <div class="card hw-card"><b>Halloween special</b><p>Sat Oct 31: Kimchi joins the stream as his AI avatar and talks with SUB-01 and chat. Costumes in chat encouraged.</p></div>
+         <div class="card"><b>Talk to him</b><p>Write in chat: he answers out loud in a few seconds.</p></div>
+         <div class="card"><b>Cartoon mode</b><p>Type <code>cartoon: &lt;action&gt;</code> and an AI clip of it airs on stream.</p></div>
+         <div class="card"><b>Send him somewhere</b><p>Ask him to open a site, a video or a game: he clicks around and reacts.</p></div>
+diff --git a/web/room.html b/web/room.html
+index 7d03535..ccbae7c 100644
+--- a/web/room.html
++++ b/web/room.html
+@@ -379,7 +379,7 @@
+   }
+   @media (max-width: 380px) { #rx button { width:34px; font-size:17px; } #viewers { font-size:10px; padding:0 6px 0 2px; } #rxpill { padding:3px 4px 3px 3px; } }
+ </style>
+-</head>
++<link rel="stylesheet" href="/halloween.css"><script src="/halloween.js" defer></script></head>
+ <body>
+ <div id="scene"></div><div id="vignette"></div>
+ <div id="boot"><div><div class="w">SUB<b>-</b>01</div><div id="boot-t">loading his room in Kichijōji…</div><div class="bar"><i id="boot-bar"></i></div></div></div>
+diff --git a/web/tastes.html b/web/tastes.html
+index e3798c4..c9d0e08 100644
+--- a/web/tastes.html
++++ b/web/tastes.html
+@@ -48,7 +48,7 @@
+     li, .box { font-size:13.5px; }
+   }
+ </style>
+-</head>
++<link rel="stylesheet" href="/halloween.css"><script src="/halloween.js" defer></script></head>
+ <body>
+ <header><h1>SUB-01</h1><div class="sub">tastes · <a href="/">life</a> · <a href="/brain">brain</a> · <a href="/diary">diary</a> · <a href="/about.html">about</a></div></header>
+ <main>
+diff --git a/web/world.html b/web/world.html
+index 32274fb..a4e11a3 100644
+--- a/web/world.html
++++ b/web/world.html
+@@ -45,7 +45,7 @@
+   @media (max-width: 800px) { header, main, #strip, #note { padding-left:16px; padding-right:16px; }
+     main { grid-template-columns: 1fr; } #thought { font-size:16px; } }
+ </style>
+-</head>
++<link rel="stylesheet" href="/halloween.css"><script src="/halloween.js" defer></script></head>
+ <body>
+ <header><h1>SUB-01</h1><div class="sub">the simulated world · <span id="stage">…</span> · <a href="/" style="color:inherit">room</a> · <a href="/brain" style="color:inherit">brain</a> · <a href="/diary" style="color:inherit">dream diary</a> · <a href="https://city.subzerone.live/" style="color:inherit" target="_blank" rel="noopener">city</a></div></header>
+ <main>
+diff --git a/tools/pod/onpod/avatar.html b/tools/pod/onpod/avatar.html
+index 02d7144..8fa6cde 100644
+--- a/tools/pod/onpod/avatar.html
++++ b/tools/pod/onpod/avatar.html
+@@ -61,8 +61,9 @@ button.go:disabled { opacity:.45; cursor:default }
+ .preview { width:120px; height:120px; object-fit:cover; border:1px solid var(--line); background:#000 }
+ .status { font-size:14px; color:var(--muted); margin:0 } .status.ok { color:var(--ink) }
+ </style>
+-</head>
++<link rel="stylesheet" href="https://subzerone.live/halloween.css"><script src="https://subzerone.live/halloween.js" defer></script></head>
+ <body>
++<aside class="hw-strip" id="hw-strip" aria-label="Halloween special"><b>HALLOWEEN SPECIAL</b><span>Sat Oct 31 · live guest: <span class="k">KIMCHI</span> joins SUB-01 as his AI avatar</span><button type="button" id="hw-close" aria-label="Hide the Halloween banner">×</button></aside>
+ <div class="wrap">
+   <header>
+     <div><h1><b>SUB-01</b> avatar</h1><p class="sub">AI avatars made by the community: faces that talk back, live.</p></div>

@@ -1,0 +1,1 @@
+APPROVE. hw1 issues addressed: static live-page markup avoids insertion-related layout shifts, decorations are non-interactive and accessibility-hidden, motion limited, avatar link origin constrained to plain HTTPS hosts. CLS negligible, controls reachable, AI-avatar disclosure explicit.
