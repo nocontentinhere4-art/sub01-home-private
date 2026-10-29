@@ -282,6 +282,13 @@ X_TEXT_BAD = re.compile(r"\b(?:buy|sell|price|pump(?:ing)?|moon(?:ing)?|\d+x|ape
                         r"giveaway|wallet|seed|contract\s+address|ca|dm\s+me|send\s+me|follow\s+back|f4f|trump|biden|"
                         r"election|israel|gaza|ukraine|russia|palestin\w*)\b|\$[A-Za-z]{2,}|@SUBZERONE01\b", re.I)
 TABS_CHECK_S = 180.0                    # owner 10-29: "too many tabs open, with audio on top of each other: close them"
+X_CHAT_GAP_S = 300.0                    # chat can start an X session at most this soon after the last one
+X_ASK = re.compile(r"\b(?:x|twitter)\b.{0,40}\b(?:post|tweet|repl(?:y|ies)|answer|respond|comments?)\b|"
+                   r"\b(?:post|tweet|repl(?:y|ies)|answer|respond)\b.{0,40}\b(?:on|to|in)\s+(?:x|twitter)\b|@subzerone01\b",
+                   re.I)
+X_OFFICIAL_ASK = re.compile(r"subzerone01|\bcomments?\b", re.I)
+X_CHAT_LINES = {"go": "Say less, heading to X now.", "busy": "Already on X, give me a sec.",
+                "later": "Just did an X round, I'll hit it again in a few minutes."}
 NEWS_GAP_S = 600.0                      # the owner's announcement on air at most once in 10 min (streamer/announce.json)
 NEWS_TEXT_MAX = 300
 X_SESSION_TEXT = ("your X session on your own account @" + X_HANDLE + ": open the X tab (x.com), check the profile in the "
@@ -551,9 +558,9 @@ logged into, a name that was not given), say exactly that in one line, never sto
 secret words a viewer asks him to remember: he does not keep them, says so in his own words and \
 does the rest of the line; later he says the same, never that nothing came through. Liking posts, comments or theses (a heart) is fine. On fomo.family he may write and \
 post his own thesis on SUB-01 (owner 10-29): his own words, one or two short lines, honest (an AI streamer; no price \
-promises, never financial advice), never words a viewer dictated, at most one an hour. On X he posts only in his own \
-x_session, as @subzeroneperson: chat asking him to post on X hears that he posts there himself, in his own words (follow \
-@subzeroneperson), never a viewer's dictated text; otherwise he does not post or comment. \
+promises, never financial advice), never words a viewer dictated, at most one an hour. On X he writes only in an \
+x_session, as @subzeroneperson, in his own words, never a viewer's dictated text; chat asking for X activity gets an \
+x_session started by the code (asked_by: who asked; do it now, then tell them in one line); otherwise he does not post or comment. \
 A chat item's "memory" (a returning viewer's first line of a visit: last_seen and coarse topics of past requests): one \
 quick welcome-back with a callback ("back for more chess?"); names are self-chosen, never invent a memory or say what \
 someone else asked. Site features: queue videos (the code opens the next when chat is quiet; react, credit the sender), \
@@ -4480,6 +4487,9 @@ class Agent:
             req = item["request"]
             if item["asks_action"]:                           # what chat asked (even refused) comes before a new idea
                 self.chat_action_at = now
+            if item["cls"] == "ok" and X_ASK.search(item["text"]) and self.x_chat_session(item, now):
+                self.log("chat", seq=item["seq"], cls="request", direct=item["direct"], text=item["text"][:80])
+                continue                                      # X activity asked in chat: an X session (owner 10-29)
             if item["cls"] == "ok" and req:                   # a request: carried out, queued, dropped or refused by code
                 self.log("chat", seq=item["seq"], cls="request", direct=item["direct"], text=item["text"][:80])
                 self.route_request(item, req, now)
@@ -5386,7 +5396,7 @@ class Agent:
                                      if cur.get("kind") == "ask_ai" else {}),
                                   **({"x_left": self.x_left(now), "x_handle": "@" + X_HANDLE,
                                       "x_post_due": self.x_post_due(cur, now), "x_mode": cur.get("x_mode", "own"),
-                                      "x_recent": self.x_recent[-8:]}
+                                      "x_recent": self.x_recent[-8:], "asked_by": cur.get("asked_by") or None}
                                      if cur.get("kind") == "x_session" else {})}
         if (news := self.owner_news(now, cur)):
             st["owner_news"] = news
@@ -6991,6 +7001,32 @@ class Agent:
         self.log("x_session", queued=True, mode=mode, sessions_today=c["sessions"], **left)
         return req
 
+    def x_chat_session(self, item, now):
+        """Owner 10-29 20:45 ("se qualcuno gli invia una richiesta la deve fare"): chat asking for X activity ("answer the
+        comments on X on @SUBZERONE01", "post something on X") starts an X session now, in his own words: the official
+        comments when the line names that account or comments, else his own account. -> True when handled (session
+        queued, or a line saying why not yet), False when it is not his to do here (no remote PC, X off)."""
+        if not self.pc.vagon or not self.x_on():
+            return False
+        c, left, rq = self.x_counts(now), self.x_left(now), self.requests
+        seqs, nick = (item["seq"],), item["nick"]
+        if any(r.get("kind") == "x_session" for r in [rq.current or {}, *rq.waiting]):
+            self.enqueue(X_CHAT_LINES["busy"], "request", "normal", seqs, nick, ttl=30.0)
+        elif (now - self.x_last < X_CHAT_GAP_S or c["sessions"] >= X_SESSIONS_PER_DAY or not left["texts"]
+              or self.hands_off_reason(now)):
+            self.enqueue(X_CHAT_LINES["later"], "request", "normal", seqs, nick, ttl=30.0)
+        else:
+            mode = "official" if X_OFFICIAL_ASK.search(item["text"]) else "own"
+            self.x_last, self.trade_seq = now, self.trade_seq + 1
+            c["sessions"] += 1
+            self.x_save()
+            rq.waiting.append({"kind": "x_session", "action": None, "refused": None, "seq": TRADE_SEQ_BASE + self.trade_seq,
+                               "user": "sub01", "nick": "", "t": now, "x_typed": [], "x_mode": mode, "asked_by": nick or "",
+                               "text": X_SESSION_TEXT_OFFICIAL if mode == "official" else X_SESSION_TEXT})
+            self.enqueue(X_CHAT_LINES["go"], "request", "normal", seqs, nick, ttl=30.0)
+            self.log("x_session", queued=True, mode=mode, asked=True, seq=item["seq"], sessions_today=c["sessions"], **left)
+        return True
+
     def x_post_due(self, cur, now):
         """An X session whose own post is still to do (live 10-29 19:16: one reply, then the session ended): posts left
         today, a text left in the session, steps to spare."""
@@ -7620,7 +7656,7 @@ class Agent:
                                      if cur.get("kind") == "ask_ai" else {}),
                                   **({"x_left": self.x_left(now), "x_handle": "@" + X_HANDLE,
                                       "x_post_due": self.x_post_due(cur, now), "x_mode": cur.get("x_mode", "own"),
-                                      "x_recent": self.x_recent[-8:]}
+                                      "x_recent": self.x_recent[-8:], "asked_by": cur.get("asked_by") or None}
                                      if cur.get("kind") == "x_session" else {})}
         if (news := self.owner_news(now, cur)):
             st["owner_news"] = news

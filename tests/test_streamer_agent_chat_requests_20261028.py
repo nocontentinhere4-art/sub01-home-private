@@ -921,3 +921,22 @@ def test_tabs_check_hint_every_three_minutes_when_nothing_is_asked(tmp_path):
     assert seen == [True, False, True], seen
     pc = SA.SYSTEM_PC.replace("\\\n", "")
     assert "background music plus one video at once is fine" in pc and "never two talking videos at once" in pc   # 20:41
+
+
+def test_chat_asking_for_x_starts_an_x_session_now(tmp_path):
+    # owner 10-29 20:45: "se qualcuno gli invia una richiesta la deve fare" (live 20:23 and 20:33 he only deflected)
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    agent.pc.mode = "vagon"
+    agent.hands_off_reason = lambda now: None
+    item = {"seq": 7, "nick": "fan", "text": "Bro answer the comments on X on @SUBZERONE01"}
+    assert SA.X_ASK.search(item["text"]) and not agent.x_chat_session(item, clock())   # X off: not handled here
+    (agent.dir / "x-on").write_text("")
+    assert agent.x_chat_session(item, clock())
+    req = agent.requests.waiting[-1]
+    assert req["kind"] == "x_session" and req["x_mode"] == "official" and req["asked_by"] == "fan"
+    assert agent.x_chat_session(dict(item, seq=8), clock())                       # already queued: "busy" line
+    agent.requests.waiting.clear()
+    assert agent.x_chat_session(dict(item, seq=9), clock() + 10)                   # too soon: "later" line
+    own = agent.x_chat_session({"seq": 10, "nick": "fan", "text": "post something on x"}, clock() + SA.X_CHAT_GAP_S + 1)
+    assert own and agent.requests.waiting[-1]["x_mode"] == "own"
+    assert not SA.X_ASK.search("x marks the spot") and not SA.X_ASK.search("play some x games")

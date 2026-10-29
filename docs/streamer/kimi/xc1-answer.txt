@@ -1,0 +1,1 @@
+APPROVE. Matches the requested behavior, preserves X gates/caps and session handling, queues correctly; tests cover off, busy, cooldown, official/own mode, regex false positives.
