@@ -1234,7 +1234,7 @@ class ChatGate:
         direct = question and bool(SELF.search(text))
         if HUMAN_Q.search(text):
             cls, direct = "human", True
-        elif INJECT.search(text) or (CREDS_SECRET if self.logins else CREDS).search(text):
+        elif INJECT.search(text) or (asks_for_secret(CREDS_SECRET, text) if self.logins else CREDS.search(text)):
             cls, direct = "inject", False                     # a refusal is not an answer to a question
         else:
             cls = "ok"
@@ -1290,6 +1290,20 @@ R_SECRETS = re.compile(r"\b(?:pass(?:word|code|phrase)s?|credentials?|2fa|otp|ve
 CREDS_SECRET = re.compile(r"\b(pass(?:word|code|phrase)s?|credentials?|seed\s*phrase|recovery\s*phrase|private\s*key|"
                           r"api[\s_-]*keys?|secret|2fa|otp|verification\s*code|(?:your|ur)\s+(?:e-?mail|phone|address|bank|"
                           r"card))\b", re.I)    # CREDS without the log-in words: a sign-up request is no injection
+# owner 10-29 ("react on X to the situation where she posted the private key of her wallet" was refused): with logins on,
+# a secret word refuses a line only when the line asks for a secret (an ask verb in its base form, or "you/your/SUB-01");
+# a viewer asking him to react to someone else's leak is a topic, not a request for a secret
+SECRET_ASK = re.compile(r"\b(?:type|enter|input|tell|give|gimme|send|share|show|paste|read|reveal|say|write|dm|spell|"
+                        r"copy|print|expose|need|want|get|got|have|grab|drop|post|please|pls|plz|what(?:'s|\s+is)|you|"
+                        r"your|ur|yours|u|my|mine|sub-?0?1|subzerone\w*)\b|\?", re.I)
+
+
+def asks_for_secret(rx, text):
+    """`rx` (R_SECRETS or CREDS_SECRET) finds a secret word and the line asks for one (SECRET_ASK, a question mark, or
+    a line of at most four words: "private key pls"), with logins on."""
+    return bool(rx.search(text)) and (bool(SECRET_ASK.search(text)) or len(text.split()) <= 4)
+
+
 R_LOGIN_ASK = re.compile(r"\b(?:log\s*in|login|log\s+into|sign\s*in|sign\s*up|register|create\s+an?\s+account|"
                          r"make\s+an?\s+account)\b", re.I)
 CONFIRM_MAIL = re.compile(r"\b(?:gmail|inbox|e-?mail|mail)\b.*\b(?:confirm\w*|verif\w*|link|code|activat\w*)\b|"
@@ -1308,7 +1322,10 @@ LOGOUT_REQ = re.compile(r"^\W*(?:log|sign)\s*(?:out|off)\b", re.I)
 LOGOUT_ANY = re.compile(r"\b(?:log|sign)\s*(?:out|off)\b", re.I)   # in a line that is a request: "open steam and log out"
 R_PAY = re.compile(r"\b(?:buy|purchase|order\s+(?:a|an|some|me|us|it|that|this|food|pizza|ramen|sushi|\w+\s+(?:online|"
                    r"delivery|from))|pay(?:\s+for)?|checkout|check\s*out\s+(?:the\s+)?(?:cart|basket)|add\s+to\s+(?:the\s+)?"
-                   r"(?:cart|basket|bag)|donate|subscribe|send\s+(?:me\s+|us\s+|him\s+|her\s+)?money|credit\s+card|wallet|"
+                   r"(?:cart|basket|bag)|donate|subscribe|send\s+(?:me\s+|us\s+|him\s+|her\s+)?money|credit\s+card|"
+                   # owner 10-29: "her wallet" in a story is a topic; his own or an unnamed wallet, and sending crypto, stay
+                   r"(?<!\bher\s)(?<!\bhis\s)(?<!\btheir\s)wallet|transfer|send\s+(?:\S+\s+){0,3}?(?:sol|eth|usdc|usdt|btc|"
+                   r"crypto|coins?|tokens?)|"
                    r"deposit|withdraw|place\s+(?:a\s+)?bid|tip\s+(?:me|us|him|her))\b", re.I)
 R_ADMIN = re.compile(r"\b(?:admin|operator|root|sudo)\b|\btokens?\b|\b(?:change|update|edit|modify|set|reset|override|"
                      r"rewrite|replace|forget|drop|turn\s+off)\s+(?:all\s+|the\s+|your\s+|ur\s+|these\s+|those\s+|my\s+)?"
@@ -1569,7 +1586,7 @@ PRIVACY_LINE = "Private screen for a moment, so you get the webcam."
 FREEZE_SIZE, FROZEN_PIXEL = (320, 180), 10      # frozen = between consecutive looks no pixel of a 320x180 grey thumbnail
                                                # moved this much for FROZEN_S (a taskbar clock tick: ~29; JPEG noise: <= 3)
 PROBATION_LOOKS, PROBATION_GAP_S = 2, 2.0      # after /resume: this many usable looks this far apart before any action
-PC_MONEY_WORDS = re.compile(r"\b(?:buy|purchase|checkout|wallet|cart|basket|add\s+funds|redeem|gift\s*cards?|pay(?:ment)?|"
+PC_MONEY_WORDS = re.compile(r"\b(?:buy|purchase|checkout|(?<!\bher\s)(?<!\bhis\s)(?<!\btheir\s)wallet|cart|basket|add\s+funds|redeem|gift\s*cards?|pay(?:ment)?|"
                             r"subscribe|pre-?order)\b", re.I)
 KEY_ALIAS = {"ctrl": "Control", "control": "Control", "ctl": "Control", "alt": "Alt", "option": "Alt", "shift": "Shift",
              "win": "Meta", "windows": "Meta", "meta": "Meta", "super": "Meta", "cmd": "Meta", "command": "Meta",
@@ -1835,7 +1852,7 @@ def refused_class(text, logins=False):
                        ("personal_data", R_PERSONAL),
                        ("code_or_download", R_CODE), ("payment", R_PAY), ("adult", R_ADULT), ("violence", R_VIOLENCE),
                        ("illegal", R_ILLEGAL)):
-        if rx.search(text):
+        if (asks_for_secret(rx, text) if logins and rx is R_SECRETS else rx.search(text)):
             return reason
     return None
 

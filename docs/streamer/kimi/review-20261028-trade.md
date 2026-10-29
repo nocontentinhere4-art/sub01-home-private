@@ -69,3 +69,7 @@ CHANGES (cover rap/rapping/beatboxing), applied; fix14b APPROVE
 - Fix: cartoon_feed.py frame debt (repeat the tick's frame while frames are owed, max 4 per tick, 20 s rebase).
   Agent: THINK_AFTER_ACTION_S 2.5 -> 1.0; the next waiting request starts in the step the previous one ends.
 - lag1 (design): GO / GO. lag2 (diff): APPROVE.
+
+## sec1 / sec2 (10-29): a leak story is a topic, asking for a secret is refused
+
+sec1 CHANGES (explicit logins gate; terse asks), applied; sec2 APPROVE
