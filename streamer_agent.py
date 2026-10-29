@@ -576,6 +576,7 @@ REFUSAL_LINES = {                                              # wording: docs/s
     "admin": "Nope, the setup stays how it is and nobody gets access.",
     "safety": "Nope, the setup stays how it is and nobody gets access.",
     "leave_desk": "Bro, I'm a desk streamer. The chair dance is all you get.",
+    "sing": "Singing's not in my voice pack, chat. Drop a song and I'll put it on instead.",   # live 10-29
     "adult": "Nah, not taking the stream there. Give me something else.",
     "violence": "Nah, not taking the stream there. Give me something else.",
     "illegal": "Nah, not taking the stream there. Give me something else.",
@@ -1348,6 +1349,10 @@ PLAY_ONLINE = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|le
                          r"blackjack|checkers|solitaire|uno|sudoku|minesweeper|tetris|wordle|geoguessr|connect\s+four|"
                          r"(?:video\s*)?games?|something)\b(?!\s+(?:of|on|like|called|named)\b)", re.I)
 GAMES_SITE = "https://www.crazygames.com"
+SING_REQ = re.compile(r"\b(?:sing|singing|sings|rap|raps|rapping|rap\s+for|beatbox\w*)\b", re.I)   # "can you sing?" is no leaving the desk (live 10-29)
+OFF_DESK_ONLY = re.compile(r"\b(?:stand\s+up|get\s+up|go\s+(?:out|outside|away|home|to\s+\w+)|step\s+(?:out|away)|lie\s+down|"
+                           r"take\s+a\s+(?:break|walk|nap|shower)|dance|stretch|turn\s+around|wave|sleep|nap|shower)\b", re.I)
+ACK_GAME_LINES = ("Bet, finding {name} to play.", "{name}? Let me see if it runs here.")   # live 10-29: "Fortnite play online free."
 PLAY_MEDIA = re.compile(r"\b(?:youtube|yt|spotify|soundcloud|songs?|music|videos?|clips?|albums?|playlists?|tracks?|mv)\b", re.I)
 # "play minecraft and hit up other streamers to join" (live 10-29) was refused as leaving the desk: "play <a game>" is
 # a game on the PC, searched as a free online one; music, songs and videos stay video requests
@@ -2090,7 +2095,7 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         # some drake on youtube" is music, live 10-29)
         name = " ".join(m.group(1).split()).strip(" .:-")
         if name and (q := query_clean(f"{name} play online free")):
-            return search_doable(q)
+            return search_doable(q, game=name[:30])
     if (m := REACT_TO.match(s)) and (q := request_query(m.group(1))):   # "react to some kai cenat": find it and put it on
         return search_doable(q)
     if ENTER_FULLSCREEN.match(s):                             # the model presses f or clicks the button (not a search)
@@ -2099,7 +2104,7 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         thing = " ".join(m.group(2).strip(" .,!?;:").split()[:5])[:40]
         return doable("look", None, intent="click", thing=(thing[:1].upper() + thing[1:]) if thing else None)
     if leaves_desk(text):
-        return refused("leave_desk")
+        return refused("sing" if SING_REQ.search(text) and not OFF_DESK_ONLY.search(text) else "leave_desk")
     if (m := NAV_LOOSE.match(s)):
         rest = m.group(1).strip(" .,!?")
         site = KNOWN_SITES.get(re.sub(r"^(?:the\s+)?|\s+(?:site|website|page|home\s*page)$", "", rest.lower()).strip())
@@ -4278,6 +4283,9 @@ class Agent:
                 place = req["weather"]
                 line = (pick_line([x.format(place=place) for x in ACK_WEATHER_LINES], self.rng, self.last_ack)
                         if place else ACK_WEATHER_HERE)
+            elif req.get("game"):
+                g = str(req["game"])
+                line = pick_line([x.format(name=g[0].upper() + g[1:]) for x in ACK_GAME_LINES], self.rng, self.last_ack)
             elif q:
                 line = pick_line([x.format(query=q[0].upper() + q[1:]) for x in ACK_SEARCH_LINES], self.rng, self.last_ack)
         elif kind == "navigate" and req.get("queue"):

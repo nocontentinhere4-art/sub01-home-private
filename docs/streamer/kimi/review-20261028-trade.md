@@ -56,3 +56,7 @@ APPROVE
 ## fix13 (songs are fine, play <artist> on youtube is music, illegal chess move recovery)
 
 APPROVE
+
+## fix14 (sing line, game ack)
+
+CHANGES (cover rap/rapping/beatboxing), applied; fix14b APPROVE

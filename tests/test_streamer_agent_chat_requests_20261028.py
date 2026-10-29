@@ -225,3 +225,14 @@ def test_play_an_artist_on_youtube_is_music_not_a_game():
 def test_the_prompt_lets_him_put_music_on_and_fixes_illegal_chess_moves():
     assert "songs are fine to put on" in SA.system_prompt()
     assert "red box means an illegal move" in SA.system_prompt(pc=True, allow_credentials=True)
+
+
+@pytest.mark.parametrize("text,why", [("Can you sing?", "sing"), ("sing a song", "sing"), ("stand up and sing", "leave_desk")])
+def test_singing_has_its_own_line(text, why):
+    assert SA.parse_request(text, pc=True)["refused"] == why and SA.reply_problem(SA.REFUSAL_LINES["sing"]) is None
+
+
+def test_a_game_search_is_acknowledged_as_a_game(tmp_path):
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    req = dict(SA.parse_request("can you play fortnite?", pc=True), nick="Tfue", seq=1)
+    assert agent.ack_for(req) in [x.format(name="Fortnite") for x in SA.ACK_GAME_LINES]
