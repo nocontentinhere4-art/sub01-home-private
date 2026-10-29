@@ -615,7 +615,7 @@ REFUSAL_LINES = {                                              # wording: docs/s
     "illegal": "Nah, not taking the stream there. Give me something else.",
     "personal_data": "I'm not looking up someone's private details.",
     "code_or_download": "No downloads, installs, or terminal commands from here.",
-    "blocked_domain": "I'm not opening that address here.",
+    "blocked_domain": "That site's blocked on my PC. Try another one.",   # live 10-29: say why
     "blocked_url": "No login or checkout pages.",
     "bad_url": "I'm not opening that address here.",
     "typing": "I don't post or type messages for chat.",
@@ -1567,7 +1567,10 @@ KNOWN_SITES = {"youtube": "https://www.youtube.com", "wikipedia": "https://en.wi
                "nba": "https://www.nba.com", "chess.com": "https://www.chess.com", "lichess": "https://lichess.org",
                "x": "https://x.com", "twitter": "https://x.com", "poki": "https://poki.com",
                "crazygames": "https://www.crazygames.com", "crazy games": "https://www.crazygames.com",
-               "cnn": "https://www.cnn.com", "kick.com": "https://kick.com"}
+               "cnn": "https://www.cnn.com", "kick.com": "https://kick.com",
+               # trading sites by name: refused up front (request_url_problem: the PC's runner blocks them, live 16:33)
+               "dexscreener": "https://dexscreener.com", "binance": "https://www.binance.com",
+               "coinbase": "https://www.coinbase.com", "tradingview": "https://www.tradingview.com"}
 # the desktop runner's host policy (scripts/streamer_desktop.py HOST_RULES), kept here too so a request is refused
 # with its reason before anything is tried; browse.url_ok (the house guard) is asked as well through url_problem.
 # By class (owner, 2026-10-23: logins and installs are his to use): a VIEWER's request is refused for every class
@@ -1862,6 +1865,12 @@ def request_url_problem(url):
     # is public on subzerone.live
     if any(c in VIEWER_LINK_BLOCKED for c in blocked_classes(url)):
         return "blocked_domain"
+    try:                                                      # live 10-29 (bug bounty): "open coingecko site" was taken up
+        host = (urlsplit(url).hostname or "").lower()         # and then blocked by the PC's runner (trading hosts): refuse
+    except ValueError:                                        # it here, before promising anything
+        return "bad_url"
+    if _browse is not None and _browse.trading_host(host):
+        return "blocked_domain"
     return None
 
 
@@ -2061,7 +2070,8 @@ def search_doable(q, **extra):
     names a known site ("the official Wikipedia homepage") opens that site."""
     site = KNOWN_SITES.get(" ".join(SITE_WORDS.sub(" ", q or "").lower().split())) if q else None
     if site and not extra:
-        return doable("navigate", {"action": "navigate", "url": site}, url=site)
+        why = request_url_problem(site)
+        return refused(why) if why else doable("navigate", {"action": "navigate", "url": site}, url=site)
     if not q:
         return refused("query_filter")
     if SENSITIVE_Q.search(q):
@@ -2269,7 +2279,8 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         site = KNOWN_SITES.get(head if tail else re.sub(r"^(?:the\s+)?|\s+(?:site|website|page|home\s*page)$", "",
                                                          rest.lower()).strip())
         if site:
-            return doable("navigate", {"action": "navigate", "url": site}, url=site)
+            why = request_url_problem(site)
+            return refused(why) if why else doable("navigate", {"action": "navigate", "url": site}, url=site)
         return search_doable(request_query(rest))
     return None                     # owner 10-28: not "can't do that from here"; the model reads it as chat and may act
 

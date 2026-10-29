@@ -477,7 +477,7 @@ def test_the_pump_fun_feed_gets_its_own_clear_no(text):
 
 
 @pytest.mark.parametrize("text,url", [("open twitch", "https://www.twitch.tv"), ("open kick", "https://kick.com"),
-                                      ("go to coingecko", "https://www.coingecko.com"), ("open twitter", "https://x.com"),
+                                      ("open twitter", "https://x.com"),
                                       ("open the twitch website", "https://www.twitch.tv"),
                                       ("open spotify", "https://open.spotify.com")])
 def test_common_sites_open_by_name_without_a_search(text, url):
@@ -567,3 +567,12 @@ def test_chat_logins_open_the_site_named(text, url):
     r = SA.parse_request(text, pc=True, logins=True)
     assert (r["kind"], r["url"], r["login"]) == ("navigate", url, True)
     assert SA.parse_request("log in", pc=True, logins=True)["thing"] == "Sign up or log in"
+
+
+@pytest.mark.parametrize("text", ["open coingecko site", "go to coinmarketcap", "open dexscreener", "open binance",
+                                  "open https://www.coingecko.com/en/coins/bitcoin"])
+def test_sites_the_pc_blocks_are_refused_before_any_promise(text):
+    """Live 10-29 16:33 (bug bounty): "open coingecko site" -> "pulling it up", then blocked by the PC's runner."""
+    assert SA.parse_request(text, pc=True, logins=True)["refused"] == "blocked_domain"
+    assert "blocked on my PC" in SA.REFUSAL_LINES["blocked_domain"]
+    assert SA.reply_problem(SA.REFUSAL_LINES["blocked_domain"]) is None
