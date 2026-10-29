@@ -1236,7 +1236,9 @@ class ChatGate:
         else:
             cls = "ok"
         overlap = len(set(words_of(text)) & page_words)
+        voter = str(msg.get("voter") or "")
         return {"seq": seq, "nick": nick, "text": text, "cls": cls, "question": question, "direct": direct,
+                "voter": voter if VOTER_RE.fullmatch(voter) else "",
                 "asks_action": bool(COMMANDISH.search(text)),
                 "request": parse_request(text, pc=self.pc, installs=self.installs, sources=self.sources, logins=self.logins),
                 "score": overlap,
@@ -2098,6 +2100,16 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
             return doable("navigate", {"action": "navigate", "url": site}, url=site)
         return search_doable(request_query(rest))
     return None                     # owner 10-28: not "can't do that from here"; the model reads it as chat and may act
+
+
+def request_user(item):
+    """Who a request belongs to (one request per viewer at a time): the chosen name, else the relay's connection hash
+    (live 10-29: every nameless site viewer is "viewer", so one person's request dropped another's), else the line."""
+    nick = item.get("nick") or ""
+    if nick and nick.lower() not in CARTOON_GENERIC_NICKS:
+        return nick
+    voter = item.get("voter") or ""
+    return f"anon-{voter[:12]}" if voter else f"anon-{item.get('seq')}"
 
 
 class Requests:
@@ -4163,7 +4175,7 @@ class Agent:
     def route_request(self, item, req, now):
         """A chat line that asks for something: refused (one short line), queued, dropped, or next up (start_request logs
         that one as executed)."""
-        req = dict(req, seq=item["seq"], user=item["nick"] or "anon", nick=item["nick"], text=item["text"], t=now)
+        req = dict(req, seq=item["seq"], user=request_user(item), nick=item["nick"], text=item["text"], t=now)
         if req["kind"] == "search" and not req["refused"]:
             earlier = list(self.recent_chat)[:-1]             # the lines before this one (it was just appended)
             q = contextual_query(req.get("query"), earlier, now, self.recent_queries)

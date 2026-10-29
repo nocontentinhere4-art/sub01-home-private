@@ -281,3 +281,13 @@ def test_three_unchanged_scrolls_on_the_pc_do_not_hold_him(tmp_path):
                             "outcome": {"action": "scroll down", "verdict": "pending"}}
         agent.track_pc({"url": "https://app.vagon.io"}, clock())
     assert not agent.held and agent.fail_counts["scroll:down"][0] == 4
+
+
+def test_two_nameless_viewers_each_get_their_request(tmp_path):
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())                 # a desktop page: no PC readiness needed
+    agent.ingest_chat([{"seq": SA.DIRECT_SEQ_BASE + 1, "text": "open lichess.org", "nick": "viewer", "voter": V[0]},
+                       {"seq": SA.DIRECT_SEQ_BASE + 2, "text": "watch some horror movie trailers", "nick": "viewer", "voter": V[1]}])
+    users = [r["user"] for r in agent.requests.waiting] + ([agent.requests.current["user"]] if agent.requests.current else [])
+    assert len(users) == 2 and len(set(users)) == 2
+    assert SA.request_user({"nick": "Marco", "voter": V[0]}) == "Marco"
+    assert SA.request_user({"nick": "viewer", "voter": "", "seq": 7}) == "anon-7"
