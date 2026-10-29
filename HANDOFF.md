@@ -308,7 +308,12 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   Simli session token (`simli-client` generateSimliSessionToken / POST /compose/token, header x-simli-api-key, config
   faceId, maxSessionLength, maxIdleTime) and a page that streams our TTS PCM16 16 kHz mono into SimliClient;
   persona replies by our model. Needs Kimi design review and the owner's OK before any public endpoint.
-- **10-29 13:55 avatars phase 1 committed (b27997b, Kimi av2a3/av2b2/av2c2 APPROVE), NOT started on the pod.** Owner's
+- **10-29 14:30 AVATARS LIVE (owner OK "riavvia il relay e accendi gli avatar"):** avatar_tts.py 8844 (10 voices,
+  GPU 8.9 -> 15.6 GB, 4.4 s of speech in 2.3 s) and avatar_service.py 8843 run from
+  `/home/unreal/.sub01-private/avatar-svc/` (logs tts.log, service.log); relay = git b94b4bd (backup
+  relay.py.bak-20261029T14*), avatar.html + avatar-voices/ next to it; switch `streamer/avatar-on` ON. Page:
+  `https://<tunnel host>/avatar`. Registry empty until the owner sends Face IDs. Test submission sent and deleted.
+- 10-29 13:55 avatars phase 1 committed (b27997b, Kimi av2a3/av2b2/av2c2 APPROVE). Owner's
   workflow: viewers submit a photo + name + personality + voice (juno/dylan) on `/avatar`; the owner creates each face
   in app.simli.com; `avatar_service.py --data-dir /home/unreal/.sub01-private/avatar --approve ID --face-id FACE` adds
   it to `avatars.json` (listed at once). To start (owner's OK needed): avatar_tts.py in voice-rt-venv
