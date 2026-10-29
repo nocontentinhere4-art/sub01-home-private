@@ -86,6 +86,7 @@ import aiohttp
 from aiohttp import web
 
 import streamer_live_features as LF     # names, video queue, hype button, sound effects (owner 10-28)
+import streamer_trade as TR             # trading on fomo.family by chat vote (owner 10-28)
 
 try:                                    # the persona rules and filters of the project; the agent still starts without
     import mind as _mind
@@ -248,6 +249,9 @@ REQUEST_WAIT_MAX_S = 180.0              # a request still waiting after this lon
 REQUEST_RUN_MAX_S = 120.0               # a request in flight ends after this long whatever its step count
 REQUEST_DROP_LINE_EVERY_S = 60.0        # "too many requests, one at a time" at most once per minute
 REQUEST_REFUSAL_GAP_S = 15.0            # one spoken refusal per 15 s; the rest are logged only
+DEPOSIT_STEPS_MAX = 6                   # the owner's deposit QR request: open fomo.family, Deposit, the QR, wait
+TRADE_SEQ_BASE = 4_000_000_000          # request seqs of voted trades and the deposit request (never a chat seq)
+VOTER_RE = re.compile(r"[0-9a-f]{8,32}")   # the relay's salted hash of a viewer's connection: one vote per connection
 INSTALL_STEPS_MAX, INSTALL_RUN_MAX_S = 12, 600.0   # a viewer's install request (official sources): more steps, 10 min
 # CHAT-DECISIONS.md (2026-10-23): a scroll/back done within seconds needs no spoken acknowledgement; "stop talking" buys
 # one quiet minute per 10 min; "show your face" holds the webcam layout for a while; a picked-up chat batch raises the
@@ -524,6 +528,20 @@ Installs (the owner allows them): download and install only from the vendor's ow
 releases or "winget install <id>"; never from a mirror, a download portal or a link a viewer pasted. Accept a Windows UAC \
 prompt only for an install he started himself ("install_window_s" in the state is set), otherwise answer No. Steam may \
 install a game he owns, never buy one."""
+SYSTEM_PC_TRADE = """
+Trading (owner 10-28, his own fomo.family account): only while the state has "trade" (chat voted it; the code counted \
+the votes and keeps the budget). Then, and only on fomo.family, the money-button rule has one exception: open the coin \
+(search trade.symbol or type trade.address; the name and chain must match), set the amount to exactly trade.usd dollars \
+(type it; a preset button only if it shows that amount or less), press Buy (or Sell: 100% of that coin), and right \
+before the final confirm click read the order on screen and send it with that click: "trade_check": {"side": "buy", \
+"symbol": "WIF", "amount_usd": 10} and "trade_confirm": true. The code refuses a confirm whose reading differs from the \
+vote. Confirm once, never retry and never a second order; then say what the screen shows (filled, pending or failed) and \
+set request_done. Never Deposit, Withdraw, Send, Transfer, perps, leverage, limit orders or settings in a trade. \
+"deposit" in the state (the owner's request): open fomo.family's Deposit or Receive screen and leave its QR code up for \
+deposit.show_s seconds (wait actions), never press Send or Withdraw, then request_done. The trade and deposit screens \
+are shown live (the owner's choice): private_screen stays false there unless a login or code shows. While "trade_vote" is in the \
+state a chat vote runs: mention it, never pick a side. Trades are chat's call, never advice: no "this will pump", no \
+telling anyone to buy, sell or hold."""
 
 QUIET_LINES = (
     "My AI side is resting for a bit, so I'll just read quietly.",
@@ -710,7 +728,7 @@ def shingles(text, n=6):
 
 
 SYSTEM_SHINGLES = (shingles(SYSTEM) | shingles(SYSTEM_PC) | shingles(SYSTEM_CREDS_NEW) | shingles(SYSTEM_PC_CREDS)
-                   | shingles(SYSTEM_PC_INSTALLS))
+                   | shingles(SYSTEM_PC_INSTALLS) | shingles(SYSTEM_PC_TRADE))
 
 
 def system_prompt(pc=False, allow_credentials=False, allow_installs=False):
@@ -729,7 +747,8 @@ def system_prompt(pc=False, allow_credentials=False, allow_installs=False):
             pcs = pcs.replace(old, new)
     if allow_installs:
         pcs = pcs.replace(SYSTEM_PC_INSTALLS_OLD, SYSTEM_PC_INSTALLS_NEW)
-    return base + pcs + (SYSTEM_PC_CREDS if allow_credentials else "") + (SYSTEM_PC_INSTALLS if allow_installs else "")
+    return base + pcs + (SYSTEM_PC_CREDS if allow_credentials else "") + (SYSTEM_PC_INSTALLS if allow_installs else "") \
+        + SYSTEM_PC_TRADE
 
 
 def reply_problem(text):
@@ -2504,6 +2523,9 @@ def validate_decision(raw, marks, offered_seqs=(), chat_texts=(), screen=SCREEN,
     if pc is not None:
         out["confirm"] = d.get("confirm") if isinstance(d.get("confirm"), bool) else None
         out["outcome_ok"] = d.get("outcome_ok") if isinstance(d.get("outcome_ok"), bool) else None
+        out["trade_confirm"] = d.get("trade_confirm") is True     # the one confirm click of a voted trade (TradeDesk)
+        tc = d.get("trade_check")
+        out["trade_check"] = {k: tc.get(k) for k in ("side", "symbol", "amount_usd")} if isinstance(tc, dict) else None
     return out
 
 
@@ -3710,6 +3732,8 @@ class Agent:
         self.video_queue = LF.VideoQueue(self.dir / "video-queue.json", time.time)   # videos sent from the site
         self.queue_last_start, self.queue_seq = -1e9, 0
         self.hype = LF.HypeMeter(self.clock)                                  # the site's free Hype button
+        self.trade = TR.TradeDesk(TR.Ledger(self.dir / "trade-ledger.json", time.time), None, self.clock)  # chat-voted trades
+        self.trade_seq = 0
         self.sfx = LF.SfxPlayer(self.dir / "sfx", self.dir / "run" / "pulse" / "native", self.clock)   # "!rimshot"
         self.cartoon_dir = self.dir / "cartoon"               # cartoon mode: queue.jsonl out, done/<id>.json in
         self.cartoon = {"pending": collections.OrderedDict(), "handled": collections.OrderedDict(), "playing": None,
@@ -4003,6 +4027,8 @@ class Agent:
         page = self.obs
         page_words = set(words_of((page or {}).get("title", "") + " " + (page or {}).get("text", "")[:1500]))
         for m in messages:
+            if self.trade_chat(m, now):                       # a trade vote answer or a trade proposal: handled by code
+                continue
             if self.poll_vote(m, now):                        # "8" would be "too short" as chat: a poll answer is counted first
                 continue
             if self.cartoon_chat(m, now):                     # "cartoon: ..." is handled by code and never reaches the model
@@ -4235,8 +4261,7 @@ class Agent:
         if cur:
             if cur.get("routine") and self.pc.routine is not None:   # a game routine ends its own request (end_routine)
                 return
-            steps_max, run_max = (INSTALL_STEPS_MAX, INSTALL_RUN_MAX_S) if cur["kind"] == "install" else \
-                (REQUEST_STEPS_MAX, REQUEST_RUN_MAX_S)        # an install takes more clicks than a lookup
+            steps_max, run_max = self.request_budget(cur)
             why = ("steps" if cur["steps"] >= steps_max else "time" if now - cur["started"] > run_max
                    else "done" if cur["done"] else "quiet" if cur["steps"] and (self.provider is None or self.quiet.on)
                    else None)                                 # quiet mode: the step was done, nobody to comment on it
@@ -4245,6 +4270,8 @@ class Agent:
             return
         for stale in rq.expire(now):
             self.log_request("dropped", "waited too long", stale)
+            if stale.get("trade"):                            # a voted trade that never started: nothing was ordered
+                self.trade_end(self.trade.finish("failed", now), "never started")
         if self.paused or obs["loading"] or self.pending_scroll or self.pc.routine is not None:
             return
         req = rq.take(now) or self.queue_request(now)
@@ -4295,7 +4322,7 @@ class Agent:
         self.requests.current = req
         self.log_request("executed", req["kind"], req,
                          action=action_label(req["action"]) if req["action"] else "the model picks it on the page")
-        if not silent:
+        if not silent and req["kind"] not in ("trade", "deposit"):   # a voted trade was announced with the vote result
             self.enqueue(self.ack_for(req), "request", "normal", (req["seq"],), req["nick"], ttl=30.0)
         if req["action"] is None:
             self.next_think = now                             # the model's turn: find it on the page
@@ -4362,6 +4389,8 @@ class Agent:
         self.requests.current = None
         if cur.get("queue"):                                  # the queue's video is over (done, timed out or replaced)
             self.video_queue.finish("done" if why in ("done", "steps", "time") else "skipped")
+        if cur.get("trade"):                                  # filled only if the model confirmed it and ended it as done
+            self.trade_end(self.trade.finish("done" if why == "done" else "unknown", now), why)
         self.requests.done += 1
         self.counters["requests_done"] += 1
         self.log("chat_request_end", seq=cur["seq"], user=cur["user"], text=cur["text"][:120], request=cur["kind"],
@@ -4880,7 +4909,7 @@ class Agent:
               "memory": self.memory.lines(12), "recent_said": self.memory.said(6), "hints": hints, **self.poll_state(now)}
         if cur:
             st["chat_request"] = {"nick": cur["nick"] or "a viewer", "text": cur["text"][:200], "kind": cur["kind"],
-                                  "phase": cur["phase"], "step": cur["steps"], "steps_max": REQUEST_STEPS_MAX,
+                                  "phase": cur["phase"], "step": cur["steps"], "steps_max": self.request_budget(cur)[0],
                                   "code_did": action_label(cur["action"]) if cur["action"] else None,
                                   "commented": cur["commented"]}
         if self.requests.waiting:
@@ -5610,6 +5639,7 @@ class Agent:
     async def _step(self):
         await self.check_stop()
         self.poll_tick(self.clock())
+        self.trade_tick(self.clock())
         await self.cartoon_lifecycle(self.clock())
         self.viewers.save(self.clock())
         self.frozen_auto_clear(self.clock())
@@ -5744,6 +5774,8 @@ class Agent:
         if action and (why := self.hands_off_reason(now)):   # held, frozen, probation, no lease: chat only (and no
             dec["dropped"].append(f"action: hands off ({why})")   # routine starts either)
             action = None
+        if pc.vagon and (action or dec.get("trade_confirm")):   # a voted trade: typed amounts and the one confirm click
+            action = dec["action"] = self.trade_guard(dec, action, now)
         if pc.vagon:                                          # the remote PC: outcome_ok of the last action, zoom / game routines
             self.pc_confirm_outcome(dec, now)
             if action:
@@ -6142,6 +6174,141 @@ class Agent:
             lines = [x for x in lines if reply_problem(x) is None] or list(LF.HYPE_SHOUT_ANON)
             self.enqueue(pick_line(lines, self.rng, self.last_ack), "reaction", "normal", (), nick or None, ttl=20.0)
         return event
+
+    # ---- trading by chat vote (owner 10-28; streamer_trade.py, Kimi trade1) ----
+    def trading_on(self):
+        """Only on the remote PC and while the owner's file streamer/trading-on exists; the coin list is re-read each
+        time (a malformed streamer/trade-coins.json means no trading)."""
+        on = self.pc.vagon and (self.dir / "trading-on").exists()
+        if self.trade.vote is None and self.trade.active is None:
+            self.trade.coins = TR.load_coins(self.dir / "trade-coins.json") if on else None
+        return on
+
+    def request_budget(self, cur):
+        """(steps, seconds) a request in flight may take: an install and a voted trade take more clicks than a lookup."""
+        return {"install": (INSTALL_STEPS_MAX, INSTALL_RUN_MAX_S), "trade": (TR.TRADE_STEPS_MAX, TR.TRADE_RUN_MAX_S),
+                "deposit": (DEPOSIT_STEPS_MAX, TR.DEPOSIT_SHOW_S + 90.0)}.get(cur["kind"], (REQUEST_STEPS_MAX, REQUEST_RUN_MAX_S))
+
+    def trade_chat(self, m, now):
+        """A trade vote answer ("yes"/"no", one per voter key) or a trade line ("buy wif"): handled by code with at most
+        one spoken line, never chat for the model. Money words are no reason to drop it (the chat filter's money
+        reasons are ignored as for cartoons); every other filter, injections and credential words still apply."""
+        if not self.trading_on():
+            return False
+        text = " ".join(str(m.get("text") or "").split())[:280]
+        voter = str(m.get("voter") or "")
+        voter = voter if VOTER_RE.fullmatch(voter) else ""
+        why = chat_blocked(text, skip_links=False) if text else "empty"
+        if not text or (why and why not in CARTOON_MONEY_OK) or INJECT.search(text) or CREDS.search(text):
+            return False
+        try:
+            seq = int(m.get("seq"))
+        except (TypeError, ValueError):
+            return False
+        if self.trade.answer(voter, text, now):
+            self.counters["trade_votes"] += 1
+            self.log("chat", seq=seq, cls="trade_vote", text=text[:20])
+            return True
+        parsed = TR.parse_trade(text, self.trade.coins)
+        if parsed is None:
+            return False
+        nick = LF.clean_nick(m.get("nick"))
+        self.counters["chat_seen"] += 1
+        self.log("chat", seq=seq, cls="trade", text=text[:80])
+        if "refused" in parsed:
+            status, why = "refused", parsed["refused"]
+        else:
+            status, why = self.trade.propose(parsed, voter, nick, now)
+        if status == "refused":
+            self.counters["trade_refused"] += 1
+            self.log("trade_proposal", ok=False, why=why, user=nick or "anon")
+            line = TR.REFUSE_LINES.get(why)
+            if line:
+                self.enqueue(line, "request", "normal", (seq,), nick or None, ttl=20.0)
+            return True
+        t = why
+        self.counters["trade_votes_opened"] += 1
+        self.log("trade_vote_open", id=t["id"], side=t["side"], symbol=t["coin"]["symbol"], usd=t["usd"], user=nick or "anon")
+        self.enqueue(TR.vote_line(t), "request", "high", (seq,), nick or None, ttl=20.0)
+        return True
+
+    def trade_tick(self, now):
+        """The vote's end: one line with the result; a passed vote becomes the next request (kind "trade"). With the
+        owner's file gone (the kill switch) an open vote, a waiting trade and an unconfirmed one are cancelled."""
+        if (self.trade.vote is not None or self.trade.active is not None) and not self.trading_on():
+            ended = self.trade.cancel(now)
+            waiting = [r for r in self.requests.waiting if r.get("trade")]
+            for r in waiting:
+                self.requests.waiting.remove(r)
+            cur = self.requests.current
+            if ended is not None and cur and cur.get("trade") == ended["id"]:
+                self.requests.current = None
+                self.log("chat_request_end", seq=cur["seq"], user=cur["user"], text=cur["text"][:120], request="trade",
+                         steps=cur.get("steps", 0), why="trading off", commented=cur.get("commented", False),
+                         seconds=round(now - cur.get("started", now), 1))
+            self.trade_end(ended, "trading off")
+            self.log("trade_off", cancelled=len(waiting) + (ended is not None))
+            return
+        res = self.trade.tally(now)
+        if res is None:
+            return
+        t, passed, yes, no = res
+        self.log("trade_vote_close", id=t["id"], passed=passed, yes=yes, no=no, error=t.get("error"))
+        if t.get("error") == "ledger":                        # the reservation could not be saved: nothing is ordered
+            self.error("trade ledger", OSError("the reservation was not saved"))
+            self.enqueue(TR.LEDGER_LINE, "request", "high", ttl=20.0)
+            return
+        self.enqueue(TR.result_line(t, passed, yes, no), "request", "high", ttl=20.0)
+        if not passed:
+            return
+        self.trade_seq += 1
+        req = {"kind": "trade", "action": {"action": "navigate", "url": TR.TRADE_URL}, "refused": None, "url": TR.TRADE_URL,
+               "seq": TRADE_SEQ_BASE + self.trade_seq, "user": "chat vote", "nick": "", "t": now, "trade": t["id"],
+               "text": f"chat voted: {t['side']} {t['coin']['symbol']}"}
+        self.requests.waiting.appendleft(req)                 # next, ahead of the viewers' requests
+        self.log("trade_start", id=t["id"], side=t["side"], symbol=t["coin"]["symbol"], chain=t["coin"]["chain"],
+                 usd=t["usd"], spent=self.trade.ledger.spent())
+
+    def trade_guard(self, dec, action, now):
+        """The code's part of a voted trade: a typed bare number above the voted amount (above $10 with no trade) is
+        refused while trading is on, and the confirm click runs once, only after a read-back that matches the vote."""
+        if action and action["action"] == "type" and self.trading_on():
+            why = TR.amount_typed_problem(action.get("text"), self.trade.active)
+            if why:
+                dec["dropped"].append(f"action: {why}")
+                self.log("trade_guard", refused="type", why=why)
+                return None
+        if dec.get("trade_confirm"):
+            cur, t = self.requests.current, self.trade.active
+            # Kimi trade2 2: only the voted trade's own request may confirm, while trading is on (the host cannot be
+            # checked on the remote PC: the prompt limits it to fomo.family)
+            why = ("trading is off" if not self.trading_on() else "no trade request in flight"
+                   if not cur or cur["kind"] != "trade" or t is None or cur.get("trade") != t["id"]
+                   else "a confirm needs a click" if not action or action["action"] != "click"
+                   else self.trade.confirm_ok(dec.get("trade_check")))
+            if why:
+                dec["dropped"].append(f"action: trade confirm refused ({why})")
+                self.log("trade_guard", refused="confirm", why=why, check=dec.get("trade_check"))
+                return None
+            t = self.trade.active
+            self.log("trade_confirm", id=t["id"], side=t["side"], symbol=t["coin"]["symbol"], usd=t["usd"],
+                     read=dec.get("trade_check"))
+        return action
+
+    def trade_end(self, t, why):
+        if t is None:
+            return
+        self.log("trade_end", id=t["id"], status=t["status"], why=why, side=t["side"], symbol=t["coin"]["symbol"],
+                 usd=t["usd"], spent=self.trade.ledger.spent())
+
+    def deposit_request(self, now):
+        """The owner's deposit (POST /trade/deposit): fomo.family's Deposit/Receive QR on screen for a minute, live."""
+        self.trade_seq += 1
+        req = {"kind": "deposit", "action": {"action": "navigate", "url": TR.TRADE_URL}, "refused": None, "url": TR.TRADE_URL,
+               "seq": TRADE_SEQ_BASE + self.trade_seq, "user": "owner", "nick": "", "t": now, "text": "show the deposit QR"}
+        self.requests.waiting.appendleft(req)
+        self.log("trade_deposit", queued=True)
+        return req
 
     def hype_cartoon(self, now):
         """A ready library clip for the hype train (no render, no daily cap), only when no cartoon is waiting or playing."""
@@ -6684,7 +6851,10 @@ class Agent:
                          if plan["open"] else "comment" if plan["comment"] else "reaction" if plan["reaction_speech"]
                          else "none", "reading_focus": plan["reading"], "reaction_ok": plan["reaction"],
                          "reaction_speech_needs_level": 2 if plan["reading"] else 1},
-              "memory": self.memory.lines(12), "recent_said": self.memory.said(6), "hints": hints, **self.poll_state(now)}
+              "memory": self.memory.lines(12), "recent_said": self.memory.said(6), "hints": hints, **self.poll_state(now),
+              **self.trade.state(now)}
+        if cur and cur["kind"] == "deposit":
+            st["deposit"] = {"show_s": TR.DEPOSIT_SHOW_S, "seconds": round(now - cur["started"])}
         if crop:
             st["zoom"] = {"center": crop["center"], "box": crop["box"], "scale": crop["scale"], "image": 2}
         if r is not None and r.get("ask"):
@@ -6695,7 +6865,7 @@ class Agent:
                           "inputs": pc.playing["inputs"], "keys": list(GAME_KEYS), "actions": list(GAME_ALLOWED)}
         if cur:
             st["chat_request"] = {"nick": cur["nick"] or "a viewer", "text": cur["text"][:200], "kind": cur["kind"],
-                                  "phase": cur["phase"], "step": cur["steps"], "steps_max": REQUEST_STEPS_MAX,
+                                  "phase": cur["phase"], "step": cur["steps"], "steps_max": self.request_budget(cur)[0],
                                   "code_did": action_label(cur["action"]) if cur["action"] else None,
                                   "commented": cur["commented"]}
         if self.requests.waiting:
@@ -7210,9 +7380,23 @@ class Agent:
             if not isinstance(text, str) or not 1 <= len(text) <= CARTOON_DIRECT_MAX:
                 return web.json_response({"ok": False, "error": 'body must be {"text": "...", "nick": "..."}'}, status=400)
             self.chat_direct += 1
+            voter = str(body.get("voter") or "")               # the relay's connection hash: one trade vote each
             self.ingest_chat([{"seq": DIRECT_SEQ_BASE + self.chat_direct, "text": text,
-                               "nick": LF.clean_nick(body.get("nick")) or "viewer"}])
+                               "nick": LF.clean_nick(body.get("nick")) or "viewer",
+                               "voter": voter if VOTER_RE.fullmatch(voter) else ""}])
             return web.json_response({"ok": True})
+
+        async def trade_deposit(request):                     # the owner's request only (operator token): the QR, live
+            if not self.pc.vagon:
+                return web.json_response({"ok": False, "error": "the remote PC only"}, status=409)
+            if any(r.get("kind") == "deposit" for r in list(self.requests.waiting) + [self.requests.current or {}]):
+                return web.json_response({"ok": False, "error": "a deposit request is already waiting"}, status=409)
+            self.deposit_request(self.clock())
+            return web.json_response({"ok": True})
+
+        async def trade_state(request):
+            return web.json_response({"on": self.trading_on(), "ledger": self.trade.ledger.public(),
+                                      **self.trade.state(self.clock())})
 
         async def queue_add(request):
             try:
@@ -7259,6 +7443,8 @@ class Agent:
         app.router.add_post("/chat", guarded(chat))
         app.router.add_post("/queue", guarded(queue_add))
         app.router.add_post("/hype", guarded(hype))
+        app.router.add_post("/trade/deposit", guarded(trade_deposit))
+        app.router.add_get("/trade/state", guarded(trade_state))
         app.router.add_get("/viewer_state", guarded(viewer_state))
         app.router.add_post("/lease", guarded(lease))
         app.router.add_delete("/lease", guarded(lease))

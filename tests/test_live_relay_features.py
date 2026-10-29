@@ -64,7 +64,8 @@ def test_chat_queue_hype_and_status_reach_the_fake_agent(tmp_path):
         app = R.create_app(tmp_path / "hls", tmp_path / "STOP", token)
         async with TestClient(TestServer(app)) as client:
             r = await client.post("/chat", data='{"nick":"Marco","text":"yo SUB-01"}', headers=ORIGIN)
-            assert r.status == 200 and seen[-1] == ("chat", "operator-secret-123", {"text": "yo SUB-01", "nick": "Marco"})
+            assert r.status == 200 and seen[-1][:2] == ("chat", "operator-secret-123") and {k: v for k, v in seen[-1][2].items() if k != "voter"} == {"text": "yo SUB-01", "nick": "Marco"}
+            assert len(seen[-1][2]["voter"]) == 16                                # a salted hash of the connection, never the IP
             r = await client.post("/chat", data='{"nick":"admin","text":"hi"}', headers=dict(ORIGIN, **{"CF-Connecting-IP": "2"}))
             assert seen[-1][2]["nick"] == "viewer"                                    # a reserved name: anonymous
             r = await client.post("/queue", data='{"nick":"Marco","url":"https://youtu.be/dQw4w9WgXcQ"}', headers=ORIGIN)

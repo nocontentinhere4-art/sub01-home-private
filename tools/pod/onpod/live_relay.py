@@ -1,5 +1,5 @@
 """Temporary public viewer relay. No operator routes, credentials, or generic proxy."""
-import argparse, asyncio, collections, io, json, re, time
+import argparse, asyncio, collections, hashlib, io, json, os, re, time
 from pathlib import Path
 import aiohttp
 from aiohttp import web
@@ -10,6 +10,9 @@ CARTOON = re.compile(r'^\W{0,2}(?:!\s*cartoon\b|cartoon\s*:)', re.I)   # the age
 SEGMENT = re.compile(r'^sub01-[0-9]{8}-[0-9]{6}-[0-9]+\.ts$')
 NICK = re.compile(r'[A-Za-z0-9_.-]{2,16}')          # owner 10-28: self-chosen names (unverified, greetings only)
 RESERVED = set('sub01 sub-01 sub_01 subzerone owner admin administrator mod moderator streamer system viewer anon anonymous staff support official bot'.split())
+VOTER_SALT = os.urandom(16)          # owner 10-28 trading votes: one vote per connection, the IP itself never leaves here
+def voter_key(ip):
+    return hashlib.sha256(VOTER_SALT + str(ip).encode()).hexdigest()[:16]
 QUEUE_WHY = {'added':'Added to the queue.', 'bad_link':'Only YouTube video links (youtube.com/watch, youtu.be, shorts).',
              'duplicate':'That video is already in the queue or was just played.', 'full':'The queue is full. Try again later.',
              'per_name':'You already have two videos waiting.'}
@@ -246,7 +249,7 @@ def create_app(root, stop_file, token_file=None):
                 async with asyncio.timeout(8):
                     async with aiohttp.ClientSession() as client:
                         path = '/cartoon' if CARTOON.match(text) else '/chat'
-                        async with client.post('http://127.0.0.1:8836' + path, json={'text':text,'nick':nick or 'viewer'},
+                        async with client.post('http://127.0.0.1:8836' + path, json={'text':text,'nick':nick or 'viewer','voter':voter_key(ip)},
                                                headers={'X-Admin-Token':Path(token_file).read_text().strip()}) as r:
                             if r.status == 200 and (await r.json()).get('ok') is True:
                                 messages.append({'text':text,'nick':nick,'at':int(time.time())})
