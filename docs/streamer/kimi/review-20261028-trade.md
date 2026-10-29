@@ -101,3 +101,7 @@ APPROVE
 ## frz2 (10-29): no frozen latch on a still page while nobody watches
 
 APPROVE
+
+## chess3 (10-29): lichess moves as UCI, a refused box is selected and typed over
+
+APPROVE (after three 429 engine_overloaded retries, spaced 15-60 min)

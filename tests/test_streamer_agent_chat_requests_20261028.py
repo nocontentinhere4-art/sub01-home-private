@@ -224,7 +224,7 @@ def test_play_an_artist_on_youtube_is_music_not_a_game():
 
 def test_the_prompt_lets_him_put_music_on_and_fixes_illegal_chess_moves():
     assert "songs are fine to put on" in SA.system_prompt()
-    assert "red box means an illegal move" in SA.system_prompt(pc=True, allow_credentials=True)
+    assert "a red box means it was refused" in SA.system_prompt(pc=True, allow_credentials=True)
 
 
 @pytest.mark.parametrize("text,why", [("Can you sing?", "sing"), ("sing a song", "sing"), ("stand up and sing", "leave_desk")])
@@ -386,3 +386,10 @@ def test_a_static_page_with_nobody_watching_is_no_frozen_stream_but_black_still_
     world2.frame = T.solid((3, 3, 3))
     asyncio.run(T.sim(agent2, clock2, 90, dt=3))
     assert agent2.frozen and agent2.frozen["why"] == "black"
+
+
+def test_an_illegal_lichess_move_is_selected_and_typed_over():
+    """Live 10-29 08:40: Backspace one letter per look looped (loop break after two) on a red 'Rad1'."""
+    pc = SA.SYSTEM_PC.replace("\\\n", "")
+    assert "Control+a selects it, then type the legal move over it" in pc and "Backspace until it is empty" not in pc
+    assert "the move as UCI, from square then to square" in pc
