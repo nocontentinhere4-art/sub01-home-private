@@ -73,3 +73,7 @@ CHANGES (cover rap/rapping/beatboxing), applied; fix14b APPROVE
 ## sec1 / sec2 (10-29): a leak story is a topic, asking for a secret is refused
 
 sec1 CHANGES (explicit logins gate; terse asks), applied; sec2 APPROVE
+
+## var1 (10-29): rotating idea, not only fail compilations
+
+APPROVE

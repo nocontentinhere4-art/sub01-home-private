@@ -256,3 +256,22 @@ def test_a_leak_story_is_a_topic_but_asking_for_a_secret_or_money_is_still_refus
     for line in ("add funds to your wallet", "open the steam wallet"):
         assert SA.parse_request(line, pc=True, logins=True)["refused"] == "payment", line
     assert SA.refused_class(story, False) == "credentials"            # logins off: every secret word still refuses
+
+
+def test_with_no_request_the_pc_state_carries_a_rotating_idea(tmp_path):
+    """Owner 10-29: "make him do other things too, not only fail compilations"."""
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    asyncio.run(T.decide_once(agent, clock, dt=3))
+    st = prov.calls[-1]["state"]
+    assert st["idea"] in dict(SA.IDEAS).values() and "chat_request" not in st
+    kinds, now = [], clock()
+    for i in range(30):
+        agent.next_idea(now + i * SA.IDEA_EVERY_S)
+        kinds.append(agent.idea)
+    for i in range(len(kinds)):                                      # never one of the last few kinds again
+        assert kinds[i] not in kinds[max(0, i - SA.IDEA_NO_REPEAT):i], kinds
+    assert len(set(kinds)) >= len(SA.IDEAS) - 3                     # random among the rest: most kinds come up
+    agent.next_idea(now + 29 * SA.IDEA_EVERY_S + 10)                 # within the period: kept
+    assert agent.idea == kinds[-1]
+    assert "never the same kind twice in a row" in SA.SYSTEM_PC.replace("\\\n", "")
+    assert "funniest fails" not in SA.SYSTEM_PC.replace("\\\n", "")

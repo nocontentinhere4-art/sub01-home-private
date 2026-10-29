@@ -442,8 +442,10 @@ gentle input per turn from the whitelist in "game". Say what you see (the deskto
 without narrating each click or key and never as if you heard its sound; the on-air habits and the pacing rules stay.
 What he puts on (owner 10-28: a hype streamer's menu, not a documentary channel): chat's suggestions first; otherwise \
 viral and trending videos, memes, funny clips and fails, new music videos, gaming and sports highlights, anything worth \
-a big reaction, and stretches of playing a game (launch_game). Good searches: "viral videos this week", "funniest \
-fails 2026", "new music video", "best game clips". No long documentaries, lectures, cooking, nature, science or \
+a big reaction, and stretches of playing a game (launch_game). Good searches: "viral videos this week", "new music \
+video", "best game clips". Variety (owner 10-29): with no chat request, "idea" is the next thing to do once the current \
+video or game has had its few minutes; never the same kind twice in a row (not fail compilation after fail \
+compilation). No long documentaries, lectures, cooking, nature, science or \
 how-to videos unless a viewer asks; drop anything that has not earned a reaction within about two minutes, except a \
 video chat asked for: it gets at least two minutes and stays until chat moves on (live 10-28: "chill out and wait"). \
 Chat asking for something to watch or do on screen gets it, right away (owner 10-28: "he does whatever chat tells \
@@ -612,6 +614,24 @@ ACK_LOOK_LINES = {"read": "I'll read it, but I'm not reciting the whole page. I'
                   "play": "Bet, playing it. Let's see it.",    # live 10-28: viewers hear the video; no "no tab audio" line
                   "click": "{thing}? I'll open that one.", "click_plain": "That one? I'll open it.",
                   "search": "Say less. Finding the best ones on YouTube."}
+# owner 10-29 "make him do other things too, not only fail compilations": with no chat request, the state carries one
+# idea for what to do next, a different kind every IDEA_EVERY_S (none of the last IDEA_NO_REPEAT kinds again)
+IDEAS = (
+    ("music", "react to a brand-new music video (search YouTube: the newest hit, 2-5 words)"),
+    ("sports", "react to last night's best sports highlights (NBA, football, UFC)"),
+    ("browser_game", "play a free browser game on crazygames.com for a few minutes"),
+    ("chess", "play a quick game on lichess.org (his account Subzerone01)"),
+    ("streamers", "react to other streamers' funniest clips of the week"),
+    ("trailers", "react to the newest movie or game trailer"),
+    ("memes", "react to this week's most viral memes or TikToks"),
+    ("crypto", "click the fomo.family tab and react to the trending coins (look only: trades go by chat vote)"),
+    ("x_trending", "open x.com/explore and react to what is trending"),
+    ("skills", "react to insane skills or world-record clips"),
+    ("tech", "react to the wildest new AI or robot clips"),
+    ("fails", "react to a fail compilation"),
+)
+IDEA_EVERY_S = 360.0
+IDEA_NO_REPEAT = 4
 QUEUE_GAP_S = 150.0                     # Kimi feat1: at least this long between two videos from the queue
 QUEUE_SEQ_BASE = 3_000_000_000          # request seqs of queue videos (never a chat seq)
 QUEUE_ACK_LINE = "Next up from the queue: {nick}'s video. Let's see it."
@@ -3800,6 +3820,7 @@ class Agent:
         self.viewers = Viewers(self.dir / "viewers.json", self.clock())       # regulars: nick -> visits (no text)
         self.video_queue = LF.VideoQueue(self.dir / "video-queue.json", time.time)   # videos sent from the site
         self.queue_last_start, self.queue_seq = -1e9, 0
+        self.idea, self.idea_at, self.idea_recent = None, -1e9, collections.deque(maxlen=IDEA_NO_REPEAT)
         self.hype = LF.HypeMeter(self.clock)                                  # the site's free Hype button
         self.trade = TR.TradeDesk(TR.Ledger(self.dir / "trade-ledger.json", time.time), None, self.clock)  # chat-voted trades
         self.trade_seq = 0
@@ -4490,6 +4511,16 @@ class Agent:
     # ---- speech ----
     def voice_busy(self, now):
         return bool(self.voice.get("speaking") or self.voice.get("queue") or now < self.speak_until or self.speech_q)
+
+    def next_idea(self, now):
+        """The idea for the state: kept IDEA_EVERY_S, then another kind, none of the last IDEA_NO_REPEAT (random among
+        the rest). Logged once per change."""
+        if self.idea is None or now - self.idea_at >= IDEA_EVERY_S:
+            pool = [kind for kind, _ in IDEAS if kind not in self.idea_recent] or [kind for kind, _ in IDEAS]
+            self.idea, self.idea_at = self.rng.choice(pool), now
+            self.idea_recent.append(self.idea)
+            self.log("idea", idea=self.idea)
+        return dict(IDEAS)[self.idea]
 
     def prompt_plan(self, now):
         """The pacing the model is told (owner 10-28: he talked ~30% of a video): its line is spoken about DECIDE_AHEAD_S
@@ -6951,6 +6982,8 @@ class Agent:
                                   "commented": cur["commented"]}
         if self.requests.waiting:
             st["requests_waiting"] = len(self.requests.waiting)
+        if not cur and r is None and pc.playing is None:     # nothing asked of him: what to do once the current thing is done
+            st["idea"] = self.next_idea(now)
         if win and win["ok"]:
             st["chat"] = [{"seq": i["seq"], "nick": i["nick"] or "a viewer", "text": i["text"][:200],
                            "question": i["question"], "direct": i["direct"], "asks_action": i["asks_action"],
