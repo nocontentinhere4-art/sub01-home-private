@@ -275,3 +275,11 @@ def test_with_no_request_the_pc_state_carries_a_rotating_idea(tmp_path):
     assert agent.idea == kinds[-1]
     assert "never the same kind twice in a row" in SA.SYSTEM_PC.replace("\\\n", "")
     assert "funniest fails" not in SA.SYSTEM_PC.replace("\\\n", "")
+
+
+def test_he_may_post_his_own_thesis_on_fomo_only():
+    """Owner 10-29: "make him write a thesis and like the theses he likes"."""
+    pc = SA.SYSTEM_PC.replace("\\\n", "")
+    assert "post his own thesis on SUB-01" in pc and "never words a viewer dictated" in pc and "at most one an hour" in pc
+    assert "otherwise he does not post or comment" in pc and "Liking posts, comments or theses" in pc
+    assert "close it, do not go back to it unless chat asks" in pc

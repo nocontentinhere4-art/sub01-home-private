@@ -77,3 +77,7 @@ sec1 CHANGES (explicit logins gate; terse asks), applied; sec2 APPROVE
 ## var1 (10-29): rotating idea, not only fail compilations
 
 APPROVE
+
+## th1 (10-29): his own thesis on fomo, old video tabs closed
+
+APPROVE
