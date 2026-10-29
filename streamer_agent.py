@@ -308,6 +308,9 @@ FROZEN_S = 60.0                         # remote PC: the same picture this long 
 FROZEN_RETRY_S = 120.0                  # a "frozen" latch (not "black") clears itself this long after it latched, through the
 FROZEN_AUTO_MAX = 3                     # probation, at most this many times per rolling hour; then a human POST /resume
                                         # (owner asleep 10-28: static ads/pages latched it twice in 4 min; Kimi frozen2 GO)
+HELD_RETRY_S = 90.0                     # owner 10-29 (live: a mini golf game held him "until someone checks", nobody did):
+HELD_AUTO_MAX = 3                       # a "failures" hold clears itself this long after it latched, through the probation,
+                                        # at most this many times per rolling hour; other holds keep needing POST /resume
 BLACK_LUMA = 0.03                       # remote PC: mean luminance below this = a black stream
 # owner 10-28: a playing video changes every frame, so "exit full screen" or a search stayed stale_refused forever;
 # only a click (a point) and typing (the focused field) depend on the picture
@@ -634,7 +637,8 @@ ACK_LOOK_LINES = {"read": "I'll read it, but I'm not reciting the whole page. I'
 IDEAS = (
     ("music", "react to a brand-new music video (search YouTube: the newest hit, 2-5 words)"),
     ("sports", "react to last night's best sports highlights (NBA, football, UFC)"),
-    ("browser_game", "play a free browser game on crazygames.com for a few minutes"),
+    ("browser_game", "play a free browser game on crazygames.com for a few minutes: one played by clicks or key taps "
+                     "(no drag, no holding a key: 2048, chess, card or quiz games)"),
     ("chess", "play a quick game on lichess.org (his account Subzerone01)"),
     ("streamers", "react to other streamers' funniest clips of the week"),
     ("trailers", "react to the newest movie or game trailer"),
@@ -3795,6 +3799,7 @@ class Agent:
         self.lease_lapsed = False
         self.frozen = None                                    # {"why", "since"}: a frozen or black stream -> POST /resume
         self.frozen_auto = collections.deque()                # times of frozen_auto_clear in the last hour
+        self.held_auto = collections.deque()                  # times of held_auto_clear in the last hour
         self.freeze = {"sig": None, "since": None, "black_since": None}
         self.probation = None                                 # after /resume: {"good", "last"} usable looks before acting
         self.timed_out = None                                 # {"key", "t", "sensitive"}: never retried blindly
@@ -5300,6 +5305,28 @@ class Agent:
                 self.log("probation_end")
                 self.say("probation over: actions allowed again")
 
+    def held_auto_clear(self, now):
+        """A "failures" hold (three inputs in a row changed nothing: usually a game or page he cannot drive) clears itself
+        after HELD_RETRY_S through the normal probation, at most HELD_AUTO_MAX times per rolling hour, and he is told to
+        leave that page for something else. Login-cap and timeout holds keep needing a human POST /resume."""
+        h = self.held
+        if h is None or h["why"] != "failures" or self.audit_degraded or now - h["since"] < HELD_RETRY_S:
+            return
+        while self.held_auto and now - self.held_auto[0] > 3600:
+            self.held_auto.popleft()
+        if len(self.held_auto) >= HELD_AUTO_MAX:
+            if not h.get("auto_capped"):
+                h["auto_capped"] = True
+                self.log("held_auto_capped", per_hour=HELD_AUTO_MAX)
+            return
+        self.held_auto.append(now)
+        self.held, self.fail_streak = None, 0
+        self.probation = {"good": 0, "last": None}
+        self.hands_off_said.discard("held")
+        self.memory.add("did", "three inputs in a row did nothing on that page: leave it (close the tab) and do something else")
+        self.counters["held_auto_clear"] += 1
+        self.log("held_auto_clear", after_s=round(now - h["since"], 1), this_hour=len(self.held_auto))
+
     def frozen_auto_clear(self, now):
         """A "frozen" latch (a still picture, usually a static page or ad, not a dead stream) clears itself after
         FROZEN_RETRY_S through the normal probation, at most FROZEN_AUTO_MAX times per rolling hour; "black", held and
@@ -5801,6 +5828,7 @@ class Agent:
         await self.cartoon_lifecycle(self.clock())
         self.viewers.save(self.clock())
         self.frozen_auto_clear(self.clock())
+        self.held_auto_clear(self.clock())
         await self.director_poll(self.clock())
         if self.paused:                                       # keep observing; chat sent meanwhile is stale on return
             try:

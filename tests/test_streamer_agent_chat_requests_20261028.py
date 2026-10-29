@@ -332,3 +332,27 @@ def test_shadow_off_file_and_audience_idle_and_wait_pacing(tmp_path):
     assert SA.THINK_AFTER_WAIT_S[0] <= agent.next_think - clock() <= SA.THINK_AFTER_WAIT_S[1] * agent.budget.stretch()
     rows = [e for e in T.events(agent) if e["kind"] == "audience_idle"]
     assert [r["on"] for r in rows] == [True, False]
+
+
+def test_a_failures_hold_clears_itself_three_times_an_hour_other_holds_do_not(tmp_path):
+    """Live 10-29: a mini golf game (drag/hold controls) held him "until someone checks" and nobody did."""
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    for i in range(SA.HELD_AUTO_MAX):
+        agent.hold("failures", "3 failed actions in a row")
+        agent.held_auto_clear(clock() + SA.HELD_RETRY_S - 5)
+        assert agent.held is not None                               # not yet
+        clock.t += SA.HELD_RETRY_S
+        agent.held_auto_clear(clock())
+        assert agent.held is None and agent.probation is not None and agent.fail_streak == 0
+        agent.probation = None
+    agent.hold("failures", "again")
+    clock.t += SA.HELD_RETRY_S
+    agent.held_auto_clear(clock())
+    assert agent.held is not None                                   # capped: a human /resume now
+    assert [e["kind"] for e in T.events(agent)].count("held_auto_capped") == 1
+    agent.held = None
+    agent.hold("login_attempts", "cap")
+    clock.t += 3 * SA.HELD_RETRY_S
+    agent.held_auto_clear(clock())
+    assert agent.held["why"] == "login_attempts"                    # never cleared by itself
+    assert any("leave it" in line for line in agent.memory.lines(12))

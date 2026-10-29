@@ -89,3 +89,7 @@ APPROVE
 ## cost1 / cost2 (10-29): shadow off, audience-aware low power, slower looks while watching
 
 cost1 GO (1-3; pod research only), cost2 APPROVE
+
+## held1 (10-29): a failures hold clears itself (90 s, 3/hour)
+
+APPROVE
