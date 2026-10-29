@@ -875,7 +875,8 @@ def test_x_sessions_alternate_with_the_official_accounts_comments(tmp_path):
     agent.requests.waiting.clear()
     assert first["x_mode"] == "own" and first["text"] == SA.X_SESSION_TEXT
     assert second["x_mode"] == "official" and second["text"] == SA.X_SESSION_TEXT_OFFICIAL
-    assert "never switch accounts" in second["text"] and "@" + SA.X_HANDLE in second["text"]
+    assert "stay on your own account" in second["text"] and "@" + SA.X_HANDLE in second["text"]
+    assert not SA.account_change(SA.X_SESSION_TEXT_OFFICIAL) and not SA.account_change(SA.X_SESSION_TEXT)   # live 20:24
     assert SA.request_text(second) == SA.X_SESSION_TEXT_OFFICIAL                      # whole, under 600 chars
     second.update(steps=1)
     assert not agent.x_post_due(second, now) and agent.x_post_due(dict(first, steps=1), now)   # replies only there

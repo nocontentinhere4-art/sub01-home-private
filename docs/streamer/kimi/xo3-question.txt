@@ -1,0 +1,28 @@
+Review xo3 (one-line fix). Live 20:24 the first @SUBZERONE01-comments X session was refused as "credentials": start_request runs account_change() on every request text right before execution (a defence I keep), and the code-written session text said "never switch accounts", which matches the account-change predicate. Fix: the text now says "you stay on your own account the whole time"; the predicate is untouched; test asserts account_change() is False for both session texts. Diff below. APPROVE or CHANGES?
+diff --git a/streamer_agent.py b/streamer_agent.py
+index ab7a9cc..179f605 100644
+--- a/streamer_agent.py
++++ b/streamer_agent.py
+@@ -290,7 +290,7 @@ X_SESSION_TEXT = ("your X session on your own account @" + X_HANDLE + ": open th
+                   "nobody wrote to you: Post box on Home, type it, click Post; report each post or reply in x_done")
+ X_SESSION_TEXT_OFFICIAL = ("your X session on the comments of the official account @" + X_OFFICIAL + ", answered from your "
+                            "own account: open the X tab (x.com), check the profile in the left column is @" + X_HANDLE +
+-                           " (anything else: stop and say so; never switch accounts), open x.com/" + X_OFFICIAL + ", open "
++                           " (anything else: stop and say so; you stay on your own account the whole time), open x.com/" + X_OFFICIAL + ", open "
+                            "its newest post, read the comments and reply to up to three real people in your own words, "
+                            "like a streamer answering his fans; skip bots, spam, insults and anything about price, buying, "
+                            "selling or the coin; report each reply in x_done")
+diff --git a/tests/test_streamer_agent_chat_requests_20261028.py b/tests/test_streamer_agent_chat_requests_20261028.py
+index 5b5eb06..fed1134 100644
+--- a/tests/test_streamer_agent_chat_requests_20261028.py
++++ b/tests/test_streamer_agent_chat_requests_20261028.py
+@@ -875,7 +875,8 @@ def test_x_sessions_alternate_with_the_official_accounts_comments(tmp_path):
+     agent.requests.waiting.clear()
+     assert first["x_mode"] == "own" and first["text"] == SA.X_SESSION_TEXT
+     assert second["x_mode"] == "official" and second["text"] == SA.X_SESSION_TEXT_OFFICIAL
+-    assert "never switch accounts" in second["text"] and "@" + SA.X_HANDLE in second["text"]
++    assert "stay on your own account" in second["text"] and "@" + SA.X_HANDLE in second["text"]
++    assert not SA.account_change(SA.X_SESSION_TEXT_OFFICIAL) and not SA.account_change(SA.X_SESSION_TEXT)   # live 20:24
+     assert SA.request_text(second) == SA.X_SESSION_TEXT_OFFICIAL                      # whole, under 600 chars
+     second.update(steps=1)
+     assert not agent.x_post_due(second, now) and agent.x_post_due(dict(first, steps=1), now)   # replies only there

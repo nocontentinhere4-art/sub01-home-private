@@ -290,7 +290,7 @@ X_SESSION_TEXT = ("your X session on your own account @" + X_HANDLE + ": open th
                   "nobody wrote to you: Post box on Home, type it, click Post; report each post or reply in x_done")
 X_SESSION_TEXT_OFFICIAL = ("your X session on the comments of the official account @" + X_OFFICIAL + ", answered from your "
                            "own account: open the X tab (x.com), check the profile in the left column is @" + X_HANDLE +
-                           " (anything else: stop and say so; never switch accounts), open x.com/" + X_OFFICIAL + ", open "
+                           " (anything else: stop and say so; you stay on your own account the whole time), open x.com/" + X_OFFICIAL + ", open "
                            "its newest post, read the comments and reply to up to three real people in your own words, "
                            "like a streamer answering his fans; skip bots, spam, insults and anything about price, buying, "
                            "selling or the coin; report each reply in x_done")
