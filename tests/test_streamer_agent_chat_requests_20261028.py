@@ -774,7 +774,7 @@ def test_x_sessions_are_scheduled_capped_and_switchable(tmp_path):
     agent.requests.current = req
     ctx = agent.pc_context()
     assert ctx["allowed"] == SA.X_ACTIONS and ctx["x_typing"] == "" and ctx["url_ok"]("https://pump.fun") is not None
-    assert ctx["url_ok"]("https://x.com/notifications") is None and ctx["url_ok"]("https://x.com/SUBZERONE01") is not None
+    assert ctx["url_ok"]("https://x.com/notifications") is None and ctx["url_ok"]("https://x.com/SUBZERONE01") is None and ctx["url_ok"]("https://x.com/elonmusk") is not None
     (agent.dir / "x-off").write_text("")
     assert agent.pc_context()["allowed"] == ("wait",)                  # the switch, checked every step
     a, why = SA.clean_pc_action({"action": "type", "text": "Buy $SUB01 now"}, x_typing="")
@@ -853,3 +853,26 @@ def test_owner_news_reaches_the_state_rate_limited_and_expires(tmp_path):
     (agent.dir / "announce.json").write_text(json.dumps(news))
     os.utime(agent.dir / "announce.json", ns=(1, 1))
     assert agent.owner_news(now + SA.NEWS_GAP_S + 1, None) is None     # over after the event
+
+
+def test_x_sessions_alternate_with_the_official_accounts_comments(tmp_path):
+    # owner 10-29: "entra sul profilo [SUBZERONE01], guarda i commenti e risponde come fosse il suo profilo secondario"
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    agent.pc.mode = "vagon"
+    agent.hands_off_reason = lambda now: None
+    (agent.dir / "x-on").write_text("")
+    now = clock()
+    first = agent.x_session_request(now)
+    agent.requests.waiting.clear()
+    second = agent.x_session_request(now + SA.X_GAP_S + 1)
+    agent.requests.waiting.clear()
+    assert first["x_mode"] == "own" and first["text"] == SA.X_SESSION_TEXT
+    assert second["x_mode"] == "official" and second["text"] == SA.X_SESSION_TEXT_OFFICIAL
+    assert "never switch accounts" in second["text"] and "@" + SA.X_HANDLE in second["text"]
+    assert SA.request_text(second) == SA.X_SESSION_TEXT_OFFICIAL                      # whole, under 600 chars
+    second.update(steps=1)
+    assert not agent.x_post_due(second, now) and agent.x_post_due(dict(first, steps=1), now)   # replies only there
+    assert SA.x_url_problem("https://x.com/SUBZERONE01/status/2115807134235398307") is None
+    assert SA.x_url_problem("https://x.com/SUBZERONE01x") and SA.x_url_problem("https://x.com/elonmusk")
+    assert SA.x_text_problem("Thanks for hanging out, catch me live at subzerone.live") is None
+    assert SA.x_text_problem("gm @SUBZERONE01 fam")                                  # never tags the official account

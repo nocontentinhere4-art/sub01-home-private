@@ -1,0 +1,1 @@
+APPROVE. The official/own alternation, replies-only official mode, case-insensitive path allowlisting, account-boundary restrictions, text gates, and increased caps are implemented consistently and covered by the new tests.

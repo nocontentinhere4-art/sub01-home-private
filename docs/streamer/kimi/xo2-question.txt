@@ -1,0 +1,130 @@
+Review xo2 (replaces the xo1 consult: ignore account switching). The owner clarified: "entra sul profilo [SUBZERONE01], guarda i commenti e risponde come fosse il suo profilo secondario" = SUB-01 stays on his own account @subzeroneperson, visits @SUBZERONE01's profile, opens its newest post and replies to commenters from his own account. Changes:
+- X sessions alternate: "own" (notifications, replies, his own post: as approved in x1-x7) and "official" (x.com/SUBZERONE01, newest post, up to 3 replies to real people from @subzeroneperson; skip bots, spam, insults, anything about price/buying/selling/the coin; never switch accounts; stop if the left column is not @subzeroneperson). The mode is in the request and the state ("x_mode"); x_post_due is false in official sessions (replies only).
+- X_PATHS gains /SUBZERONE01 (its profile and /SUBZERONE01/status/... pages); the case-insensitive compare is fixed (the constant is upper case). Other accounts' pages stay refused. Typed texts still may not contain "@SUBZERONE01" or money/coin words (all existing gates unchanged).
+- More active (owner: "essere attivo"): a session every 30 min instead of 60, daily caps 24 sessions, 4 posts, 20 replies (texts cap = 24), 4 texts per session unchanged.
+Diff and tests follow. APPROVE or CHANGES?
+diff --git a/streamer_agent.py b/streamer_agent.py
+index 5aacd34..fbf65d6 100644
+--- a/streamer_agent.py
++++ b/streamer_agent.py
+@@ -272,11 +272,12 @@ THESIS_TEXT = ("write your own short thesis on SUB-01 in the thesis box of the f
+ # code-scheduled sessions (Kimi x1): daily caps, X-only navigation, only subzerone.live as a link, his own words, a
+ # content gate before anything is typed, the kill switch <streamer-dir>/x-off checked at every step; clips come later
+ X_HANDLE = "subzeroneperson"
+-X_GAP_S, X_STEPS_MAX, X_RUN_MAX_S = 3600.0, 12, 240.0
+-X_SESSIONS_PER_DAY, X_POSTS_PER_DAY, X_REPLIES_PER_DAY, X_TEXT_MAX = 12, 4, 12, 280
++X_OFFICIAL = "SUBZERONE01"             # owner 10-29: the official account; he answers its comments as @subzeroneperson
++X_GAP_S, X_STEPS_MAX, X_RUN_MAX_S = 1800.0, 12, 240.0
++X_SESSIONS_PER_DAY, X_POSTS_PER_DAY, X_REPLIES_PER_DAY, X_TEXT_MAX = 24, 4, 20, 280
+ X_TEXTS_PER_SESSION, X_TEXT_MIN = 4, 6   # Kimi x2: typed texts are the evidence the code counts (1 post + 3 replies)
+ X_ACTIONS = ("click", "type", "key", "scroll", "wait", "zoom", "navigate")
+-X_PATHS = ("/home", "/notifications", "/compose/post", "/" + X_HANDLE)
++X_PATHS = ("/home", "/notifications", "/compose/post", "/" + X_HANDLE, "/" + X_OFFICIAL)
+ X_TEXT_BAD = re.compile(r"\b(?:buy|sell|price|pump(?:ing)?|moon(?:ing)?|\d+x|ape|invest\w*|financial|profit|gains?|airdrop|"
+                         r"giveaway|wallet|seed|contract\s+address|ca|dm\s+me|send\s+me|follow\s+back|f4f|trump|biden|"
+                         r"election|israel|gaza|ukraine|russia|palestin\w*)\b|\$[A-Za-z]{2,}|@SUBZERONE01\b", re.I)
+@@ -287,6 +288,12 @@ X_SESSION_TEXT = ("your X session on your own account @" + X_HANDLE + ": open th
+                   "three people in your own words, then, while x_left has posts, write one new post of your own about the "
+                   "stream (you are live at subzerone.live, a funny moment, what you are watching, a take) even when "
+                   "nobody wrote to you: Post box on Home, type it, click Post; report each post or reply in x_done")
++X_SESSION_TEXT_OFFICIAL = ("your X session on the comments of the official account @" + X_OFFICIAL + ", answered from your "
++                           "own account: open the X tab (x.com), check the profile in the left column is @" + X_HANDLE +
++                           " (anything else: stop and say so; never switch accounts), open x.com/" + X_OFFICIAL + ", open "
++                           "its newest post, read the comments and reply to up to three real people in your own words, "
++                           "like a streamer answering his fans; skip bots, spam, insults and anything about price, buying, "
++                           "selling or the coin; report each reply in x_done")
+ DEPOSIT_STEPS_MAX = 6                   # the owner's deposit QR request: open fomo.family, Deposit, the QR, wait
+ TRADE_SEQ_BASE = 4_000_000_000          # request seqs of voted trades and the deposit request (never a chat seq)
+ VOTER_RE = re.compile(r"[0-9a-f]{8,32}")   # the relay's salted hash of a viewer's connection: one vote per connection
+@@ -1648,7 +1655,7 @@ def x_url_problem(url):
+     except ValueError:
+         return "bad url"
+     if (u.hostname or "").lower() not in ("x.com", "www.x.com", "twitter.com") or \
+-            not any(u.path.lower().rstrip("/") == p or u.path.lower().startswith(p + "/") for p in X_PATHS):
++            not any(u.path.lower().rstrip("/") == p.lower() or u.path.lower().startswith(p.lower() + "/") for p in X_PATHS):
+         return "an X session stays on his own X pages"
+     return None
+ 
+@@ -5365,7 +5372,7 @@ class Agent:
+                                   **({"ai_message": cur["payload"], "ai_typed": bool(cur.get("typed"))}
+                                      if cur.get("kind") == "ask_ai" else {}),
+                                   **({"x_left": self.x_left(now), "x_handle": "@" + X_HANDLE,
+-                                      "x_post_due": self.x_post_due(cur, now)}
++                                      "x_post_due": self.x_post_due(cur, now), "x_mode": cur.get("x_mode", "own")}
+                                      if cur.get("kind") == "x_session" else {})}
+         if (news := self.owner_news(now, cur)):
+             st["owner_news"] = news
+@@ -6954,19 +6961,21 @@ class Agent:
+         if (not self.pc.vagon or not self.x_on() or now - self.x_last < X_GAP_S or rq.current or rq.waiting
+                 or c["sessions"] >= X_SESSIONS_PER_DAY or not left["texts"] or self.hands_off_reason(now)):
+             return None
++        mode = "official" if c["sessions"] % 2 else "own"    # owner 10-29: every other session, the official comments
+         self.x_last, self.trade_seq = now, self.trade_seq + 1
+         c["sessions"] += 1
+         self.x_save()
+         req = {"kind": "x_session", "action": None, "refused": None, "seq": TRADE_SEQ_BASE + self.trade_seq, "user": "sub01",
+-               "nick": "", "t": now, "text": X_SESSION_TEXT, "x_typed": []}
++               "nick": "", "t": now, "text": X_SESSION_TEXT_OFFICIAL if mode == "official" else X_SESSION_TEXT,
++               "x_typed": [], "x_mode": mode}
+         rq.waiting.appendleft(req)
+-        self.log("x_session", queued=True, sessions_today=c["sessions"], **left)
++        self.log("x_session", queued=True, mode=mode, sessions_today=c["sessions"], **left)
+         return req
+ 
+     def x_post_due(self, cur, now):
+         """An X session whose own post is still to do (live 10-29 19:16: one reply, then the session ended): posts left
+         today, a text left in the session, steps to spare."""
+-        if not cur or cur.get("kind") != "x_session" or cur.get("x_posted") or not self.x_on():
++        if not cur or cur.get("kind") != "x_session" or cur.get("x_mode") == "official" or cur.get("x_posted") or not self.x_on():
+             return False
+         left = self.x_left(now)
+         return bool(left["posts"] and left["texts"] and len(cur.get("x_typed") or []) < X_TEXTS_PER_SESSION
+@@ -7591,7 +7600,7 @@ class Agent:
+                                   **({"ai_message": cur["payload"], "ai_typed": bool(cur.get("typed"))}
+                                      if cur.get("kind") == "ask_ai" else {}),
+                                   **({"x_left": self.x_left(now), "x_handle": "@" + X_HANDLE,
+-                                      "x_post_due": self.x_post_due(cur, now)}
++                                      "x_post_due": self.x_post_due(cur, now), "x_mode": cur.get("x_mode", "own")}
+                                      if cur.get("kind") == "x_session" else {})}
+         if (news := self.owner_news(now, cur)):
+             st["owner_news"] = news
+diff --git a/tests/test_streamer_agent_chat_requests_20261028.py b/tests/test_streamer_agent_chat_requests_20261028.py
+index e01bc5a..af656aa 100644
+--- a/tests/test_streamer_agent_chat_requests_20261028.py
++++ b/tests/test_streamer_agent_chat_requests_20261028.py
+@@ -774,7 +774,7 @@ def test_x_sessions_are_scheduled_capped_and_switchable(tmp_path):
+     agent.requests.current = req
+     ctx = agent.pc_context()
+     assert ctx["allowed"] == SA.X_ACTIONS and ctx["x_typing"] == "" and ctx["url_ok"]("https://pump.fun") is not None
+-    assert ctx["url_ok"]("https://x.com/notifications") is None and ctx["url_ok"]("https://x.com/SUBZERONE01") is not None
++    assert ctx["url_ok"]("https://x.com/notifications") is None and ctx["url_ok"]("https://x.com/SUBZERONE01") is None and ctx["url_ok"]("https://x.com/elonmusk") is not None
+     (agent.dir / "x-off").write_text("")
+     assert agent.pc_context()["allowed"] == ("wait",)                  # the switch, checked every step
+     a, why = SA.clean_pc_action({"action": "type", "text": "Buy $SUB01 now"}, x_typing="")
+@@ -853,3 +853,26 @@ def test_owner_news_reaches_the_state_rate_limited_and_expires(tmp_path):
+     (agent.dir / "announce.json").write_text(json.dumps(news))
+     os.utime(agent.dir / "announce.json", ns=(1, 1))
+     assert agent.owner_news(now + SA.NEWS_GAP_S + 1, None) is None     # over after the event
++
++
++def test_x_sessions_alternate_with_the_official_accounts_comments(tmp_path):
++    # owner 10-29: "entra sul profilo [SUBZERONE01], guarda i commenti e risponde come fosse il suo profilo secondario"
++    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
++    agent.pc.mode = "vagon"
++    agent.hands_off_reason = lambda now: None
++    (agent.dir / "x-on").write_text("")
++    now = clock()
++    first = agent.x_session_request(now)
++    agent.requests.waiting.clear()
++    second = agent.x_session_request(now + SA.X_GAP_S + 1)
++    agent.requests.waiting.clear()
++    assert first["x_mode"] == "own" and first["text"] == SA.X_SESSION_TEXT
++    assert second["x_mode"] == "official" and second["text"] == SA.X_SESSION_TEXT_OFFICIAL
++    assert "never switch accounts" in second["text"] and "@" + SA.X_HANDLE in second["text"]
++    assert SA.request_text(second) == SA.X_SESSION_TEXT_OFFICIAL                      # whole, under 600 chars
++    second.update(steps=1)
++    assert not agent.x_post_due(second, now) and agent.x_post_due(dict(first, steps=1), now)   # replies only there
++    assert SA.x_url_problem("https://x.com/SUBZERONE01/status/2115807134235398307") is None
++    assert SA.x_url_problem("https://x.com/SUBZERONE01x") and SA.x_url_problem("https://x.com/elonmusk")
++    assert SA.x_text_problem("Thanks for hanging out, catch me live at subzerone.live") is None
++    assert SA.x_text_problem("gm @SUBZERONE01 fam")                                  # never tags the official account

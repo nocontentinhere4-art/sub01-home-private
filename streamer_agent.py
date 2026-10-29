@@ -272,11 +272,12 @@ THESIS_TEXT = ("write your own short thesis on SUB-01 in the thesis box of the f
 # code-scheduled sessions (Kimi x1): daily caps, X-only navigation, only subzerone.live as a link, his own words, a
 # content gate before anything is typed, the kill switch <streamer-dir>/x-off checked at every step; clips come later
 X_HANDLE = "subzeroneperson"
-X_GAP_S, X_STEPS_MAX, X_RUN_MAX_S = 3600.0, 12, 240.0
-X_SESSIONS_PER_DAY, X_POSTS_PER_DAY, X_REPLIES_PER_DAY, X_TEXT_MAX = 12, 4, 12, 280
+X_OFFICIAL = "SUBZERONE01"             # owner 10-29: the official account; he answers its comments as @subzeroneperson
+X_GAP_S, X_STEPS_MAX, X_RUN_MAX_S = 1800.0, 12, 240.0
+X_SESSIONS_PER_DAY, X_POSTS_PER_DAY, X_REPLIES_PER_DAY, X_TEXT_MAX = 24, 4, 20, 280
 X_TEXTS_PER_SESSION, X_TEXT_MIN = 4, 6   # Kimi x2: typed texts are the evidence the code counts (1 post + 3 replies)
 X_ACTIONS = ("click", "type", "key", "scroll", "wait", "zoom", "navigate")
-X_PATHS = ("/home", "/notifications", "/compose/post", "/" + X_HANDLE)
+X_PATHS = ("/home", "/notifications", "/compose/post", "/" + X_HANDLE, "/" + X_OFFICIAL)
 X_TEXT_BAD = re.compile(r"\b(?:buy|sell|price|pump(?:ing)?|moon(?:ing)?|\d+x|ape|invest\w*|financial|profit|gains?|airdrop|"
                         r"giveaway|wallet|seed|contract\s+address|ca|dm\s+me|send\s+me|follow\s+back|f4f|trump|biden|"
                         r"election|israel|gaza|ukraine|russia|palestin\w*)\b|\$[A-Za-z]{2,}|@SUBZERONE01\b", re.I)
@@ -287,6 +288,12 @@ X_SESSION_TEXT = ("your X session on your own account @" + X_HANDLE + ": open th
                   "three people in your own words, then, while x_left has posts, write one new post of your own about the "
                   "stream (you are live at subzerone.live, a funny moment, what you are watching, a take) even when "
                   "nobody wrote to you: Post box on Home, type it, click Post; report each post or reply in x_done")
+X_SESSION_TEXT_OFFICIAL = ("your X session on the comments of the official account @" + X_OFFICIAL + ", answered from your "
+                           "own account: open the X tab (x.com), check the profile in the left column is @" + X_HANDLE +
+                           " (anything else: stop and say so; never switch accounts), open x.com/" + X_OFFICIAL + ", open "
+                           "its newest post, read the comments and reply to up to three real people in your own words, "
+                           "like a streamer answering his fans; skip bots, spam, insults and anything about price, buying, "
+                           "selling or the coin; report each reply in x_done")
 DEPOSIT_STEPS_MAX = 6                   # the owner's deposit QR request: open fomo.family, Deposit, the QR, wait
 TRADE_SEQ_BASE = 4_000_000_000          # request seqs of voted trades and the deposit request (never a chat seq)
 VOTER_RE = re.compile(r"[0-9a-f]{8,32}")   # the relay's salted hash of a viewer's connection: one vote per connection
@@ -1648,7 +1655,7 @@ def x_url_problem(url):
     except ValueError:
         return "bad url"
     if (u.hostname or "").lower() not in ("x.com", "www.x.com", "twitter.com") or \
-            not any(u.path.lower().rstrip("/") == p or u.path.lower().startswith(p + "/") for p in X_PATHS):
+            not any(u.path.lower().rstrip("/") == p.lower() or u.path.lower().startswith(p.lower() + "/") for p in X_PATHS):
         return "an X session stays on his own X pages"
     return None
 
@@ -5365,7 +5372,7 @@ class Agent:
                                   **({"ai_message": cur["payload"], "ai_typed": bool(cur.get("typed"))}
                                      if cur.get("kind") == "ask_ai" else {}),
                                   **({"x_left": self.x_left(now), "x_handle": "@" + X_HANDLE,
-                                      "x_post_due": self.x_post_due(cur, now)}
+                                      "x_post_due": self.x_post_due(cur, now), "x_mode": cur.get("x_mode", "own")}
                                      if cur.get("kind") == "x_session" else {})}
         if (news := self.owner_news(now, cur)):
             st["owner_news"] = news
@@ -6954,19 +6961,21 @@ class Agent:
         if (not self.pc.vagon or not self.x_on() or now - self.x_last < X_GAP_S or rq.current or rq.waiting
                 or c["sessions"] >= X_SESSIONS_PER_DAY or not left["texts"] or self.hands_off_reason(now)):
             return None
+        mode = "official" if c["sessions"] % 2 else "own"    # owner 10-29: every other session, the official comments
         self.x_last, self.trade_seq = now, self.trade_seq + 1
         c["sessions"] += 1
         self.x_save()
         req = {"kind": "x_session", "action": None, "refused": None, "seq": TRADE_SEQ_BASE + self.trade_seq, "user": "sub01",
-               "nick": "", "t": now, "text": X_SESSION_TEXT, "x_typed": []}
+               "nick": "", "t": now, "text": X_SESSION_TEXT_OFFICIAL if mode == "official" else X_SESSION_TEXT,
+               "x_typed": [], "x_mode": mode}
         rq.waiting.appendleft(req)
-        self.log("x_session", queued=True, sessions_today=c["sessions"], **left)
+        self.log("x_session", queued=True, mode=mode, sessions_today=c["sessions"], **left)
         return req
 
     def x_post_due(self, cur, now):
         """An X session whose own post is still to do (live 10-29 19:16: one reply, then the session ended): posts left
         today, a text left in the session, steps to spare."""
-        if not cur or cur.get("kind") != "x_session" or cur.get("x_posted") or not self.x_on():
+        if not cur or cur.get("kind") != "x_session" or cur.get("x_mode") == "official" or cur.get("x_posted") or not self.x_on():
             return False
         left = self.x_left(now)
         return bool(left["posts"] and left["texts"] and len(cur.get("x_typed") or []) < X_TEXTS_PER_SESSION
@@ -7591,7 +7600,7 @@ class Agent:
                                   **({"ai_message": cur["payload"], "ai_typed": bool(cur.get("typed"))}
                                      if cur.get("kind") == "ask_ai" else {}),
                                   **({"x_left": self.x_left(now), "x_handle": "@" + X_HANDLE,
-                                      "x_post_due": self.x_post_due(cur, now)}
+                                      "x_post_due": self.x_post_due(cur, now), "x_mode": cur.get("x_mode", "own")}
                                      if cur.get("kind") == "x_session" else {})}
         if (news := self.owner_news(now, cur)):
             st["owner_news"] = news
