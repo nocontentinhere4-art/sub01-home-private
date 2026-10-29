@@ -113,3 +113,11 @@ APPROVE
 ## vid1 (10-29): Short vs video, stay on the named creator
 
 Kimi 429 (engine overloaded); owner chose to deploy without the review (one-off), review owed when Kimi is back
+(at 12:57 and 13:20).
+
+Owed review done 13:37: APPROVE — "addresses all four live failures: wide videos instead of Shorts,
+creator-channel fidelity, latest via the Videos tab, and exact-title searches. Test covers the new prompt rules."
+
+## eye1 (10-29, site branch `claude/live-control-20261027` 9cde7b7): white eye icon in the watching badge
+
+APPROVE. Needs the owner's `railway up` to reach the site.
