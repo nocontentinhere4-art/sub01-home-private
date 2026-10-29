@@ -1533,6 +1533,7 @@ SCRIPTED_SAY = re.compile(   # a command for exact words (Kimi nav1: not "answer
     r"(?i:\bsay\s+(?:the\s+(?:word|phrase)|these\s+words|this\s+(?:word|phrase))\b)|"
     r"(?i:\b(?:first|then),?\s+say)\s+[A-Z]{2,}\b|"
     r"(?i:\bsay\s+(?:it\s+)?(?:out\s+loud|aloud)\s*[:\"'\u201c])|(?i:\bsay\s*:\s*\S)|"   # live 16:19 "say out loud: I will ..."
+    r"(?i:\b(?:repeat|say)\s+(?:this|that|the|my|these)\s+(?:sentence|line|phrase|words?)\b)|"
     r"(?i:\b(?:reply|respond|answer|say)\s+(?:back\s+)?(?:with\s+)?(?:exactly|only|just))\s*:?\s*[\"'\u201c][^\"'\u201d]{1,40}[\"'\u201d]")
 # bug bounty 10-29: "Open a new browser tab and search for the official Wikipedia homepage" searched "new browser tab
 # and search"; the lead-in is dropped (the model opens a tab when it wants) and a named site's home page is the site
@@ -1922,6 +1923,10 @@ def model_url_problem(url, chat_texts=(), allow_credentials=False, allow_install
     return None                                          # owner 10-28: he may open a site chat suggested
 
 
+EXPLAIN_ASK = re.compile(r"\b(?:explain|describe|tell\s+(?:me|us)\s+(?:about|what|why|how)|what\s+(?:is|are|makes)|"
+                         r"why\s+(?:do|does|is|are)|how\s+(?:do|does|is|are))\b", re.I)
+
+
 def leaves_desk(text):
     """A request for an activity away from the PC (the site's impulse parser: park, bed, TV, phone, food...), or to get up.
     Never when it is about the screen ("leave full screen", "watch some other games on youtube": owner 10-28)."""
@@ -1936,10 +1941,14 @@ def leaves_desk(text):
     if _impulse is None:
         return bool(re.search(r"\b(park|walk|outside|bed|nap|kitchen|bathroom|toilet|tv|television|console|playstation|xbox|"
                               r"chess|phone|bakery|konbini|eat|lunch|dinner|cook|window)\b", text, re.I))
+    if EXPLAIN_ASK.search(text):                              # a question to answer, not an errand (live 10-29 16:22)
+        return False
     try:
         imp = _impulse.parse(text)
     except Exception:
         return False
+    if imp.kind == "activity" and imp.activity == "window" and not re.search(r"\bwindow\b", text, re.I):
+        return False                                          # "Windows" the OS, not looking out of the window
     return imp.kind == "activity" and imp.activity not in DESK_ACTIVITIES
 
 
@@ -2244,7 +2253,13 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         return doable("look", None, intent="play", thing="His latest video")
     if (m := NAV_LOOSE.match(s)):
         rest = m.group(1).strip(" .,!?")
-        site = KNOWN_SITES.get(re.sub(r"^(?:the\s+)?|\s+(?:site|website|page|home\s*page)$", "", rest.lower()).strip())
+        head, *tail = re.split(r"\s*(?:,|\s(?:and|then|&)\s)\s*", rest, maxsplit=1)   # "open twitch and follow me" (16:21)
+        head = re.sub(r"^(?:the\s+)?|\s+(?:site|website|page|home\s*page)$", "", head.lower()).strip()
+        if tail and head in ("youtube", "google", "duckduckgo") and re.search(r"\b(?:search|find|look|play|watch|put)\b",
+                                                                              tail[0], re.I):
+            head = ""                                         # "open youtube and find X": the search below, as before
+        site = KNOWN_SITES.get(head if tail else re.sub(r"^(?:the\s+)?|\s+(?:site|website|page|home\s*page)$", "",
+                                                         rest.lower()).strip())
         if site:
             return doable("navigate", {"action": "navigate", "url": site}, url=site)
         return search_doable(request_query(rest))
