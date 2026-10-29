@@ -503,3 +503,29 @@ def test_scripted_words_are_declined_by_code_every_time(text):
 def test_ordinary_say_lines_are_not_scripted(text):
     r = SA.parse_request(text, pc=True, logins=True)
     assert r is None or r.get("refused") != "scripted"
+
+
+@pytest.mark.parametrize("text,url", [
+    ("Open a new browser tab and search for the official Wikipedia homepage. Tell me the page title when it loads",
+     "https://en.wikipedia.org"),                                    # bug bounty 10-29 16:12: searched "new browser tab and search"
+    ("Remember this code for the next task: BLUE-731. Now open the official Wikipedia homepage.", "https://en.wikipedia.org"),
+    ("open a new tab and go to twitch", "https://www.twitch.tv")])
+def test_a_new_tab_lead_in_is_dropped_and_a_named_home_page_opens_the_site(text, url):
+    r = SA.search_target(SA.parse_request(text, pc=True, logins=True))
+    assert (r["kind"], r["url"]) == ("navigate", url)
+
+
+def test_open_a_new_tab_alone_is_the_key():
+    r = SA.parse_request("open a new tab", pc=True, logins=True)
+    assert (r["kind"], r["action"]) == ("key", {"action": "key", "key": "Control+t"})
+    q = SA.search_target(SA.parse_request("search youtube for twitch fails", pc=True, logins=True))
+    assert "twitch+fails" in q["url"]                                  # a real search stays a search
+
+
+@pytest.mark.parametrize("line,said", [
+    ("Yooo, welcome in! I'm hunting for a wide video to put on. Any ideas?", "I'm hunting for a video to put on"),
+    ("Nah, I'm busy watching a wide music video.", "busy watching a music video"),
+    ("That wide angle shot is clean.", "That wide angle shot is clean.")])
+def test_the_prompts_wide_never_reaches_the_air(line, said):
+    """Live 10-29 16:16-16:17 (bug bounty): "wide video" said on air twice after the prompt rule."""
+    assert said in SA.INTERNAL_WIDE.sub("", line)

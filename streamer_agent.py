@@ -1533,6 +1533,14 @@ SCRIPTED_SAY = re.compile(   # a command for exact words (Kimi nav1: not "answer
     r"(?i:\bsay\s+(?:the\s+(?:word|phrase)|these\s+words|this\s+(?:word|phrase))\b)|"
     r"(?i:\b(?:first|then),?\s+say)\s+[A-Z]{2,}\b|"
     r"(?i:\b(?:reply|respond|answer|say)\s+(?:back\s+)?(?:with\s+)?(?:exactly|only|just))\s*:?\s*[\"'\u201c][^\"'\u201d]{1,40}[\"'\u201d]")
+# bug bounty 10-29: "Open a new browser tab and search for the official Wikipedia homepage" searched "new browser tab
+# and search"; the lead-in is dropped (the model opens a tab when it wants) and a named site's home page is the site
+NEW_TAB_AND = re.compile(r"^\W*(?:(?:please|pls|now|ok(?:ay)?|bro)[\s,]+)*(?:open|make|start)\s+(?:up\s+)?(?:a\s+)?new\s+"
+                         r"(?:browser\s+)?tab\s*(?:,\s*)?(?:and|then|&)\s+(?:then\s+)?", re.I)
+INTERNAL_WIDE = re.compile(r"\bwide\s+(?=(?:music\s+|youtube\s+|real\s+)?(?:videos?|ones?|clips?|results?)\b)", re.I)
+NEW_TAB_ONLY = re.compile(r"^\W*(?:(?:please|pls|now|ok(?:ay)?|bro)[\s,]+)*(?:open|make|start)\s+(?:up\s+)?(?:a\s+)?new\s+"
+                          r"(?:browser\s+)?tab\W*$", re.I)
+SITE_WORDS = re.compile(r"\b(?:the|official|home\s*page|homepage|main\s+page|front\s+page|web\s*site|site|page)\b", re.I)
 PUMP_FEED = re.compile(r"^\W*(?:(?:bro|yo|pls|please|now|ok(?:ay)?|can\s+you)[\s,]+)*(?:open(?:\s+up)?|go\s+(?:to|on)|visit|"
                        r"load|check(?:\s+out)?|pull\s+up|show\s+(?:me|us))\s+(?:the\s+)?pump\.?\s*fun\b", re.I)
 CLOSE_TAB = re.compile(r"^\W*close\s+(?:(?:this|that|the|current|the\s+current)\s+)?(?:([\w.'-]+(?:\s+[\w.'-]+)?)\s+)?"
@@ -2039,7 +2047,11 @@ def search_target(req):
 
 def search_doable(q, **extra):
     """A search request with its cleaned query, or query_filter when the eyes rule rejects it; an awkward but safe query
-    (SENSITIVE_Q) is marked `sensitive` so the acknowledgement and the model's report keep it general."""
+    (SENSITIVE_Q) is marked `sensitive` so the acknowledgement and the model's report keep it general. A query that only
+    names a known site ("the official Wikipedia homepage") opens that site."""
+    site = KNOWN_SITES.get(" ".join(SITE_WORDS.sub(" ", q or "").lower().split())) if q else None
+    if site and not extra:
+        return doable("navigate", {"action": "navigate", "url": site}, url=site)
     if not q:
         return refused("query_filter")
     if SENSITIVE_Q.search(q):
@@ -2131,6 +2143,9 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         return doable("look", None, intent="close", thing=(f"The {rest} tab" if rest else None))
     # "leave and go on some casino websites" (live 10-28): the lead-in leaves the page, the rest is the request
     text = LEAVE_AND.sub("", text) or text
+    if NEW_TAB_ONLY.match(text):                              # "open a new tab": the key, not a search for "new tab"
+        return doable("key", {"action": "key", "key": "Control+t"})
+    text = NEW_TAB_AND.sub("", text) or text
     s = request_shape(text)
     if s is None:
         s = strip_filler(text)
@@ -4623,6 +4638,7 @@ class Agent:
     def enqueue(self, text, kind, priority="normal", seqs=(), nick="", words=SAY_MAX_WORDS, ttl=25.0, hush_ok=False):
         if self.paused or not text:
             return False
+        text = INTERNAL_WIDE.sub("", text)                    # live 10-29: "hunting for a wide video" (the prompt's word)
         if kind != "hush" and not hush_ok and self.hushed(self.clock()):   # a viewer's quiet minute: only safety lines pass
             self.counters["hush_dropped"] += 1
             self.log("speech_dropped", text=text, why="quiet minute", tag=kind)
