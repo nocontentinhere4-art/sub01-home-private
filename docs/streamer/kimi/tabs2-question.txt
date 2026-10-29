@@ -1,0 +1,10 @@
+Review tabs2 (follow-up to tabs1 you approved). Owner 20:40: "se c è uno con musica che canta ci può anche stare, basta che non si sovrappongono troppo". The tabs_check rule now: more than 4 tabs -> close the extras (same protections); one music tab may keep playing in the background, but never two sounds over each other: when a video with talking plays, pause the music (its tab, key k) or close it. Diff below. APPROVE or CHANGES?
++TABS_CHECK_S = 180.0                    # owner 10-29: "too many tabs open, with audio on top of each other: close them"
++reply put "x_done": "post" or "reply" in that answer; "x_post_due" true: your own post is still to do; A state "tabs_check" (owner 10-29): look at the tab strip now: more \
++than 4 tabs: close the extra ones (click the tab, key Control+w, one per step), the older video tabs first, never the tab \
++playing what chat asked for or the fomo.family tab; one music tab may keep playing in the background, but never two \
++sounds over each other: when a video with talking plays, pause the music (its tab, key k) or close it; "x_recent" is what you already wrote on X: never answer the same \
++        self.tabs_check_at = -1e9                            # the last "tabs_check" hint (TABS_CHECK_S)
++        if not cur and r is None and pc.playing is None and now - self.tabs_check_at >= TABS_CHECK_S:
++            st["tabs_check"] = True                          # owner 10-29 20:36: too many tabs, sounds on top of each other
++            self.tabs_check_at = now

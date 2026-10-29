@@ -904,3 +904,20 @@ def test_put_some_artist_opens_youtube_results(text, q):
     r = SA.search_target(dict(r, text=text))
     assert r["url"] == SA.YT_RESULTS + q and r["action"]["action"] == "navigate"
     assert SA.parse_request("put it on full screen", pc=True, logins=True)["kind"] == "look"
+
+
+def test_tabs_check_hint_every_three_minutes_when_nothing_is_asked(tmp_path):
+    # owner 10-29 20:36: "quando ci sono troppe tab aperte e sovrapposte con audio sopratutto chiudile"
+    seen = []
+    def look(state):
+        seen.append("tabs_check" in json.dumps(state))
+        return T.decision(state="reading", action={"action": "wait", "seconds": 2}, say="")
+    agent, world, prov, clock = T.pc_make(tmp_path, look, look, look)
+    agent.pc.mode = "vagon"
+    agent.hands_off_reason = lambda now: None
+    for dt in (0, 20, SA.TABS_CHECK_S + 5):
+        clock.t += dt
+        asyncio.run(agent.step())
+    assert seen == [True, False, True], seen
+    pc = SA.SYSTEM_PC.replace("\\\n", "")
+    assert "background music plus one video at once is fine" in pc and "never two talking videos at once" in pc   # 20:41
