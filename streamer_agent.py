@@ -2181,7 +2181,15 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         return doable("navigate", {"action": "navigate", "url": "https://mail.google.com"}, url="https://mail.google.com",
                       login=True)
     if logins and R_LOGIN_ASK.search(text):                   # owner 10-28: sign up / log in with his one identity
-        site = next((url for name, url in SITE_NAMES.items() if re.search(rf"\b{re.escape(name)}\b", text, re.I)), None)
+        # owner 10-29 "fai si che possa fare login dappertutto": any site he knows by name, not only the chess ones
+        # ("log in to twitch" clicked "Log in" on whatever page was open); the longest name first (chess.com before chess)
+        # the site after on/to/into/at wins ("sign in with google on x" is X); a one- or two-letter name needs it
+        names = sorted({**KNOWN_SITES, **SITE_NAMES}.items(), key=lambda kv: -len(kv[0]))
+        after = lambda n: rf"\b(?:on|to|into|at|for|in)\s+(?:the\s+)?{re.escape(n)}(?![\w])"
+        anywhere = lambda n: rf"(?<![\w.]){re.escape(n)}(?![\w])"
+        site = next((url for name, url in names if re.search(after(name), text, re.I) and request_url_problem(url) is None),
+                    None) or next((url for name, url in names if len(name) > 2 and re.search(anywhere(name), text, re.I)
+                                   and request_url_problem(url) is None), None)
         if site:                                              # the model signs up there next ({{email}}, {{password}})
             return doable("navigate", {"action": "navigate", "url": site}, url=site, login=True)
         return doable("look", None, intent="click", thing="Sign up or log in", login=True)

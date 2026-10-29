@@ -555,3 +555,15 @@ def test_a_question_about_windows_is_not_leaving_the_desk(text):
 def test_looking_out_of_the_window_still_leaves_the_desk():
     for line in ("stand up and look out the window", "go to the window and look outside"):
         assert SA.parse_request(line, pc=True)["refused"] == "leave_desk", line
+
+
+@pytest.mark.parametrize("text,url", [("log in to twitch", "https://www.twitch.tv"),
+                                      ("log in on reddit and like the post", "https://www.reddit.com"),
+                                      ("sign in with google on x", "https://x.com"), ("sign up on kick", "https://kick.com"),
+                                      ("create an account on chess.com", "https://www.chess.com"),
+                                      ("sign up on lichess", "https://lichess.org")])
+def test_chat_logins_open_the_site_named(text, url):
+    """Owner 10-29: "fai si che possa fare login dappertutto senza problemi" ("log in to twitch" clicked the open page)."""
+    r = SA.parse_request(text, pc=True, logins=True)
+    assert (r["kind"], r["url"], r["login"]) == ("navigate", url, True)
+    assert SA.parse_request("log in", pc=True, logins=True)["thing"] == "Sign up or log in"
