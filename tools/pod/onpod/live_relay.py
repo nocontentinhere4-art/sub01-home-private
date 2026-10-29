@@ -13,6 +13,7 @@ RESERVED = set('sub01 sub-01 sub_01 subzerone owner admin administrator mod mode
 VOTER_SALT = os.urandom(16)          # owner 10-28 trading votes: one vote per connection, the IP itself never leaves here
 def voter_key(ip):
     return hashlib.sha256(VOTER_SALT + str(ip).encode()).hexdigest()[:16]
+VIEWER_WINDOW_S = 70.0   # owner 10-29 "show how many are online": a page polls /status every 5 s (a background tab ~1/min)
 QUEUE_WHY = {'added':'Added to the queue.', 'bad_link':'Only YouTube video links (youtube.com/watch, youtu.be, shorts).',
              'duplicate':'That video is already in the queue or was just played.', 'full':'The queue is full. Try again later.',
              'per_name':'You already have two videos waiting.'}
@@ -49,6 +50,12 @@ def create_app(root, stop_file, token_file=None):
     screen_task = None
     screen_jpg_task = None
     screen_jpg_cache = None
+    online = collections.OrderedDict()   # connection hash -> last /status poll (salted hashes only, never an IP)
+    def count_online(ip):
+        now = time.monotonic(); key = voter_key(ip)
+        online[key] = now; online.move_to_end(key)
+        while online and (now - next(iter(online.values())) > VIEWER_WINDOW_S or len(online) > 5000): online.popitem(last=False)
+        return len(online)
     viewer_cache = {'t': -1e9, 'data': {'queue': {'now': None, 'waiting': []}, 'hype': {'level': 0, 'train': False}}}
     async def agent_call(method, path, payload=None, timeout=6):
         """The agent's API with the operator token (never sent to browsers). -> (status, json) or (None, None)."""
@@ -229,7 +236,9 @@ def create_app(root, stop_file, token_file=None):
         return director_cache['layout']
     async def status(request):
         raw, _ = playlist()
+        watching = count_online(request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64])
         return web.json_response({'online':raw is not None, 'agent':'paused' if Path(stop_file).exists() else 'checks', 'messages':list(messages),
+                                  'watching':watching,
                                   'layout':await director_layout(), **(await viewer_state())})
     async def chat(request):
         if request.headers.get('Origin') != ORIGIN or request.content_type != 'text/plain': raise web.HTTPForbidden()

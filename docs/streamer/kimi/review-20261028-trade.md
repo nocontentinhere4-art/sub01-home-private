@@ -40,3 +40,7 @@ APPROVE
 ## fix12 (scroll end no streak, trade how-to refusal, fomo tab reuse, likes ok)
 
 APPROVE
+
+## watch1 (viewers online on the site)
+
+APPROVE: count, 70 s pruning, 5000 cap, salted hashes, safe badge rendering.

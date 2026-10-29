@@ -80,7 +80,9 @@ def test_chat_queue_hype_and_status_reach_the_fake_agent(tmp_path):
             assert r.status == 403
             r = await client.get("/status", headers={"Origin": R.ORIGIN})
             st = await r.json()
-            assert st["queue"]["waiting"][0]["nick"] == "Marco" and st["hype"]["level"] == 0.2
+            assert st["queue"]["waiting"][0]["nick"] == "Marco" and st["hype"]["level"] == 0.2 and st["watching"] == 1
+            r = await client.get("/status", headers={"Origin": R.ORIGIN, "CF-Connecting-IP": "7"})
+            assert (await r.json())["watching"] == 2                                   # two connections polling
             assert "operator-secret-123" not in await r.text()
         await runner.cleanup()
     asyncio.run(body())
