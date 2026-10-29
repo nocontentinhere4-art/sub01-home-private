@@ -79,7 +79,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
 #feedback{min-height:18px;margin:6px 0 0;color:var(--muted);font-size:12px}.rules{color:var(--dim);font-size:11px;margin:4px 0 0}
 /* names, sounds, hype, queue (owner 10-28) */
 .nick{display:flex;gap:6px;align-items:center;margin-bottom:8px}.nick input{flex:1;min-width:0;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:0 10px;font:inherit}
-.nick input:focus{border-color:var(--accent);outline:none}.nick input:invalid{border-color:#eb040080}
+.nick input:focus{border-color:var(--accent);outline:none}.nick-l{flex:none;font:600 12px/1 var(--sans);color:var(--muted)}.nick-hint{margin:-4px 0 8px;font-size:12px;line-height:1.4;color:var(--accent)}.nick-hint[hidden]{display:none}.nick input:invalid{border-color:#eb040080}
 .sfx{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 8px}.sfx button{border:1px solid var(--line);background:#0b0c0f;border-radius:6px;padding:2px 7px;font:12px var(--mono);color:var(--accent2)}
 .sfx button:hover{border-color:var(--accent)}.sfx button:disabled{opacity:.45;cursor:default}
 .hypebtn{background:linear-gradient(135deg,#ff6a00,#ff2d55)!important;color:#fff!important;border:0!important;font-weight:800}.hypebtn:disabled{opacity:.55}
@@ -148,7 +148,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
     <header>Stream chat</header>
     <div id="messages" aria-live="polite" aria-label="Recent messages"><p class="empty">Say hi to SUB-01 👋</p></div>
     <form class="compose" id="chat">
-      <div class="nick"><label for="nick" style="position:absolute;left:-9999px">Your name</label><input id="nick" maxlength="16" pattern="[A-Za-z0-9_.\-]{2,16}" placeholder="Your name (optional, SUB-01 will remember it)" autocomplete="nickname" spellcheck="false"></div>
+      <div class="nick"><label for="nick" class="nick-l">Name</label><input id="nick" maxlength="16" pattern="[A-Za-z0-9_.\-]{2,16}" placeholder="optional, SUB-01 will remember it" autocomplete="nickname" spellcheck="false" aria-describedby="nick-hint"></div><p class="nick-hint" id="nick-hint" hidden>This box is only your name: letters, numbers, _ . - (up to 16). Write your message in the box below.</p>
       <div class="sfx" aria-label="Sound effects: click to play on stream">
         <button type="button" data-s="!airhorn">!airhorn</button><button type="button" data-s="!drumroll">!drumroll</button><button type="button" data-s="!rimshot">!rimshot</button><button type="button" data-s="!sad">!sad</button>
         <button type="button" data-s="!boom">!boom</button><button type="button" data-s="!applause">!applause</button><button type="button" data-s="!crickets">!crickets</button><button type="button" data-s="!win">!win</button>
@@ -231,6 +231,7 @@ document.querySelector('#chat').addEventListener('submit',async e=>{e.preventDef
 document.querySelector('#share').addEventListener('click',async()=>{const u=location.origin+'/',b=document.querySelector('#share');if(navigator.share){try{await navigator.share({title:'SUB-01 live',url:u});}catch(e){}return;}try{await navigator.clipboard.writeText(u);b.textContent='Link copied';}catch(e){b.textContent='Copy failed';}setTimeout(()=>b.textContent='Share',1600);});
 const nickEl=document.querySelector('#nick');try{nickEl.value=localStorage.getItem('sub01Nick')||''}catch(e){}
 function nickVal(){const v=nickEl.value.trim();return /^[A-Za-z0-9_.-]{2,16}$/.test(v)?v:'';}
+nickEl.addEventListener('input',()=>{const v=nickEl.value;document.querySelector('#nick-hint').hidden=!(/[^A-Za-z0-9_.-]/.test(v)||v.length>=16);});
 nickEl.addEventListener('change',()=>{try{nickVal()?localStorage.setItem('sub01Nick',nickVal()):localStorage.removeItem('sub01Nick')}catch(e){}});
 async function post(path,payload,ms){const r=await fetch(base+path,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload),signal:AbortSignal.timeout(ms||12000)});let d={};try{d=await r.json()}catch(e){}return [r,d];}
 document.querySelectorAll('.sfx button').forEach(b=>b.addEventListener('click',async()=>{const f=document.querySelector('#feedback'),all=document.querySelectorAll('.sfx button');all.forEach(x=>x.disabled=true);
