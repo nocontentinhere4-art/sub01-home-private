@@ -109,3 +109,7 @@ APPROVE (after three 429 engine_overloaded retries, spaced 15-60 min)
 ## chess4 (10-29): click the move box first in a new game
 
 APPROVE
+
+## vid1 (10-29): Short vs video, stay on the named creator
+
+Kimi 429 (engine overloaded); owner chose to deploy without the review (one-off), review owed when Kimi is back

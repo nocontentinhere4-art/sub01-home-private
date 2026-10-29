@@ -394,3 +394,11 @@ def test_an_illegal_lichess_move_is_selected_and_typed_over():
     assert "Control+a selects it, then type the legal move over it" in pc and "Backspace until it is empty" not in pc
     assert "the move as UCI, from square then to square" in pc
     assert "in a new game click the empty box once first" in pc
+
+
+def test_a_video_request_gets_a_wide_video_not_a_short_and_stays_on_the_creator():
+    """Live 10-29 12:36: "Put his latest video on his channel" -> a fan channel's Short; "Video ... not short"."""
+    pc = SA.SYSTEM_PC.replace("\\\n", "")
+    assert "Chat asking for a \"video\" (not a short) gets a wide video" in pc and "never a Short" in pc
+    assert "not fan or clip channels" in pc and "newest video on his own channel's Videos tab" in pc
+    assert "searched with its exact words" in pc
