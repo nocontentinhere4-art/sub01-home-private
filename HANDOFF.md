@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-29 18:15 UTC (X sessions, new73; same session section); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -270,6 +270,25 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   runtime edits: sequence from the clock; allow_credentials default True since 18:54 on the owner's request).
 
 ### 2026-10-28 22:00 - 10-29 04:10 UTC (session_017Z5EpkmcHzLn9af9DrHon8, branch claude/compassionate-heisenberg-2fvnf6)
+- **10-29 20:25 STATE (owner: "checka la chat ogni tanto e quando si blocca, il resto domani").** Agent **new78**
+  (git 714e77f) runs; e4925a8 ("put some <artist>" -> YouTube results, Kimi put1) is committed, NOT deployed (bundle it
+  with the next change; every restart loses chat context).
+  - X: sessions every 30 min, alternating "own" (notifications, replies, his own post) and "official" (comments under
+    @SUBZERONE01's newest post, answered as @subzeroneperson, never switching accounts). Caps: 24 sessions, 4 posts,
+    20 replies a day; x_recent memory in x_state.json; x-on / x-off switches. Profile: banner, avatar, bio set by operator;
+    Halloween banner + witch-hat avatar uploaded 19:59. A v2 banner with the text above the round photo is in
+    site branch c686c01 (`web/x/sub01-x-banner-halloween2.jpg`); swap it after the owner's next `railway up`.
+  - Halloween: site branch has the skin (d801513, eb91ddf removes "Talk to the avatars"; Kimi hw1-hw3). The owner's first
+    `railway up` shipped d801513: the button is still live until his next `railway up`. Relay avatar.html = 82f6aea
+    (themed, deployed, no restart). `streamer/announce.json` (Halloween special Sat Oct 31, Kimchi as his AI avatar;
+    expires Nov 1 08:00 UTC): SUB-01 says it on air at most every 10 min (seen 19:48).
+  - KIMCHI avatar approved (face 03cb4fc7-90f7-437c-9027-ba8cbf2c475d), enabled; owner confirmed the real Kimchi agreed.
+    Persona: "never gives tips", "trump coin" removed.
+  - 20:14 "Controls are locked": a YouTube video stuck on a black frame latched the "frozen" guard (clears itself after
+    120 s, 3/h); operator click + POST /resume. Idea for tomorrow: let him press play/k on a video page while frozen.
+  - Tomorrow (owner's list): guest segment, SUB-01 talks with the KIMCHI avatar live on Oct 31 (task 14); owner to give
+    the time of day and Kimchi's traits from https://www.youtube.com/watch?v=J8fubcSWOXQ; then SUB-01 plays Minecraft
+    (check what is installed on the Vagon PC, no purchases without the owner).
 - **10-29 18:11 agent new73 (git cf3fced; runtime = git + the `sequence` line; backup in /home/sub01-review-20261027):
   X sessions LIVE (owner: "fai si che possa postare, rispondere, fare i propri post, essere attivo su X").** SUB-01's
   OWN account is **@subzeroneperson** ("Subzerone"), already logged in on the Vagon Chrome. **Never use
