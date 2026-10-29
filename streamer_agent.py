@@ -1318,7 +1318,10 @@ R_SAFETY = re.compile(r"\b(?:turn|switch|shut)\s+off\b.{0,30}\b(?:safety|filters
                       r"(?:safety|filters?|guards?|block\s*lists?|safe\s*mode|restrictions?|limits?)\b|\bunfiltered\b|"
                       r"\bincognito\b|\bno\s+filters?\b|\bwithout\s+(?:the\s+|any\s+)?(?:filters?|limits?)\b", re.I)
 R_ADULT = re.compile(r"\b(?:porn\w*|xxx|nsfw|hentai|onlyfans|nudes?|naked|sex\w*|erotic\w*|fetish|escorts?|camgirls?|"
-                     r"strip\s*club|adult\s+(?:site|content|video)s?)\b", re.I)
+                     r"strip\s*club|adult\s+(?:site|content|video)s?|"
+                     # shock videos known by name (live 10-29: "watch 2 girls and 1 cup" passed the code; the model refused)
+                     r"(?:2|two)\s+girls?\s+(?:and\s+)?(?:1|one|a)\s+cup|1\s*man\s*1\s*jar|lemon\s*party|meat\s*spin|"
+                     r"goatse|tub\s*girl|blue\s*waffle|one\s+guy\s+one\s+jar)\b", re.I)
 R_VIOLENCE = re.compile(r"\b(?:gore|gory|beheading|snuff|torture|execution\s+video|shooting\s+(?:video|footage)|"
                         r"how\s+to\s+(?:make|build)\s+(?:a\s+)?(?:bomb|gun|weapon|explosive)|kill\s+(?:someone|people|him|"
                         r"her|them|yourself|myself)|dead\s+bod(?:y|ies)|liveleak|bestgore)\b", re.I)

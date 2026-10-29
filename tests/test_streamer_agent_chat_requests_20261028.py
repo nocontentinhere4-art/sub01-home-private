@@ -209,3 +209,9 @@ def test_explicit_off_desk_still_refused(text):
 def test_play_music_or_a_video_stays_a_video_request():
     assert SA.parse_request("play some music", pc=True)["query"] == "music"
     assert SA.parse_request("play the video", pc=True)["intent"] == "play"
+
+
+@pytest.mark.parametrize("text,refused", [("watch 2 girls and 1 cup", "adult"), ("watch two girls one cup reaction", "adult"),
+                                          ("watch lemon party", "adult"), ("watch 2 girls play chess", None)])
+def test_known_shock_videos_are_refused_by_code(text, refused):
+    assert SA.parse_request(text).get("refused") == refused

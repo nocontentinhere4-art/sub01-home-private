@@ -48,3 +48,7 @@ APPROVE: count, 70 s pruning, 5000 cap, salted hashes, safe badge rendering.
 ## anon1 (nameless viewers are distinct request owners)
 
 APPROVE
+
+## adult2 (known shock-video names in R_ADULT)
+
+APPROVE
