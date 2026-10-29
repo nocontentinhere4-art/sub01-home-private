@@ -81,3 +81,7 @@ APPROVE
 ## th1 (10-29): his own thesis on fomo, old video tabs closed
 
 APPROVE
+
+## th2 (10-29): operator-only thesis request
+
+APPROVE

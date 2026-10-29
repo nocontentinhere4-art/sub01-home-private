@@ -251,6 +251,10 @@ REQUEST_RUN_MAX_S = 120.0               # a request in flight ends after this lo
 REQUEST_DROP_LINE_EVERY_S = 60.0        # "too many requests, one at a time" at most once per minute
 REQUEST_REFUSAL_GAP_S = 15.0            # one spoken refusal per 15 s; the rest are logged only
 TRADE_HOWTO_LINE = "Chat trades by vote: pick a coin from my list and everyone votes yes or no."
+THESIS_STEPS_MAX, THESIS_RUN_MAX_S = 8, 180.0   # owner 10-29: his own thesis on fomo (POST /fomo/thesis, operator only)
+THESIS_GAP_S = 3600.0                   # at most one thesis request an hour
+THESIS_TEXT = ("write your own short thesis on SUB-01 in the thesis box of the fomo.family tab (his coin page) and "
+               "press Post, then like one to three theses you agree with")
 DEPOSIT_STEPS_MAX = 6                   # the owner's deposit QR request: open fomo.family, Deposit, the QR, wait
 TRADE_SEQ_BASE = 4_000_000_000          # request seqs of voted trades and the deposit request (never a chat seq)
 VOTER_RE = re.compile(r"[0-9a-f]{8,32}")   # the relay's salted hash of a viewer's connection: one vote per connection
@@ -3827,6 +3831,7 @@ class Agent:
         self.hype = LF.HypeMeter(self.clock)                                  # the site's free Hype button
         self.trade = TR.TradeDesk(TR.Ledger(self.dir / "trade-ledger.json", time.time), None, self.clock)  # chat-voted trades
         self.trade_seq = 0
+        self.thesis_at = -1e9
         self.sfx = LF.SfxPlayer(self.dir / "sfx", self.dir / "run" / "pulse" / "native", self.clock)   # "!rimshot"
         self.cartoon_dir = self.dir / "cartoon"               # cartoon mode: queue.jsonl out, done/<id>.json in
         self.cartoon = {"pending": collections.OrderedDict(), "handled": collections.OrderedDict(), "playing": None,
@@ -4421,7 +4426,7 @@ class Agent:
         self.requests.current = req
         self.log_request("executed", req["kind"], req,
                          action=action_label(req["action"]) if req["action"] else "the model picks it on the page")
-        if not silent and req["kind"] not in ("trade", "deposit"):   # a voted trade was announced with the vote result
+        if not silent and req["kind"] not in ("trade", "deposit", "thesis"):   # a voted trade: announced with the vote result
             self.enqueue(self.ack_for(req), "request", "normal", (req["seq"],), req["nick"], ttl=30.0)
         if req["action"] is None:
             self.next_think = now                             # the model's turn: find it on the page
@@ -6297,7 +6302,8 @@ class Agent:
     def request_budget(self, cur):
         """(steps, seconds) a request in flight may take: an install and a voted trade take more clicks than a lookup."""
         return {"install": (INSTALL_STEPS_MAX, INSTALL_RUN_MAX_S), "trade": (TR.TRADE_STEPS_MAX, TR.TRADE_RUN_MAX_S),
-                "deposit": (DEPOSIT_STEPS_MAX, TR.DEPOSIT_SHOW_S + 90.0)}.get(cur["kind"], (REQUEST_STEPS_MAX, REQUEST_RUN_MAX_S))
+                "deposit": (DEPOSIT_STEPS_MAX, TR.DEPOSIT_SHOW_S + 90.0),
+                "thesis": (THESIS_STEPS_MAX, THESIS_RUN_MAX_S)}.get(cur["kind"], (REQUEST_STEPS_MAX, REQUEST_RUN_MAX_S))
 
     def trade_chat(self, m, now):
         """A trade vote answer ("yes"/"no", one per voter key) or a trade line ("buy wif"): handled by code with at most
@@ -6418,6 +6424,18 @@ class Agent:
                "seq": TRADE_SEQ_BASE + self.trade_seq, "user": "owner", "nick": "", "t": now, "text": "show the deposit QR"}
         self.requests.waiting.appendleft(req)
         self.log("trade_deposit", queued=True)
+        return req
+
+    def thesis_request(self, now):
+        """The owner's thesis (POST /fomo/thesis): the model writes and posts his own thesis on SUB-01 on fomo.family and
+        likes a few; first in line like the deposit, at most one per THESIS_GAP_S. -> the request, or None (too soon)."""
+        if now - self.thesis_at < THESIS_GAP_S:
+            return None
+        self.thesis_at, self.trade_seq = now, self.trade_seq + 1
+        req = {"kind": "thesis", "action": None, "refused": None, "seq": TRADE_SEQ_BASE + self.trade_seq, "user": "owner",
+               "nick": "", "t": now, "text": THESIS_TEXT}
+        self.requests.waiting.appendleft(req)
+        self.log("thesis_request", queued=True)
         return req
 
     def hype_cartoon(self, now):
@@ -7503,6 +7521,13 @@ class Agent:
                                "voter": voter if VOTER_RE.fullmatch(voter) else ""}])
             return web.json_response({"ok": True})
 
+        async def fomo_thesis(request):                       # the owner's request only (operator token)
+            if not self.pc.vagon:
+                return web.json_response({"ok": False, "error": "the remote PC only"}, status=409)
+            if self.thesis_request(self.clock()) is None:
+                return web.json_response({"ok": False, "error": "at most one thesis an hour"}, status=429)
+            return web.json_response({"ok": True})
+
         async def trade_deposit(request):                     # the owner's request only (operator token): the QR, live
             if not self.pc.vagon:
                 return web.json_response({"ok": False, "error": "the remote PC only"}, status=409)
@@ -7561,6 +7586,7 @@ class Agent:
         app.router.add_post("/queue", guarded(queue_add))
         app.router.add_post("/hype", guarded(hype))
         app.router.add_post("/trade/deposit", guarded(trade_deposit))
+        app.router.add_post("/fomo/thesis", guarded(fomo_thesis))
         app.router.add_get("/trade/state", guarded(trade_state))
         app.router.add_get("/viewer_state", guarded(viewer_state))
         app.router.add_post("/lease", guarded(lease))

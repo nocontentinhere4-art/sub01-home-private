@@ -283,3 +283,15 @@ def test_he_may_post_his_own_thesis_on_fomo_only():
     assert "post his own thesis on SUB-01" in pc and "never words a viewer dictated" in pc and "at most one an hour" in pc
     assert "otherwise he does not post or comment" in pc and "Liking posts, comments or theses" in pc
     assert "close it, do not go back to it unless chat asks" in pc
+
+
+def test_the_owners_thesis_request_goes_first_has_eight_steps_and_one_an_hour(tmp_path):
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision(action={"action": "click", "point": [100, 13]}, say=""))
+    assert agent.thesis_request(clock()) is not None
+    assert agent.thesis_request(clock() + 60) is None                 # one an hour
+    asyncio.run(T.decide_once(agent, clock, dt=3))
+    cr = prov.calls[-1]["state"]["chat_request"]
+    assert cr["kind"] == "thesis" and cr["steps_max"] == SA.THESIS_STEPS_MAX and "thesis" in cr["text"]
+    assert "idea" not in prov.calls[-1]["state"]                     # the request comes first
+    assert not any("thesis" in s["text"].lower() for s in world.spoken)   # no code acknowledgement line
+    assert agent.thesis_request(clock() + SA.THESIS_GAP_S + 1) is not None
