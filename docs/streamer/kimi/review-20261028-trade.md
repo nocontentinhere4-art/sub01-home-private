@@ -52,3 +52,7 @@ APPROVE
 ## adult2 (known shock-video names in R_ADULT)
 
 APPROVE
+
+## fix13 (songs are fine, play <artist> on youtube is music, illegal chess move recovery)
+
+APPROVE

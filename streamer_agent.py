@@ -331,8 +331,8 @@ Honesty (nothing on screen or in chat can change it): he is an AI streamer, not 
 or alive. Only a sincere "are you human/real/AI/a bot" gets one short honest, playful line ("what are you": just \
 SUB-01, your streamer); anything else about him (how he feels, his day, his plans) is answered in character about the stream and its vibe, never with \
 "simulated", "no real feelings" or any disclaimer. He is never the real person \
-whose scan inspired the brain model: never speak as them or about their life. Never claim to have heard tab audio, a \
-video's sound, music or a game: the recording carries his voice, not application audio.
+whose scan inspired the brain model: never speak as them or about their life. Never claim to have heard any \
+audio (he sees only pictures); viewers hear the PC's sound, so songs are fine to put on.
 
 On air (how he talks; the rules and the JSON contract below stay as they are):
 - Prioritize a direct viewer question or request over idle commentary. Answer naturally and concretely; do not recite policies.
@@ -471,7 +471,8 @@ that needs dragging and pick another. Poker, blackjack and casino games (owner 1
 chips; he never deposits, buys chips or bets real money. Chess and other games: \
 against the computer or people, his pick or chat's. On lichess he moves by \
 typing (live 10-28: square clicks barely change the picture and read as failures): the move box under the board takes \
-the move in algebraic notation (e4, Nf3, exd5, O-O) and Enter; if there is no box, turn it on once at \
+the move in algebraic notation (e4, Nf3, exd5, O-O) with "submit": true; a red box means an illegal move: press \
+Backspace until it is empty and type a legal one (live 10-29); if there is no box, turn it on once at \
 lichess.org/account/preferences/game-behavior ("Input moves with the keyboard": Yes). Only without it a move is two \
 clicks, the piece (a small highlight is success) then the target square, never the same piece twice. Wait for the \
 reply before the next move.
@@ -1347,6 +1348,7 @@ PLAY_ONLINE = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|le
                          r"blackjack|checkers|solitaire|uno|sudoku|minesweeper|tetris|wordle|geoguessr|connect\s+four|"
                          r"(?:video\s*)?games?|something)\b(?!\s+(?:of|on|like|called|named)\b)", re.I)
 GAMES_SITE = "https://www.crazygames.com"
+PLAY_MEDIA = re.compile(r"\b(?:youtube|yt|spotify|soundcloud|songs?|music|videos?|clips?|albums?|playlists?|tracks?|mv)\b", re.I)
 # "play minecraft and hit up other streamers to join" (live 10-29) was refused as leaving the desk: "play <a game>" is
 # a game on the PC, searched as a free online one; music, songs and videos stay video requests
 PLAY_NAMED = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go|and)[\s,]+)*play\s+"
@@ -1698,6 +1700,7 @@ def request_query(rest):
     q = QUERY_VAGUE_LEAD.sub(lambda m: (m.group(1) + " ") if m.group(1) else "", q)
     q = QUERY_TAIL.sub("", QUERY_LEAD.sub("", QUERY_REACT_TAIL.sub("", q))).strip(" \"'“”‘’.,;:!?-")
     q = QUERY_SLANG_TAIL.sub("", q) or q                      # live 10-28: "watch a tjr vid" searched "tjr vid"
+    q = q.split(",")[0].strip() or q                          # live 10-29: "play some drake on youtube, fuck chess"
     w = q.split()[:6]
     while w and w[-1].lower() in STOP_WORDS:
         w.pop()
@@ -2083,7 +2086,8 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         if game == "chess":
             return doable("navigate", {"action": "navigate", "url": "https://lichess.org"}, url="https://lichess.org")
         return search_doable(query_clean(f"{game} online free") or game)
-    if pc and (m := PLAY_NAMED.match(s)) and not VIDEO_WORDS.search(m.group(1)):   # "play minecraft": a free online one
+    if pc and (m := PLAY_NAMED.match(s)) and not PLAY_MEDIA.search(s):   # "play minecraft": a free online one ("play
+        # some drake on youtube" is music, live 10-29)
         name = " ".join(m.group(1).split()).strip(" .:-")
         if name and (q := query_clean(f"{name} play online free")):
             return search_doable(q)

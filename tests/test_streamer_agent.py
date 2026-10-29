@@ -2285,7 +2285,7 @@ def test_system_prompt_carries_the_adopted_lines_and_none_of_the_rejected_ones()
     for needle in ("20-year-old hype streamer", "Chat comes first", "Big reactions only for genuinely unusual things",
                    "not in shouting or in moving his body", "never a viewer's identity", "one shared hello, never a roll call",
                    "never about who they are", "dropped at once if they don't like it", "not an assistant giving a demonstration",
-                   "never a real streamer's name", "no accents, no claims of fluency", "Never claim to have heard tab audio",
+                   "never a real streamer's name", "no accents, no claims of fluency", "Never claim to have heard any",
                    "Doing, not narrating", "a quiet screen is a reason to look for", "Do not narrate mouse moves",
                    "Never infer an article from its headline", "at most two short utterances and 35 words", "no invented tea",
                    "Read silently first", "never enumerate", "Keep headline and evidence apart", '"I don\'t know yet" is fine',

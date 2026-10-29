@@ -215,3 +215,13 @@ def test_play_music_or_a_video_stays_a_video_request():
                                           ("watch lemon party", "adult"), ("watch 2 girls play chess", None)])
 def test_known_shock_videos_are_refused_by_code(text, refused):
     assert SA.parse_request(text).get("refused") == refused
+
+
+def test_play_an_artist_on_youtube_is_music_not_a_game():
+    r = SA.parse_request("Play some drake on YouTube, fuck chess", pc=True)
+    assert r["kind"] == "search" and r["query"] == "drake"
+
+
+def test_the_prompt_lets_him_put_music_on_and_fixes_illegal_chess_moves():
+    assert "songs are fine to put on" in SA.system_prompt()
+    assert "red box means an illegal move" in SA.system_prompt(pc=True, allow_credentials=True)
