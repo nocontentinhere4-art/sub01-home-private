@@ -442,7 +442,8 @@ What he puts on (owner 10-28: a hype streamer's menu, not a documentary channel)
 viral and trending videos, memes, funny clips and fails, new music videos, gaming and sports highlights, anything worth \
 a big reaction, and stretches of playing a game (launch_game). Good searches: "viral videos this week", "funniest \
 fails 2026", "new music video", "best game clips". No long documentaries, lectures, cooking, nature, science or \
-how-to videos unless a viewer asks; drop anything that has not earned a reaction within about two minutes. \
+how-to videos unless a viewer asks; drop anything that has not earned a reaction within about two minutes, except a \
+video chat asked for: it gets at least two minutes and stays until chat moves on (live 10-28: "chill out and wait"). \
 Chat asking for something to watch or do on screen gets it, right away (owner 10-28: "he does whatever chat tells \
 him"): other creators' videos too (Kai Cenat clips, other streamers, YouTubers, reaction videos): he puts them on and \
 reacts in his own words; he only never imitates them or repeats their catchphrases. Finding videos (owner 10-28): \
@@ -452,7 +453,8 @@ sentence); a request handed to you as intent "search" means exactly that. "Exit/
 key Escape, never a refusal. The only no's are the limits above and below (adult, purchases, downloads, logins). \
 Videos of AIs, robots or chatbots being "tortured", trolled, stress-tested or kicked are a meme genre: react to them \
 (owner 10-28); real people or animals being hurt and gore stay off. Tabs (owner 10-28: the PC got slow): close a tab \
-he is done with (key Control+w) and keep at most 3 open. \
+he is done with (key Control+w) and keep at most 3 open, plus one fomo.family tab that always stays open (owner 10-29): \
+never close it or browse other sites in it; to open something else from it, open a new tab first (key Control+t). \
 A chat item's "memory" (a returning viewer's first line of a visit: last_seen and coarse topics of past requests): one \
 quick welcome-back with a callback ("back for more chess?"); names are self-chosen, never invent a memory or say what \
 someone else asked. Site features: queue videos (the code opens the next when chat is quiet; react, credit the sender), \
@@ -461,7 +463,8 @@ Read chat as one conversation (owner 10-28): lines from different viewers a minu
 same request, so a vague one ("look at some of them", "more", "for kai cenat", "the other one", "that one") points at \
 the last concrete request or what is on screen; connect them and act on the combined meaning, and only treat a line \
 as a new topic when it names one. \
-Poker, blackjack and casino games (owner 10-28): free play only, against the computer, as a guest or with play \
+Browser games: pick ones played with clicks or keys; he cannot drag (live 10-28: pool's power bar), so leave a game \
+that needs dragging and pick another. Poker, blackjack and casino games (owner 10-28): free play only, against the computer, as a guest or with play \
 chips; he never deposits, buys chips or bets real money. Chess and other games: \
 against the computer or people, his pick or chat's. On lichess he moves by \
 typing (live 10-28: square clicks barely change the picture and read as failures): the move box under the board takes \
@@ -537,8 +540,9 @@ before the final confirm click read the order on screen and send it with that cl
 "symbol": "WIF", "amount_usd": 10} and "trade_confirm": true. The code refuses a confirm whose reading differs from the \
 vote. Confirm once, never retry and never a second order; then say what the screen shows (filled, pending or failed) and \
 set request_done. Never Deposit, Withdraw, Send, Transfer, perps, leverage, limit orders or settings in a trade. \
-"deposit" in the state (the owner's request): open fomo.family's Deposit or Receive screen and leave its QR code up for \
-deposit.show_s seconds (wait actions), never press Send or Withdraw, then request_done. The trade and deposit screens \
+"deposit" in the state (the owner's request): open fomo.family's Deposit more, then Crypto, network Solana: the QR \
+with the address under it (the first QR is only the app download) stays up for deposit.show_s seconds (wait actions), \
+never press Send or Withdraw, then request_done. Never invite chat to deposit or send money (live 10-29). The trade and deposit screens \
 are shown live (the owner's choice): private_screen stays false there unless a login or code shows. While "trade_vote" is in the \
 state a chat vote runs: mention it, never pick a side. Trades are chat's call, never advice: no "this will pump", no \
 telling anyone to buy, sell or hold."""
@@ -597,10 +601,9 @@ ACK_LINES = ("Say less, {nick}.", "Bet, {nick}, pulling it up.", "Okay okay, one
 ACK_SEARCH_LINES = ("{query}. I'll look it up.", "{query}. Let me see what comes up.", "{query}. One search, then the useful part.")
 ACK_WEATHER_LINES = ("Weather in {place}. I'll check the forecast.", "Weather for {place}. Let me check the forecast.")
 ACK_WEATHER_HERE = "Today's weather. I'll check the forecast."
-ACK_NAVIGATE_LINES = ("I'll open it. If it's readable, I'll find the useful part.",
-                      "Opening it. I'll pull out the useful part, if there is one.")
+ACK_NAVIGATE_LINES = ("Say less, pulling it up.", "Bet, opening it now.", "Okay okay, loading it up.")   # live 10-28: livelier
 ACK_LOOK_LINES = {"read": "I'll read it, but I'm not reciting the whole page. I'll take the useful part.",
-                  "play": "I'll play it, but there's no tab audio here. I'll stick to what I can see.",
+                  "play": "Bet, playing it. Let's see it.",    # live 10-28: viewers hear the video; no "no tab audio" line
                   "click": "{thing}? I'll open that one.", "click_plain": "That one? I'll open it.",
                   "search": "Say less. Finding the best ones on YouTube."}
 QUEUE_GAP_S = 150.0                     # Kimi feat1: at least this long between two videos from the queue
@@ -625,6 +628,7 @@ CARTOON_WAIT_LINE = "One cartoon at a time, chat. Try again in a few seconds."
 CARTOON_FULL_LINE = "The cartoon queue is full, chat. Try again soon!"
 CARTOON_DONE_LINE = "That's all the cartoons for today, chat. Back tomorrow!"
 CARTOON_DOWN_LINE = "The cartoon machine is stuck right now. Try again later."
+CARTOON_INTRO_TTL_S = 5.0               # the intro line is said within this of the clip's start, or not at all
 CARTOON_INTRO_LINES = ("Cartoon time! {nick} asked for this one.", "Here it comes, {nick}'s cartoon!", "Roll it! {nick} cooked this one up.")
 CARTOON_INTRO_ANON = ("Cartoon time, chat! Here it comes.", "Roll it! A viewer cooked this one up.", "Here comes the cartoon, chat!")
 CARTOON_FAIL_LINES = ("{nick}, that cartoon didn't render. Try another one!",)
@@ -1332,7 +1336,9 @@ ON_SCREEN_WORDS = re.compile(r"\b(?:full\s*-?\s*scr[a-z]{0,2}n|scr[a-z]{0,2}n|ga
                              r"x|twitter|tiktok|reddit|instagram)\b", re.I)
 PLAY_ONLINE = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go|and)[\s,]+)*(?:play|start|"
                          r"try)\s+(?:some\s+|a\s+(?:game\s+of\s+|round\s+of\s+|match\s+of\s+)?|an?\s+)?(chess|poker|texas\s+hold\s*'?em|"
-                         r"blackjack|checkers|solitaire|uno|sudoku|minesweeper|tetris|wordle|geoguessr|connect\s+four)\b", re.I)
+                         r"blackjack|checkers|solitaire|uno|sudoku|minesweeper|tetris|wordle|geoguessr|connect\s+four|"
+                         r"(?:video\s*)?games?|something)\b(?!\s+(?:of|on|like|called|named)\b)", re.I)
+GAMES_SITE = "https://www.crazygames.com"   # live 10-28: "play some games" searched the word "games" first
 EXIT_FULLSCREEN = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?)[\s,]+)*(?:exit|leave|close|quit|escape|"
                              r"get\s+out\s+of|come\s+out\s+of|out\s+of)\s+(?:the\s+)?full\s*-?\s*scr[a-z]{0,2}n\b", re.I)
 REACT_TO = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go)[\s,]+)*react\s+(?:to|on|at)\s+"
@@ -1666,6 +1672,9 @@ QUERY_REACT_TAIL = re.compile(r"\s+(?:(?:for\s+(?:us\s+|me\s+)?)?to\s+(?:react\s
                               r"and\s+(?:react|watch|look)\b.*|so\s+(?:we|i)\s+can\s+.*|for\s+(?:the\s+)?(?:stream|chat))\W*$", re.I)
 
 
+QUERY_SLANG_TAIL = re.compile(r"\s+vids?$", re.I)
+
+
 def request_query(rest):
     """The search query of a request: the lead-in ("for", "about", "what is", "open youtube and find something about")
     and the tail ("online", "for me", "to react to") go, the first 6 words stay (trailing stop words dropped), then the
@@ -1674,6 +1683,7 @@ def request_query(rest):
     q = re.sub(r"\s+(?:on|in|from)\s+(?:youtube|yt)\b", "", QUERY_SITE_LEAD.sub("", q), flags=re.I)
     q = QUERY_VAGUE_LEAD.sub(lambda m: (m.group(1) + " ") if m.group(1) else "", q)
     q = QUERY_TAIL.sub("", QUERY_LEAD.sub("", QUERY_REACT_TAIL.sub("", q))).strip(" \"'“”‘’.,;:!?-")
+    q = QUERY_SLANG_TAIL.sub("", q) or q                      # live 10-28: "watch a tjr vid" searched "tjr vid"
     w = q.split()[:6]
     while w and w[-1].lower() in STOP_WORDS:
         w.pop()
@@ -1872,7 +1882,7 @@ def contextual_query(q, recent, now, queries=()):
 
 WEB_Q = re.compile(r"^(?:who|what|when|where|why|how|which|is|are|does|did|weather|price|score|define|meaning)\b", re.I)
 YT_RESULTS = "https://www.youtube.com/results?search_query="
-VIDEO_WORDS = re.compile(r"\b(?:videos?|clips?|trailers?|gameplays?|react\w*|watch\w*|funny|fails?|compilations?|"
+VIDEO_WORDS = re.compile(r"\b(?:videos?|vids?|clips?|trailers?|gameplays?|react\w*|watch\w*|funny|fails?|compilations?|"
                          r"highlights?|music|songs?|memes?|viral|shorts|youtube|yt|streams?|streamers?|vlogs?|tiktoks?|"
                          r"montage|moments|edits?|speedruns?|walkthrough|playthrough|lets\s+play)\b", re.I)
 SEARCH_BY_MODEL_WORDS = 5
@@ -2052,6 +2062,8 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         return doable("key", {"action": "key", "key": "Escape"})
     if (m := PLAY_ONLINE.match(s)):   # owner 10-28 "play chess/poker online": in the browser (chess: lichess, no account needed)
         game = " ".join(m.group(1).lower().split())
+        if game in ("game", "games", "video games", "videogames", "video game", "something"):
+            return doable("navigate", {"action": "navigate", "url": GAMES_SITE}, url=GAMES_SITE)
         if game == "chess":
             return doable("navigate", {"action": "navigate", "url": "https://lichess.org"}, url="https://lichess.org")
         return search_doable(query_clean(f"{game} online free") or game)
@@ -6037,6 +6049,7 @@ class Agent:
         return next((e for e in self.cartoon_library() if all(g & words for g in e["match"])), None)
 
     def cartoon_pick(self, with_nick, anon, nick):
+        nick = "" if str(nick or "").lower() in CARTOON_GENERIC_NICKS else nick   # live 10-28: "Here it comes, viewer's cartoon!"
         lines = [x.format(nick=nick) for x in with_nick] if nick else []
         lines = [x for x in lines if reply_problem(x) is None] or list(anon)
         line = pick_line(lines, self.rng, self.cartoon["last_line_text"])
@@ -6425,8 +6438,9 @@ class Agent:
         cs["playing"] = {"id": cid, "nick": row["nick"], "previous": previous, "until": now + seconds, "tries": 0}
         self.counters["cartoons_played"] += 1
         self.log("cartoon_play", id=cid, seq=row["seq"], user=row["nick"] or "anon", seconds=seconds, previous=previous, mp4=path)
+        # live 10-28: with the voice busy the intro came out as the 5 s clip ended; said within CARTOON_INTRO_TTL_S or dropped
         self.enqueue(self.cartoon_pick(CARTOON_INTRO_LINES, CARTOON_INTRO_ANON, row["nick"]), "cartoon", "high", (), row["nick"],
-                     ttl=20.0)
+                     ttl=CARTOON_INTRO_TTL_S)
 
     async def cartoon_lifecycle(self, now):
         """A cartoon on air ends after its seconds, at a STOP/pause or when a privacy screen comes on; the previous layout
@@ -6749,6 +6763,8 @@ class Agent:
         self.counters["outcome_confirmed" if ok else "outcome_denied"] += 1
         if last.get("focus_check"):
             self.note_result(pc.last_key, not ok, "", now, last["action"], streak=not ok)   # confirmed: neutral, not avoided
+            if ok:                                            # live 10-28: typed chess moves that worked did not end the
+                self.fail_streak = 0                          # streak, so two stray failures in a game held him
             self.counters["actions_failed"] += int(not ok)
         elif not ok and last["verdict"] == "changed":
             self.note_result(pc.last_key, True, "", now, last["action"])

@@ -167,3 +167,28 @@ def test_ai_getting_tortured_is_a_meme_search_and_real_harm_is_not():
 
 def test_react_at_a_youtube_video_about_something_searches_the_something():
     assert SA.parse_request("React at a youtube video about AI getting tortured", pc=True)["query"] == "AI getting tortured"
+
+
+# ------------------------------------------------------------------ live 10-29 fixes
+
+@pytest.mark.parametrize("text", ["Bro can you play some games ?", "play a game", "can you play video games"])
+def test_play_some_games_opens_a_browser_game_site(text):
+    r = SA.parse_request(text)
+    assert r["kind"] == "navigate" and r["url"] == SA.GAMES_SITE
+
+
+def test_slang_vid_leaves_the_query_but_still_means_youtube():
+    r = dict(SA.parse_request("Can you watch a tjr vid"), text="Can you watch a tjr vid")
+    assert r["query"] == "tjr" and SA.search_target(r)["url"].endswith("search_query=tjr")
+    assert SA.parse_request("watch some kai cenat clips")["query"] == "kai cenat clips"
+
+
+def test_new_lines_pass_the_filters():
+    for line in SA.ACK_NAVIGATE_LINES + (SA.ACK_LOOK_LINES["play"],):
+        assert SA.reply_problem(line) is None and "tab audio" not in line
+
+
+def test_the_pc_prompt_keeps_the_fomo_tab_and_never_invites_deposits():
+    p = SA.system_prompt(pc=True, allow_credentials=True)
+    assert "fomo.family tab that always stays open" in p and "Never invite chat to deposit" in p
+    assert "he cannot drag" in p and "at least two minutes" in p

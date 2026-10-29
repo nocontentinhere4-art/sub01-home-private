@@ -28,3 +28,7 @@ Fixes: kill switch cancels votes/queued/unconfirmed trades; confirm bound to the
 ## trade3 (delta review)
 
 APPROVE — Changes 1–5 are correctly implemented; no new correctness or fail-closed regressions found in the delta.
+
+## fix10 (live fixes 10-29: games, drag, streak, cartoon intro, vid, acks, patience, fomo tab, deposit)
+
+APPROVE

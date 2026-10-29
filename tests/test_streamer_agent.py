@@ -2411,7 +2411,7 @@ def test_read_play_and_click_requests_get_their_lines_and_the_model_may_ask_whic
     texts = [s["text"] for s in world.spoken]
     assert texts[::2] == [SA.ACK_LOOK_LINES["read"], SA.ACK_LOOK_LINES["play"], "The first result? I'll open that one."]
     assert texts[1::2] == ["Tide pools again."] * 3 and [p["seqs"] for p in world.said_log] == [[1], [1], [2], [2], [3], [3]]
-    assert "tab audio" in SA.ACK_LOOK_LINES["play"] and "not reciting the whole page" in SA.ACK_LOOK_LINES["read"]
+    assert "tab audio" not in SA.ACK_LOOK_LINES["play"] and "not reciting the whole page" in SA.ACK_LOOK_LINES["read"]   # live 10-28: viewers hear the video
     assert all(any("ask in one short line which one" in h for h in c["state"]["hints"]) for c in prov.calls
                if c["state"].get("chat_request", {}).get("phase") == "act")
     # nothing matching on the page: the new line
@@ -4374,7 +4374,9 @@ def test_a_done_file_plays_through_the_feeder_and_the_director_and_the_layout_co
     asyncio.run(agent.step())
     assert world.layouts == ["cartoon", "desktop"] and agent.status()["cartoon"]["playing"] is None   # the director's own layout
     intro = [s for s in world.spoken if s["tag"] == "cartoon"]
-    assert len(intro) == 1 and intro[0]["text"] in [x.format(nick="mika") for x in SA.CARTOON_INTRO_LINES]
+    # live 10-28: an intro said as the clip ended; now it is said within CARTOON_INTRO_TTL_S or dropped (the voice was
+    # still on the "cooking" line here)
+    assert len(intro) <= 1 and all(x["text"] in [y.format(nick="mika") for y in SA.CARTOON_INTRO_LINES] for x in intro)
     for _ in range(3):
         clock.t += 4
         asyncio.run(agent.step())
