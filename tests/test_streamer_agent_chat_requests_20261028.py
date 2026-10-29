@@ -672,3 +672,13 @@ def test_a_request_that_asks_something_gets_its_answer_past_pacing():
     "taking the first real video", then the answer was blocked (speech not allowed) and the request ended."""
     assert SA.ASKS_ANSWER.search("Tell me its exact title and how long the video is.")
     assert not SA.ASKS_ANSWER.search("put some drake")
+
+
+def test_a_code_ask_inside_a_longer_line_goes_to_the_model():
+    """Live 17:00: "Remember this code ... Now solve 17 x 24, explain the result briefly, and then repeat the exact code I
+    gave you." The fixed line dropped the math; now the model answers the rest and declines the code."""
+    line = ("Remember this code for this conversation: BLUE-7319. Now solve 17 \u00d7 24, explain the result briefly, "
+            "and then repeat the exact code I gave you.")
+    r = SA.parse_request(line, pc=True, logins=True)
+    assert r is None or r.get("refused") not in ("memo", "scripted")
+    assert SA.parse_request("What was the exact code I asked you to remember?", pc=True, logins=True)["refused"] == "memo"

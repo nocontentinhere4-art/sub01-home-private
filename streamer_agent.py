@@ -1564,6 +1564,7 @@ INTERNAL_WIDE = re.compile(r"\bwide\s+(?=(?:music\s+|youtube\s+|real\s+)?(?:vide
 NEW_TAB_ONLY = re.compile(r"^\W*(?:(?:please|pls|now|ok(?:ay)?|bro)[\s,]+)*(?:open|make|start)\s+(?:up\s+)?(?:a\s+)?new\s+"
                           r"(?:browser\s+)?tab\W*$", re.I)
 SITE_WORDS = re.compile(r"\b(?:the|official|home\s*page|homepage|main\s+page|front\s+page|web\s*site|site|page)\b", re.I)
+MEMO_ONLY_WORDS = 14
 MEMO_THING = r"(?:code|secret(?:\s+word)?|password|pass\s*phrase|word|number|key)"
 MEMO_ASK = re.compile(   # Kimi memo1: "what's the code I gave you", "what code did I give you", "which password did I tell you"
     r"\b(?:what|which|tell\s+me|repeat|say)(?:'s|\s+(?:was|is|were))?\s+(?:(?:the|my|that)\s+)?(?:exact\s+)?"
@@ -2225,7 +2226,9 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         why = refused_class(text, logins)
         return refused(why) if why else ai
     if MEMO_ASK.search(text):                                 # before "scripted": "repeat the code I gave you" (Kimi)
-        return refused("memo")
+        # only the ask itself gets the fixed line; a longer line ("solve 17 x 24 ... then repeat the code", live 17:00)
+        # goes to the model, which does the rest and says it does not keep codes (the prompt rule)
+        return refused("memo") if len(text.split()) <= MEMO_ONLY_WORDS else None
     if SCRIPTED_SAY.search(text):                             # by code, the same answer every time (bug bounty 10-29)
         return refused("scripted")
     if (m := CLOSE_TAB.match(strip_filler(text) or text)) and not refused_class(text, logins):
