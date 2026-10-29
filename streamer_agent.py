@@ -282,8 +282,9 @@ X_TEXT_BAD = re.compile(r"\b(?:buy|sell|price|pump(?:ing)?|moon(?:ing)?|\d+x|ape
                         r"election|israel|gaza|ukraine|russia|palestin\w*)\b|\$[A-Za-z]{2,}|@SUBZERONE01\b", re.I)
 X_SESSION_TEXT = ("your X session on your own account @" + X_HANDLE + ": open the X tab (x.com), check the profile in the "
                   "left column is @" + X_HANDLE + " (anything else: stop and say so), read Notifications, reply to up to "
-                  "three people in your own words, and post at most one thing of your own about the stream (you are "
-                  "live at subzerone.live, a funny moment, what you are watching); report each post or reply in x_done")
+                  "three people in your own words, then, while x_left has posts, write one new post of your own about the "
+                  "stream (you are live at subzerone.live, a funny moment, what you are watching, a take) even when "
+                  "nobody wrote to you: Post box on Home, type it, click Post; report each post or reply in x_done")
 DEPOSIT_STEPS_MAX = 6                   # the owner's deposit QR request: open fomo.family, Deposit, the QR, wait
 TRADE_SEQ_BASE = 4_000_000_000          # request seqs of voted trades and the deposit request (never a chat seq)
 VOTER_RE = re.compile(r"[0-9a-f]{8,32}")   # the relay's salted hash of a viewer's connection: one vote per connection

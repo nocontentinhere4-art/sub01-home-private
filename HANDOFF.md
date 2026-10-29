@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-29 18:15 UTC (X sessions, new73; same session section); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -270,6 +270,32 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   runtime edits: sequence from the clock; allow_credentials default True since 18:54 on the owner's request).
 
 ### 2026-10-28 22:00 - 10-29 04:10 UTC (session_017Z5EpkmcHzLn9af9DrHon8, branch claude/compassionate-heisenberg-2fvnf6)
+- **10-29 18:11 agent new73 (git cf3fced; runtime = git + the `sequence` line; backup in /home/sub01-review-20261027):
+  X sessions LIVE (owner: "fai si che possa postare, rispondere, fare i propri post, essere attivo su X").** SUB-01's
+  OWN account is **@subzeroneperson** ("Subzerone"), already logged in on the Vagon Chrome. **Never use
+  @SUBZERONE01: it is the owner's account.** Every hour, when nothing else is asked of him, he gets one session (12 steps,
+  240 s): his posts/replies in his own words. Code gates: x.com own paths only for navigation; every typed text >= 6
+  chars, the session's texts joined <= 280 chars, the only link subzerone.live, no money/coin/politics/owner-account
+  words, the speech filter, no log-in typing; caps are 12 sessions, 16 texts a day and 4 per session, persisted in
+  `streamer/x_state.json`. Switches: `streamer/x-on` (created 18:11) and `streamer/x-off` (kill switch, checked
+  at every step). Chat asking him to post on X hears that he posts there himself. Kimi x1-x4. Clicks can't be
+  URL-checked (screenshots only), so no follows/DMs is a prompt rule. Phase 2: logo/banner upload (owner's OK),
+  live clips.
+- 10-29 16:30-18:00 agent new65-new72 (710a0ab, 32bfcac, 2432583, 05d5f50, 2206dfc, 148e976, 763de64, cf32160):
+  - chat logins open the named site;
+  - the trading host is refused;
+  - memo codes are not kept;
+  - **ask_ai**: he types a viewer's message into ChatGPT once (his own ChatGPT account, age 25, light mode);
+    `streamer/ask-ai-off` is the kill switch;
+  - asked questions get an answer (answer_due);
+  - on the PC he stays in the desktop streamer view, with webcam **talk segments** for chat moments;
+  - "open the full screen" clicks full screen.
+  
+  Pending:
+  - KIMCHI avatar waits for the owner's Simli Face ID; restore "never gives tips or tells anyone to buy" on approval.
+  - Owner to decide: block piracy streaming sites? TikTok/Instagram by name?
+  
+  Known issue: an agent restart loses chat context.
 - Runtime now: agent **new48** (git ba2d991 + the runtime `sequence` line), `streamer_trade.py`,
   `streamer_live_features.py`; relay watch1 (git 699f572, `/status` `watching` = distinct viewers in the last 70 s);
   cartoon feeder git ba2d991 (frame debt); director unchanged. Every change is in `/tmp/sub01-share/pod-changes.log`

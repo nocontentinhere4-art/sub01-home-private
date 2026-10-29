@@ -1,0 +1,17 @@
+Follow-up x5 on SUB-01's X sessions (you approved x3/x4). First live session (18:11 UTC): he checked the profile was @subzeroneperson, Notifications and mentions were empty, and he ended the session without posting ("no replies to send, back to the clips"), because the session text said "post at most one thing". The owner wants him active on X. Change to the session text (diff below): when x_left has posts, writing one new post of his own is expected even when nobody wrote to him. All code gates are unchanged (4 posts and 16 texts a day, 4 texts a session, 280 chars joined, only subzerone.live as a link, no money/coin/politics, speech filter, own x.com pages only, x-off kill switch). APPROVE or CHANGES?
+diff --git a/streamer_agent.py b/streamer_agent.py
+index 0393486..bd4e790 100644
+--- a/streamer_agent.py
++++ b/streamer_agent.py
+@@ -282,8 +282,9 @@ X_TEXT_BAD = re.compile(r"\b(?:buy|sell|price|pump(?:ing)?|moon(?:ing)?|\d+x|ape
+                         r"election|israel|gaza|ukraine|russia|palestin\w*)\b|\$[A-Za-z]{2,}|@SUBZERONE01\b", re.I)
+ X_SESSION_TEXT = ("your X session on your own account @" + X_HANDLE + ": open the X tab (x.com), check the profile in the "
+                   "left column is @" + X_HANDLE + " (anything else: stop and say so), read Notifications, reply to up to "
+-                  "three people in your own words, and post at most one thing of your own about the stream (you are "
+-                  "live at subzerone.live, a funny moment, what you are watching); report each post or reply in x_done")
++                  "three people in your own words, then, while x_left has posts, write one new post of your own about the "
++                  "stream (you are live at subzerone.live, a funny moment, what you are watching, a take) even when "
++                  "nobody wrote to you: Post box on Home, type it, click Post; report each post or reply in x_done")
+ DEPOSIT_STEPS_MAX = 6                   # the owner's deposit QR request: open fomo.family, Deposit, the QR, wait
+ TRADE_SEQ_BASE = 4_000_000_000          # request seqs of voted trades and the deposit request (never a chat seq)
+ VOTER_RE = re.compile(r"[0-9a-f]{8,32}")   # the relay's salted hash of a viewer's connection: one vote per connection
