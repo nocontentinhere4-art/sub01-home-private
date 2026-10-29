@@ -682,3 +682,15 @@ def test_a_code_ask_inside_a_longer_line_goes_to_the_model():
     r = SA.parse_request(line, pc=True, logins=True)
     assert r is None or r.get("refused") not in ("memo", "scripted")
     assert SA.parse_request("What was the exact code I asked you to remember?", pc=True, logins=True)["refused"] == "memo"
+
+
+@pytest.mark.parametrize("text,payload", [("Open chatgpt and sign in and type hi i am sub-01", "hi i am sub-01"),
+                                          ("open chatgpt and write hello there", "hello there"),
+                                          ("open chatgpt and type into it what is 2+2", "what is 2+2"),
+                                          ("open chatgpt and say hello and type hi", "hi")])
+def test_unquoted_text_for_chatgpt_is_the_message(text, payload):
+    """Live 10-29 17:20: "Open chatgpt and sign in and type hi i am sub-01" was a plain navigation."""
+    r = SA.parse_request(text, pc=True, logins=True)
+    assert (r["kind"], r["payload"]) == ("ask_ai", payload)
+    assert SA.parse_request("type hi on twitter", pc=True, logins=True)["refused"] == "typing"
+    assert "log in with your own identity" in SA.SYSTEM_PC.replace("\\\n", "")
