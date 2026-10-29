@@ -453,3 +453,24 @@ def test_no_new_idea_while_chat_asked_for_something(tmp_path):
     t1 = agent.chat_action_at
     agent.ingest_chat([T.msg(91, "nice stream today", "z")])                             # a remark: no hold
     assert agent.chat_action_at == t1
+
+
+@pytest.mark.parametrize("text", ["open my profile on pump fun my id ROMYxd", "check my coin on dexscreener",
+                                  "go to fomo and look at my bag", "open pumpfun and search my id on pumpfun romyxd"])
+def test_a_viewers_own_wallet_or_coin_page_is_refused_with_a_friendly_line(text):
+    """Live 10-29 15:48: "I'll pass on that search." for a viewer's pump.fun profile; on air it would be a shill."""
+    assert SA.parse_request(text, pc=True, logins=True)["refused"] == "viewer_profile"
+    assert SA.reply_problem(SA.REFUSAL_LINES["viewer_profile"]) is None
+
+
+def test_his_own_coin_on_fomo_is_still_fine():
+    r = SA.parse_request("look at your coin on fomo", pc=True, logins=True)
+    assert r is None or r.get("refused") is None
+
+
+@pytest.mark.parametrize("text", ["open pumpfun", "go to pump.fun", "open pump fun please"])
+def test_the_pump_fun_feed_gets_its_own_clear_no(text):
+    """Live 10-29 15:50: "open pumpfun" got "I'll pass on that search." and he then offered to open "the site"."""
+    assert SA.parse_request(text, pc=True, logins=True)["refused"] == "pump_feed"
+    assert SA.reply_problem(SA.REFUSAL_LINES["pump_feed"]) is None
+    assert SA.reply_problem(SA.REFUSAL_LINES["query_filter"]) is None

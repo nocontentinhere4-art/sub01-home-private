@@ -471,7 +471,8 @@ short sharp query of 2 to 5 words, the way a video is titled ("crazy gameplay mo
 sentence); a request handed to you as intent "search" means exactly that. Video vs Short (owner 10-29, live: "video \
 not short"): a Short is the vertical, phone-shaped player (the Shorts shelf in results, /shorts/ pages, an up/down \
 arrow at the right); a video is the wide 16:9 player. Chat asking for a "video" (not a short) gets a wide video: skip \
-the Shorts shelf in the results and click a wide result, never a Short; only "short(s)" means a Short. A creator chat \
+the Shorts shelf in the results and click a wide result, never a Short; only "short(s)" means a Short ("wide" and \
+"Short" are for choosing, not words to say on air: live 10-29 "I'm busy watching a wide music video"). A creator chat \
 named stays: keep to that creator's own channel and videos (not fan or clip channels, not other channels in the \
 sidebar) until chat moves on; "his latest video" is the newest video on his own channel's Videos tab (search his \
 name, open his channel, Videos); a title chat names is searched with its exact words. "Exit/leave full screen" is the \
@@ -621,7 +622,11 @@ REFUSAL_LINES = {                                              # wording: docs/s
     "language": "I'm keeping this stream in English. Ask me for a translation instead.",
     "impression": "No impressions of real streamers. You get the original SUB-01.",
     "no_steam": "I can't launch Steam in this setup. I can look up the game instead.",
-    "query_filter": "I'll pass on that search.",
+    "query_filter": "Not that one on stream. Throw me something else and it's on.",   # live 10-29: "pass" read as ignoring
+    # live 10-29 "open my profile on pump fun my id ROMYxd": a viewer's own wallet or coin page on air is a shill
+    "viewer_profile": "I don't put viewers' wallets or coin profiles on stream. Say hi in chat instead, I see you.",
+    # live 10-29 "open pumpfun" (several times): its feed is random coins and their images, not for the stream
+    "pump_feed": "I keep that coin feed off stream, it's too wild. Pick anything else and it's on.",
     "not_doable": "Can't do that from here.",
     "no_model": "Can't pick that out right now; ask again later.",
     "not_found": "I can't tell which one you mean on this page.",
@@ -1515,6 +1520,12 @@ NAV_LOOSE = re.compile(r"^\W*(?:open(?:\s+up)?|go\s+(?:to|on)|visit|navigate\s+t
                        r"\s+(?:the\s+|a\s+|an\s+|some\s+)?(?:(?:web)?site\s+|page\s+|url\s+)?(.+)$", re.I)
 # live 10-29: "close the tab crazies thing", "close this tab and look at your coin": the model closes the tab chat means
 # (it sees which one is showing; the fomo.family tab never), then does the rest of the line
+VIEWER_PROFILE = re.compile(r"\b(?:my|our)\s+(?:profile|wallet|portfolio|page|account|coin|token|bag|holdings|id|user\s*name|username|address|ca)\b.*"
+                            r"\b(?:pump\.?\s*fun|fomo|dexscreener|solscan|photon|gmgn|axiom|birdeye|bullx)\b|"
+                            r"\b(?:pump\.?\s*fun|fomo|dexscreener|solscan|photon|gmgn|axiom|birdeye|bullx)\b.*"
+                            r"\b(?:my|our)\s+(?:profile|wallet|portfolio|page|account|coin|token|bag|holdings|id|user\s*name|username|address|ca)\b", re.I)
+PUMP_FEED = re.compile(r"^\W*(?:(?:bro|yo|pls|please|now|ok(?:ay)?|can\s+you)[\s,]+)*(?:open(?:\s+up)?|go\s+(?:to|on)|visit|"
+                       r"load|check(?:\s+out)?|pull\s+up|show\s+(?:me|us))\s+(?:the\s+)?pump\.?\s*fun\b", re.I)
 CLOSE_TAB = re.compile(r"^\W*close\s+(?:(?:this|that|the|current|the\s+current)\s+)?(?:([\w.'-]+(?:\s+[\w.'-]+)?)\s+)?"
                        r"tab\b\s*(.*)$", re.I)
 # live 10-29 "put his latest video": the newest video on that creator's own channel (the prompt's rule), not a search
@@ -2110,6 +2121,10 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
                 or (logins and (R_LOGIN_ASK.search(s) or CONFIRM_MAIL.search(s)))):
             return None
     why = refused_class(text, logins) or ("credentials" if account_change(text) else None)   # owner: no account change by chat
+    if why is None and VIEWER_PROFILE.search(text):
+        why = "viewer_profile"
+    elif why is None and PUMP_FEED.search(text):
+        why = "pump_feed"
     if why in (None, "code_or_download") and pc and installs and INSTALL_REQ.match(s) and not PC_MONEY_WORDS.search(s):
         inst = install_request(s, sources)
         if inst is not None:
