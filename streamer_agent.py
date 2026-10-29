@@ -733,8 +733,9 @@ ACK_LOOK_LINES = {"read": "I'll read it, but I'm not reciting the whole page. I'
 IDEAS = (
     ("music", "react to a brand-new music video (search YouTube: the newest hit, 2-5 words)"),
     ("sports", "react to last night's best sports highlights (NBA, football, UFC)"),
-    ("browser_game", "play a free browser game on crazygames.com for a few minutes: one played by clicks or key taps "
-                     "(no drag, no holding a key: 2048, chess, card or quiz games)"),
+    ("browser_game", "play a free browser game on crazygames.com for a few minutes: one played by clicks where each "
+                     "click changes a lot on screen (card, quiz or chess games; not 2048: its moves barely change the "
+                     "picture); if a game ignores you twice, leave it"),   # live 10-29: 2048 held him twice
     ("chess", "play a quick game on lichess.org (his account Subzerone01)"),
     ("streamers", "react to other streamers' funniest clips of the week"),
     ("trailers", "react to the newest movie or game trailer"),
