@@ -1,0 +1,1 @@
+APPROVE. x_done recorded before session termination, x_post_due prevents only the generic early close while preserving explicit completion and caps, owner news filtered, request-aware, rate-limited, X-session-enabled, expiry-checked.

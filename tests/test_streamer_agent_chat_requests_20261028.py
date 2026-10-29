@@ -1,7 +1,9 @@
-import json
 """Owner 10-28, live chat: "leave full screen", "watch some other games", "react to some kai cenat", "play poker online"
 were refused or never carried out (a playing video made every key and search stale_refused)."""
 import asyncio
+import json
+import os
+import time
 import sys
 from pathlib import Path
 
@@ -813,3 +815,41 @@ def test_x_session_text_reaches_the_model_whole():
     assert SA.request_text({"kind": "x_session", "text": SA.X_SESSION_TEXT}) == SA.X_SESSION_TEXT
     assert "click Post" in SA.request_text({"kind": "x_session", "text": SA.X_SESSION_TEXT})
     assert SA.request_text({"kind": "navigate", "text": "y" * 500}) == "y" * 200
+
+
+def test_x_session_goes_on_after_a_reply_until_his_own_post(tmp_path):
+    # live 10-29 19:16: he replied once, said so, and the session ended without his own post
+    reply = T.decision(state="x", action=None, say="Replied to that one on X.", x_done="reply")
+    post = T.decision(state="x", action=None, say="My own post is up too.", x_done="post")
+    agent, world, prov, clock = T.pc_make(tmp_path, reply, post)
+    agent.pc.mode = "vagon"
+    agent.hands_off_reason = lambda now: None
+    (agent.dir / "x-on").write_text("")
+    req = agent.x_session_request(clock())
+    agent.requests.waiting.clear()
+    req.update(phase="report", steps=3, started=clock(), commented=True, done=False)
+    agent.requests.current = req
+    assert agent.x_post_due(req, clock())
+    asyncio.run(agent.step())
+    assert agent.requests.current is req and not req["done"] and agent.x_day["reply"] == 1   # his post is still due
+    clock.t += 5
+    asyncio.run(agent.step())
+    assert req.get("x_posted") and agent.x_day["post"] == 1 and not agent.x_post_due(req, clock())
+
+
+def test_owner_news_reaches_the_state_rate_limited_and_expires(tmp_path):
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    now = clock()
+    assert agent.owner_news(now, None) is None                         # no file: nothing
+    news = {"text": "Halloween special, Sat Oct 31: Kimchi joins the stream as his AI avatar.",
+            "keywords": ["Kimchi", "Halloween"], "until": time.time() + 3600}
+    (agent.dir / "announce.json").write_text(json.dumps(news))
+    assert "Kimchi" in agent.owner_news(now, None)
+    assert agent.owner_news(now, {"kind": "navigate"}) is None         # never mid-request
+    agent.news_said = now                                              # he just named it on air
+    assert agent.owner_news(now + 60, None) is None and agent.owner_news(now + SA.NEWS_GAP_S + 1, None)
+    assert agent.owner_news(now + 60, {"kind": "x_session"})           # his X post is about it
+    news["until"] = time.time() - 1
+    (agent.dir / "announce.json").write_text(json.dumps(news))
+    os.utime(agent.dir / "announce.json", ns=(1, 1))
+    assert agent.owner_news(now + SA.NEWS_GAP_S + 1, None) is None     # over after the event
