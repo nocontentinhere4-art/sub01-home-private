@@ -36,7 +36,7 @@ main{min-width:0;padding:16px 20px 0}
 video{display:block;width:100%;aspect-ratio:16/9;background:#000}
 .badges{position:absolute;left:12px;top:12px;display:flex;gap:8px;pointer-events:none}
 .live{background:var(--live);color:#fff;font:800 12px/1 var(--sans);letter-spacing:.06em;padding:5px 8px;border-radius:4px}
-.live[hidden],.watching[hidden]{display:none}.watching{font-variant-numeric:tabular-nums}.state{background:#000a;color:#fff;font:600 12px/1 var(--sans);padding:5px 8px;border-radius:4px;backdrop-filter:blur(4px)}
+.live[hidden],.watching[hidden]{display:none}.watching{font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:5px}.watching svg{width:14px;height:14px;flex:none}.state{background:#000a;color:#fff;font:600 12px/1 var(--sans);padding:5px 8px;border-radius:4px;backdrop-filter:blur(4px)}
 .pc-screen{position:absolute;right:12px;bottom:56px;width:30%;max-width:380px;background:#101216ee;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 6px 28px #000a}
 .pc-heading{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px solid var(--line)}
 .pc-heading h2{margin:0;font:700 10px/1 var(--mono);letter-spacing:.12em;color:var(--muted)}.pc-buttons{display:flex;gap:6px}
@@ -124,7 +124,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
   <main>
     <section class="stage" aria-label="Live video">
       <video id="video" controls playsinline muted autoplay></video>
-      <div class="badges"><span class="live" id="live-badge" hidden>LIVE</span><span class="state" id="status" role="status">Connecting…</span><span class="state watching" id="watching" hidden aria-live="polite"></span></div>
+      <div class="badges"><span class="live" id="live-badge" hidden>LIVE</span><span class="state" id="status" role="status">Connecting…</span><span class="state watching" id="watching" hidden aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span id="watching-n"></span></span></div>
       <section class="pc-screen" aria-label="PC screen preview"><div class="pc-heading"><h2>PC SCREEN</h2><span class="pc-buttons"><button id="pc-expand" type="button" aria-expanded="false">Expand</button><button id="pc-hide" type="button">Hide</button></span></div><div class="pc-view"><span id="pc-state" role="status">Connecting…</span><img id="pc-frame" alt="Live PC screen" hidden></div></section>
       <button id="pc-show" type="button" hidden>Show PC</button>
     </section>
@@ -219,8 +219,8 @@ function renderMessages(list){const key=JSON.stringify(list);if(key===lastKey)re
 if(!list.length){messages.replaceChildren(Object.assign(document.createElement('p'),{className:'empty',textContent:'Say hi to SUB-01 👋'}));return;}
 messages.replaceChildren(...list.map(m=>{const p=document.createElement('p');p.className='msg';const w=document.createElement('span');w.className='who';w.textContent=(m.nick||'viewer')+':';w.style.color=COLORS[(m.nick?[...m.nick].reduce((a,c)=>a+c.charCodeAt(0),0):(m.at||0))%COLORS.length];p.append(w,document.createTextNode(m.text));return p;}));
 if(atBottom)messages.scrollTop=messages.scrollHeight;}
-const watchingEl=document.querySelector('#watching');
-function renderWatching(n){const ok=Number.isInteger(n)&&n>0;watchingEl.hidden=!ok;if(ok)watchingEl.textContent='👁 '+n.toLocaleString('en-US')+' watching';}
+const watchingEl=document.querySelector('#watching'),watchingN=document.querySelector('#watching-n');
+function renderWatching(n){const ok=Number.isInteger(n)&&n>0;watchingEl.hidden=!ok;if(ok)watchingN.textContent=n.toLocaleString('en-US')+' watching';}
 async function refresh(){try{const r=await fetch(base+'/status',{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error();const s=await r.json();const on=!!s.online&&!retryTimer&&!video.error;
 statusEl.textContent=s.online?(retryTimer||video.error?'Reconnecting video':'24/7 AI stream'):'Video temporarily offline';setLive(on);mode.textContent=s.agent==='paused'?'Manual control · agent paused':'';
 pcLayoutBig=(s.layout==='desktop'||s.layout==='split'||s.layout==='cartoon');applyPC();renderMessages(s.messages||[]);renderQueue(s.queue);renderHype(s.hype);renderWatching(s.watching);if(s.online)start();}catch{statusEl.textContent='Connection unavailable';setLive(false);}setTimeout(refresh,5000)}
