@@ -2345,6 +2345,14 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
                                    and request_url_problem(url) is None), None)
         if site:                                              # the model signs up there next ({{email}}, {{password}})
             return doable("navigate", {"action": "navigate", "url": site}, url=site, login=True)
+        # live 10-29 18:19 "go to example.com and click the Sign In button": a link or domain in the line is the site;
+        # a blocked one is refused, never "log in" on whatever page is open
+        links = request_links(text) or ["https://" + m.group(1) for m in HOST_RE.finditer(text)
+                                        if text[m.start() - 1:m.start()] != "@"]          # an e-mail's domain is no site
+        if links:
+            why = request_url_problem(links[0])
+            return refused(why) if why else doable("navigate", {"action": "navigate", "url": links[0]}, url=links[0],
+                                                   login=True)
         return doable("look", None, intent="click", thing="Sign up or log in", login=True)
     if R_TYPE.match(s):
         return refused("typing")

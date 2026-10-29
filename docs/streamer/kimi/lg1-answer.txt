@@ -1,0 +1,1 @@
+APPROVE — the fallback now correctly treats links and bare domains as login destinations, excludes e-mail domains, refuses blocked URLs instead of clicking the open page, and preserves known-site precedence.

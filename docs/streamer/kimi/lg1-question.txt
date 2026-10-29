@@ -1,0 +1,42 @@
+Review lg1 (SUB-01 chat request parser, during the public bug bounty). Live 18:19 a viewer wrote: SUB-01, go to example.com and click the "Sign In" button in the top right corner. The line matched the login branch (R_LOGIN_ASK, logins are allowed by the owner), no known site name was found, so it became the generic "look for Sign up or log in on whatever page is open" with an odd ack line ("Sign up or log in? I'll open that one."). The model still navigated and correctly found no Sign In button. Fix (diff below): after the known-site-name lookup fails, a link or bare domain in the line (request_links, else HOST_RE hosts not preceded by "@", so an e-mail's domain is never a site) is the site: navigate there with login=True; if it is blocked (request_url_problem: adult, trading hosts, bad url) the request is refused instead of falling back to a click on the open page. Known names still win (twitch.tv -> https://www.twitch.tv). Tests added. APPROVE or CHANGES?
+diff --git a/streamer_agent.py b/streamer_agent.py
+index 216b2df..72e3af8 100644
+--- a/streamer_agent.py
++++ b/streamer_agent.py
+@@ -2345,6 +2345,14 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
+                                    and request_url_problem(url) is None), None)
+         if site:                                              # the model signs up there next ({{email}}, {{password}})
+             return doable("navigate", {"action": "navigate", "url": site}, url=site, login=True)
++        # live 10-29 18:19 "go to example.com and click the Sign In button": a link or domain in the line is the site;
++        # a blocked one is refused, never "log in" on whatever page is open
++        links = request_links(text) or ["https://" + m.group(1) for m in HOST_RE.finditer(text)
++                                        if text[m.start() - 1:m.start()] != "@"]          # an e-mail's domain is no site
++        if links:
++            why = request_url_problem(links[0])
++            return refused(why) if why else doable("navigate", {"action": "navigate", "url": links[0]}, url=links[0],
++                                                   login=True)
+         return doable("look", None, intent="click", thing="Sign up or log in", login=True)
+     if R_TYPE.match(s):
+         return refused("typing")
+diff --git a/tests/test_streamer_agent_chat_requests_20261028.py b/tests/test_streamer_agent_chat_requests_20261028.py
+index 939d3dc..6f1f666 100644
+--- a/tests/test_streamer_agent_chat_requests_20261028.py
++++ b/tests/test_streamer_agent_chat_requests_20261028.py
+@@ -562,12 +562,16 @@ def test_looking_out_of_the_window_still_leaves_the_desk():
+                                       ("log in on reddit and like the post", "https://www.reddit.com"),
+                                       ("sign in with google on x", "https://x.com"), ("sign up on kick", "https://kick.com"),
+                                       ("create an account on chess.com", "https://www.chess.com"),
+-                                      ("sign up on lichess", "https://lichess.org")])
++                                      ("sign up on lichess", "https://lichess.org"),
++                                      ('SUB-01, go to example.com and click the "Sign In" button in the top right '
++                                       'corner.\u2060', "https://example.com")])
+ def test_chat_logins_open_the_site_named(text, url):
+     """Owner 10-29: "fai si che possa fare login dappertutto senza problemi" ("log in to twitch" clicked the open page)."""
+     r = SA.parse_request(text, pc=True, logins=True)
+     assert (r["kind"], r["url"], r["login"]) == ("navigate", url, True)
+     assert SA.parse_request("log in", pc=True, logins=True)["thing"] == "Sign up or log in"
++    assert SA.parse_request("log in to dexscreener.com", pc=True, logins=True)["refused"] == "blocked_domain"
++    assert SA.parse_request("sign in to my-site.io", pc=True, logins=True)["url"] == "https://my-site.io"
+ 
+ 
+ @pytest.mark.parametrize("text", ["open coingecko site", "go to coinmarketcap", "open dexscreener", "open binance",

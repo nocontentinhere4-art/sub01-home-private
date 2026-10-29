@@ -562,12 +562,16 @@ def test_looking_out_of_the_window_still_leaves_the_desk():
                                       ("log in on reddit and like the post", "https://www.reddit.com"),
                                       ("sign in with google on x", "https://x.com"), ("sign up on kick", "https://kick.com"),
                                       ("create an account on chess.com", "https://www.chess.com"),
-                                      ("sign up on lichess", "https://lichess.org")])
+                                      ("sign up on lichess", "https://lichess.org"),
+                                      ('SUB-01, go to example.com and click the "Sign In" button in the top right '
+                                       'corner.\u2060', "https://example.com")])
 def test_chat_logins_open_the_site_named(text, url):
     """Owner 10-29: "fai si che possa fare login dappertutto senza problemi" ("log in to twitch" clicked the open page)."""
     r = SA.parse_request(text, pc=True, logins=True)
     assert (r["kind"], r["url"], r["login"]) == ("navigate", url, True)
     assert SA.parse_request("log in", pc=True, logins=True)["thing"] == "Sign up or log in"
+    assert SA.parse_request("log in to dexscreener.com", pc=True, logins=True)["refused"] == "blocked_domain"
+    assert SA.parse_request("sign in to my-site.io", pc=True, logins=True)["url"] == "https://my-site.io"
 
 
 @pytest.mark.parametrize("text", ["open coingecko site", "go to coinmarketcap", "open dexscreener", "open binance",
