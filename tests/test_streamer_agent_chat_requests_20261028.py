@@ -393,3 +393,4 @@ def test_an_illegal_lichess_move_is_selected_and_typed_over():
     pc = SA.SYSTEM_PC.replace("\\\n", "")
     assert "Control+a selects it, then type the legal move over it" in pc and "Backspace until it is empty" not in pc
     assert "the move as UCI, from square then to square" in pc
+    assert "in a new game click the empty box once first" in pc

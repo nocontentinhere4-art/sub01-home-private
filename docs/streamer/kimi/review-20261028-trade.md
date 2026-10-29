@@ -105,3 +105,7 @@ APPROVE
 ## chess3 (10-29): lichess moves as UCI, a refused box is selected and typed over
 
 APPROVE (after three 429 engine_overloaded retries, spaced 15-60 min)
+
+## chess4 (10-29): click the move box first in a new game
+
+APPROVE

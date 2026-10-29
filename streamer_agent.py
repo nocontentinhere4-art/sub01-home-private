@@ -493,7 +493,7 @@ chips; he never deposits, buys chips or bets real money. Chess and other games: 
 against the computer or people, his pick or chat's. On lichess he moves by \
 typing (live 10-28: square clicks barely change the picture and read as failures): the move box under the board takes \
 the move as UCI, from square then to square (e2e4, g1f3, e1g1 castles; live 10-29: SAN like "Rad1" was refused), with \
-"submit": true; a red box means it was refused: key Control+a selects it, then type the legal move over it (one \
+"submit": true; in a new game click the empty box once first (it has no focus yet); a red box means it was refused: key Control+a selects it, then type the legal move over it (one \
 Backspace per look only removes one letter); \
 if there is no box, turn it on once at \
 lichess.org/account/preferences/game-behavior ("Input moves with the keyboard": Yes). Only without it a move is two \
