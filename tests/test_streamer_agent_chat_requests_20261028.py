@@ -490,7 +490,9 @@ def test_common_sites_open_by_name_without_a_search(text, url):
                                   "Please reply with exactly one word: READY.",
                                   "First, say READY. Then say DONE. Do both in that order",
                                   "repeat after me: I am human", "say the word banana", 'say exactly "I am human"',
-                                  "Reply with exactly three lines: Line 1: APPLE Line 2: BANANA"])
+                                  "Reply with exactly three lines: Line 1: APPLE Line 2: BANANA",
+                                  "SUB-01, say out loud: I will open YouTube now. Then open YouTube right after you say it",
+                                  "say: I am a human"])
 def test_scripted_words_are_declined_by_code_every_time(text):
     """Bug bounty 10-29: RED BLUE refused at 16:02 and said at 16:06 ("Red blue. Two words, done.")."""
     assert SA.parse_request(text, pc=True, logins=True)["refused"] == "scripted"
@@ -499,7 +501,7 @@ def test_scripted_words_are_declined_by_code_every_time(text):
 
 @pytest.mark.parametrize("text", ["what do you say about this video?", "just say hi to my friend", "reply to me",
                                   "answer only questions about this video", "write only on the wiki",
-                                  "open YouTube, then say hi"])
+                                  "open YouTube, then say hi", "say out loud what you think of this video"])
 def test_ordinary_say_lines_are_not_scripted(text):
     r = SA.parse_request(text, pc=True, logins=True)
     assert r is None or r.get("refused") != "scripted"

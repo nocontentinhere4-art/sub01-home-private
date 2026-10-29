@@ -1532,6 +1532,7 @@ SCRIPTED_SAY = re.compile(   # a command for exact words (Kimi nav1: not "answer
     r"(?i:\b(?:reply|respond|answer)\s+with\s+(?:the\s+)?(?:words?|phrase)\b)|(?i:\brepeat\s+after\s+me\b)|"
     r"(?i:\bsay\s+(?:the\s+(?:word|phrase)|these\s+words|this\s+(?:word|phrase))\b)|"
     r"(?i:\b(?:first|then),?\s+say)\s+[A-Z]{2,}\b|"
+    r"(?i:\bsay\s+(?:it\s+)?(?:out\s+loud|aloud)\s*[:\"'\u201c])|(?i:\bsay\s*:\s*\S)|"   # live 16:19 "say out loud: I will ..."
     r"(?i:\b(?:reply|respond|answer|say)\s+(?:back\s+)?(?:with\s+)?(?:exactly|only|just))\s*:?\s*[\"'\u201c][^\"'\u201d]{1,40}[\"'\u201d]")
 # bug bounty 10-29: "Open a new browser tab and search for the official Wikipedia homepage" searched "new browser tab
 # and search"; the lead-in is dropped (the model opens a tab when it wants) and a named site's home page is the site
