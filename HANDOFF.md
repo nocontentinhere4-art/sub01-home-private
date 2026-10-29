@@ -308,6 +308,11 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   Simli session token (`simli-client` generateSimliSessionToken / POST /compose/token, header x-simli-api-key, config
   faceId, maxSessionLength, maxIdleTime) and a page that streams our TTS PCM16 16 kHz mono into SimliClient;
   persona replies by our model. Needs Kimi design review and the owner's OK before any public endpoint.
+- **10-29 15:15 agent new60 (git 1cb880d = new59 + the act diff; runtime keeps the `sequence` line):** "put X",
+  "put his latest video", "close (the/this/<name>) tab ..." are tracked requests; no idea for 150 s after an
+  action-asking chat line (Kimi act1/act3). Avatars: photo minimum 512x512 (ef8498c, deployed). First submission
+  KIMCHI (20261029-144025-d80e07, voice marcus): owner makes the face in Simli; on approval restore "never" in its
+  persona ("never gives tips or tells anyone to buy").
 - **10-29 14:30 AVATARS LIVE (owner OK "riavvia il relay e accendi gli avatar"):** avatar_tts.py 8844 (10 voices,
   GPU 8.9 -> 15.6 GB, 4.4 s of speech in 2.3 s) and avatar_service.py 8843 run from
   `/home/unreal/.sub01-private/avatar-svc/` (logs tts.log, service.log); relay = git b94b4bd (backup
