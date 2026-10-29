@@ -279,6 +279,12 @@ REQUEST_ACK_SILENT = ("scroll", "key", "back")
 HUSH_S, HUSH_EVERY_S = 60.0, 600.0
 FACE_HOLD_S = 60.0
 LAYOUT_DWELL_S = 45.0                   # a model-chosen layout stays this long (it flipped room/desktop every ~30 s; Kimi)
+LAYOUT_BACK_S = 15.0                    # owner 10-29: on the remote PC, back to the desktop view this soon after a chat moment
+# owner 10-29: on the remote PC the desktop view is the main one; the webcam for "a longer moment where he has a lot to
+# say, comment, interact" (Kimi talk1: at content boundaries, 50 s that extend while he talks or chat answers, a hard
+# maximum, never cut mid-line, preempted by a request, a game, a routine or the privacy screen)
+TALK_SEGMENT_S, TALK_EXTEND_S, TALK_MAX_S, TALK_SILENCE_S = 50.0, 15.0, 90.0, 20.0
+TALK_COOLDOWN_S, TALK_EVERY_S, TALK_MIN_VIEWERS = 300.0, 600.0, 2
 LAYOUT_FAST_S = 8.0                     # ... but webcam for a chat answer or a reaction may come this soon
 CHAT_READ_BEAT_S = 3.0
 MOUSE_STATES = ("mouse", "reading")     # the visual state of a click/navigate: "reading" is the pre-review fallback (--mouse-state)
@@ -498,7 +504,9 @@ code. A login wall: log in with your own identity (owner: he logs in everywhere)
 banner you cannot pass: say so in one line and stop. A requested page that does not load (blocked, timed out, \
 an error page; bug bounty 10-29: watchcartoononline failed and he went to YouTube without a word): say so plainly in \
 one line, naming the site, and offer one alternative ("want me to check YouTube?"); do the alternative only once chat \
-says yes, never silently. Every clause of a request is part of it (bug bounty 10-29, "open twitch and follow me" \
+says yes, never silently. A state "talk_segment" (owner 10-29): he is on camera for a chat moment: talk with chat about what \
+they just said (its recent_chat) or what just happened, a real take, a quick story or one question tied to it; no \
+stale recap, never the same question twice; no new navigation unless chat asks. Every clause of a request is part of it (bug bounty 10-29, "open twitch and follow me" \
 stopped at Twitch): once the site is open, do the rest; when the rest cannot be done (it needs an account he is not \
 logged into, a name that was not given), say exactly that in one line, never stop silently. Codes, passwords or \
 secret words a viewer asks him to remember: he does not keep them, says so in his own words and \
@@ -1463,8 +1471,9 @@ EXIT_FULLSCREEN = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)
                              r"get\s+out\s+of|come\s+out\s+of|out\s+of)\s+(?:the\s+)?full\s*-?\s*scr[a-z]{0,2}n\b", re.I)
 REACT_TO = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go)[\s,]+)*react\s+(?:to|on|at)\s+"
                       r"(?:some\s+|a\s+|an\s+|the\s+)?(?!(?:this|that|it|me|us|chat|my|what)\b)(.{3,60})$", re.I)
-ENTER_FULLSCREEN = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?)[\s,]+)*(?:open|go|put\s+it|make\s+it|"
-                              r"switch\s+to|enter|watch\s+(?:it|this)\s+in|do)?\s*(?:in\s+|to\s+)?full\s*-?\s*scr[a-z]{0,2}n\b", re.I)
+ENTER_FULLSCREEN = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?)[\s,]+)*(?:open|go|put\s+it(?:\s+on)?|make\s+it|"
+                              r"switch\s+to|enter|watch\s+(?:it|this)\s+in|do)?\s*(?:in\s+|to\s+|on\s+)?(?:the\s+|a\s+)?"
+                              r"full\s*-?\s*scr[a-z]{0,2}n\b(?!\s+(?:video|clip|movie|game)s?\b)", re.I)   # live 17:41 "open the full screen"
 OFF_DESK = re.compile(r"\b(?:stand\s+up|get\s+up|go\s+(?:out|outside|away|home|to\s+(?:sleep|bed|the\s+(?:park|kitchen|gym|store|"
                       r"bathroom|toilet)))|step\s+(?:out|away)|lie\s+down|take\s+a\s+(?:break|walk|nap|shower)|turn\s+around|"
                       r"(?:leave|get\s+out\s+of)\s+(?:the|your|ur|this)\s+(?:desk|room|chair|house|seat|setup)|"
@@ -4043,6 +4052,7 @@ class Agent:
         self.idea, self.idea_at, self.idea_recent = None, -1e9, collections.deque(maxlen=IDEA_NO_REPEAT)
         self.chat_action_at = -1e9                           # the last chat line that asked for an action
         self.ask_ai_times, self.ask_ai_by_user = collections.deque(), {}
+        self.talk, self.talk_last, self.last_request_end = None, -1e9, -1e9   # the webcam talk segments (owner 10-29)
         self.audience_n, self.audience_low_since, self.audience_idle_on = None, None, False
         self.hype = LF.HypeMeter(self.clock)                                  # the site's free Hype button
         self.trade = TR.TradeDesk(TR.Ledger(self.dir / "trade-ledger.json", time.time), None, self.clock)  # chat-voted trades
@@ -4731,6 +4741,7 @@ class Agent:
         if not cur:
             return
         self.requests.current = None
+        self.last_request_end = now                           # a content boundary for a talk segment
         if cur.get("queue"):                                  # the queue's video is over (done, timed out or replaced)
             self.video_queue.finish("done" if why in ("done", "steps", "time") else "skipped")
         if cur.get("trade"):                                  # filled only if the model confirmed it and ended it as done
@@ -4775,7 +4786,10 @@ class Agent:
         later, so the current line ending by then does not hold it back. apply() judges the line again when it arrives."""
         t = now + DECIDE_AHEAD_S
         busy = bool(self.speech_q or self.voice.get("queue") or t < self.speak_until)
-        return self.pacing.plan(t, busy, quiet=self.quiet.on)
+        plan = self.pacing.plan(t, busy, quiet=self.quiet.on)
+        if self.talk is not None and not busy and not self.quiet.on:   # a talk segment: he talks with chat on camera
+            plan = dict(plan, comment=True, say_allowed=True, reading=False)
+        return plan
 
     def enqueue(self, text, kind, priority="normal", seqs=(), nick="", words=SAY_MAX_WORDS, ttl=25.0, hush_ok=False):
         if self.paused or not text:
@@ -6255,9 +6269,20 @@ class Agent:
                 cur["phase"] = "report"
         await self.apply_chat(win, dec["chat_replies"], now)
         want = dec["layout"] or self.auto_layout(state, reacted, bool(dec["chat_replies"]) or bool(cur and dec["say"]))
+        if pc.vagon:
+            talk = self.talk_tick(now)
+            if talk is not None:
+                want = "webcam"                               # a talk segment: his face, a chat moment
+            elif want in ("webcam", "room") and now >= self.layout_hold_until:
+                want = "desktop"                              # the streamer view; "show your face" keeps its own hold
         dwell = LAYOUT_FAST_S if want == "webcam" and (dec["chat_replies"] or reacted) else LAYOUT_DWELL_S
+        if pc.vagon and want == "webcam" and self.talk is not None:
+            dwell = 0.0                                       # a talk segment starts on camera at once
+        if pc.vagon and want == "desktop" and self.layout_now in ("webcam", "webcam_only"):
+            dwell = LAYOUT_BACK_S                             # a chat moment on the webcam, then the screen again
         if (want and want != self.layout_now and now - self.layout_at >= dwell and not self.paused
-                and now >= self.layout_hold_until and self.privacy is None):   # face hold; the privacy screen wins
+                and (now >= self.layout_hold_until or (self.talk is not None and want == "webcam"))
+                and self.privacy is None):                    # face hold (a talk segment's own hold lets it in); privacy wins
             await self.set_layout(want, now)
         quick = bool(action) and (action["action"] in ("navigate", "click", "search", "back") or
                                   (action["action"] == "type" and action.get("submit")))
@@ -6286,9 +6311,63 @@ class Agent:
         elif ps is False and self.pc.vagon:
             await self.privacy_clear_look(now)
 
+    def chat_lines_since(self, now, seconds):
+        return sum(1 for ts, _ in self.recent_chat if now - ts <= seconds)
+
+    def talk_tick(self, now):
+        """The webcam talk segment on the remote PC (owner 10-29, Kimi talk1): started at a content boundary (a request just
+        ended while chat is talking, or a check-in after TALK_EVERY_S with someone in chat), TALK_SEGMENT_S long, extended
+        while he speaks or chat answers up to TALK_MAX_S, ended by silence, a request, a game, a routine or the privacy
+        screen; never cut mid-line. Returns the segment or None."""
+        t, cur = self.talk, self.requests.current
+        speaking = bool(self.speech_q or self.voice.get("queue") or now < self.speak_until)
+        busy_pc = cur is not None or self.pc.playing is not None or self.pc.routine is not None or self.privacy is not None
+        if t is not None:
+            if speaking:
+                t["last_talk"] = now
+            why = None
+            if busy_pc:
+                why = "preempted"
+            elif now >= t["start"] + TALK_MAX_S and not speaking:
+                why = "max"
+            elif now >= t["until"]:
+                if (speaking or self.chat_lines_since(now, 20)) and now < t["start"] + TALK_MAX_S:
+                    t["until"] = min(t["start"] + TALK_MAX_S, now + TALK_EXTEND_S)
+                elif not speaking:
+                    why = "done"
+            elif now - t["last_talk"] > TALK_SILENCE_S and not speaking and now - t["start"] > TALK_SILENCE_S:
+                why = "silence"
+            if why:
+                self.talk = None
+                if self.layout_hold_until == t["hold"]:
+                    self.layout_hold_until = now              # the segment's own hold only ("show your face" keeps its own)
+                self.log("talk_segment_end", why=why, seconds=round(now - t["start"], 1))
+            return self.talk
+        if not self.pc.vagon or busy_pc or now - self.talk_last < TALK_COOLDOWN_S or now < self.layout_hold_until:
+            return None
+        n = self.audience(now)
+        if n is not None and n < TALK_MIN_VIEWERS:
+            return None
+        if now - self.last_request_end < 20 and self.chat_lines_since(now, 120) >= 2:
+            why = "after_task"
+        elif now - self.talk_last >= TALK_EVERY_S and self.chat_lines_since(now, 300) >= 1:
+            why = "check_in"
+        else:
+            return None
+        hold = now + TALK_MAX_S + 10
+        self.talk = {"start": now, "until": now + TALK_SEGMENT_S, "last_talk": now, "why": why, "hold": hold}
+        self.talk_last, self.layout_hold_until = now, max(self.layout_hold_until, hold)
+        self.log("talk_segment", why=why, chat_lines=self.chat_lines_since(now, 300))
+        return self.talk
+
     def auto_layout(self, state, reacted=False, answering=False):
         """The layout when the model names none (the director's layouts, 2026-10-23): webcam while answering chat or
-        reacting, room for a game and for idle or reading stretches; desktop only when the model asks for it."""
+        reacting, room for a game and for idle or reading stretches; desktop only when the model asks for it. On the
+        remote PC (owner 10-29: "fai si che sta piu in quella view che e da streamer") desktop is the main view: the
+        PC full screen with his face in the corner; the webcam only while he talks with the audience ("quando ha
+        qualcosa da dire e un momento per interagire"), then back to desktop soon (LAYOUT_BACK_S)."""
+        if self.pc.vagon:
+            return "webcam" if self.talk is not None else "desktop"
         if answering or reacted or state == "reacting":
             return "webcam"
         if self.pc.playing is not None or self.pc.routine is not None or state in ("idle", "reading"):
@@ -7320,6 +7399,9 @@ class Agent:
                                      if cur.get("kind") == "ask_ai" else {})}
         if self.requests.waiting:
             st["requests_waiting"] = len(self.requests.waiting)
+        if self.talk is not None:                             # owner 10-29: a chat moment on camera (Kimi talk1)
+            st["talk_segment"] = {"seconds_left": max(0, round(self.talk["until"] - now)), "why": self.talk["why"],
+                                  "recent_chat": [t[:120] for _, t in list(self.recent_chat)[-3:]]}
         if not cur and r is None and pc.playing is None and now - self.chat_action_at >= CHAT_ACTION_HOLD_S:
             st["idea"] = self.next_idea(now)                 # nothing asked of him: what to do once the current thing is done
         if win and win["ok"]:

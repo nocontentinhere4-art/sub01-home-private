@@ -694,3 +694,50 @@ def test_unquoted_text_for_chatgpt_is_the_message(text, payload):
     assert (r["kind"], r["payload"]) == ("ask_ai", payload)
     assert SA.parse_request("type hi on twitter", pc=True, logins=True)["refused"] == "typing"
     assert "log in with your own identity" in SA.SYSTEM_PC.replace("\\\n", "")
+
+
+@pytest.mark.parametrize("text", ["Bro open the full screen so we can watch it too", "put it on full screen"])
+def test_open_the_full_screen_is_the_full_screen_click(text):
+    """Live 10-29 17:41: "Bro open the full screen so we can watch it too" searched YouTube for "full screen"."""
+    r = SA.parse_request(text, pc=True, logins=True)
+    assert (r["kind"], r["thing"]) == ("look", "Full screen")
+
+
+def test_the_remote_pc_keeps_the_streamer_view(tmp_path):
+    """Owner 10-29: "fai si che sta piu in quella view che e da streamer" (the PC full screen, his face in the corner)."""
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    agent.pc.mode = "vagon"
+    for state, reacted, answering in (("reacting", True, False), ("idle", False, False), ("watching", False, False)):
+        assert agent.auto_layout(state, reacted, answering) == "desktop"
+    assert agent.auto_layout("watching", False, True) == "desktop"        # owner: a quick chat answer stays on the screen
+    assert SA.LAYOUT_BACK_S < SA.LAYOUT_DWELL_S
+    agent.pc.mode = "local"
+    assert agent.auto_layout("reacting", True, False) == "webcam"          # the pod desktop keeps its old rule
+
+
+def test_a_talk_segment_starts_at_a_boundary_extends_while_talking_and_ends(tmp_path):
+    """Owner 10-29: the webcam for "a longer moment where he has a lot to say, comment, interact" (Kimi talk1)."""
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    agent.pc.mode = "vagon"
+    now = clock()
+    agent.audience = lambda t: 3
+    assert agent.talk_tick(now) is None                               # nothing said in chat: no segment
+    agent.recent_chat.extend([(now - 30, "yo"), (now - 10, "what do you think of this?")])
+    agent.last_request_end = now - 5
+    t = agent.talk_tick(now)
+    assert t and t["why"] == "after_task" and agent.auto_layout("watching") == "webcam"
+    assert agent.layout_hold_until >= now + SA.TALK_MAX_S
+    agent.speak_until = now + SA.TALK_SEGMENT_S + 5                    # still speaking at the end: extended
+    assert agent.talk_tick(now + SA.TALK_SEGMENT_S + 1) is not None
+    agent.speak_until = 0.0
+    agent.recent_chat.clear()
+    assert agent.talk_tick(now + SA.TALK_MAX_S + 1) is None           # the hard maximum
+    assert agent.auto_layout("watching") == "desktop" and agent.layout_hold_until <= now + SA.TALK_MAX_S + 1
+    assert agent.talk_tick(now + SA.TALK_MAX_S + 30) is None          # cooldown
+    agent.recent_chat.append((now + 700, "hello"))
+    agent.talk_last, agent.layout_hold_until = now - 700, 0.0
+    t2 = agent.talk_tick(now + 700)
+    assert t2 and t2["why"] == "check_in"
+    agent.requests.current = {"kind": "search"}                       # a request needs the PC: preempted at once
+    assert agent.talk_tick(now + 705) is None
+    assert "talk_segment" in SA.SYSTEM_PC.replace("\\\n", "")
