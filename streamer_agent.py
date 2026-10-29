@@ -232,6 +232,14 @@ OPEN_WINDOW_S = 90.0                    # the greeting may come in the first min
 FOCUS_CAP_S = 240.0                     # reading focus lasts 4 min at most, then he is nudged to move on (was 20 min)
 STALE_PAGE_S = 180.0
 THINK_READING_S = (8.0, 11.0)           # next model call while reading (a scroll step; was 14-28 s)
+THINK_AFTER_WAIT_S = (4.0, 6.0)         # owner 10-29 (costs): after a PC "wait" (watching a video), not the 1 s of an input
+# owner 10-29 "spend as little as possible, same quality" (Kimi cost1 GO): with at most AUDIENCE_IDLE_N viewers (his own
+# view counts as zero) for AUDIENCE_IDLE_AFTER_S and nothing asked of him, a routine look every AUDIENCE_IDLE_THINK_S;
+# chat is still answered at once. The relay writes <streamer-dir>/watching.json from the site's /status polls.
+AUDIENCE_FILE = "watching.json"
+AUDIENCE_IDLE_N, AUDIENCE_IDLE_AFTER_S, AUDIENCE_IDLE_THINK_S = 1, 300.0, (50.0, 70.0)
+AUDIENCE_FRESH_S, AUDIENCE_KNOWN_S = 60.0, 3600.0   # fresh: its count; older (nobody polls): 0; past an hour: unknown
+SHADOW_OFF_FILE = "shadow-off"          # owner 10-29: present -> no shadow decisions (the default "auto" resolves to none)
 THINK_OTHER_S = (7.0, 10.0)            # was 8-16 s; with the budget about 450 calls an hour
 THINK_AFTER_ACTION_S = 1.0              # then look at the outcome (was 2.5; owner 10-29 "on Vagon it is slow": act() already
                                         # waited for the load, a PC input is verified by that next look)
@@ -3303,6 +3311,8 @@ def resolve_shadow(cfg):
     if want == "none":
         return None
     if want == "auto":
+        if cfg.streamer_dir and (Path(cfg.streamer_dir) / SHADOW_OFF_FILE).exists():
+            return None
         return "kimi" if key_available("kimi", cfg) else None
     return want if want in PROVIDERS else None
 
@@ -3828,6 +3838,7 @@ class Agent:
         self.video_queue = LF.VideoQueue(self.dir / "video-queue.json", time.time)   # videos sent from the site
         self.queue_last_start, self.queue_seq = -1e9, 0
         self.idea, self.idea_at, self.idea_recent = None, -1e9, collections.deque(maxlen=IDEA_NO_REPEAT)
+        self.audience_n, self.audience_low_since, self.audience_idle_on = None, None, False
         self.hype = LF.HypeMeter(self.clock)                                  # the site's free Hype button
         self.trade = TR.TradeDesk(TR.Ledger(self.dir / "trade-ledger.json", time.time), None, self.clock)  # chat-voted trades
         self.trade_seq = 0
@@ -5134,12 +5145,45 @@ class Agent:
                    frame_hash=frame.get("hash"), frame_id=frame.get("frame_id"), raw=self.raw_for_log(b.get("raw"), dec))
         return row
 
-    def schedule_think(self, now, short=False):
+    def audience(self, now):
+        """Viewers on the site from the relay's watching.json: its count when fresh, 0 when nobody has polled for a while,
+        None (unknown: full mode) when the file is missing, unreadable or older than AUDIENCE_KNOWN_S."""
+        try:
+            d = json.loads((self.dir / AUDIENCE_FILE).read_text())
+            age = time.time() - float(d["t"])
+            n = int(d["watching"])
+        except (OSError, ValueError, KeyError, TypeError):
+            return None
+        if age > AUDIENCE_KNOWN_S or age < -60:
+            return None
+        return n if age <= AUDIENCE_FRESH_S else 0
+
+    def audience_idle(self, now):
+        """True while at most AUDIENCE_IDLE_N viewers have watched for AUDIENCE_IDLE_AFTER_S and nothing is asked of him
+        (no request in flight or waiting, no chat waiting, no game or routine, no trade vote or poll). Logged on change."""
+        n = self.audience(now)
+        low = n is not None and n <= AUDIENCE_IDLE_N
+        self.audience_low_since = (self.audience_low_since or now) if low else None
+        busy = (self.requests.current is not None or self.requests.waiting or self.pending or self.pc.playing is not None
+                or self.pc.routine is not None or self.trade.vote is not None or self.trade.active is not None
+                or self.poll is not None)
+        idle = low and not busy and now - self.audience_low_since >= AUDIENCE_IDLE_AFTER_S
+        if idle != self.audience_idle_on or n != self.audience_n:
+            if idle != self.audience_idle_on:
+                self.log("audience_idle", on=idle, watching=n)
+            self.audience_idle_on, self.audience_n = idle, n
+        return idle
+
+    def schedule_think(self, now, short=False, after_wait=False):
+        if not short and self.audience_idle(now):            # nobody watching (owner 10-29): one look a minute or so
+            self.next_think = now + self.rng.uniform(*AUDIENCE_IDLE_THINK_S)
+            return
         if self.pc.playing is not None and self.pc.routine is None:   # the gentle play loop: one look per 2-4 s at most
             self.next_think = now + self.rng.uniform(*GAME_STEP_S) * self.budget.stretch()
             return
         short = short or self.requests.current is not None   # a viewer is waiting: no reading pace
-        lo, hi = (THINK_AFTER_ACTION_S, THINK_AFTER_ACTION_S + 1.5) if short else self.reading_pace(now)
+        lo, hi = ((THINK_AFTER_ACTION_S, THINK_AFTER_ACTION_S + 1.5) if short else THINK_AFTER_WAIT_S if after_wait
+                  else self.reading_pace(now))
         self.next_think = now + self.rng.uniform(lo, hi) * self.budget.stretch()
 
     # ---- acting ----
@@ -5956,9 +6000,10 @@ class Agent:
             await self.set_layout(want, now)
         quick = bool(action) and (action["action"] in ("navigate", "click", "search", "back") or
                                   (action["action"] == "type" and action.get("submit")))
-        if pc.vagon and (action or pc.zoom):                  # every PC input is verified by the next look; a crop is served soon
+        waited = bool(action) and action["action"] == "wait"
+        if pc.vagon and ((action and not waited) or pc.zoom):   # every PC input is verified by the next look; a crop is served soon
             quick = True
-        self.schedule_think(self.clock(), short=quick)
+        self.schedule_think(self.clock(), short=quick, after_wait=pc.vagon and waited and not cur)
 
     def model_url_problem(self, url, chat_texts=()):
         return model_url_problem(url, chat_texts, self.cfg.allow_credentials, self.cfg.allow_installs and self.pc.vagon,

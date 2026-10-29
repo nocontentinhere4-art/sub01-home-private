@@ -83,6 +83,9 @@ def test_chat_queue_hype_and_status_reach_the_fake_agent(tmp_path):
             assert st["queue"]["waiting"][0]["nick"] == "Marco" and st["hype"]["level"] == 0.2 and st["watching"] == 1
             r = await client.get("/status", headers={"Origin": R.ORIGIN, "CF-Connecting-IP": "7"})
             assert (await r.json())["watching"] == 2                                   # two connections polling
+            import json as _json                                                       # owner 10-29: the agent idles on it
+            d = _json.loads((tmp_path / "watching.json").read_text())
+            assert d["watching"] == 2 and abs(d["t"] - __import__("time").time()) < 5
             assert "operator-secret-123" not in await r.text()
         await runner.cleanup()
     asyncio.run(body())

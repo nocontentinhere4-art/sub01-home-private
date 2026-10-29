@@ -234,9 +234,21 @@ def create_app(root, stop_file, token_file=None):
             except (TimeoutError, aiohttp.ClientError, ValueError, OSError):
                 director_cache['layout'] = None
         return director_cache['layout']
+    audience_file = Path(stop_file).parent / 'watching.json'   # owner 10-29 (costs): the agent idles with nobody watching
+    audience_written = {'t': -1e9, 'n': None}
+    def write_audience(n):
+        now = time.monotonic()
+        if n == audience_written['n'] and now - audience_written['t'] < 5: return
+        try:
+            tmp = audience_file.with_name('.watching.json.tmp')
+            tmp.write_text(json.dumps({'watching': n, 't': round(time.time(), 1)})); os.replace(tmp, audience_file)
+            audience_written.update(t=now, n=n)
+        except OSError:
+            pass
     async def status(request):
         raw, _ = playlist()
         watching = count_online(request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64])
+        write_audience(watching)
         return web.json_response({'online':raw is not None, 'agent':'paused' if Path(stop_file).exists() else 'checks', 'messages':list(messages),
                                   'watching':watching,
                                   'layout':await director_layout(), **(await viewer_state())})

@@ -295,3 +295,40 @@ def test_the_owners_thesis_request_goes_first_has_eight_steps_and_one_an_hour(tm
     assert "idea" not in prov.calls[-1]["state"]                     # the request comes first
     assert not any("thesis" in s["text"].lower() for s in world.spoken)   # no code acknowledgement line
     assert agent.thesis_request(clock() + SA.THESIS_GAP_S + 1) is not None
+
+
+def test_shadow_off_file_and_audience_idle_and_wait_pacing(tmp_path):
+    """Owner 10-29 "spend as little as possible, same quality" (Kimi cost1 GO)."""
+    import json as _json
+    import time as _time
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision(action={"action": "wait", "seconds": 5}, say=""))
+    cfg = agent.cfg
+    (Path(cfg.streamer_dir) / SA.SHADOW_OFF_FILE).write_text("")
+    assert SA.resolve_shadow(cfg) is None                            # auto + shadow-off: none, whatever the keys
+    f = Path(cfg.streamer_dir) / SA.AUDIENCE_FILE
+    assert agent.audience(clock()) is None                           # no file: unknown, full mode
+    f.write_text(_json.dumps({"watching": 3, "t": _time.time()}))
+    assert agent.audience(clock()) == 3
+    f.write_text(_json.dumps({"watching": 3, "t": _time.time() - 600}))
+    assert agent.audience(clock()) == 0                              # nobody polling for 10 min
+    f.write_text(_json.dumps({"watching": 3, "t": _time.time() - 7200}))
+    assert agent.audience(clock()) is None                           # too old to know
+    f.write_text("{broken")
+    assert agent.audience(clock()) is None
+    f.write_text(_json.dumps({"watching": 1, "t": _time.time()}))    # only the owner: counts as nobody
+    assert agent.audience_idle(clock()) is False                     # not yet 300 s
+    clock.t += SA.AUDIENCE_IDLE_AFTER_S + 1
+    assert agent.audience_idle(clock()) is True
+    agent.schedule_think(clock())
+    assert SA.AUDIENCE_IDLE_THINK_S[0] <= agent.next_think - clock() <= SA.AUDIENCE_IDLE_THINK_S[1]
+    agent.schedule_think(clock(), short=True)                        # an input is still verified at once
+    assert agent.next_think - clock() <= SA.THINK_AFTER_ACTION_S + 1.5
+    agent.thesis_request(clock())                                    # something asked of him: full mode
+    assert agent.audience_idle(clock()) is False
+    agent.requests.waiting.clear()
+    f.write_text(_json.dumps({"watching": 2, "t": _time.time()}))    # a second viewer: full mode at once
+    assert agent.audience_idle(clock()) is False
+    agent.schedule_think(clock(), after_wait=True)
+    assert SA.THINK_AFTER_WAIT_S[0] <= agent.next_think - clock() <= SA.THINK_AFTER_WAIT_S[1] * agent.budget.stretch()
+    rows = [e for e in T.events(agent) if e["kind"] == "audience_idle"]
+    assert [r["on"] for r in rows] == [True, False]

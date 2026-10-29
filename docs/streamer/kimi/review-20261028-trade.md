@@ -85,3 +85,7 @@ APPROVE
 ## th2 (10-29): operator-only thesis request
 
 APPROVE
+
+## cost1 / cost2 (10-29): shadow off, audience-aware low power, slower looks while watching
+
+cost1 GO (1-3; pod research only), cost2 APPROVE
