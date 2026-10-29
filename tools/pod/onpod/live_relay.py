@@ -30,6 +30,11 @@ def body_json(text):
     return d if isinstance(d, dict) else None
 
 HEADERS = {'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}
+# owner 10-29 avatars phase 1: the Simli avatar page and its calls (list, session, say, submit), forwarded to
+# avatar_service.py (loopback); the page is served here, so its own origin is accepted on /avatar paths only
+AVATAR_PAGE = Path(__file__).with_name('avatar.html')
+AVATAR_SERVICE = 'http://127.0.0.1:8843'
+AVATAR_SUBMIT_MAX = 4_300_000      # a base64 photo of up to 3 MB plus its fields (the page shrinks photos first)
 
 def chat_ack_response(data):
     ok = data.get('ok') is True
@@ -83,7 +88,8 @@ def create_app(root, stop_file, token_file=None):
         q.append(now); return False
     @web.middleware
     async def boundary(request, handler):
-        if request.headers.get('Origin') not in (None, ORIGIN):
+        origin = request.headers.get('Origin')
+        if origin not in (None, ORIGIN) and not (request.path.startswith('/avatar') and origin == 'https://' + request.host):
             return web.Response(status=403, text='Origin refused')
         ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
         if request.path != '/screen.jpg' and (limited(ip, 'all', 10, 120) or limited('global', 'all', 1, 100)):
@@ -316,7 +322,44 @@ def create_app(root, stop_file, token_file=None):
         if status is None or not isinstance(data, dict): return web.json_response({'ok':False,'code':'offline'}, status=503)
         viewer_cache['t'] = -1e9
         return web.json_response({'ok':True, 'level':data.get('level'), 'train':data.get('train')})
+    async def avatar_page(request):
+        if not AVATAR_PAGE.is_file(): raise web.HTTPNotFound()
+        return web.FileResponse(AVATAR_PAGE, headers={'Content-Type': 'text/html; charset=utf-8'})
+    async def avatar_forward(path, payload=None):
+        try:
+            async with asyncio.timeout(90):
+                async with aiohttp.ClientSession() as client:
+                    call = client.post(AVATAR_SERVICE + path, json=payload) if payload is not None else client.get(AVATAR_SERVICE + path)
+                    async with call as r:
+                        data = await r.json(content_type=None)
+                        return web.json_response(data if isinstance(data, dict) else {'ok':False}, status=r.status)
+        except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
+            return web.json_response({'ok':False,'why':'The avatars are offline right now.'}, status=503)
+    async def avatar_call(request, path, period, maximum, fields, limit=6000, per_day=None):
+        """the avatar page's JSON calls: the connection's salted hash as `client` (never the IP), per-IP and global
+        limits here too; the service answers with its own status and JSON."""
+        if request.content_type != 'application/json': raise web.HTTPForbidden()
+        ip = request.headers.get('CF-Connecting-IP', request.remote or 'local')[:64]
+        if request.content_length is None or request.content_length > limit: raise web.HTTPRequestEntityTooLarge(max_size=limit, actual_size=request.content_length or 0)
+        if limited(ip, path, period, maximum) or limited('global', path, 60, 30) or (per_day and limited('global', path + '/day', 86400, per_day)):
+            return web.json_response({'ok':False,'why':'Please wait a bit.'}, status=429)
+        raw = bytearray()                       # read here, bounded, instead of the app-wide small body limit
+        while len(raw) <= limit and (chunk := await request.content.read(65536)): raw += chunk
+        d = body_json(raw.decode('utf-8', 'replace').strip()) if len(raw) <= limit else None
+        if d is None: raise web.HTTPBadRequest()
+        return await avatar_forward(path, {'client': voter_key(ip), **{k: d.get(k) for k in fields}})
+    async def avatar_list(request): return await avatar_forward('/avatars')
+    async def avatar_session(request): return await avatar_call(request, '/session', 600, 2, ('avatar_id',))
+    async def avatar_say(request): return await avatar_call(request, '/say', 3, 1, ('avatar_id', 'text', 'history'))
+    async def avatar_submit(request):          # owner 10-29: a viewer's photo for a new avatar (the owner reviews every one)
+        return await avatar_call(request, '/submit', 3600, 3, ('name', 'persona', 'voice', 'consent', 'photo_b64'),
+                                 limit=AVATAR_SUBMIT_MAX, per_day=40)
     app = web.Application(client_max_size=2048, middlewares=[boundary])
+    app.router.add_get('/avatar', avatar_page, allow_head=False)
+    app.router.add_get('/avatar/list', avatar_list, allow_head=False)
+    app.router.add_post('/avatar/session', avatar_session)
+    app.router.add_post('/avatar/say', avatar_say)
+    app.router.add_post('/avatar/submit', avatar_submit)
     app.router.add_get('/hls/{name}', media, allow_head=False)
     app.router.add_get('/screen.png', screen, allow_head=False)
     app.router.add_get('/screen.jpg', screen_jpg, allow_head=False)

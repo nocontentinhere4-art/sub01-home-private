@@ -121,3 +121,17 @@ creator-channel fidelity, latest via the Videos tab, and exact-title searches. T
 ## eye1 (10-29, site branch `claude/live-control-20261027` 9cde7b7): white eye icon in the watching badge
 
 APPROVE. Needs the owner's `railway up` to reach the site.
+
+## av2a / av2b / av2c (10-29): Simli avatars phase 1 (submissions, registry, page, voices)
+
+Split into three light requests after repeated 429s on one 37k request (owner: "mandali magari una richiesta piu
+leggera"). The simli1 design consult (phases 2-3) is still owed.
+- av2a (photo upload) CHANGES: racy daily limits, decompression bomb + decode on the event loop, odd JSON files break
+  the limits, non-atomic writes -> one lock over check-and-save, header pixel check, decode in a thread, typed and
+  bounded metadata, tmp + fsync + rename. av2a2 CHANGES (math.isfinite overflow on a huge int) -> bounds compare.
+  av2a3 APPROVE.
+- av2b (registry, session, say, relay) CHANGES: origin uses the Host header (kept, traced: a browser cannot forge the
+  pair, the quick-tunnel host changes on restart), history not a list -> 500 (now 400), approve could write an
+  unusable avatar (now validates face id, name, voice). av2b2 APPROVE ("the Host/Origin trace is sound").
+- av2c (page, TTS) CHANGES: avatar switch while connecting, send() wedging on bad audio, a stopped session reviving
+  the input, no cleanup on a failed start, PCM float/int heuristic. All fixed. av2c2 APPROVE.
