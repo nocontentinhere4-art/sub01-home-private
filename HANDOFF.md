@@ -308,8 +308,16 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   Simli session token (`simli-client` generateSimliSessionToken / POST /compose/token, header x-simli-api-key, config
   faceId, maxSessionLength, maxIdleTime) and a page that streams our TTS PCM16 16 kHz mono into SimliClient;
   persona replies by our model. Needs Kimi design review and the owner's OK before any public endpoint.
+- **10-29 13:55 avatars phase 1 committed (b27997b, Kimi av2a3/av2b2/av2c2 APPROVE), NOT started on the pod.** Owner's
+  workflow: viewers submit a photo + name + personality + voice (juno/dylan) on `/avatar`; the owner creates each face
+  in app.simli.com; `avatar_service.py --data-dir /home/unreal/.sub01-private/avatar --approve ID --face-id FACE` adds
+  it to `avatars.json` (listed at once). To start (owner's OK needed): avatar_tts.py in voice-rt-venv
+  (`--voice juno=.../voice-ref-juno.wav --voice dylan=.../voice-ref-dylan.wav`, 8844), avatar_service.py in
+  /home/unreal/venv (8843; check Pillow there), relay restart with the new live_relay.py, then `touch
+  <streamer-dir>/avatar-on`. Owed: simli1 design consult (phases 2-3). vid1 owed review done: APPROVE.
 - Site branch `claude/live-control-20261027`: 36a4d72 (viewer count badge) and 48a09b0 (SUB-01 logo in the round
-  orange avatar) wait for the owner's `railway up`.
+  orange avatar) are live; 9cde7b7 (white SVG eye instead of the 👁 emoji, Kimi eye1 APPROVE) waits for the owner's
+  `railway up` from `/Users/cn/sub01-home-private`.
 - Open: "open twich" should open twitch.tv; "put <video>" / "look some X video" are not parsed as requests; a chat
   line about someone leaking a private key was refused as a credentials request (safe, maybe too strict); optional
   racial-slur filter (owner to decide).
