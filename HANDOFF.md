@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -268,6 +268,34 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   59.99 fps, no lag_restart since 18:43). Pending for the owner: top-up decision, run set_sub01_login.py for logins,
   Railway healthcheck logs. Runtime: director = 503c236 + live-layouts file; agent = new30 (git f5530be + the two
   runtime edits: sequence from the clock; allow_credentials default True since 18:54 on the owner's request).
+
+### 2026-10-28 22:00 - 10-29 04:10 UTC (session_017Z5EpkmcHzLn9af9DrHon8, branch claude/compassionate-heisenberg-2fvnf6)
+- Runtime now: agent **new48** (git ba2d991 + the runtime `sequence` line), `streamer_trade.py`,
+  `streamer_live_features.py`; relay watch1 (git 699f572, `/status` `watching` = distinct viewers in the last 70 s);
+  cartoon feeder git ba2d991 (frame debt); director unchanged. Every change is in `/tmp/sub01-share/pod-changes.log`
+  with its backup in `/home/sub01-review-20261027/`. Kimi verdicts: `docs/streamer/kimi/review-20261028-trade.md`.
+- **Trading (owner chose):** chat proposes "buy/sell $N of <coin>" from an allowlist (WIF, BONK, POPCAT, PENGU,
+  FARTCOIN, MEW, BRETT, PEPE), 60 s vote (>= 3 distinct voters, yes > no), max $10/trade, $50 total, fail-closed
+  ledger, one confirm click only after a matching read-back. Kill switch: file `streamer/trading-on` (ON). The owner
+  deposited $50 USDC (Solana) to SUB-01's own fomo.family account (handle HurtBasicGuppy); I bought $15 of SUB-01 by
+  operator input on the owner's order (not in the agent ledger). Never invite chat to deposit; no buy/sell advice.
+- Live fixes from chat (fix10-fix14, anon1, adult2): chess/drag games, "play <game>", "play <artist> on youtube" =
+  music, "sing" line, anonymous viewers no longer block each other, known shock videos refused by code, one fixed
+  fomo tab, scroll at page end not a failure, cartoon intro on time.
+- **Stream delay (10-29 03:30-04:10):** lag grew ~3-5 s/h and forced a relaunch at 10 s. Measured cause: the cartoon
+  FIFO is stamped by frame count and the live graph waits for the slowest input, so each frame the feeder dropped on a
+  full pipe left the stream 33 ms behind (9 drops = +0.30 s). Fix: feeder frame debt (`/state` shows `repeated`,
+  `debt`). Feeder restarted with the owner's OK. Check that `lag_s` stays flat.
+  Caveat: restarting the feeder ends ffmpeg's cartoon input (EOF; the director does not notice), so cartoons stop
+  airing until ffmpeg is relaunched: SIGINT the director's `ffmpeg_pid` (it relaunches in ~3 s; done 03:59:40,
+  run sub01-20261029-035940). Needs the owner's OK like any stream restart.
+- **PC speed:** agent looks at an action's outcome after 1.0 s (was 2.5 s); the next chat request starts in the step
+  the previous one ends. The call cap stays 450/h (owner chose, 10-29). Vagon: 5 stale tabs closed by operator input.
+- Site branch `claude/live-control-20261027`: 36a4d72 (viewer count badge) and 48a09b0 (SUB-01 logo in the round
+  orange avatar) wait for the owner's `railway up`.
+- Open: "open twich" should open twitch.tv; "put <video>" / "look some X video" are not parsed as requests; a chat
+  line about someone leaking a private key was refused as a credentials request (safe, maybe too strict); optional
+  racial-slur filter (owner to decide).
 
 ### To-do (owner's open items, most visible first)
 1. **Hands** (owner: "le mani sono intrecciate", "movimenti strani").
