@@ -33,6 +33,8 @@ HEADERS = {'Access-Control-Allow-Origin': ORIGIN, 'Vary': 'Origin', 'Cache-Contr
 # owner 10-29 avatars phase 1: the Simli avatar page and its calls (list, session, say, submit), forwarded to
 # avatar_service.py (loopback); the page is served here, so its own origin is accepted on /avatar paths only
 AVATAR_PAGE = Path(__file__).with_name('avatar.html')
+AVATAR_VOICES = Path(__file__).with_name('avatar-voices')     # short previews of the avatar voices
+VOICE_PREVIEW = re.compile(r'[a-z]{2,12}\.mp3')
 AVATAR_SERVICE = 'http://127.0.0.1:8843'
 AVATAR_SUBMIT_MAX = 4_300_000      # a base64 photo of up to 3 MB plus its fields (the page shrinks photos first)
 
@@ -325,6 +327,10 @@ def create_app(root, stop_file, token_file=None):
     async def avatar_page(request):
         if not AVATAR_PAGE.is_file(): raise web.HTTPNotFound()
         return web.FileResponse(AVATAR_PAGE, headers={'Content-Type': 'text/html; charset=utf-8'})
+    async def avatar_voice(request):
+        name = request.match_info['name']
+        if not VOICE_PREVIEW.fullmatch(name) or not (AVATAR_VOICES / name).is_file(): raise web.HTTPNotFound()
+        return web.FileResponse(AVATAR_VOICES / name, headers={'Content-Type': 'audio/mpeg', 'Cache-Control': 'public, max-age=86400'})
     async def avatar_forward(path, payload=None):
         try:
             async with asyncio.timeout(90):
@@ -357,6 +363,7 @@ def create_app(root, stop_file, token_file=None):
     app = web.Application(client_max_size=2048, middlewares=[boundary])
     app.router.add_get('/avatar', avatar_page, allow_head=False)
     app.router.add_get('/avatar/list', avatar_list, allow_head=False)
+    app.router.add_get('/avatar/voice/{name}', avatar_voice, allow_head=False)
     app.router.add_post('/avatar/session', avatar_session)
     app.router.add_post('/avatar/say', avatar_say)
     app.router.add_post('/avatar/submit', avatar_submit)

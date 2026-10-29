@@ -44,7 +44,11 @@ SESSION_S, IDLE_S = 300, 60            # a session's length and idle limit (Siml
 SESSIONS_PER_HOUR, CLIENT_GAP_S = 4, 600.0
 SAY_GAP_S, SAY_PER_MIN = 3.0, 20
 MAX_TEXT, MAX_NAME, MAX_STYLE, MAX_HISTORY = 280, 24, 300, 8
-VOICES = {"juno": "Juno (female)", "dylan": "Dylan (male)"}   # the synthetic reference voices avatar_tts.py loads
+# the synthetic reference voices avatar_tts.py loads (stock Higgsfield voices rendered once; owner 10-29: "ognuno scelga
+# tra piu voci non solo 2"); <data-dir>/voice-ref-<name>.wav on the pod, a short preview in avatar-voices/<name>.mp3
+VOICES = {"juno": "Juno (female)", "maeve": "Maeve (female)", "luna": "Luna (female)", "roxie": "Roxie (female)",
+          "kaia": "Kaia (female)", "dylan": "Dylan (male)", "marcus": "Marcus (male)", "knox": "Knox (male)",
+          "julian": "Julian (male)", "brooks": "Brooks (male)"}
 PHOTO_MAX_BYTES, PHOTO_MIN_SIDE, PHOTO_MAX_SIDE = 3 * 1024 * 1024, 256, 1600
 PHOTO_MAX_PIXELS = 24_000_000             # checked from the header, before anything is decoded
 SUBMIT_PER_CLIENT_DAY, SUBMIT_PER_DAY, SUBMIT_PENDING_MAX = 3, 30, 200

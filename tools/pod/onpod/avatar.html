@@ -55,6 +55,7 @@ button.go:disabled { opacity:.45; cursor:default }
 .pick[aria-pressed="true"] { border-color:var(--accent) }
 .empty { color:var(--muted); font-size:14px; margin:0 }
 .new { display:grid; gap:12px; max-width:560px }
+.voice { display:flex; gap:8px } .voice select { flex:1; min-width:0 }
 .new select { font:15px var(--sans); color:var(--ink); background:var(--bg); border:1px solid var(--line); padding:9px 10px }
 .check { display:flex; gap:10px; align-items:flex-start; font-size:13.5px; color:var(--ink) } .check input { flex:none; width:18px; height:18px; margin:2px 0 0; padding:0; accent-color:var(--accent) }
 .preview { width:120px; height:120px; object-fit:cover; border:1px solid var(--line); background:#000 }
@@ -103,7 +104,9 @@ button.go:disabled { opacity:.45; cursor:default }
     <label class="f" for="nName">Avatar name<input id="nName" maxlength="24" minlength="2" required autocomplete="off"></label>
     <label class="f" for="nPersona">Personality and style
       <textarea id="nPersona" rows="3" maxlength="300" minlength="10" required placeholder="Chill gamer who loves retro consoles, dry humor, short answers, asks chat questions back."></textarea></label>
-    <label class="f" for="nVoice">Voice<select id="nVoice"></select></label>
+    <label class="f" for="nVoice">Voice</label>
+    <div class="voice"><select id="nVoice"></select><button class="go" id="nListen" type="button">Listen</button></div>
+    <audio id="nSample" preload="none"></audio>
     <label class="check"><input type="checkbox" id="nConsent" required>
       <span>This is my photo, or I have the person's permission to use it. It is not a minor and not a public figure.</span></label>
     <div><button class="go" id="nSend" type="submit">Send for review</button></div>
@@ -252,6 +255,11 @@ async function submitNew(e) {
 $("tabTalk").addEventListener("click", () => tab("talk"));
 $("tabNew").addEventListener("click", () => tab("new"));
 $("nPhoto").addEventListener("change", pickPhoto);
+$("nListen").addEventListener("click", () => {     // a short preview of the chosen voice
+  const a = $("nSample"); if (!$("nVoice").value) return;
+  a.src = `/avatar/voice/${encodeURIComponent($("nVoice").value)}.mp3`; a.play().catch(() => {});
+});
+$("nVoice").addEventListener("change", () => $("nSample").pause());
 $("create").addEventListener("submit", submitNew);
 $("startBtn").addEventListener("click", start);
 $("form").addEventListener("submit", send);

@@ -135,3 +135,9 @@ leggera"). The simli1 design consult (phases 2-3) is still owed.
   unusable avatar (now validates face id, name, voice). av2b2 APPROVE ("the Host/Origin trace is sound").
 - av2c (page, TTS) CHANGES: avatar switch while connecting, send() wedging on bad audio, a stopped session reviving
   the input, no cleanup on a failed start, PCM float/int heuristic. All fixed. av2c2 APPROVE.
+
+## voices1 (10-29): ten avatar voices with a Listen preview
+
+APPROVE. Owner: "ognuno scelga tra piu voci non solo 2". 8 new synthetic stock voices (Higgsfield seed_audio presets
+Maeve, Luna, Roxie, Kaia, Marcus, Knox, Julian, Brooks; 11.2 credits), reference WAVs on the pod in
+/home/unreal/.sub01-private/avatar/voice-ref-<name>.wav (sizes checked against the downloads).

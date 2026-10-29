@@ -312,8 +312,8 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   workflow: viewers submit a photo + name + personality + voice (juno/dylan) on `/avatar`; the owner creates each face
   in app.simli.com; `avatar_service.py --data-dir /home/unreal/.sub01-private/avatar --approve ID --face-id FACE` adds
   it to `avatars.json` (listed at once). To start (owner's OK needed): avatar_tts.py in voice-rt-venv
-  (`--voice juno=.../voice-ref-juno.wav --voice dylan=.../voice-ref-dylan.wav`, 8844), avatar_service.py in
-  /home/unreal/venv (8843; check Pillow there), relay restart with the new live_relay.py, then `touch
+  (`--voice NAME=/home/unreal/.sub01-private/avatar/voice-ref-NAME.wav` for the 10 voices in VOICES, 8844), avatar_service.py in
+  /home/unreal/venv (8843; Pillow 11.0 there), relay restart with the new live_relay.py, then `touch
   <streamer-dir>/avatar-on`. Owed: simli1 design consult (phases 2-3). vid1 owed review done: APPROVE.
 - Site branch `claude/live-control-20261027`: 36a4d72 (viewer count badge) and 48a09b0 (SUB-01 logo in the round
   orange avatar) are live; 9cde7b7 (white SVG eye instead of the 👁 emoji, Kimi eye1 APPROVE) waits for the owner's

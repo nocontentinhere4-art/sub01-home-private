@@ -83,7 +83,7 @@ def test_session_and_say_with_injected_llm_and_tts(tmp_path, monkeypatch):
         async with TestClient(TestServer(app)) as c:
             d = await (await c.get("/avatars")).json()
             assert [a["id"] for a in d["avatars"]] == ["mika"] and "face_id" not in d["avatars"][0]
-            assert set(d["voices"]) == {"juno", "dylan"}
+            assert set(d["voices"]) == set(AV.VOICES) and len(AV.VOICES) == 10 and {"juno", "dylan"} <= set(AV.VOICES)
             r = await c.post("/say", json={"client": "zz"})              # a bad client key
             assert r.status == 400
             for bad in (5, "abc", {"who": "viewer"}):                  # a history that is not a list
@@ -254,6 +254,11 @@ def test_relay_serves_the_page_and_forwards_with_a_hash_never_the_ip(tmp_path, m
             r = await c.post("/avatar/say", json={"text": "hi"}, headers={"Origin": "https://evil.example"})
             assert r.status == 403                                       # a foreign page
             assert (await (await c.get("/avatar/list")).json())["avatars"] == [{"id": "mika"}]
+            for v in AV.VOICES:                                          # every voice has its preview on the page
+                r = await c.get(f"/avatar/voice/{v}.mp3")
+                assert r.status == 200 and r.content_type == "audio/mpeg" and len(await r.read()) > 10_000
+            for bad in ("..%2Favatar.html", "Juno.mp3", "juno.wav", "nope.mp3"):
+                assert (await c.get(f"/avatar/voice/{bad}")).status == 404
             r = await c.post("/avatar/say", json={"text": "hi", "avatar_id": "mika", "persona": {"name": "M"}},
                              headers={"CF-Connecting-IP": "9.9.9.9"})
             assert r.status == 200 and got[-1]["text"] == "hi" and len(got[-1]["client"]) == 16
