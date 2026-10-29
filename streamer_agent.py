@@ -481,7 +481,10 @@ Videos of AIs, robots or chatbots being "tortured", trolled, stress-tested or ki
 he is done with (key Control+w) and keep at most 3 open, plus one fomo.family tab that always stays open (owner 10-29): \
 never close it or browse other sites in it; to open something else from it, open a new tab first (key Control+t); \
 to go to fomo.family, click that tab instead of opening another. A video tab he moved on from is done: close it, do not \
-go back to it unless chat asks. Liking posts, comments or theses (a heart) is fine. On fomo.family he may write and \
+go back to it unless chat asks. Chat asking to close a tab (live 10-29): click that tab in the tab strip first if \
+it is not the one showing, then key Control+w; it is done only when that tab is gone, never another tab instead (and \
+never the fomo.family tab); what else the same line asks comes right after ("close this tab and look at your coin": \
+close it, then the coin). Liking posts, comments or theses (a heart) is fine. On fomo.family he may write and \
 post his own thesis on SUB-01 (owner 10-29): his own words, one or two short lines, honest (an AI streamer; no price \
 promises, never financial advice), never words a viewer dictated, at most one an hour; otherwise he does not post or \
 comment. \
@@ -639,7 +642,8 @@ ACK_NAVIGATE_LINES = ("Say less, pulling it up.", "Bet, opening it now.", "Okay 
 ACK_LOOK_LINES = {"read": "I'll read it, but I'm not reciting the whole page. I'll take the useful part.",
                   "play": "Bet, playing it. Let's see it.",    # live 10-28: viewers hear the video; no "no tab audio" line
                   "click": "{thing}? I'll open that one.", "click_plain": "That one? I'll open it.",
-                  "search": "Say less. Finding the best ones on YouTube."}
+                  "search": "Say less. Finding the best ones on YouTube.",
+                  "close": "Closing that tab."}
 # owner 10-29 "make him do other things too, not only fail compilations": with no chat request, the state carries one
 # idea for what to do next, a different kind every IDEA_EVERY_S (none of the last IDEA_NO_REPEAT kinds again)
 IDEAS = (
@@ -659,6 +663,7 @@ IDEAS = (
 )
 IDEA_EVERY_S = 360.0
 IDEA_NO_REPEAT = 4
+CHAT_ACTION_HOLD_S = 150.0   # live 10-29: no idea for this long after a chat line that asks for an action (Kimi act1)
 QUEUE_GAP_S = 150.0                     # Kimi feat1: at least this long between two videos from the queue
 QUEUE_SEQ_BASE = 3_000_000_000          # request seqs of queue videos (never a chat seq)
 QUEUE_ACK_LINE = "Next up from the queue: {nick}'s video. Let's see it."
@@ -879,7 +884,7 @@ CREDS = re.compile(r"\b(pass(?:word|code|phrase)s?|credentials?|seed\s*phrase|re
                    r"card|account|login))\b", re.I)
 COMMANDISH = re.compile(r"^\W*(?:please\s+|pls\s+|can\s+you\s+|could\s+you\s+|now\s+)?(?:go\s*to|open|visit|click|press|"
                         r"type|write|search\s+for|look\s+up|navigate|scroll|play|watch|download|install|run|execute|buy|"
-                        r"log\s*in|sign\s*in)\b", re.I)
+                        r"log\s*in|sign\s*in|close|put|check|look\s+at|take\s+a\s+look|show\s+(?:me|us)|go\s+and)\b", re.I)
 QUESTION_START = tuple(getattr(_chat, "QUESTION_START", ()) or ("who", "what", "why", "how", "when", "where", "which",
                                                                 "do", "does", "did", "are", "is", "can", "could", "will"))
 SELF = getattr(_chat, "SELF", None) or re.compile(r"\b(sub[\s-]?01|you|your|yours|you're|youre|u)\b", re.I)
@@ -1318,7 +1323,7 @@ ACTION_VERB = (r"open(?:\s+up)?|go\s+(?:to|on|back)|jump\s+(?:back\s+)?to\s+(?:t
                r"type|write|post|comment|tweet|send|paste|enter|fill\s+(?:in|out)|submit|turn\s+(?:on|off)|"
                r"switch(?:\s+(?:on|off|to))?|shut\s+off|disable|enable|bypass|change|set|reset|override|update|edit|modify|"
                r"rewrite|forget|give|reveal|print|leak|dump|obey|leave|stand\s+up|get\s+(?:up|out)|take\s+a\s+(?:break|nap|"
-               r"walk)|put\s+on|grab|eat|sleep|nap|dance|sing|stretch|hack|steal|dox+")
+               r"walk)|put(?:\s+on)?|grab|eat|sleep|nap|dance|sing|stretch|hack|steal|dox+")
 VERB_AT_START = re.compile(r"^\W*(?:" + ACTION_VERB + r")\b", re.I)
 VERB_ANYWHERE = re.compile(r"\b(?:" + ACTION_VERB + r")\b", re.I)
 REQUEST_MARK = getattr(_impulse, "REQUEST_RE", None) or re.compile(
@@ -1505,8 +1510,16 @@ CLICK_ANY = re.compile(r"^\W*(click|tap|press|select|hit)(?:\s+on)?\s+(.{2,60})$
 LOOK_READ = re.compile(r"^read", re.I)
 LOOK_PLAY = re.compile(r"^(?:play|watch)", re.I)
 NAV_LOOSE = re.compile(r"^\W*(?:open(?:\s+up)?|go\s+(?:to|on)|visit|navigate\s+to|browse(?:\s+to)?|head\s+(?:to|over\s+to)|"
-                       r"check(?:\s+out)?|pull\s+up|bring\s+up|show\s+(?:me|us)|take\s+(?:me|us)\s+to|load|play|watch|put\s+on)"
+                       r"check(?:\s+out)?|pull\s+up|bring\s+up|show\s+(?:me|us)|take\s+(?:me|us)\s+to|load|play|watch|put\s+on|"
+                       r"put(?!\s+(?:it|that|this|them|your|my|me|him|her|down|away|back|up|in|out)\b))"
                        r"\s+(?:the\s+|a\s+|an\s+|some\s+)?(?:(?:web)?site\s+|page\s+|url\s+)?(.+)$", re.I)
+# live 10-29: "close the tab crazies thing", "close this tab and look at your coin": the model closes the tab chat means
+# (it sees which one is showing; the fomo.family tab never), then does the rest of the line
+CLOSE_TAB = re.compile(r"^\W*close\s+(?:(?:this|that|the|current|the\s+current)\s+)?(?:([\w.'-]+(?:\s+[\w.'-]+)?)\s+)?"
+                       r"tab\b\s*(.*)$", re.I)
+# live 10-29 "put his latest video": the newest video on that creator's own channel (the prompt's rule), not a search
+CREATOR_LATEST = re.compile(r"^\W*(?:put(?:\s+on)?|play|show\s+(?:me|us)|open|watch)\s+(?:his|her|their)\s+"
+                            r"(?:latest|newest|new|last|most\s+recent)\s+(?:video|vid|upload)\b", re.I)
 KNOWN_SITES = {"youtube": "https://www.youtube.com", "wikipedia": "https://en.wikipedia.org", "reddit": "https://www.reddit.com",
                "hacker news": "https://news.ycombinator.com", "hackernews": "https://news.ycombinator.com",
                "duckduckgo": "https://duckduckgo.com", "google": "https://www.google.com", "bbc": "https://www.bbc.com/news",
@@ -2079,6 +2092,11 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
     install request is carried out from an official source only (install_request: kind install, `name`, `source`,
     `hosts`); a pasted URL or file name is refused (official_source)."""
     text = " ".join(str(text or "").split())
+    if (m := CLOSE_TAB.match(strip_filler(text) or text)) and not refused_class(text, logins):
+        rest = " ".join((m.group(1) or m.group(2)).strip(" .,!?;:").split()[:4])
+        rest = re.sub(r"^(?:and|then|&)\b.*", "", rest, flags=re.I)              # "and look at your coin": next, by the model
+        rest = re.sub(r"\s*\b(?:and|then|&)\b.*$|\s+(?:etc\.*|please|pls|bro|now)$", "", rest, flags=re.I).strip(" .")
+        return doable("look", None, intent="close", thing=(f"The {rest} tab" if rest else None))
     # "leave and go on some casino websites" (live 10-28): the lead-in leaves the page, the rest is the request
     text = LEAVE_AND.sub("", text) or text
     s = request_shape(text)
@@ -2170,6 +2188,8 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         return doable("look", None, intent="click", thing=(thing[:1].upper() + thing[1:]) if thing else None)
     if leaves_desk(text):
         return refused("sing" if SING_REQ.search(text) and not OFF_DESK_ONLY.search(text) else "leave_desk")
+    if CREATOR_LATEST.match(s):
+        return doable("look", None, intent="play", thing="His latest video")
     if (m := NAV_LOOSE.match(s)):
         rest = m.group(1).strip(" .,!?")
         site = KNOWN_SITES.get(re.sub(r"^(?:the\s+)?|\s+(?:site|website|page|home\s*page)$", "", rest.lower()).strip())
@@ -3851,6 +3871,7 @@ class Agent:
         self.video_queue = LF.VideoQueue(self.dir / "video-queue.json", time.time)   # videos sent from the site
         self.queue_last_start, self.queue_seq = -1e9, 0
         self.idea, self.idea_at, self.idea_recent = None, -1e9, collections.deque(maxlen=IDEA_NO_REPEAT)
+        self.chat_action_at = -1e9                           # the last chat line that asked for an action
         self.audience_n, self.audience_low_since, self.audience_idle_on = None, None, False
         self.hype = LF.HypeMeter(self.clock)                                  # the site's free Hype button
         self.trade = TR.TradeDesk(TR.Ledger(self.dir / "trade-ledger.json", time.time), None, self.clock)  # chat-voted trades
@@ -4179,6 +4200,8 @@ class Agent:
             if item["viewer"] == "back":
                 item["memory"] = self.viewers.greeting(item["nick"], now)
             req = item["request"]
+            if item["asks_action"]:                           # what chat asked (even refused) comes before a new idea
+                self.chat_action_at = now
             if item["cls"] == "ok" and req:                   # a request: carried out, queued, dropped or refused by code
                 self.log("chat", seq=item["seq"], cls="request", direct=item["direct"], text=item["text"][:80])
                 self.route_request(item, req, now)
@@ -7086,8 +7109,8 @@ class Agent:
                                   "commented": cur["commented"]}
         if self.requests.waiting:
             st["requests_waiting"] = len(self.requests.waiting)
-        if not cur and r is None and pc.playing is None:     # nothing asked of him: what to do once the current thing is done
-            st["idea"] = self.next_idea(now)
+        if not cur and r is None and pc.playing is None and now - self.chat_action_at >= CHAT_ACTION_HOLD_S:
+            st["idea"] = self.next_idea(now)                 # nothing asked of him: what to do once the current thing is done
         if win and win["ok"]:
             st["chat"] = [{"seq": i["seq"], "nick": i["nick"] or "a viewer", "text": i["text"][:200],
                            "question": i["question"], "direct": i["direct"], "asks_action": i["asks_action"],
