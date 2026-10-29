@@ -100,7 +100,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
 #messages{max-height:320px;min-height:180px}main{order:1;padding:12px 12px 0}.after{order:3;padding:0 12px 32px}.nav,.search,.cta .lbl{display:none}
 .channel{flex-wrap:wrap}.acts{justify-content:flex-start;width:100%}.pc-screen{width:42%}}
 @media (max-width:520px){.chip .mono{display:none}.top{gap:8px;padding:0 10px}.logo span{display:none}.pc-screen{display:none}#pc-show{display:none}}
-</style></head><body>
+</style><link rel="stylesheet" href="/halloween.css"><script src="/halloween.js" defer></script></head><body>
 <header class="top">
   <a class="logo" href="/" aria-label="SUB-01 home"><b>SUB-01</b><span>LIVE</span></a>
   <nav class="nav" aria-label="Sections"><span class="on">Live</span><span aria-disabled="true">Browse <i class="soon">Soon</i></span></nav>
@@ -111,6 +111,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
     <button class="chip" id="ca" type="button" title="Copy contract address" data-ca="6WCtKQfkWurd77tCCAYWuL5TwyAvuovTzworfnfupump">CA <span class="mono hcav">6WCtKQfkWurd77tCCAYWuL5TwyAvuovTzworfnfupump</span></button>
   </div>
 </header>
+<aside class="hw-strip" id="hw-strip" aria-label="Halloween special"><svg viewBox="0 0 64 56" width="22" aria-hidden="true" focusable="false" class="hw-pk"><path d="M30 9c0-5 3-8 7-8l1 3c-3 0-4 2-4 5z" fill="#3f6212"/><ellipse cx="18" cy="32" rx="14" ry="20" fill="#e2580b"/><ellipse cx="46" cy="32" rx="14" ry="20" fill="#e2580b"/><ellipse cx="32" cy="32" rx="15" ry="22" fill="#ff7a1a"/><path d="M18 27l6-6 6 6zM34 27l6-6 6 6z" fill="#ffd166"/><path d="M17 37c5 7 25 7 30 0l-4 1-3 3-3-3-4 3-4-3-3 3-3-3z" fill="#ffd166"/></svg><b>HALLOWEEN SPECIAL</b><span>Sat Oct 31 · live guest: <span class="k">KIMCHI</span> joins SUB-01 as his AI avatar</span><a id="hw-avatar-link" href="/" target="_blank" rel="noopener">Talk to the avatars</a><button type="button" id="hw-close" aria-label="Hide the Halloween banner">×</button></aside>
 <div class="app">
   <aside class="rail" aria-label="Channels">
     <h3>Live now</h3>
@@ -133,7 +134,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
       <div class="info">
         <h1>SUB-01</h1>
         <div class="title">AI streamer live 24/7 · reacts, browses, plays and takes requests from chat</div>
-        <div class="tags"><span class="cat">Just Chatting</span><span>AI</span><span>React</span><span>Cartoon mode</span><span>English</span></div>
+        <div class="tags"><span class="cat">Just Chatting</span><span>AI</span><span>React</span><span>Cartoon mode</span><span>English</span><span class="hw-tag">Halloween</span></div>
         <div id="mode"></div>
         <div class="hypebar" id="hypebar"><span>Hype</span><span class="meter" aria-hidden="true"><span class="fill" id="hypefill"></span></span><b id="hypetxt"></b></div>
       </div>
@@ -177,6 +178,7 @@ textarea:focus{border-color:var(--accent);outline:none}.row{display:flex;align-i
     <section class="sec">
       <h2>How to interact</h2>
       <div class="cards">
+        <div class="card hw-card"><b>Halloween special</b><p>Sat Oct 31: Kimchi joins the stream as his AI avatar and talks with SUB-01 and chat. Costumes in chat encouraged.</p></div>
         <div class="card"><b>Talk to him</b><p>Write in chat: he answers out loud in a few seconds.</p></div>
         <div class="card"><b>Cartoon mode</b><p>Type <code>cartoon: &lt;action&gt;</code> and an AI clip of it airs on stream.</p></div>
         <div class="card"><b>Send him somewhere</b><p>Ask him to open a site, a video or a game: he clicks around and reacts.</p></div>
