@@ -308,6 +308,15 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   Simli session token (`simli-client` generateSimliSessionToken / POST /compose/token, header x-simli-api-key, config
   faceId, maxSessionLength, maxIdleTime) and a page that streams our TTS PCM16 16 kHz mono into SimliClient;
   persona replies by our model. Needs Kimi design review and the owner's OK before any public endpoint.
+- **10-29 15:50-16:28 PUBLIC BUG BOUNTY on SUB-01 (owner, pump.fun Go.fun): no mistakes.** Chat trade votes PAUSED
+  (`streamer/trading-on` -> `trading-on.paused-bounty`; mv back to resume). Agent new61-new64 (16886d0, b403726,
+  8d2633f+7f62b60, 9ed01c5; Kimi prof1/2, nav1/2, tab1, wide1, say1, win1/2): viewer coin/wallet profiles and the
+  pump.fun feed refused with clear lines, scripted-word commands (exactly N words, say out loud:, repeat this
+  sentence) refused by code, common sites open by name, "open a new tab and ...", named home pages, "open twitch and
+  ...", "wide" never on air, Windows questions are not leave_desk. Site branch (needs the owner's `railway up`):
+  9cde7b7 eye, 17eaa92 name box label, 0ba779a chat wait countdown + auto-send. Open: owner to decide tiktok/
+  instagram by name and turning chat logins off for the bounty; an old backend-path chat line (seq 2122/2123) is
+  answered right after an agent restart (harmless so far).
 - **10-29 15:15 agent new60 (git 1cb880d = new59 + the act diff; runtime keeps the `sequence` line):** "put X",
   "put his latest video", "close (the/this/<name>) tab ..." are tracked requests; no idea for 150 s after an
   action-asking chat line (Kimi act1/act3). Avatars: photo minimum 512x512 (ef8498c, deployed). First submission
