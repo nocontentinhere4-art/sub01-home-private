@@ -893,3 +893,13 @@ def test_x_recent_texts_survive_a_restart_and_reach_the_state(tmp_path):
     again, *_ = T.pc_make(tmp_path, T.decision())
     assert again.x_recent and again.x_recent[0]["text"].startswith("I'm SUB-01")
     assert "never answer the same" in SA.SYSTEM_PC.replace("\\\n", "")
+
+
+@pytest.mark.parametrize("text,q", [("Put some travis scott", "travis+scott"), ("put on some drake", "drake"),
+                                    ("bro put some kendrick", "kendrick"), ("put some lofi", "lofi")])
+def test_put_some_artist_opens_youtube_results(text, q):
+    # live 10-29 20:16: "Put some travis scott" ran a web search first, then he went to YouTube by hand
+    r = SA.parse_request(text, pc=True, logins=True)
+    r = SA.search_target(dict(r, text=text))
+    assert r["url"] == SA.YT_RESULTS + q and r["action"]["action"] == "navigate"
+    assert SA.parse_request("put it on full screen", pc=True, logins=True)["kind"] == "look"

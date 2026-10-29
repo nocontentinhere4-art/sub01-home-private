@@ -1,0 +1,1 @@
+APPROVE. Narrowly scoped to put (on) (some) <x>, preserves question/weather/search guards, excludes direct-object pronouns, covers the failure and the put it... regression.
