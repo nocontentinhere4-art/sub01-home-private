@@ -233,7 +233,8 @@ FOCUS_CAP_S = 240.0                     # reading focus lasts 4 min at most, the
 STALE_PAGE_S = 180.0
 THINK_READING_S = (8.0, 11.0)           # next model call while reading (a scroll step; was 14-28 s)
 THINK_OTHER_S = (7.0, 10.0)            # was 8-16 s; with the budget about 450 calls an hour
-THINK_AFTER_ACTION_S = 2.5              # let the page settle, then look at the outcome
+THINK_AFTER_ACTION_S = 1.0              # then look at the outcome (was 2.5; owner 10-29 "on Vagon it is slow": act() already
+                                        # waited for the load, a PC input is verified by that next look)
 QUIET_MIN_S = 20.0                      # quiet this long before the honest line
 QUIET_LINE_EVERY_S = 300.0
 QUIET_SCROLL_S = (8.0, 14.0)
@@ -4323,7 +4324,8 @@ class Agent:
                    else None)                                 # quiet mode: the step was done, nobody to comment on it
             if why:
                 self.finish_request(why, now)
-            return
+            if rq.current is not None:                        # ended: the next one waiting starts now, not after a look
+                return
         for stale in rq.expire(now):
             self.log_request("dropped", "waited too long", stale)
             if stale.get("trade"):                            # a voted trade that never started: nothing was ordered

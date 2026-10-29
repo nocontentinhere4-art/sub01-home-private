@@ -60,3 +60,12 @@ APPROVE
 ## fix14 (sing line, game ack)
 
 CHANGES (cover rap/rapping/beatboxing), applied; fix14b APPROVE
+
+## lag1 / lag2 (2026-10-29): stream delay growth and slow PC steps
+
+- Cause measured live: the director stamps the cartoon FIFO by frame count and its live graph waits for the slowest input;
+  every frame the feeder dropped on a full pipe left the whole stream 33 ms further behind (9 drops = +0.30 s lag in one
+  sample window). Lag grew ~3-5 s/hour and forced a relaunch at 10 s.
+- Fix: cartoon_feed.py frame debt (repeat the tick's frame while frames are owed, max 4 per tick, 20 s rebase).
+  Agent: THINK_AFTER_ACTION_S 2.5 -> 1.0; the next waiting request starts in the step the previous one ends.
+- lag1 (design): GO / GO. lag2 (diff): APPROVE.

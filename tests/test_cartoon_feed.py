@@ -308,3 +308,57 @@ def test_feed_writes_valid_frames_to_fifo(tmp_path):
             first = data.split(b"\xff\xd8\xff")[1]
             assert_frame(b"\xff\xd8\xff" + first)                    # complete 1280x720 JPEG
     run(go())
+
+
+def test_fifo_writer_pays_frame_debt_and_rebases(tmp_path):
+    """The director stamps the cartoon input by frame count: frames lost to a full pipe are repeated later (10-29)."""
+    p = make_fifo(tmp_path)
+    logs = []
+    now = [100.0]
+    w = cf.FifoWriter(p, log=lambda ev, **f: logs.append(ev), clock=lambda: now[0])
+    frame = b"\xff\xd8\xff" + b"2" * 1000
+    assert w.debt() == 0                                             # no reader: nobody is owed anything
+    rfd = os.open(p, os.O_RDONLY | os.O_NONBLOCK)
+    assert w.write_frame(frame) is True and w.debt() == 0            # attached: frame 0 is the first one due
+    now[0] += 0.5                                                    # 15 ticks pass, none written (a stall)
+    assert w.debt() == 15
+    assert w.write_frame(frame) is True and w.write_owed(frame) == cf.DEBT_EXTRA_MAX
+    assert w.debt() == 15 - 1 - cf.DEBT_EXTRA_MAX and w.repeated == cf.DEBT_EXTRA_MAX
+    while w.debt():
+        assert w.write_owed(frame) > 0
+    assert w.written_since == 16 and w.repeated == 14
+    assert w.write_owed(frame) == 0                                  # nothing owed: no extra frame
+    now[0] += 30.0                                                   # a reader that stopped for long: no burst
+    assert w.debt() == 0 and w.rebased == 1 and logs[-1] == "timeline_rebased"
+    now[0] += 0.1
+    assert w.debt() == 3
+    data = b""
+    while True:
+        try:
+            chunk = os.read(rfd, 1 << 20)
+        except BlockingIOError:
+            break
+        if not chunk:
+            break
+        data += chunk
+    assert data.count(b"\xff\xd8\xff") == w.frames_written == 16     # whole frames only
+    os.close(rfd)
+    w.write_frame(frame)
+    assert not w.reader and w.debt() == 0
+
+
+def test_fifo_writer_debt_not_paid_into_a_full_pipe(tmp_path):
+    p = make_fifo(tmp_path)
+    now = [100.0]
+    w = cf.FifoWriter(p, log=lambda ev, **f: None, clock=lambda: now[0])
+    frame = b"\xff\xd8\xff" + b"3" * 300_000
+    rfd = os.open(p, os.O_RDONLY | os.O_NONBLOCK)
+    assert w.write_frame(frame) is True
+    now[0] += 1.0
+    w.write_frame(frame)
+    t0 = time.monotonic()
+    w.write_owed(frame)                                              # 1 MiB pipe: stops at the first partial frame
+    assert time.monotonic() - t0 < 1.0 and len(w.pending) <= len(frame)
+    assert w.write_owed(frame) == 0 and w.debt() > 0                 # a tail is pending: no more extra frames
+    os.close(rfd)
+    w.close()

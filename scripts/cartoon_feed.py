@@ -35,7 +35,13 @@ pending tail discarded and the open-retry loop starts again.  Reader attached /
 detached transitions are logged.
 
 Playback timing: one 30 fps tick loop (monotonic deadlines, resync if more than
-250 ms behind) is the ONLY writer of the FIFO.  The decoder task runs ahead by at
+250 ms behind) is the ONLY writer of the FIFO.  The director stamps this input by
+frame count (30 frames = 1 s) and its live graph waits for the slowest input, so a
+frame dropped while the pipe was full or a tick lost to a resync would leave the
+whole stream that much behind the wall clock for good (~4 s/hour measured 10-29).
+The writer therefore keeps a frame debt since the reader attached: while fewer
+frames went out than the time elapsed calls for, each tick repeats its frame (at
+most DEBT_EXTRA_MAX extra per tick, only while the pipe takes them whole).  The decoder task runs ahead by at
 most 8 encoded frames (bounded queue = back-pressure on ffmpeg); if it ever
 lags the previous frame is repeated, so the output rate stays constant.  The
 clip timer is counted in ticks, i.e. it is wall-clock time, with or without a
@@ -116,6 +122,8 @@ QUEUE_FRAMES = 8                      # decoder read-ahead (encoded JPEGs)
 REOPEN_SECONDS = 1.0                  # FIFO open retry period without reader
 F_SETPIPE_SZ = 1031                   # linux fcntl, not exported by fcntl module
 PIPE_SIZE = 1 << 20
+DEBT_EXTRA_MAX = 4                    # extra copies of a tick's frame while the FIFO timeline is behind
+DEBT_RESET_FRAMES = 20 * FPS          # a reader this far behind is not sent a burst: the baseline restarts
 FIRST_FRAME_TIMEOUT = 8.0             # /play waits this long for a decoded frame
 MAX_BODY = 64 * 1024
 
@@ -309,6 +317,10 @@ class FifoWriter:
         self.next_open = 0.0                  # earliest time of the next open attempt
         self.frames_written = 0
         self.dropped = 0
+        self.attached_at = 0.0                # clock() when the current reader attached
+        self.written_since = 0                # complete frames handed to the current reader
+        self.repeated = 0                     # extra frames written to pay the debt
+        self.rebased = 0
 
     @property
     def reader(self) -> bool:
@@ -334,6 +346,7 @@ class FifoWriter:
         except OSError:
             pass
         self.fd = fd
+        self.attached_at, self.written_since = now, 0
         self.log("reader_attached")
 
     def _detach(self) -> None:
@@ -377,6 +390,7 @@ class FifoWriter:
                 self.dropped += 1
                 return False
             self.frames_written += 1
+            self.written_since += 1
         rest = self._push(memoryview(frame))
         if rest is None:
             self._detach()
@@ -386,7 +400,32 @@ class FifoWriter:
             self.pending = rest               # remember the tail, count it when complete
             return False
         self.frames_written += 1
+        self.written_since += 1
         return True
+
+    def debt(self) -> int:
+        """Frames the current reader is owed: the ticks since it attached minus the complete frames it got.
+        A debt beyond DEBT_RESET_FRAMES (a reader that stopped reading for long) restarts the baseline instead."""
+        if self.fd is None:
+            return 0
+        now = self.clock()
+        owed = int((now - self.attached_at) * FPS) + 1 - self.written_since
+        if owed > DEBT_RESET_FRAMES:
+            self.attached_at = now - self.written_since / FPS
+            self.rebased += 1
+            self.log("timeline_rebased", owed=owed)
+            return 0
+        return max(0, owed)
+
+    def write_owed(self, frame: bytes) -> int:
+        """Repeat `frame` while the reader is owed frames and the pipe takes each one whole. Returns the count."""
+        extra = 0
+        while extra < DEBT_EXTRA_MAX and not len(self.pending) and self.debt() > 0:
+            if not self.write_frame(frame):
+                break
+            extra += 1
+        self.repeated += extra
+        return extra
 
     def close(self) -> None:
         if self.fd is not None:
@@ -518,7 +557,9 @@ class CartoonFeed:
         next_t = loop.time()
         while True:
             try:
-                self.writer.write_frame(self.next_frame())
+                frame = self.next_frame()
+                if self.writer.write_frame(frame):
+                    self.writer.write_owed(frame)    # frames lost to a full pipe or a resync (module docstring)
             except Exception as e:               # never let the feed die
                 self.log("error", where="tick", error=repr(e))
             next_t += period
@@ -667,6 +708,8 @@ class CartoonFeed:
             "clip_frames": c.ticks if c else 0,
             "reader": self.writer.reader,
             "dropped": self.writer.dropped,
+            "repeated": self.writer.repeated,
+            "debt": self.writer.debt(),
         }
 
 
