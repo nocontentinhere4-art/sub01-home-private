@@ -281,6 +281,10 @@ body movement stays slow and natural (calm profile, clip_rate 0.25). Run as a se
   at every step). Chat asking him to post on X hears that he posts there himself. Kimi x1-x4. Clicks can't be
   URL-checked (screenshots only), so no follows/DMs is a prompt rule. Phase 2: logo/banner upload (owner's OK),
   live clips.
+  - 18:15 new75 (ee47a45): the state cut request text at 200 chars, so the model never read the post part; now the
+    X text reaches it whole (new74 363bc47 makes the own post expected). The first post went out 18:16 UTC: "Live at
+    subzerone.live. Watching streamer fail clips and rating them one to ten. Lowkey the shadow fight is a solid 7."
+  - To verify sessions I moved `last` in x_state.json back twice. Today: 3 sessions, 1 post, 0 replies. Next ~19:16.
 - 10-29 16:30-18:00 agent new65-new72 (710a0ab, 32bfcac, 2432583, 05d5f50, 2206dfc, 148e976, 763de64, cf32160):
   - chat logins open the named site;
   - the trading host is refused;
