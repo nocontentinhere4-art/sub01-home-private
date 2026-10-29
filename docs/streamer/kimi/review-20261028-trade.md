@@ -32,3 +32,7 @@ APPROVE — Changes 1–5 are correctly implemented; no new correctness or fail-
 ## fix10 (live fixes 10-29: games, drag, streak, cartoon intro, vid, acks, patience, fomo tab, deposit)
 
 APPROVE
+
+## fix11 (play <game> is a game, not leaving the desk)
+
+APPROVE

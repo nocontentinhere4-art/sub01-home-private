@@ -192,3 +192,20 @@ def test_the_pc_prompt_keeps_the_fomo_tab_and_never_invites_deposits():
     p = SA.system_prompt(pc=True, allow_credentials=True)
     assert "fomo.family tab that always stays open" in p and "Never invite chat to deposit" in p
     assert "he cannot drag" in p and "at least two minutes" in p
+
+
+@pytest.mark.parametrize("text,query", [("Play Minecraft and hit up other streamers to join", "Minecraft play online free"),
+                                        ("play roblox", "roblox play online free")])
+def test_play_a_named_game_is_a_game_not_leaving_the_desk(text, query):
+    r = SA.parse_request(text, pc=True)
+    assert r["kind"] == "search" and r["query"] == query and not SA.leaves_desk(text)
+
+
+@pytest.mark.parametrize("text", ["stand up and play minecraft", "get up and play roblox"])
+def test_explicit_off_desk_still_refused(text):
+    assert SA.parse_request(text, pc=True)["refused"] == "leave_desk"
+
+
+def test_play_music_or_a_video_stays_a_video_request():
+    assert SA.parse_request("play some music", pc=True)["query"] == "music"
+    assert SA.parse_request("play the video", pc=True)["intent"] == "play"

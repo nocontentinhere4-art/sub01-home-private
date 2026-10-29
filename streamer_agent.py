@@ -1338,7 +1338,13 @@ PLAY_ONLINE = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|le
                          r"try)\s+(?:some\s+|a\s+(?:game\s+of\s+|round\s+of\s+|match\s+of\s+)?|an?\s+)?(chess|poker|texas\s+hold\s*'?em|"
                          r"blackjack|checkers|solitaire|uno|sudoku|minesweeper|tetris|wordle|geoguessr|connect\s+four|"
                          r"(?:video\s*)?games?|something)\b(?!\s+(?:of|on|like|called|named)\b)", re.I)
-GAMES_SITE = "https://www.crazygames.com"   # live 10-28: "play some games" searched the word "games" first
+GAMES_SITE = "https://www.crazygames.com"
+# "play minecraft and hit up other streamers to join" (live 10-29) was refused as leaving the desk: "play <a game>" is
+# a game on the PC, searched as a free online one; music, songs and videos stay video requests
+PLAY_NAMED = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go|and)[\s,]+)*play\s+"
+                        r"(?:some\s+|a\s+(?:bit\s+of\s+|game\s+of\s+)?|the\s+game\s+)?"
+                        r"(?!(?:some\s+|the\s+|a\s+)?(?:music|songs?|videos?|clips?|it|this|that|that\s+one|the\s+\w+\s+video)\b)"
+                        r"([a-z0-9][a-z0-9' .:-]{1,30}?)(?=\s+(?:and|then|with|on|online|pls|please|now|bro)\b|\W*$)", re.I)   # live 10-28: "play some games" searched the word "games" first
 EXIT_FULLSCREEN = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?)[\s,]+)*(?:exit|leave|close|quit|escape|"
                              r"get\s+out\s+of|come\s+out\s+of|out\s+of)\s+(?:the\s+)?full\s*-?\s*scr[a-z]{0,2}n\b", re.I)
 REACT_TO = re.compile(r"^\W*(?:(?:bro|yo|chat|sub-?01|please|pls|ok(?:ay)?|let'?s|lets|can\s+you|go)[\s,]+)*react\s+(?:to|on|at)\s+"
@@ -1788,6 +1794,8 @@ def leaves_desk(text):
     Never when it is about the screen ("leave full screen", "watch some other games on youtube": owner 10-28)."""
     if OFF_DESK.search(text):                                 # explicit, whatever screen word comes with it (Kimi)
         return True
+    if PLAY_NAMED.match(text):                                # "play minecraft": a game on the PC (live 10-29)
+        return False
     if ON_SCREEN_WORDS.search(text):
         return False
     if LEAVE_WORDS.search(text):
@@ -2067,6 +2075,10 @@ def parse_request(text, pc=False, installs=False, sources=None, logins=False):
         if game == "chess":
             return doable("navigate", {"action": "navigate", "url": "https://lichess.org"}, url="https://lichess.org")
         return search_doable(query_clean(f"{game} online free") or game)
+    if pc and (m := PLAY_NAMED.match(s)) and not VIDEO_WORDS.search(m.group(1)):   # "play minecraft": a free online one
+        name = " ".join(m.group(1).split()).strip(" .:-")
+        if name and (q := query_clean(f"{name} play online free")):
+            return search_doable(q)
     if (m := REACT_TO.match(s)) and (q := request_query(m.group(1))):   # "react to some kai cenat": find it and put it on
         return search_doable(q)
     if ENTER_FULLSCREEN.match(s):                             # the model presses f or clicks the button (not a search)
