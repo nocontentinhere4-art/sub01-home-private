@@ -5180,7 +5180,8 @@ class Agent:
         return idle
 
     def schedule_think(self, now, short=False, after_wait=False):
-        if not short and self.audience_idle(now):            # nobody watching (owner 10-29): one look a minute or so
+        if self.audience_idle(now):                           # nobody watching (owner 10-29): one look a minute or so, an
+            # input of his own included (a chess move, a game key); a request in flight or waiting is never idle
             self.next_think = now + self.rng.uniform(*AUDIENCE_IDLE_THINK_S)
             return
         if self.pc.playing is not None and self.pc.routine is None:   # the gentle play loop: one look per 2-4 s at most
@@ -6896,8 +6897,9 @@ class Agent:
                        pixel_diff=None if diff is None else round(diff, 2))
             if not changed and pv["kind"] == "scroll":       # live 10-29: the end of a page (fomo's holder list) is no
                 self.note_result(pv["key"], True, "", now, out["action"], streak=False)   # failure streak: avoided only
-            elif not changed and pv["kind"] in ("click", "type"):   # a focus click or a few typed characters (live 10-28:
-                # "Subzerone01" typed into lichess's form read as unchanged, pixel_diff 0.04) change almost no pixels:
+            elif not changed and pv["kind"] in ("click", "type", "key"):   # a focus click, a few typed characters (live 10-28:
+                # "Subzerone01" typed into lichess's form read as unchanged, pixel_diff 0.04) or a key in a small box (live
+                # 10-29: Backspace clearing an illegal lichess move, twice, held him) change almost no pixels:
                 out["focus_check"] = True                     # the model's outcome_ok decides it (pc_confirm_outcome)
                 self.note_result(pv["key"], True, "", now, out["action"], streak=False)
             else:

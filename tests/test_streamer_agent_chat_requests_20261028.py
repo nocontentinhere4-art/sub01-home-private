@@ -321,8 +321,8 @@ def test_shadow_off_file_and_audience_idle_and_wait_pacing(tmp_path):
     assert agent.audience_idle(clock()) is True
     agent.schedule_think(clock())
     assert SA.AUDIENCE_IDLE_THINK_S[0] <= agent.next_think - clock() <= SA.AUDIENCE_IDLE_THINK_S[1]
-    agent.schedule_think(clock(), short=True)                        # an input is still verified at once
-    assert agent.next_think - clock() <= SA.THINK_AFTER_ACTION_S + 1.5
+    agent.schedule_think(clock(), short=True)                        # his own input too, with nobody watching
+    assert SA.AUDIENCE_IDLE_THINK_S[0] <= agent.next_think - clock() <= SA.AUDIENCE_IDLE_THINK_S[1]
     agent.thesis_request(clock())                                    # something asked of him: full mode
     assert agent.audience_idle(clock()) is False
     agent.requests.waiting.clear()
@@ -356,3 +356,18 @@ def test_a_failures_hold_clears_itself_three_times_an_hour_other_holds_do_not(tm
     agent.held_auto_clear(clock())
     assert agent.held["why"] == "login_attempts"                    # never cleared by itself
     assert any("leave it" in line for line in agent.memory.lines(12))
+
+
+def test_an_unchanged_key_is_judged_by_the_model_like_a_focus_click(tmp_path):
+    """Live 10-29: Backspace clearing an illegal lichess move changed almost no pixels; twice held him."""
+    keys = [T.decision(state="mouse", action={"action": "key", "key": "Backspace"}, say="", outcome_ok=True) for _ in range(6)]
+    agent, world, prov, clock = T.pc_make(tmp_path, *keys)
+    asyncio.run(T.sim(agent, clock, 40, dt=3))
+    assert len(world.acts) >= 4 and agent.held is None and agent.fail_streak == 0
+    outs = [e for e in T.events(agent) if e["kind"] == "outcome" and e.get("verdict") == "unchanged"]
+    assert outs and all(e["focus_check"] for e in outs)
+    denied = [T.decision(state="mouse", action={"action": "key", "key": k}, say="", outcome_ok=False)   # new keys: no loop break
+              for k in ("Space", "Enter", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight")]
+    agent, world, prov, clock = T.pc_make(tmp_path / "denied", *denied)
+    asyncio.run(T.sim(agent, clock, 40, dt=3))
+    assert agent.held is not None and agent.held["why"] == "failures"   # the model says it did nothing: still a failure

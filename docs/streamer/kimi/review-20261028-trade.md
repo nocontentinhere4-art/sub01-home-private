@@ -93,3 +93,7 @@ cost1 GO (1-3; pod research only), cost2 APPROVE
 ## held1 (10-29): a failures hold clears itself (90 s, 3/hour)
 
 APPROVE
+
+## held2 (10-29): unchanged key = focus check; idle paces his own inputs too
+
+APPROVE
