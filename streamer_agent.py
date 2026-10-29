@@ -273,8 +273,8 @@ THESIS_TEXT = ("write your own short thesis on SUB-01 in the thesis box of the f
 # content gate before anything is typed, the kill switch <streamer-dir>/x-off checked at every step; clips come later
 X_HANDLE = "subzeroneperson"
 X_OFFICIAL = "SUBZERONE01"             # owner 10-29: the official account; he answers its comments as @subzeroneperson
-X_GAP_S, X_STEPS_MAX, X_RUN_MAX_S = 1800.0, 12, 240.0
-X_SESSIONS_PER_DAY, X_POSTS_PER_DAY, X_REPLIES_PER_DAY, X_TEXT_MAX = 24, 4, 20, 280
+X_GAP_S, X_STEPS_MAX, X_RUN_MAX_S = 1800.0, 16, 300.0   # owner 10-29 20:30: scroll several posts, pick the comments
+X_SESSIONS_PER_DAY, X_POSTS_PER_DAY, X_REPLIES_PER_DAY, X_TEXT_MAX = 24, 8, 20, 280
 X_TEXTS_PER_SESSION, X_TEXT_MIN, X_RECENT_KEEP = 4, 6, 12   # Kimi x2: typed texts are the evidence the code counts (1 post + 3 replies)
 X_ACTIONS = ("click", "type", "key", "scroll", "wait", "zoom", "navigate")
 X_PATHS = ("/home", "/notifications", "/compose/post", "/" + X_HANDLE, "/" + X_OFFICIAL)
@@ -290,8 +290,9 @@ X_SESSION_TEXT = ("your X session on your own account @" + X_HANDLE + ": open th
                   "nobody wrote to you: Post box on Home, type it, click Post; report each post or reply in x_done")
 X_SESSION_TEXT_OFFICIAL = ("your X session on the comments of the official account @" + X_OFFICIAL + ", answered from your "
                            "own account: open the X tab (x.com), check the profile in the left column is @" + X_HANDLE +
-                           " (anything else: stop and say so; you stay on your own account the whole time), open x.com/" + X_OFFICIAL + ", open "
-                           "its newest post, read the comments and reply to up to three real people in your own words, "
+                           " (anything else: stop and say so; you stay on your own account the whole time), open x.com/" + X_OFFICIAL + ", scroll "
+                           "its latest posts (up to three), read their comments, pick the best ones and reply to up to "
+                           "four real people across them in your own words, "
                            "like a streamer answering his fans; skip bots, spam, insults and anything about price, buying, "
                            "selling or the coin; report each reply in x_done")
 DEPOSIT_STEPS_MAX = 6                   # the owner's deposit QR request: open fomo.family, Deposit, the QR, wait
