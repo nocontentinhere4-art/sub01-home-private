@@ -36,3 +36,7 @@ APPROVE
 ## fix11 (play <game> is a game, not leaving the desk)
 
 APPROVE
+
+## fix12 (scroll end no streak, trade how-to refusal, fomo tab reuse, likes ok)
+
+APPROVE

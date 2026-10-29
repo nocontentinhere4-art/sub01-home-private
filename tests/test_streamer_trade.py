@@ -259,3 +259,25 @@ def test_only_the_trade_request_itself_may_confirm(tmp_path):
     click = {"action": "click", "point": [10, 10]}
     dec = {"dropped": [], "trade_confirm": True, "trade_check": {"side": "buy", "symbol": "WIF", "amount_usd": 10}}
     assert agent.trade_guard(dec, click, clock()) is None and "no trade request" in dec["dropped"][0]
+
+
+def test_a_payment_refusal_while_trading_explains_the_vote(tmp_path):
+    agent, world, prov, clock = trade_agent(tmp_path, T.decision())
+    assert SA.reply_problem(SA.TRADE_HOWTO_LINE) is None
+    agent.refuse_request({"refused": "payment", "seq": 5, "nick": "Marco", "user": "Marco", "kind": "refused",
+                          "text": "buy gta 6 coin"}, clock())
+    assert any(x.text == SA.TRADE_HOWTO_LINE for x in agent.speech_q)
+
+
+def test_the_pc_prompt_allows_likes_and_reuses_the_fomo_tab():
+    p = SA.system_prompt(pc=True, allow_credentials=True)
+    assert "Liking posts, comments or theses" in p and "click that tab instead of opening another" in p
+
+
+def test_three_unchanged_scrolls_on_the_pc_do_not_hold_him(tmp_path):
+    agent, world, prov, clock = trade_agent(tmp_path, T.decision())
+    for i in range(4):
+        agent.pc.pending = {"key": "scroll:down", "kind": "scroll", "sig": None, "point": None, "runner_changed": False,
+                            "outcome": {"action": "scroll down", "verdict": "pending"}}
+        agent.track_pc({"url": "https://app.vagon.io"}, clock())
+    assert not agent.held and agent.fail_counts["scroll:down"][0] == 4

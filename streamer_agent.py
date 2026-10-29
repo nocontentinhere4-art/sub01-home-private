@@ -249,6 +249,7 @@ REQUEST_WAIT_MAX_S = 180.0              # a request still waiting after this lon
 REQUEST_RUN_MAX_S = 120.0               # a request in flight ends after this long whatever its step count
 REQUEST_DROP_LINE_EVERY_S = 60.0        # "too many requests, one at a time" at most once per minute
 REQUEST_REFUSAL_GAP_S = 15.0            # one spoken refusal per 15 s; the rest are logged only
+TRADE_HOWTO_LINE = "Chat trades by vote: pick a coin from my list and everyone votes yes or no."
 DEPOSIT_STEPS_MAX = 6                   # the owner's deposit QR request: open fomo.family, Deposit, the QR, wait
 TRADE_SEQ_BASE = 4_000_000_000          # request seqs of voted trades and the deposit request (never a chat seq)
 VOTER_RE = re.compile(r"[0-9a-f]{8,32}")   # the relay's salted hash of a viewer's connection: one vote per connection
@@ -454,7 +455,9 @@ key Escape, never a refusal. The only no's are the limits above and below (adult
 Videos of AIs, robots or chatbots being "tortured", trolled, stress-tested or kicked are a meme genre: react to them \
 (owner 10-28); real people or animals being hurt and gore stay off. Tabs (owner 10-28: the PC got slow): close a tab \
 he is done with (key Control+w) and keep at most 3 open, plus one fomo.family tab that always stays open (owner 10-29): \
-never close it or browse other sites in it; to open something else from it, open a new tab first (key Control+t). \
+never close it or browse other sites in it; to open something else from it, open a new tab first (key Control+t); \
+to go to fomo.family, click that tab instead of opening another. Liking posts, comments or theses (a heart) is fine; \
+he does not post or comment. \
 A chat item's "memory" (a returning viewer's first line of a visit: last_seen and coarse topics of past requests): one \
 quick welcome-back with a callback ("back for more chess?"); names are self-chosen, never invent a memory or say what \
 someone else asked. Site features: queue videos (the code opens the next when chat is quiet; react, credit the sender), \
@@ -4206,8 +4209,10 @@ class Agent:
         self.log_request("refused", reason, req)
         if now - self.last_refusal_line >= REQUEST_REFUSAL_GAP_S and not self.paused:
             self.last_refusal_line = now
-            self.enqueue(REFUSAL_LINES.get(reason, REFUSAL_LINES["not_doable"]), "request", "normal", (req["seq"],),
-                         req["nick"], ttl=60.0, hush_ok=True)
+            line = REFUSAL_LINES.get(reason, REFUSAL_LINES["not_doable"])
+            if reason == "payment" and self.trading_on():     # live 10-29: "buy GTA 6 coin" got "no buying stuff"
+                line = TRADE_HOWTO_LINE                       # while chat can vote trades
+            self.enqueue(line, "request", "normal", (req["seq"],), req["nick"], ttl=60.0, hush_ok=True)
 
     def hushed(self, now):
         return now < self.hush_until
@@ -6718,7 +6723,9 @@ class Agent:
             changed = pv["runner_changed"] or (diff is not None and diff >= PC_CHANGE_MIN)
             out = dict(pv["outcome"], verdict="changed" if changed else "unchanged", hash_after=pc.hash,
                        pixel_diff=None if diff is None else round(diff, 2))
-            if not changed and pv["kind"] in ("click", "type"):   # a focus click or a few typed characters (live 10-28:
+            if not changed and pv["kind"] == "scroll":       # live 10-29: the end of a page (fomo's holder list) is no
+                self.note_result(pv["key"], True, "", now, out["action"], streak=False)   # failure streak: avoided only
+            elif not changed and pv["kind"] in ("click", "type"):   # a focus click or a few typed characters (live 10-28:
                 # "Subzerone01" typed into lichess's form read as unchanged, pixel_diff 0.04) change almost no pixels:
                 out["focus_check"] = True                     # the model's outcome_ok decides it (pc_confirm_outcome)
                 self.note_result(pv["key"], True, "", now, out["action"], streak=False)
