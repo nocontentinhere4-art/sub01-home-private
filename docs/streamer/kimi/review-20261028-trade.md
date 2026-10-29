@@ -97,3 +97,7 @@ APPROVE
 ## held2 (10-29): unchanged key = focus check; idle paces his own inputs too
 
 APPROVE
+
+## frz2 (10-29): no frozen latch on a still page while nobody watches
+
+APPROVE

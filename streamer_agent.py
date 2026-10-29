@@ -5275,8 +5275,8 @@ class Agent:
         sig = freeze_signature(obs["jpeg_b64"])            # compared with the previous look, not the first one
         moved = fz["sig"] is None or (max_pixel_diff(fz["sig"], sig) or 0) >= FROZEN_PIXEL
         fz["sig"] = sig
-        if moved or fz["since"] is None:
-            fz["since"] = now
+        if moved or fz["since"] is None or self.audience_idle_on:   # nobody watching (10-29): one look a minute on a
+            fz["since"] = now                                         # static page is no frozen stream; black still is
         elif now - fz["since"] > self.cfg.frozen_s:
             return self.latch_frozen("frozen", now - fz["since"], obs)
 

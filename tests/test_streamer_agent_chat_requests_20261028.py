@@ -371,3 +371,18 @@ def test_an_unchanged_key_is_judged_by_the_model_like_a_focus_click(tmp_path):
     agent, world, prov, clock = T.pc_make(tmp_path / "denied", *denied)
     asyncio.run(T.sim(agent, clock, 40, dt=3))
     assert agent.held is not None and agent.held["why"] == "failures"   # the model says it did nothing: still a failure
+
+
+def test_a_static_page_with_nobody_watching_is_no_frozen_stream_but_black_still_is(tmp_path):
+    """Live 10-29 05:12: X explore (a still page) between minute looks latched "frozen" with nobody watching."""
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision(state="idle", action={"action": "wait", "seconds": 5}, say=""))
+    agent.audience_idle_on = True
+    agent.audience_idle = lambda now: True                          # stays idle for the whole run
+    asyncio.run(T.sim(agent, clock, 240, dt=3))
+    assert agent.frozen is None
+    agent2, world2, prov2, clock2 = T.pc_make(tmp_path / "b", T.decision(state="idle", action={"action": "wait", "seconds": 5}, say=""))
+    agent2.audience_idle_on = True
+    agent2.audience_idle = lambda now: True
+    world2.frame = T.solid((3, 3, 3))
+    asyncio.run(T.sim(agent2, clock2, 90, dt=3))
+    assert agent2.frozen and agent2.frozen["why"] == "black"
