@@ -1,0 +1,1 @@
+APPROVE. The three fixes match the reported failures, persistence and prompt wiring are present in both session-state paths, tests cover duplicate x_done, split banned word, separate-box length, restart persistence.

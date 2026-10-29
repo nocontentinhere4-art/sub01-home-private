@@ -804,9 +804,11 @@ def test_x_text_joined_with_earlier_text_is_refused():
     # the second text is checked alone and joined with the earlier ones of the session (Kimi x2)
     a, why = SA.clean_pc_action({"action": "type", "text": "x.com/SUBZERONE01 hi"}, x_typing="hello chat")
     assert a is None and why
-    long_prior = "a" * (SA.X_TEXT_MAX - 5)
+    a, why = SA.clean_pc_action({"action": "type", "text": "let me know chat"}, x_typing="check my wal")
+    assert a is None and "joined" in why                               # a banned word split over two types
+    long_prior = "a" * (SA.X_TEXT_MAX - 5)                             # live 20:07: a reply then a post, separate boxes
     a, why = SA.clean_pc_action({"action": "type", "text": "chat is great today"}, x_typing=long_prior)
-    assert a is None and "joined" in why
+    assert a and why is None
 
 
 def test_x_session_text_reaches_the_model_whole():
@@ -821,17 +823,22 @@ def test_x_session_goes_on_after_a_reply_until_his_own_post(tmp_path):
     # live 10-29 19:16: he replied once, said so, and the session ended without his own post
     reply = T.decision(state="x", action=None, say="Replied to that one on X.", x_done="reply")
     post = T.decision(state="x", action=None, say="My own post is up too.", x_done="post")
-    agent, world, prov, clock = T.pc_make(tmp_path, reply, post)
+    again = T.decision(state="x", action=None, say="Reply is out.", x_done="reply")
+    agent, world, prov, clock = T.pc_make(tmp_path, reply, again, post)
     agent.pc.mode = "vagon"
     agent.hands_off_reason = lambda now: None
     (agent.dir / "x-on").write_text("")
     req = agent.x_session_request(clock())
     agent.requests.waiting.clear()
-    req.update(phase="report", steps=3, started=clock(), commented=True, done=False)
+    req.update(phase="report", steps=3, started=clock(), commented=True, done=False, x_typed=["Thanks, glad you're here!"])
     agent.requests.current = req
     assert agent.x_post_due(req, clock())
     asyncio.run(agent.step())
     assert agent.requests.current is req and not req["done"] and agent.x_day["reply"] == 1   # his post is still due
+    clock.t += 5
+    asyncio.run(agent.step())
+    assert agent.x_day["reply"] == 1 and agent.x_day["post"] == 0      # live 20:06: x_done again with no new text
+    req["x_typed"].append("Live now at subzerone.live, come hang")
     clock.t += 5
     asyncio.run(agent.step())
     assert req.get("x_posted") and agent.x_day["post"] == 1 and not agent.x_post_due(req, clock())
@@ -876,3 +883,13 @@ def test_x_sessions_alternate_with_the_official_accounts_comments(tmp_path):
     assert SA.x_url_problem("https://x.com/SUBZERONE01x") and SA.x_url_problem("https://x.com/elonmusk")
     assert SA.x_text_problem("Thanks for hanging out, catch me live at subzerone.live") is None
     assert SA.x_text_problem("gm @SUBZERONE01 fam")                                  # never tags the official account
+
+
+def test_x_recent_texts_survive_a_restart_and_reach_the_state(tmp_path):
+    # live 20:06: he answered the same "are you conscious?" mention he had answered at 19:16
+    agent, world, prov, clock = T.pc_make(tmp_path, T.decision())
+    agent.x_recent = [{"mode": "own", "text": "I'm SUB-01, an AI streamer.", "utc": "19:16"}]
+    agent.x_save()
+    again, *_ = T.pc_make(tmp_path, T.decision())
+    assert again.x_recent and again.x_recent[0]["text"].startswith("I'm SUB-01")
+    assert "never answer the same" in SA.SYSTEM_PC.replace("\\\n", "")
