@@ -1,6 +1,6 @@
 // Halloween skin (owner 10-29), see halloween.css. Decorations only: absolute/fixed, aria-hidden, no clicks, static
 // markup (never user content). The live page carries the announcement strip, tag and card in its own HTML (no layout
-// shift); this script adds the decor, the strip's close button and its avatar link. Kimi hw1.
+// shift); this script adds the decor and the strip's close button. Kimi hw1.
 (function () {
   "use strict";
   var d = document, root = d.documentElement;
@@ -43,11 +43,6 @@
     if (close) close.addEventListener("click", function () {
       strip.hidden = true; try { sessionStorage.setItem("hw-strip", "closed"); } catch (e) {}
     });
-    var link = d.getElementById("hw-avatar-link"), o = window.SUB01_PREVIEW_ORIGIN;
-    if (link) {                                            // the avatar page lives on the relay (live-config.js)
-      if (o && /^https:\/\/[a-z0-9.-]+$/i.test(String(o).replace(/\/$/, ""))) link.href = String(o).replace(/\/$/, "") + "/avatar";
-      else link.hidden = true;
-    }
     if (d.getElementById("talk")) {                        // the relay's avatar page: pumpkins by its title
       root.classList.add("hw-avatar");
       add(d.querySelector(".wrap > header"), '<div class="hw-deco hw-pumpkins">' + PUMPKIN(30, true) + PUMPKIN(22) + PUMPKIN(36, true) + "</div>");
