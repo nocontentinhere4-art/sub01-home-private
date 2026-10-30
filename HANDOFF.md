@@ -12,6 +12,15 @@ Keep it current: update at every milestone and before ending a turn that changed
   and the relay tunnel does not answer. The last pod-shell contact that worked was 11:18 UTC (lease renewal).
   Volume `dvrlt6yk2k` state is unknown (the 0.049 $/h is probably storage). No further provider calls, no top-up, no
   recreate: the owner decides. Do not assume the runtime state on the pod survived.
+- **15:44-16:00 UTC:** the owner topped up RunPod (balance 74.89 $). Pod 505 is confirmed deleted; volume `dvrlt6yk2k`
+  (500 GB, EU-RO-1) is still there. The owner approved a new pod. One REST create was attempted (RTX 5090, EU-RO-1,
+  image `runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404`, 150 GB root, volume on `/workspace`, port 8888, the same
+  `JUPYTER_PASSWORD` as `pods.json`). It returned HTTP 500 "no instances currently available", so no pod was created.
+  A stock read showed only RTX PRO 4500 and PRO 4000 in EU-RO-1. **The owner chose to wait for a 5090.** There is no
+  automatic polling: retry one create only when the owner asks. The owner also topped up Vagon.
+- **After a new pod exists:** everything outside `/workspace` must be restored (UE build, voice, venv, API keys,
+  backend state, relay and quick tunnel). The quick-tunnel URL changes, so `live-config.js` on the site needs the new
+  origin and a `railway up` by the owner. Inventory `/workspace` first; secrets may be missing and must come from the owner.
 - **Vagon:** "Balance is Running Out" at 08:58 UTC (dismissed with Continue Session, no top-up). The machine was off
   from ~09:15 UTC; SUB-01 stayed on air voice-only until the pod went.
 - **Runtime that was live:** new83 (git fd6c82e). a90a0b7 (no 2048 idea) is committed but was never deployed.
