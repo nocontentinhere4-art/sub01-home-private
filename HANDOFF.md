@@ -1,8 +1,27 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-30 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
+
+
+## OFFLINE 2026-10-30 ~11:20 UTC (read first)
+
+- **RunPod:** one read at 11:5x UTC (logged in the session ledger) showed clientBalance -0.11 $, spend 0.049 $/h, and
+  pod `505jw5ph3dt7ed` no longer in the account's pod list (only old EXITED pods). The Jupyter proxy (8888) answers 404
+  and the relay tunnel does not answer. The last pod-shell contact that worked was 11:18 UTC (lease renewal).
+  Volume `dvrlt6yk2k` state is unknown (the 0.049 $/h is probably storage). No further provider calls, no top-up, no
+  recreate: the owner decides. Do not assume the runtime state on the pod survived.
+- **Vagon:** "Balance is Running Out" at 08:58 UTC (dismissed with Continue Session, no top-up). The machine was off
+  from ~09:15 UTC; SUB-01 stayed on air voice-only until the pod went.
+- **Runtime that was live:** new83 (git fd6c82e). a90a0b7 (no 2048 idea) is committed but was never deployed.
+- **Overnight 10-29/30 (owner away, operator handling only, no code deploys):** repeated holds on 2048, Hearts and
+  chess (illegal UCI moves typed over and over, e.g. g1f3 as Black, b1b8, b3d4; the lichess move box loses focus).
+  Handled by closing the tab while paused or held, then /resume. All logged in `/tmp/sub01-share/pod-changes.log` on the pod.
+- **Fixes waiting for the owner's OK:** deploy a90a0b7; cap rejected moves per game (leave after 2-3) or drop chess
+  from IDEAS; treat small game moves and focus clicks as neutral in the verifier; X post-box typing rule; official
+  session opens the post and replies via the reply icon; X scroll false "nothing moved"; duplicate-reply gate in code;
+  pause the old video tab before opening a new one; relay `/moment.jpg` for screenshot posts.
 
 ## LIVE STATE AND TO-DO (2026-10-28 02:00 UTC; written by the Claude session that ran the live fixes; read this first)
 
