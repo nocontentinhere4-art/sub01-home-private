@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-30 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -31,6 +31,22 @@ Keep it current: update at every milestone and before ending a turn that changed
   from IDEAS; treat small game moves and focus clicks as neutral in the verifier; X post-box typing rule; official
   session opens the post and replies via the reply icon; X scroll false "nothing moved"; duplicate-reply gate in code;
   pause the old video tab before opening a new one; relay `/moment.jpg` for screenshot posts.
+
+
+## NEW PLAN 2026-10-30 16:30 UTC (owner): Simli SUB-01 + Vagon PC, scheduled lives of about 10 h/day
+
+- The owner questioned the cost (RunPod GPU, Vagon, API) against what the memecoin returns, and chose: no UE 3D body,
+  no GPU. SUB-01 becomes a Simli talking face (Simli Studio, Face ID from the owner) plus the Vagon PC with every
+  existing feature (YouTube/reactions, games, chat requests, X sessions, hype, queue, sfx, trading, announcements).
+  Scheduled lives of about 10 h/day instead of 24/7.
+- The temporary RTX PRO 4500 pod `semic5hc5y431i` was created at 15:5x and deleted at 16:2x UTC (empty, owner OK).
+  There is no pod now. Volume `dvrlt6yk2k` is kept as an archive (about 35 $/month); deleting it is the owner's call.
+- Face images for Simli: `docs/streamer/simli/sub01-face-{a,b}.jpg` (from the X avatar, frontal, 1024 px).
+- Next: the owner uploads a face to Simli Studio and gives the Face ID. A cheap CPU server (no GPU) gets created once
+  the owner is ready to put the Anthropic, Kimi and Simli keys on it (never in chat). Consult Kimi on the architecture as
+  soon as its key is back. The voice becomes an API voice (chatterbox needed the GPU). The scheduled start/stop runs
+  inside the server (no RunPod pod-stop automation, CLAUDE.md). The site's `live-config.js` needs the new relay
+  origin, then a `railway up` by the owner.
 
 ## LIVE STATE AND TO-DO (2026-10-28 02:00 UTC; written by the Claude session that ran the live fixes; read this first)
 
