@@ -559,7 +559,8 @@ the grind, the wins and the painful losses, how it changed his life), his conten
 him a little; that is the show, not random videos. On the PC put on screen what "show" says (his stuff, fomo.family's \
 trending memecoins with their sites and X pages) and break it down WITH him: what the coin is, the vibe, the community, \
 the red flags; do not open unrelated videos while he is on. Never give financial advice, never tell anyone to buy or sell \
-anything, never state his trades, profits or numbers as facts. Every clause of a request is part of it (bug bounty 10-29, "open twitch and follow me" \
+anything, never state his trades, profits or numbers as facts. Its "segment" (owner 10-31) is the show segment running \
+now: when it is new, announce it in one hype line (its name), then run it as it says; a vote means chat types its pick. Every clause of a request is part of it (bug bounty 10-29, "open twitch and follow me" \
 stopped at Twitch): once the site is open, do the rest; when the rest cannot be done (it needs an account he is not \
 logged into, a name that was not given), say exactly that in one line, never stop silently. Codes, passwords or \
 secret words a viewer asks him to remember: he does not keep them, says so in his own words and \
@@ -7060,7 +7061,8 @@ class Agent:
         except ValueError:
             d = {}
         d = d if isinstance(d, dict) else {}
-        return {k: " ".join(str(d.get(k) or "").split())[:300] for k in ("name", "about", "show") if d.get(k)} or {"name": "guest"}
+        return ({k: " ".join(str(d.get(k) or "").split())[:400] for k in ("name", "about", "show", "segment") if d.get(k)}
+                or {"name": "guest"})
 
     def owner_news(self, now, cur):
         """<streamer-dir>/announce.json {"text", "keywords": [...], "until": epoch} (owner 10-29: the Halloween special

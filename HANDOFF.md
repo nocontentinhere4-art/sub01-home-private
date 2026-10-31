@@ -71,6 +71,11 @@ Keep it current: update at every milestone and before ending a turn that changed
     rule: his memecoin story, the grind, the lifestyle; put his own stuff on the PC; no financial advice). The
     guest driver's persona was rewritten the same way (owner: "parlino di memecoin ... non devono reazionare a mr beast").
   - Verified at 16:32: SUB-01 opened x.com/kimchi1x and the two talk about it.
+  - 16:57 segments (owner "2, 3, 6, 8"): the guest driver rotates Roast battle, Memecoin Shark Tank, Kimchi teaches
+    and Would you rather every 9 min. It writes `segment` + `show` into guest-on, the agent announces and runs it,
+    and Kimchi's prompt carries his side of it. Also fixed: Haiku's thinking ate the line budget (lines of 2-6 words);
+    guest lines are 28 words; the guest yields 2.5 s; no X sessions during the show; relay START_OFFSET is 2 s. A YouTube
+    Yeat/Drake playlist plays at 35% in its own tab (operator).
 
 ## PAUSED 2026-10-31 03:40 UTC (owner: "ferma tutto e continuiamo domani") - RESUME HERE
 

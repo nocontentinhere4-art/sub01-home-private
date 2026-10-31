@@ -175,3 +175,15 @@ def test_stage_guest_config_and_face_byte(tmp_path):
             await client.close()
 
     asyncio.run(run())
+
+
+def test_guest_rotates_segments_into_guest_on(tmp_path):
+    g, calls, clock, sdir = make_guest(tmp_path, replies=["hi"] * 10)
+    (sdir / "guest-on").write_text(json.dumps({"name": "Kimchi", "show": "old"}))
+    g.step()
+    d = json.loads((sdir / "guest-on").read_text())
+    assert d["name"] == "Kimchi" and d["segment"].startswith("Roast battle") and "kimchi1x" in d["show"]
+    assert "Current segment: Roast battle with SUB-01" in g.prompt()
+    clock.t += G.SEGMENT_S + 1
+    g.step()
+    assert json.loads((sdir / "guest-on").read_text())["segment"].startswith("Memecoin Shark Tank")

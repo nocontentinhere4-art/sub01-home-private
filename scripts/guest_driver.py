@@ -14,6 +14,7 @@ advice, never tells anyone to buy anything and never speaks for the real person 
 The Anthropic key is read from --key-file; the operator token from --token-file; neither is ever logged."""
 import argparse
 import json
+import os
 import sys
 import time
 import urllib.error
@@ -32,6 +33,36 @@ PERSONA = {
                "Halloween special on SUB-01's stream and he is the guest: he loves talking about how he made it, the "
                "memecoin life, the mindset, his content, and how cool his life is now, and he roasts SUB-01 a little."),
 }
+# owner 10-31 "2, 3, 6, 8": show segments between the two, one every SEGMENT_S, in this order. Each has SUB-01's rule (the
+# agent reads it from guest-on, its "segment"), the guest's rule (this prompt) and what goes on the PC ("show").
+SEGMENT_S = 540.0
+SEGMENTS = (
+    ("roast", "Roast battle",
+     "Roast battle with your guest: three rounds, you and he roast each other in turns (friendly, about each other only, "
+     "no slurs); after round three ask chat to vote the winner in chat and announce it.",
+     "Roast battle with SUB-01: three rounds, you roast him and he roasts you (friendly, about each other only); fire back "
+     "at what he just said with one punchy roast.",
+     "his X profile x.com/kimchi1x (his flexes are roast material)"),
+    ("shark", "Memecoin Shark Tank",
+     "Memecoin Shark Tank: open one trending coin at a time on fomo.family (its page, site, X); you and your guest rate the "
+     "meme, the community, the site and the X page from 1 to 10 with a reason. Vibe ratings only: never buy, sell or price talk.",
+     "Memecoin Shark Tank: SUB-01 shows coins from fomo.family; rate the meme, community, site or X page he describes from "
+     "1 to 10 with a quick reason, like a judge. Vibe only, never buy, sell or price predictions.",
+     "fomo.family trending coins, one at a time: its page, its site, its X"),
+    ("teach", "Kimchi teaches",
+     "Kimchi teaches: ask him beginner questions about how he looks at a coin, what he checks first, the mistakes he made "
+     "early, and pass chat's questions to him. His experience only, never advice on what to buy.",
+     "Kimchi teaches: explain to SUB-01, like a mentor, how you look at a coin, what you check first, the beginner mistakes "
+     "you made; answer his question. Your experience only, never tell anyone what to buy.",
+     "a fomo.family coin page to point at while he explains"),
+    ("wyr", "Would you rather",
+     "Would you rather: take turns with your guest asking crypto and trader-life would-you-rather questions; both answer "
+     "with a reason, then ask chat theirs.",
+     "Would you rather: answer SUB-01's would-you-rather with a reason, then ask him a new crypto or trader-life one.",
+     "whatever is on screen, nothing new needed"),
+)
+
+
 SYSTEM = ("You are the AI avatar of {name}, the guest on SUB-01's live stream on subzerone.live (SUB-01 is an AI "
           "streamer). The real {name} agreed to appear as this AI avatar. Character: {persona}\n"
           "Rules: reply with ONE short spoken line (at most {words} words), casual spoken English, no emojis, no stage "
@@ -98,6 +129,7 @@ class Guest:
         self.last_sub01 = -1e9
         self.sub01_since_me = False
         self.recent = []                 # times of the guest's lines (hourly cap)
+        self.seg_i, self.seg_at, self.seg_new = -1, -1e9, False
         try:                             # a restart mid-show: no second hello when the switch is older than 2 min
             self.was_on = clock() - (Path(cfg.streamer_dir) / "guest-on").stat().st_mtime > 120
         except OSError:
@@ -147,15 +179,36 @@ class Guest:
             return True                               # the guest's hello
         return self.sub01_since_me or now - max(self.last_spoke, self.last_sub01) > QUIET_S
 
+    def rotate(self, now):
+        """next segment every SEGMENT_S; its SUB-01 rule and PC goal go into guest-on (the agent's guest_on_air)"""
+        if now - self.seg_at < SEGMENT_S:
+            return
+        self.seg_i, self.seg_at, self.seg_new = (self.seg_i + 1) % len(SEGMENTS), now, True
+        key, title, sub01_rule, _, show = SEGMENTS[self.seg_i]
+        path = Path(self.cfg.streamer_dir) / "guest-on"
+        try:
+            d = json.loads(path.read_text() or "{}")
+        except (OSError, ValueError):
+            d = {}
+        d = d if isinstance(d, dict) else {}
+        d.update(segment=f"{title}: {sub01_rule}", show=show)
+        tmp = path.with_name(".guest-on.tmp")
+        tmp.write_text(json.dumps(d))
+        os.replace(tmp, path)
+        log(f"segment {key}")
+
     def prompt(self):
         if not self.was_on:
             ask = "You just joined the stream. Say hi to SUB-01 and chat in one line, Halloween vibe, a hint of your memecoin flex."
+        elif self.seg_new and self.seg_i >= 0:
+            ask = f"A new segment just started: {SEGMENTS[self.seg_i][1]}. Kick it off in one line."
         elif self.sub01_since_me:
             ask = "Reply to what SUB-01 just said."
         else:
             ask = "It went quiet. Bring up a story from your memecoin journey or your lifestyle, or ask SUB-01 something."
         convo = "\n".join(f"{who}: {text}" for who, text in self.history[-HISTORY:]) or "(nothing yet)"
-        return f"Conversation so far:\n{convo}\n\n{ask}"
+        seg = f"Current segment: {SEGMENTS[self.seg_i][3]}\n" if self.seg_i >= 0 else ""
+        return f"{seg}Conversation so far:\n{convo}\n\n{ask}"
 
     def _claude(self, system, user):
         import anthropic
@@ -174,6 +227,7 @@ class Guest:
             self.was_on = False
             return None
         self.poll_timeline()
+        self.rotate(now)
         if now - getattr(self, "_last_beat", 0) > 60:  # a heartbeat: why the guest is (not) talking
             self._last_beat = now
             log(f"beat: since_me={self.sub01_since_me} gap={now - self.last_spoke:.0f}s hour={len(self.recent)}")
@@ -205,7 +259,7 @@ class Guest:
             log("guest on")
         self.was_on = True
         self.history.append((self.name, line))
-        self.last_spoke, self.sub01_since_me = now, False
+        self.last_spoke, self.sub01_since_me, self.seg_new = now, False, False
         self.recent.append(now)
         log(f"line ({len(line)} chars)")
         return line
