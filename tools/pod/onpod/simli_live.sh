@@ -13,6 +13,8 @@
 #   simli_live.sh rest     off hours: agent, Vagon browser, Simli face and director stop; relay and tunnel stay
 #   simli_live.sh schedule [START END]   (run under nohup) `up` between START and END UTC (default 18-4), `rest` outside
 #   simli_live.sh down     everything above stopped (the keys and the private dir stay)
+#   simli_live.sh guest on|off   Kimchi as guest: his Simli face beside SUB-01 (stage), his voice (voices pod) and his
+#                          lines in the conversation (scripts/guest_driver.py, Claude Haiku in his persona)
 #   simli_live.sh status   one line per piece
 #
 # Config: $P/simli-face-id (the SUB-01 face from app.simli.com), optional $P/simli-live.env (VOICE_ENGINE=kokoro|remote|
@@ -69,7 +71,8 @@ up() {
   alive backend || spawn backend $PY $SRC/scripts/backend_shim.py --port 8830
   if ! alive xvfb-stage; then spawn xvfb-stage /usr/bin/Xvfb :99 -screen 0 960x540x24 -nolisten tcp -noreset; sleep 2; fi
   alive stage || spawn stage $PY $SRC/scripts/simli_stage.py --key-file $P/simli-key --face-id "$(cat $P/simli-face-id)" \
-    --face-image $P/stage-face.jpg
+    --face-image $P/stage-face.jpg --guest-switch $S/guest-on --guest-face-file $P/kimchi-face-id --guest-voice kimchi \
+    --guest-name KIMCHI
   wait_http http://127.0.0.1:8842/healthz 20 || say "stage server not answering"
   alive stage-chrome || spawn stage-chrome env DISPLAY=:99 $CHROME --user-data-dir=$P/stage-chrome --no-first-run \
     --no-default-browser-check --password-store=basic --no-sandbox --kiosk --window-position=0,0 --window-size=960,540 \
@@ -94,6 +97,8 @@ up() {
       > $S/logs/up-start.log 2>&1 || say "supervisor start reported a problem (see logs/up-start.log)"
   fi
   alive lease || spawn lease python3 $ON/lease_renew.py
+  alive guest || spawn guest $PY $SRC/scripts/guest_driver.py --streamer-dir $S --voice kimchi \
+    --token-file $P/operator-token --key-file $P/anthropic-key
   alive relay || spawn relay $PY $ON/live_relay.py --hls $S/hls --stop $S/STOP --token-file $P/operator-token --port 8841
   status
 }
@@ -111,7 +116,7 @@ public() {   # the Cloudflare quick tunnel to the relay: only on the owner's exp
 rest() {   # off hours: the paid parts stop (agent, Vagon browser, Simli face, director); relay + tunnel stay, so the
            # site keeps its address and shows the stream offline until the next `up`
   runuser -u unreal -- env HOME=/home/unreal python3 $SRC/scripts/streamer_up.py stop --streamer-dir $S --token-file $P/operator-token >/dev/null 2>&1
-  for n in lease stage-chrome stage xvfb-stage; do stop_one $n; done
+  for n in guest lease stage-chrome stage xvfb-stage; do stop_one $n; done
   say "resting (relay and tunnel kept)"
 }
 
@@ -131,12 +136,12 @@ schedule() {   # schedule START END (UTC hours): `up` inside the window, `rest` 
 
 down() {
   runuser -u unreal -- env HOME=/home/unreal python3 $SRC/scripts/streamer_up.py stop --streamer-dir $S --token-file $P/operator-token >/dev/null 2>&1
-  for n in tunnel relay lease stage-chrome stage xvfb-stage backend; do stop_one $n; done
+  for n in tunnel relay guest lease stage-chrome stage xvfb-stage backend; do stop_one $n; done
   say "down"
 }
 
 status() {
-  for n in backend xvfb-stage stage stage-chrome lease relay tunnel; do printf '%-13s %s\n' $n "$(alive $n && echo up || echo DOWN)"; done
+  for n in backend xvfb-stage stage stage-chrome lease guest relay tunnel; do printf '%-13s %s\n' $n "$(alive $n && echo up || echo DOWN)"; done
   curl -s -m3 http://127.0.0.1:8842/healthz; echo
   runuser -u unreal -- env HOME=/home/unreal python3 $SRC/scripts/streamer_up.py status --streamer-dir $S --token-file $P/operator-token 2>&1 | tail -12
   [ -s $S/tunnel-url ] && echo "tunnel: $(cat $S/tunnel-url)"
@@ -151,7 +156,11 @@ console() {   # console on|off: a second quick tunnel to the desktop runner, onl
   say "Vagon login page: ${url:-?}/operator   (close it afterwards: simli_live.sh console off)"
 }
 
+guest() {   # guest on|off: Kimchi's face beside SUB-01 and his lines in the conversation (owner 10-31)
+  if [ "${1:-on}" = off ]; then rm -f $S/guest-on; say "guest off"; else touch $S/guest-on; own $S/guest-on; say "guest on"; fi
+}
+
 case "${1:-status}" in
-  keys) keys ;; prep) prep ;; up) up ;; public) public ;; rest) rest ;; schedule) schedule "${2:-18}" "${3:-4}" ;; down) down ;; status) status ;; console) console "${2:-on}" ;;
-  *) echo "usage: $0 keys|prep|up|public|rest|schedule [START END]|down|status|console [on|off]"; exit 2 ;;
+  keys) keys ;; prep) prep ;; up) up ;; public) public ;; rest) rest ;; schedule) schedule "${2:-18}" "${3:-4}" ;; down) down ;; status) status ;; console) console "${2:-on}" ;; guest) guest "${2:-on}" ;;
+  *) echo "usage: $0 keys|prep|up|public|rest|schedule [START END]|down|status|console [on|off]|guest [on|off]"; exit 2 ;;
 esac

@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-31 02:50 UTC (SIMLI STACK, section below); 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-31 03:40 UTC (PAUSED, resume steps below); 02:50 UTC (SIMLI STACK, section below); 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -33,6 +33,37 @@ Keep it current: update at every milestone and before ending a turn that changed
   pause the old video tab before opening a new one; relay `/moment.jpg` for screenshot posts.
 
 
+
+
+## PAUSED 2026-10-31 03:40 UTC (owner: "ferma tutto e continuiamo domani") - RESUME HERE
+
+- **Both pods stopped** at 03:3x UTC (REST stop, ledger in the session scratchpad):
+  - the live CPU pod `28il9i6ngortgs`;
+  - the voices GPU pod `l0d0rgd4y47rlp`.
+  Neither has a network volume, so the container disk (installs, `/home/unreal`, `/root/voices`) is gone on restart.
+- **To resume (about 30 min):**
+  1. Start both pods (or create new ones).
+  2. Re-run `tools/pod/simli-setup/setup-base.sh` and `setup-voice.sh` on the live pod.
+  3. Re-run `gpu-setup.sh` on the voices pod, with the voices from `docs/streamer/voices/*-ref.{wav,txt}` and a new token
+     written to `/root/voices/token` and to the live pod's `$P/voices-token`.
+  4. Upload the code tarball and run `simli_live.sh prep`.
+  5. Put the face ids in `$P/simli-face-id` and `$P/kimchi-face-id`:
+     - SUB-01 `40e54165-998f-405b-b8b3-e8f092429c31`;
+     - Kimchi `03cb4fc7-90f7-437c-9027-ba8cbf2c475d`.
+  6. Write `$P/simli-live.env`: `VOICE_ENGINE=remote`, `VOICE=sub01`, `REMOTE_URL=https://<voices pod>-8000.proxy.runpod.net`.
+  7. Have the owner put the keys in `/root/sub01-keys/`, then run `simli_live.sh keys`.
+  8. Run `simli_live.sh up`.
+  9. Run `console`, where the owner logs in to Vagon once.
+  10. Run `public`, only with the owner's OK. Then the site's `live-config.js` gets the tunnel URL and the owner runs
+      `railway up`.
+  11. Start the `schedule` run.
+- **Guest mode (Kimchi), written offline after the pause, not yet tried on a pod:**
+  - `simli_live.sh guest on|off`;
+  - `scripts/guest_driver.py` (Claude Haiku in his persona, his voice via `tag guest:kimchi`, his lines handed to the
+    agent as chat from "Kimchi");
+  - two faces side by side in `simli_stage.py`;
+  - tests in `tests/test_simli_guest_20261031.py`.
+- **Still waiting on the owner:** the Anthropic, Kimi and Simli keys; an OK for the live tunnel and the Vagon-login tunnel.
 
 ## SIMLI STACK 2026-10-31 02:50 UTC (live planned 18:00 UTC today, ~10 h/day)
 
