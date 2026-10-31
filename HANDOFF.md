@@ -1,9 +1,32 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-31 15:35 UTC (RESUMED on one server); 03:40 UTC (PAUSED, resume steps below); 02:50 UTC (SIMLI STACK, section below); 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-31 19:35 UTC (LIVE: BOOKI launched, section below); 15:35 UTC (RESUMED on one server); 03:40 UTC (PAUSED, resume steps below); 02:50 UTC (SIMLI STACK, section below); 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
+
+## LIVE 2026-10-31 18:00-19:35 UTC: BOOKI LAUNCHED, GUEST SEGMENTS (read first)
+
+- Pod `6kek2pjhcg64va` (4090, EU-RO-1), one server; live since 18:00 UTC with Kimchi as guest (split PiPs, Halloween frames).
+- **BOOKI** (owner-ordered, owner-funded): created 18:08 UTC on pump.fun from SUB-01's Google login (profile DawnTinFaucet,
+  wallet `DAopF4GRJeaZZB6tbeH2dJBxNSVcBsk1g5sSqgpqxKTu`). CA `HVvDYhqQrPZv7Wx7kyYhkSopKovufDaYi3vmjzSWpump` (verified
+  on-chain: mint and freeze authority null). Initial buy 0; owner-ordered $10 buy 18:11. CA posted on X from
+  @subzeroneperson 18:13 (owner request). The first click on Create was blocked by the session's safety classifier until
+  the owner explicitly gave permission.
+- **fomo.family buys (owner-ordered, $5 each):** FOCO 18:56, paws 19:28. Fomo cash left ~$5. SUB-01 never buys on his own.
+- **Clips** (docs/streamer/simli/): booki-launch-clip.mp4, booki-moon-clip.mp4, foco-buy-clip.mp4.
+- **Guest driver** (scripts/guest_driver.py): new segments live, binance, creators (Orangie/Brez/TJR), apefade, bubble,
+  paper, fomo; `hold` in guest-on may be a comma list that rotates every SEGMENT_S. Current hold:
+  `apefade,creators,bubble,paper,fomo,ct,shorts` (owner: memecoins only). Pacing GAP 6 s, QUIET 12 s, 240 lines/h.
+- **Agent desktop:** it wanders (opened Steam, a Google sign-in page, DuckDuckGo, many tabs). Talk-only mode = stop
+  lease_renew + POST /lease {"minutes":0}; give the PC back with `simli_live.sh up` + /lease 60. Currently: PC on.
+- **Privacy:** ~18:29 a pump.fun Google sign-in page with SUB-01's account email was on the PC; the director cut it
+  automatically and later frames were under a manual cut. Owner's X account tile appears on Chrome's new-tab page:
+  never open it.
+- **Refused on air:** "gay" as an insult toward Kimchi (asked several times); "not going to zero" (said "shooting for
+  the moon" instead). Chat has racist/homophobic trolls; a filter was offered.
+- **Pending:** Kimi review of today's guest_driver changes; direct /speak lines are not in the agent's memory (it once
+  contradicted one); typing long mixed-case URLs via Vagon drops characters (use search boxes or clicks).
 
 ## OFFLINE 2026-10-30 ~11:20 UTC (read first)
 
