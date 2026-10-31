@@ -88,6 +88,12 @@ body.split.duo.hw #hw2{display:block}
 #hw2 .web{top:6px;right:6px;width:170px;opacity:.85;transform:scaleX(-1)}
 #hw2 .pk1{bottom:4px;right:14px;width:110px}
 body.split .tag{bottom:6%;font-size:40px}
+/* owner 10-31 "piu figo da vedere": the speaker's box lights up (brighter frame, pulsing glow, name tag flips color) */
+#hw .edge,#hw2 .edge{transition:box-shadow .25s,border-color .25s}
+body.t0 #hw .edge,body.t1 #hw2 .edge{border-color:#ffb066;animation:hwpulse .9s ease-in-out infinite}
+@keyframes hwpulse{50%{box-shadow:inset 0 0 0 6px #2a0f3d,inset 0 0 70px 26px #ff7a1acc,0 0 0 4px #c4a3ff}}
+body.t0 #t0,body.t1 #t1{color:#ffb066}
+body.split.duo:not(.t0) #v0,body.split.duo:not(.t1) #v1{filter:brightness(.82)}
 body.split #t0{left:4%}body.split #t1{left:54%;right:auto}
 .tag{position:fixed;bottom:4%;font:700 26px/1 system-ui,sans-serif;color:#fff;text-shadow:0 2px 6px #000;display:none}
 body.duo .tag{display:block}
@@ -114,8 +120,8 @@ function feed() {          // the voice server's audio; first byte = whose face 
     const s16 = new Int16Array(pcm.buffer, pcm.byteOffset, pcm.length >> 1);   // speaking: a nod, else the idle breath
     let sum = 0; for (let i = 0; i < s16.length; i += 4) sum += Math.abs(s16[i]);
     const loud = s16.length && sum / (s16.length / 4) > 600, f = faces[who] || faces[0];
-    if (loud) { f.video.classList.add("talking"); clearTimeout(f.quiet);
-      f.quiet = setTimeout(() => f.video.classList.remove("talking"), 700); }
+    if (loud) { f.video.classList.add("talking"); document.body.classList.add("t" + f.id); clearTimeout(f.quiet);
+      f.quiet = setTimeout(() => { f.video.classList.remove("talking"); document.body.classList.remove("t" + f.id); }, 700); }
   };
   ws.onclose = () => setTimeout(feed, 1000);
 }

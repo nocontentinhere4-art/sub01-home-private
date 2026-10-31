@@ -22,7 +22,7 @@ import urllib.request
 from pathlib import Path
 
 MODEL = "claude-haiku-5-5"
-GAP_S, QUIET_S, LINES_PER_HOUR, MAX_WORDS = 14.0, 45.0, 90, 28   # 28 words: about 8 s, so SUB-01 answers chat sooner
+GAP_S, QUIET_S, LINES_PER_HOUR, MAX_WORDS = 9.0, 25.0, 120, 28   # 28 words: about 8 s, so SUB-01 answers chat sooner
 HISTORY = 10
 YIELD_S = 2.5          # silence the guest waits for after anyone spoke, so a chat answer goes first
 PERSONA = {
@@ -58,7 +58,8 @@ SEGMENTS = (
     ("vlog", "Vlog reaction",
      "Vlog reaction: his 'Day In The Life Of Kimchi (Memecoin Millionaire)' video plays on the PC; react to it WITH him "
      "every few moments (what you see: the jet, the cars, the room, the charts), ask him about the moment on screen, "
-     "hype and roast; pause it (key k) when the two of you talk longer, resume after.",
+     "hype and roast; pause it (key k) when the two of you talk longer, resume after. Keep that tab on his vlog until "
+     "it ends: never search or open other videos in it, a chat request for another video waits until after the vlog.",
      "Vlog reaction: SUB-01 is playing your own 'Day In The Life' video; react to the moment he describes like it is your "
      "life (behind the scenes, what really happened that day, what you were thinking), funny and cocky.",
      "his vlog on YouTube, Day In The Life Of Kimchi (Memecoin Millionaire) by Orangie Web3, already open"),

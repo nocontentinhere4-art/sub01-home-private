@@ -4905,8 +4905,12 @@ class Agent:
         later, so the current line ending by then does not hold it back. apply() judges the line again when it arrives."""
         t = now + DECIDE_AHEAD_S
         busy = bool(self.speech_q or self.voice.get("queue") or t < self.speak_until)
-        plan = self.pacing.plan(t, busy, quiet=self.quiet.on)
-        if self.talk is not None and not busy and not self.quiet.on:   # a talk segment: he talks with chat on camera
+        return self.show_plan(self.pacing.plan(t, busy, quiet=self.quiet.on), busy)
+
+    def show_plan(self, plan, busy):
+        """a talk segment (he talks with chat on camera) or a guest on air (owner 10-31 "piu interattivi"): his lines
+        are not held to the video-watching pace, only to a free voice"""
+        if (self.talk is not None or self.guest_on_air()) and not busy and not self.quiet.on:
             plan = dict(plan, comment=True, say_allowed=True, reading=False)
         return plan
 
@@ -6333,7 +6337,8 @@ class Agent:
     # ---- applying a decision ----
     async def apply(self, dec, obs, win, now):
         self.counters["decisions"] += 1
-        plan = self.pacing.plan(now, self.voice_busy(now))   # speech rights as they are now, after the model's delay
+        busy_now = self.voice_busy(now)
+        plan = self.show_plan(self.pacing.plan(now, busy_now), busy_now)   # speech rights now, after the model's delay
         action = dec["action"]
         pc = self.pc
         await self.note_private_screen(dec, now)
