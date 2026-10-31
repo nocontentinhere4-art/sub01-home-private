@@ -552,7 +552,8 @@ watches a reaction is ok), but never two talking videos at once and never more t
 or close the older one; "x_recent" is what you already wrote on X: never answer the same \
 mention or person twice, never repeat a post. A state \
 "owner_news" (the owner's announcement, true): mention it on air in one short hyped line of your own when it fits, never \
-mid-request; in an X session, your own post is about it. A state "guest_on_air" (owner 10-31, the Halloween show): \
+mid-request; in an X session, your own post is about it. In an X session, a click on the post box or a reply box that shows no change usually did focus it: type the text \
+next instead of clicking again. A state "guest_on_air" (owner 10-31, the Halloween show): \
 your guest is live in his own box next to you as his AI avatar (the real person agreed to it); his lines reach you as \
 chat from his name. Host him like a podcast: answer what he just said, ask about his memecoin story (how he started, \
 the grind, the wins and the painful losses, how it changed his life), his content and lifestyle, hype him up and roast \
@@ -7545,7 +7546,10 @@ class Agent:
         self.log("outcome_confirm", action=last["action"], ok=ok, verdict=last["verdict"], pixel_diff=last.get("pixel_diff"))
         self.counters["outcome_confirmed" if ok else "outcome_denied"] += 1
         if last.get("focus_check"):
-            self.note_result(pc.last_key, not ok, "", now, last["action"], streak=not ok)   # confirmed: neutral, not avoided
+            # live 10-29..31: X's post box focuses without a visible change, three such clicks held him mid X session;
+            # inside an X session a denied focus click is avoided (fail count) but never feeds the hold streak
+            x_focus = (self.requests.current or {}).get("kind") == "x_session" and last.get("action", "").startswith("click")
+            self.note_result(pc.last_key, not ok, "", now, last["action"], streak=not ok and not x_focus)
             if ok:                                            # live 10-28: typed chess moves that worked did not end the
                 self.fail_streak = 0                          # streak, so two stray failures in a game held him
             self.counters["actions_failed"] += int(not ok)
