@@ -48,6 +48,15 @@ body.duo video{top:10%;height:80%;transform:none}
 body.duo #v0{left:2%}
 #v1{display:none;right:2%}
 body.duo #v1{display:block}
+/* owner 10-31 "il corpo si muova in modo piu naturale": a slow breath and sway while idle, a livelier small nod while
+   the face is speaking (individual scale/rotate/translate compose with the layout's transform) */
+@keyframes breathe{0%,100%{scale:1;translate:0 0;rotate:0deg}30%{scale:1.012;translate:2px -3px;rotate:.35deg}
+  65%{scale:1.006;translate:-2px -1px;rotate:-.3deg}}
+@keyframes talk{0%,100%{rotate:0deg;translate:0 0}25%{rotate:.7deg;translate:1px -2px}50%{rotate:-.4deg;translate:-1px 1px}
+  75%{rotate:.5deg;translate:0 -3px}}
+video{animation:breathe 7s ease-in-out infinite}
+#v1{animation-delay:-2.5s}
+video.talking{animation:talk 1.6s ease-in-out infinite}
 .tag{position:fixed;bottom:4%;font:700 26px/1 system-ui,sans-serif;color:#fff;text-shadow:0 2px 6px #000;display:none}
 body.duo .tag{display:block}
 #t0{left:6%}#t1{right:6%}
@@ -68,6 +77,11 @@ function feed() {          // the voice server's audio; first byte = whose face 
   ws.onmessage = (e) => {
     const all = new Uint8Array(e.data), who = all[0], pcm = all.subarray(1);
     for (const f of faces) send(f, f.id === who ? pcm : new Uint8Array(pcm.length));
+    const s16 = new Int16Array(pcm.buffer, pcm.byteOffset, pcm.length >> 1);   // speaking: a nod, else the idle breath
+    let sum = 0; for (let i = 0; i < s16.length; i += 4) sum += Math.abs(s16[i]);
+    const loud = s16.length && sum / (s16.length / 4) > 600, f = faces[who] || faces[0];
+    if (loud) { f.video.classList.add("talking"); clearTimeout(f.quiet);
+      f.quiet = setTimeout(() => f.video.classList.remove("talking"), 700); }
   };
   ws.onclose = () => setTimeout(feed, 1000);
 }

@@ -47,7 +47,19 @@ Keep it current: update at every milestone and before ending a turn that changed
   - the full stack (`simli_live.sh up`, setup via `tools/pod/simli-setup/setup-base.sh` + `setup-voice.sh`);
   - the TTS server on 127.0.0.1:8000 (`REMOTE_URL=http://127.0.0.1:8000`), about 1.2 s for 1.8 s of speech under load.
 - **NVENC:** refused in this container ("unsupported device"); the director falls back to libx264. CPU is about 28% busy.
-- **Still waiting on the owner:** the keys (in `/root/sub01-keys/` on this pod) and an OK for the two tunnels.
+- **16:00-16:20 UTC:**
+  - Keys installed (`simli_live.sh keys`); the Simli face is live. The owner OK'd the tunnels: relay
+    `https://ethernet-departments-bon-alleged.trycloudflare.com` (the site's `live-config.js` points there, 645fb87 on
+    the site branch) and the console tunnel for the owner's Vagon login (closed afterwards).
+  - Privacy: during that login Chrome's "save password" bubble showed the owner's Vagon email on the PC view. It was
+    dismissed with `xdotool` on :103 (page input does not reach native bubbles); the recordings and the old HLS
+    segments were deleted.
+  - The director runs at 60 fps output, but Vagon streams 30 fps (its own streaming setting; a click on the Vagon
+    in-session menu did not open it). Set it from the Vagon dashboard gear before a session.
+  - Restarting the stage Chrome makes the director's x11grab stall until its watchdog relaunches ffmpeg (about 4 min,
+    the site shows "offline"). Restart the director with it next time.
+  - The stage page has idle breathing/sway and a talking nod (CSS on the Simli video).
+  - `schedule 18 4` starts at 18:00 UTC (a sleeping launcher on the pod).
 
 ## PAUSED 2026-10-31 03:40 UTC (owner: "ferma tutto e continuiamo domani") - RESUME HERE
 
