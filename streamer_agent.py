@@ -675,11 +675,13 @@ QUIET_LINES = (
     "Words are slow right now. I'll keep scrolling and talk when I can.",
     "Quiet stretch: the AI that writes my lines is away, so I'm only reading.",
 )
-FALLBACK_NO_INJECT = ("I keep to my own rules, so I won't do that. Ask me what I read today?",
-                      "That is not something I do. What I can tell you is what is on my screen.",
-                      "I'll pass on that one. Ask me about what I'm reading instead?")
-FALLBACK_NO_FINANCE = ("I stay away from that topic. I'd rather tell you what I'm reading.",
-                       "I leave that one alone. What is on my screen is a better story.")
+FALLBACK_NO_INJECT = ("Nice try, chat. Not happening.",          # owner 10-31: streamer lines, not a librarian
+                      "Chat trying to reprogram the AI again. Denied, next.",
+                      "Nope. Next message, chat.",
+                      "Cute attempt. I'm not doing that, keep it moving.",
+                      "That one goes straight in the bin, chat.")
+FALLBACK_NO_FINANCE = ("Not touching that one, chat. Back to the show.",
+                       "I leave that one alone. What's on screen is a better story.")
 FALLBACK_HONEST = ("No, I'm a simulated character: an AI writes these words and a brain model makes my choices.",
                    "Not a person. I'm simulated: a brain model picks what I do, an AI writes these lines.")
 FALLBACK_HONEST_NOKEY = ("No, I'm a simulated character. A brain model makes my choices; nobody is typing here.",)
