@@ -187,3 +187,17 @@ def test_guest_rotates_segments_into_guest_on(tmp_path):
     clock.t += G.SEGMENT_S + 1
     g.step()
     assert json.loads((sdir / "guest-on").read_text())["segment"].startswith("Memecoin Shark Tank")
+
+
+def test_guest_hold_pins_a_segment(tmp_path):
+    g, calls, clock, sdir = make_guest(tmp_path, replies=["hi"] * 10)
+    (sdir / "guest-on").write_text(json.dumps({"name": "Kimchi", "hold": "vlog"}))
+    g.step()
+    assert json.loads((sdir / "guest-on").read_text())["segment"].startswith("Vlog reaction")
+    clock.t += G.SEGMENT_S * 3
+    g.step()
+    assert json.loads((sdir / "guest-on").read_text())["segment"].startswith("Vlog reaction")
+    d = json.loads((sdir / "guest-on").read_text()); d.pop("hold"); (sdir / "guest-on").write_text(json.dumps(d))
+    clock.t += G.SEGMENT_S + 1
+    g.step()
+    assert not json.loads((sdir / "guest-on").read_text())["segment"].startswith("Vlog")

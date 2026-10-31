@@ -55,6 +55,13 @@ SEGMENTS = (
      "Kimchi teaches: explain to SUB-01, like a mentor, how you look at a coin, what you check first, the beginner mistakes "
      "you made; answer his question. Your experience only, never tell anyone what to buy.",
      "a fomo.family coin page to point at while he explains"),
+    ("vlog", "Vlog reaction",
+     "Vlog reaction: his 'Day In The Life Of Kimchi (Memecoin Millionaire)' video plays on the PC; react to it WITH him "
+     "every few moments (what you see: the jet, the cars, the room, the charts), ask him about the moment on screen, "
+     "hype and roast; pause it (key k) when the two of you talk longer, resume after.",
+     "Vlog reaction: SUB-01 is playing your own 'Day In The Life' video; react to the moment he describes like it is your "
+     "life (behind the scenes, what really happened that day, what you were thinking), funny and cocky.",
+     "his vlog on YouTube, Day In The Life Of Kimchi (Memecoin Millionaire) by Orangie Web3, already open"),
     ("wyr", "Would you rather",
      "Would you rather: take turns with your guest asking crypto and trader-life would-you-rather questions; both answer "
      "with a reason, then ask chat theirs.",
@@ -181,11 +188,24 @@ class Guest:
 
     def rotate(self, now):
         """next segment every SEGMENT_S; its SUB-01 rule and PC goal go into guest-on (the agent's guest_on_air)"""
-        if now - self.seg_at < SEGMENT_S:
-            return
-        self.seg_i, self.seg_at, self.seg_new = (self.seg_i + 1) % len(SEGMENTS), now, True
-        key, title, sub01_rule, _, show = SEGMENTS[self.seg_i]
         path = Path(self.cfg.streamer_dir) / "guest-on"
+        try:                                          # owner 10-31: {"hold": "<segment>"} pins one segment, no rotation
+            hold = str((json.loads(path.read_text() or "{}") or {}).get("hold") or "")
+        except (OSError, ValueError, AttributeError):
+            hold = ""
+        keys = [seg[0] for seg in SEGMENTS]
+        if hold in keys:
+            if self.seg_i >= 0 and SEGMENTS[self.seg_i][0] == hold:
+                return
+            self.seg_i, self.seg_at, self.seg_new = keys.index(hold), now, True
+        elif now - self.seg_at < SEGMENT_S:
+            return
+        else:
+            nxt = (self.seg_i + 1) % len(SEGMENTS)
+            while SEGMENTS[nxt][0] == "vlog":         # the vlog runs only when pinned
+                nxt = (nxt + 1) % len(SEGMENTS)
+            self.seg_i, self.seg_at, self.seg_new = nxt, now, True
+        key, title, sub01_rule, _, show = SEGMENTS[self.seg_i]
         try:
             d = json.loads(path.read_text() or "{}")
         except (OSError, ValueError):
