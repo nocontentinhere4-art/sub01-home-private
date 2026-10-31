@@ -6998,6 +6998,7 @@ class Agent:
         c, left = self.x_counts(now), self.x_left(now)
         rq = self.requests
         if (not self.pc.vagon or not self.x_on() or now - self.x_last < X_GAP_S or rq.current or rq.waiting
+                or self.guest_on_air()                 # owner 10-31: no silent X scrolling in the middle of the guest show
                 or c["sessions"] >= X_SESSIONS_PER_DAY or not left["texts"] or self.hands_off_reason(now)):
             return None
         mode = "official" if c["sessions"] % 2 else "own"    # owner 10-29: every other session, the official comments

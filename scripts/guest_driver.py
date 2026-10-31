@@ -97,7 +97,10 @@ class Guest:
         self.last_sub01 = -1e9
         self.sub01_since_me = False
         self.recent = []                 # times of the guest's lines (hourly cap)
-        self.was_on = False
+        try:                             # a restart mid-show: no second hello when the switch is older than 2 min
+            self.was_on = clock() - (Path(cfg.streamer_dir) / "guest-on").stat().st_mtime > 120
+        except OSError:
+            self.was_on = False
 
     # -- inputs
     def on(self):
@@ -150,8 +153,9 @@ class Guest:
     def _claude(self, system, user):
         import anthropic
         key = Path(self.cfg.key_file).read_text().strip()
-        msg = anthropic.Anthropic(api_key=key).messages.create(
-            model=self.cfg.model, max_tokens=120, system=system, messages=[{"role": "user", "content": user}])
+        msg = anthropic.Anthropic(api_key=key, timeout=25.0, max_retries=1).messages.create(
+            model=self.cfg.model, max_tokens=600, system=system, messages=[{"role": "user", "content": user}],
+            thinking={"type": "disabled"})            # one short spoken line: thinking only ate the token budget
         return "".join(getattr(b, "text", "") for b in msg.content)
 
     # -- one step
@@ -163,6 +167,9 @@ class Guest:
             self.was_on = False
             return None
         self.poll_timeline()
+        if now - getattr(self, "_last_beat", 0) > 60:  # a heartbeat: why the guest is (not) talking
+            self._last_beat = now
+            log(f"beat: since_me={self.sub01_since_me} gap={now - self.last_spoke:.0f}s hour={len(self.recent)}")
         if not self.due(now) or not self.voice_idle():
             return None
         system = SYSTEM.format(name=self.name, persona=self.persona, words=MAX_WORDS)
