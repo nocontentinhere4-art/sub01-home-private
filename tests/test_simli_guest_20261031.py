@@ -96,7 +96,8 @@ def test_guest_stop_file_and_hourly_cap(tmp_path):
 
 
 def test_clean_line_trims_words_and_marks():
-    assert G.clean_line('"*grins* yo"') == "grins yo"
+    assert G.clean_line('"*grins* yo"') == "Grins yo"
+    assert G.clean_line("Ha, bro, real") == "Bro, real"
     assert len(G.clean_line("word " * 80).split()) == G.MAX_WORDS
 
 
