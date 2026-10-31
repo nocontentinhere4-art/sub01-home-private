@@ -230,3 +230,17 @@ def test_guest_records_memecoin_decisions(tmp_path):
     book = json.loads((sdir / "memecoin.json").read_text())
     assert book["ticker"]["choice"] == "$GHOUL" and book["name"]["choice"] == "Ghoul Coin"
     assert len((sdir / "memecoin-log.jsonl").read_text().splitlines()) == 2
+
+
+def test_guest_hold_list_rotates_among_listed(tmp_path):
+    g, calls, clock, sdir = make_guest(tmp_path, replies=["hi"] * 10)
+    (sdir / "guest-on").write_text(json.dumps({"name": "Kimchi", "hold": "shorts,fomo"}))
+    seen = []
+    for _ in range(4):
+        g.step()
+        seen.append(SEG_KEY[json.loads((sdir / "guest-on").read_text())["segment"].split(":")[0]])
+        clock.t += G.SEGMENT_S + 1
+    assert seen == ["shorts", "fomo", "shorts", "fomo"]
+
+
+SEG_KEY = {seg[1]: seg[0] for seg in G.SEGMENTS}

@@ -23,7 +23,7 @@ import urllib.request
 from pathlib import Path
 
 MODEL = "claude-haiku-5-5"
-GAP_S, QUIET_S, LINES_PER_HOUR, MAX_WORDS = 9.0, 25.0, 120, 34   # 28 words: about 8 s, so SUB-01 answers chat sooner
+GAP_S, QUIET_S, LINES_PER_HOUR, MAX_WORDS = 6.0, 12.0, 240, 34   # owner 10-31 "falli parlare in continuazione": a line every ~15 s at most
 HISTORY = 10
 YIELD_S = 2.5          # silence the guest waits for after anyone spoke, so a chat answer goes first
 PERSONA = {
@@ -140,6 +140,13 @@ SEGMENTS = (
      "Launch prep: hype each field SUB-01 fills on pump.fun in one line (what makes BOOKI fun), never promise gains or "
      "talk price, remind chat it is for fun and can go to zero.",
      "pump.fun create form, being filled in"),
+    ("fomo", "Fomo check",
+     "Fomo check: on fomo.family open the Trending list, pick one coin, open it and verify it out loud with your guest: "
+     "holders, top-10 holding, volume, age, socials, any red flag (one wallet holding a lot, a brand new coin with huge "
+     "volume); ask chat real or rug, then the next coin. Never buy, sell or type an amount; no price targets.",
+     "Fomo check: react to the coin SUB-01 opens on fomo like a trench veteran: one stat that looks good, one red flag, "
+     "your verdict in a word; never tell anyone to buy, remind chat most coins go to zero.",
+     "fomo.family Trending list and coin pages"),
     ("live", "BOOKI is live",
      "BOOKI is live on pump.fun and its chart is on screen: stay on that pump.fun tab, never close it or open another "
      "site, never click Buy or Sell or type an amount. Roast your guest hard but playfully (his forty mil brag, his "
@@ -346,7 +353,14 @@ class Guest:
         except (OSError, ValueError, AttributeError):
             hold = ""
         keys = [seg[0] for seg in SEGMENTS]
-        if hold in keys:
+        holds = [h for h in hold.replace(" ", "").split(",") if h in keys]
+        if len(holds) > 1:                            # owner 10-31: {"hold": "a,b"} rotates among these only
+            cur = SEGMENTS[self.seg_i][0] if self.seg_i >= 0 else ""
+            if cur in holds and now - self.seg_at < SEGMENT_S:
+                return
+            nxt = holds[(holds.index(cur) + 1) % len(holds)] if cur in holds else holds[0]
+            self.seg_i, self.seg_at, self.seg_new = keys.index(nxt), now, True
+        elif hold in keys:
             if self.seg_i >= 0 and SEGMENTS[self.seg_i][0] == hold:
                 return
             self.seg_i, self.seg_at, self.seg_new = keys.index(hold), now, True
