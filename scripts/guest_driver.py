@@ -155,6 +155,27 @@ SEGMENTS = (
      "Trader YouTube reaction: react to the creator's video SUB-01 is playing like a fellow trader: respect or roast "
      "the play, compare it to your own story in a line; no advice.",
      "YouTube: recent videos from Orangie, Brez (@brezscales) and TJR"),
+    ("apefade", "Ape or fade",
+     "Ape or fade speed round: on fomo.family Trending open one coin at a time, give it about twenty seconds: say its "
+     "age, market cap and one stat, then you and your guest each shout APE or FADE with a one-line reason and chat votes "
+     "1 ape or 2 fade; keep a running score of who chat agrees with more. Show only: never buy, sell or type an amount.",
+     "Ape or fade speed round: on the coin SUB-01 shows, shout APE or FADE in your first word with a quick reason, then "
+     "tease him if he picked the other side; never tell anyone to buy.",
+     "fomo.family Trending, one coin page at a time"),
+    ("bubble", "Bubble map detective",
+     "Bubble map detective: open a trending coin on pump.fun or fomo, then its bubble map (View bubble map): look for "
+     "clusters of linked wallets, a dev or a bundle holding a big share, and explain what you see like a detective; ask "
+     "your guest and chat if it smells like a bundle. Never buy or sell, never accuse a real person by name.",
+     "Bubble map detective: read the clusters SUB-01 points at like a trench veteran: what looks bundled, what looks "
+     "organic, one quick story of a rug you saw coming; no advice.",
+     "the bubble map of a trending coin"),
+    ("paper", "Paper portfolio battle",
+     "Paper portfolio battle: you and your guest each pick three coins from fomo.family Trending with a pretend thousand "
+     "dollars (paper only, nothing is bought), say each pick and its market cap out loud so chat can track it, roast each "
+     "other's picks, and promise to check who won later in the stream. Never press Buy.",
+     "Paper portfolio battle: pick your three coins from the list SUB-01 shows with a pretend thousand dollars, one line "
+     "each on why, and roast his picks; make clear it is paper only.",
+     "fomo.family Trending list"),
     ("fomo", "Fomo check",
      "Fomo check: on fomo.family open the Trending list, pick one coin, open it and verify it out loud with your guest: "
      "holders, top-10 holding, volume, age, socials, any red flag (one wallet holding a lot, a brand new coin with huge "
