@@ -552,7 +552,13 @@ watches a reaction is ok), but never two talking videos at once and never more t
 or close the older one; "x_recent" is what you already wrote on X: never answer the same \
 mention or person twice, never repeat a post. A state \
 "owner_news" (the owner's announcement, true): mention it on air in one short hyped line of your own when it fits, never \
-mid-request; in an X session, your own post is about it. Every clause of a request is part of it (bug bounty 10-29, "open twitch and follow me" \
+mid-request; in an X session, your own post is about it. A state "guest_on_air" (owner 10-31, the Halloween show): \
+your guest is live in his own box next to you as his AI avatar (the real person agreed to it); his lines reach you as \
+chat from his name. Host him like a podcast: answer what he just said, ask about his memecoin story (how he started, \
+the grind, the wins and the painful losses, how it changed his life), his content and lifestyle, hype him up and roast \
+him a little; that is the show, not random videos. On the PC put his own stuff on screen ("show" says what) and talk \
+about it; do not open unrelated videos while he is on. Never give financial advice, never tell anyone to buy or sell \
+anything, never state his trades, profits or numbers as facts. Every clause of a request is part of it (bug bounty 10-29, "open twitch and follow me" \
 stopped at Twitch): once the site is open, do the rest; when the rest cannot be done (it needs an account he is not \
 logged into, a name that was not given), say exactly that in one line, never stop silently. Codes, passwords or \
 secret words a viewer asks him to remember: he does not keep them, says so in his own words and \
@@ -5401,6 +5407,8 @@ class Agent:
                                      if cur.get("kind") == "x_session" else {})}
         if (news := self.owner_news(now, cur)):
             st["owner_news"] = news
+        if (guest := self.guest_on_air()):
+            st["guest_on_air"] = guest
         if self.requests.waiting:
             st["requests_waiting"] = len(self.requests.waiting)
         if win and win["ok"]:
@@ -7037,6 +7045,21 @@ class Agent:
         return bool(left["posts"] and left["texts"] and len(cur.get("x_typed") or []) < X_TEXTS_PER_SESSION
                     and cur["steps"] <= X_STEPS_MAX - 4)
 
+    def guest_on_air(self):
+        """<streamer-dir>/guest-on (owner 10-31: Kimchi as his AI avatar on the Halloween show): a JSON object {"name",
+        "about", "show"} or an empty file; None when it does not exist."""
+        path = self.dir / "guest-on"
+        try:
+            raw = path.read_text()[:2000]
+        except OSError:
+            return None
+        try:
+            d = json.loads(raw) if raw.strip() else {}
+        except ValueError:
+            d = {}
+        d = d if isinstance(d, dict) else {}
+        return {k: " ".join(str(d.get(k) or "").split())[:300] for k in ("name", "about", "show") if d.get(k)} or {"name": "guest"}
+
     def owner_news(self, now, cur):
         """<streamer-dir>/announce.json {"text", "keywords": [...], "until": epoch} (owner 10-29: the Halloween special
         with Kimchi): in the state when nothing is asked of him and he has not named it for NEWS_GAP_S, and always in his
@@ -7661,6 +7684,8 @@ class Agent:
                                      if cur.get("kind") == "x_session" else {})}
         if (news := self.owner_news(now, cur)):
             st["owner_news"] = news
+        if (guest := self.guest_on_air()):
+            st["guest_on_air"] = guest
         if self.requests.waiting:
             st["requests_waiting"] = len(self.requests.waiting)
         if self.talk is not None:                             # owner 10-29: a chat moment on camera (Kimi talk1)

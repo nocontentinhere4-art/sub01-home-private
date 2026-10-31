@@ -23,7 +23,7 @@
 set -u
 P=/home/unreal/.sub01-private; S=$P/streamer; SRC=/home/unreal/sub01-src; ON=$SRC/tools/pod/onpod
 PY=/home/unreal/venv/bin/python; VPY=/home/unreal/voice-rt-venv/bin/python; CHROME=/usr/bin/google-chrome
-VOICE_ENGINE=kokoro; VOICE=am_puck; LEAD_S=0.4; PIP=300x168; FRAME=none; REMOTE_URL=; ENCODER=libx264; FPS=30
+VOICE_ENGINE=kokoro; VOICE=am_puck; LEAD_S=0.4; PIP=300x168; FRAME=none; SPLIT=0; REMOTE_URL=; ENCODER=libx264; FPS=30
 [ -f $P/simli-live.env ] && . $P/simli-live.env
 
 say() { printf '%s simli-live: %s\n' "$(date -u +%H:%M:%S)" "$*"; }
@@ -69,13 +69,13 @@ up() {
   [ -s $P/simli-face-id ] || { say "no $P/simli-face-id: put the SUB-01 Face ID there first"; return 1; }
   rm -f $S/STOP
   alive backend || spawn backend $PY $SRC/scripts/backend_shim.py --port 8830
-  if ! alive xvfb-stage; then spawn xvfb-stage /usr/bin/Xvfb :99 -screen 0 960x540x24 -nolisten tcp -noreset; sleep 2; fi
+  if ! alive xvfb-stage; then spawn xvfb-stage /usr/bin/Xvfb :99 -screen 0 $([ "$SPLIT" = 1 ] && echo 1920 || echo 960)x540x24 -nolisten tcp -noreset; sleep 2; fi
   alive stage || spawn stage $PY $SRC/scripts/simli_stage.py --key-file $P/simli-key --face-id "$(cat $P/simli-face-id)" \
     --face-image $P/stage-face.jpg --guest-switch $S/guest-on --guest-face-file $P/kimchi-face-id --guest-voice kimchi \
-    --guest-name KIMCHI --frame $FRAME
+    --guest-name KIMCHI --frame $FRAME $([ "$SPLIT" = 1 ] && echo --split)
   wait_http http://127.0.0.1:8842/healthz 20 || say "stage server not answering"
   alive stage-chrome || spawn stage-chrome env DISPLAY=:99 $CHROME --user-data-dir=$P/stage-chrome --no-first-run \
-    --no-default-browser-check --password-store=basic --no-sandbox --kiosk --window-position=0,0 --window-size=960,540 \
+    --no-default-browser-check --password-store=basic --no-sandbox --kiosk --window-position=0,0 --window-size=$([ "$SPLIT" = 1 ] && echo 1920 || echo 960),540 \
     --autoplay-policy=no-user-gesture-required --disable-features=Translate,MediaRouter --mute-audio \
     --app=http://127.0.0.1:8842/
   runuser -u unreal -- env HOME=/home/unreal STREAMER_DIR=$S bash $SRC/scripts/streamer_audio.sh up > $S/logs/audio-up.log 2>&1 || say "audio up failed (see logs/audio-up.log)"
@@ -93,7 +93,7 @@ up() {
       --desktop-python $PY --voice-python $VPY --agent-python $PY --director-python $PY --monitor-python $PY --hls-python $PY \
       --child-arg "desktop=--data-dir $S/desktop-vagon --pc-mode vagon --vagon-kind workstation --chromium $CHROME --operator-console --size 1280x720" \
       --child-arg "voice=$voice_args" $env_eleven \
-      --child-arg "director=--game-source x11 --window-prefix SUB01-STAGE --layout desktop --size 1280x720 --pip-size $PIP --fps $FPS --desktop-fps $FPS --encoder $ENCODER --recordings-dir $S/recordings --hls-dir $S/hls --min-free-gb 3 --keep-segments 12" \
+      --child-arg "director=--game-source x11 --window-prefix SUB01-STAGE --layout desktop --size 1280x720 --pip-size $PIP $([ "$SPLIT" = 1 ] && echo --pip2) --fps $FPS --desktop-fps $FPS --encoder $ENCODER --recordings-dir $S/recordings --hls-dir $S/hls --min-free-gb 3 --keep-segments 12" \
       > $S/logs/up-start.log 2>&1 || say "supervisor start reported a problem (see logs/up-start.log)"
   fi
   alive lease || spawn lease python3 $ON/lease_renew.py

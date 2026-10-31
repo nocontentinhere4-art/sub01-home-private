@@ -343,6 +343,7 @@ class DirectorConfig:
     height: int = 1080
     pip_width: int = 480
     pip_height: int = 270
+    pip2: bool = False         # owner 10-31: the stage window's right half is a second PiP (the guest), bottom-right
     fps: int = 24
     desktop_fps: int = 15
     segment_seconds: int = 600
@@ -462,6 +463,18 @@ def _overlay(main, pip, out, left=False):
     return f"[{main}][{pip}]overlay=x={x}:y=H-h-{PIP_MARGIN}:eof_action=pass[{out}]"
 
 
+PIP2_KEY = "0x00FF00"          # the stage paints its guest half this green while there is no guest: keyed out, no box
+
+
+def pip2_chain(src, cfg, out_main, out_guest):
+    """--pip2 (owner 10-31: "mettilo in un altro riquadro"): the stage window holds SUB-01 in its left half and the
+    guest in its right half; each half becomes its own PiP. The guest half is green-keyed, so with no guest it vanishes."""
+    pw, ph = cfg.pip_width, cfg.pip_height
+    return (f"[{src}]split=2[p2a][p2b];[p2a]crop=iw/2:ih:0:0,scale={pw}:{ph}:flags=area,setsar=1[{out_main}];"
+            f"[p2b]crop=iw/2:ih:iw/2:0,scale={pw}:{ph}:flags=area,setsar=1,format=yuva420p,"
+            f"colorkey={PIP2_KEY}:0.25:0.05[{out_guest}]")
+
+
 def game_rate(cfg, main=None):
     """The `fps` step of input 0. The fifo mode's main view (`main` "fifo") also repeats its last frame after an EOF
     (`tpad`, as cam2); the x11 grab and the placeholder card keep today's chain."""
@@ -507,6 +520,11 @@ def build_filter_complex(layout, cfg, main=None, cam2=False):
     if spec["pip"] == "game":                # the FIFO main view as the PiP: its rate and EOF chain too (Kimi review)
         pip = (f"{rate}," if main == "fifo" else "") + game_scale(f"{pw}:{ph}", "area", main)
     x = f"{PIP_MARGIN}" if layout == "desktop" and PIP_LEFT_DESKTOP else f"W-w-{PIP_MARGIN}"
+    if layout == "desktop" and cfg.pip2 and main != "fifo":
+        x2 = f"W-w-{PIP_MARGIN}" if PIP_LEFT_DESKTOP else f"{PIP_MARGIN}"
+        return (top + pip2_chain(pip_src, cfg, "pip", "pipg") + ";"
+                f"[main][pip]overlay=x={x}:y=H-h-{PIP_MARGIN}:eof_action=pass[m1];"
+                f"[m1][pipg]overlay=x={x2}:y=H-h-{PIP_MARGIN}:eof_action=pass,format=yuv420p[vout]")
     return (top + f"[{pip_src}]{pip},setsar=1[pip];"
             f"[main][pip]overlay=x={x}:y=H-h-{PIP_MARGIN}:eof_action=pass,format=yuv420p[vout]")
 
@@ -532,11 +550,20 @@ def build_live_graph(cfg, cam2, layout, main=None, cartoon=False):
     parts = [f"[0:v]{game_rate(cfg, main)},{game_scale(f'{w}:{h}', main=main)},setsar=1,format=yuv420p"
              + _fan(game + [f"l{PRIVATE_LAYOUT}"]),
              f"[1:v]{norm},fps={fps}{_fan(desk)}"]
-    if gpip:
+    if gpip and cfg.pip2 and "desktop" in on:
+        if len(gpip) > 1:
+            parts.append(f"[gp]split=2[gp2][gpr];[gpr]{pip}[gpb]")
+            parts.append(pip2_chain("gp2", cfg, "gpa", "gpg"))
+        else:
+            parts.append(pip2_chain("gp", cfg, "gpa", "gpg"))
+    elif gpip:
         parts.append(f"[gp]{pip}{_fan(gpip)}")
     if "webcam" in on:
         parts += [f"[dp]{pip}[dpip]", _overlay("gm", "dpip", "lwebcam")]
-    if "desktop" in on:
+    if "desktop" in on and cfg.pip2:
+        parts.append(_overlay("dm", "gpa", "ldesk1", left=PIP_LEFT_DESKTOP))
+        parts.append(_overlay("ldesk1", "gpg", "ldesktop", left=not PIP_LEFT_DESKTOP))
+    elif "desktop" in on:
         parts.append(_overlay("dm", "gpa", "ldesktop", left=PIP_LEFT_DESKTOP))
     if "split" in on:
         parts.append(f"[gh]scale={half_w}:{half_h}:flags=area,setsar=1[gl];[dh]scale={half_w}:{half_h}:flags=area,setsar=1[dr];"
@@ -2995,6 +3022,8 @@ def parse_args(argv=None):
     p.add_argument("--game-pid-file", help="file holding the game pid")
     p.add_argument("--size", default="1920x1080")
     p.add_argument("--pip-size", default="480x270")
+    p.add_argument("--pip2", action="store_true", help="layout desktop: the game window's right half is a second, "
+                   "green-keyed PiP at the other bottom corner (the Simli stage's guest box)")
     p.add_argument("--fps", type=int, default=24, help=f"game capture and output rate, 10-{MAX_FPS}")
     p.add_argument("--desktop-fps", type=int, default=15, help=f"10-{MAX_DESKTOP_FPS}, at most --fps")
     p.add_argument("--segment-seconds", type=int, default=600)
@@ -3081,7 +3110,7 @@ def parse_args(argv=None):
             ffmpeg=args.ffmpeg, xdotool=args.xdotool, game_display=args.game_display,
             desktop_display=args.desktop_display, window_prefix=args.window_prefix, window_id=args.window_id,
             game_pid=args.game_pid, game_pid_file=Path(args.game_pid_file) if args.game_pid_file else None,
-            width=width, height=height, pip_width=pip_width, pip_height=pip_height, fps=args.fps,
+            width=width, height=height, pip_width=pip_width, pip_height=pip_height, pip2=args.pip2, fps=args.fps,
             desktop_fps=args.desktop_fps, segment_seconds=args.segment_seconds, keep_segments=args.keep_segments,
             min_free_gb=args.min_free_gb, crf=args.crf, preset=args.preset,
             audio_bitrate=args.audio_bitrate, watchdog_interval=args.watchdog_interval,

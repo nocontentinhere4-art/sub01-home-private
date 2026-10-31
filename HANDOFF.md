@@ -60,6 +60,17 @@ Keep it current: update at every milestone and before ending a turn that changed
     the site shows "offline"). Restart the director with it next time.
   - The stage page has idle breathing/sway and a talking nod (CSS on the Simli video).
   - `schedule 18 4` starts at 18:00 UTC (a sleeping launcher on the pod).
+- **16:25-16:35 UTC, Kimchi on air (`simli_live.sh guest on`):**
+  - Separate boxes. `SPLIT=1`: the stage window is 1920x540 (SUB-01 on the left half, the guest on the right); the
+    director's `--pip2` turns each half into its own PiP, SUB-01 bottom-left and Kimchi bottom-right. The guest half
+    is plain #00ff00 and green-keyed while no guest is on.
+  - Halloween frames on both boxes (`FRAME=halloween`); PiP 300x168.
+  - Voice: louder (about -18 dB RMS), one retry and never another voice. The voices pod runs at default steps; 16
+    steps was tried and reverted (the restart made a few sentences fall back to Kokoro, which the owner hated).
+  - `$S/guest-on` is a JSON object {name, about, show}. The agent's state gets `guest_on_air` (a podcast-host prompt
+    rule: his memecoin story, the grind, the lifestyle; put his own stuff on the PC; no financial advice). The
+    guest driver's persona was rewritten the same way (owner: "parlino di memecoin ... non devono reazionare a mr beast").
+  - Verified at 16:32: SUB-01 opened x.com/kimchi1x and the two talk about it.
 
 ## PAUSED 2026-10-31 03:40 UTC (owner: "ferma tutto e continuiamo domani") - RESUME HERE
 
