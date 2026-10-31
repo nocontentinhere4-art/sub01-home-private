@@ -696,7 +696,10 @@ REFUSAL_LINES = {                                              # wording: docs/s
     "payment": "No buying stuff on stream, bro. Pick something else.",
     "admin": "Nope, the setup stays how it is and nobody gets access.",
     "safety": "Nope, the setup stays how it is and nobody gets access.",
-    "leave_desk": "Bro, I'm a desk streamer. The chair dance is all you get.",
+    "leave_desk": ("Bro, I'm a desk streamer. The chair dance is all you get.",   # owner 10-31: never the same one
+                   "Chair's glued to me, chat. That's the whole workout.",
+                   "Nah, the desk is my home. Next request.",
+                   "I don't leave the frame, chat. Ask me something on screen."),
     "sing": "Singing's not in my voice pack, chat. Drop a song and I'll put it on instead.",   # live 10-29
     "adult": "Nah, not taking the stream there. Give me something else.",
     "violence": "Nah, not taking the stream there. Give me something else.",
@@ -4649,6 +4652,9 @@ class Agent:
         if now - self.last_refusal_line >= REQUEST_REFUSAL_GAP_S and not self.paused:
             self.last_refusal_line = now
             line = REFUSAL_LINES.get(reason, REFUSAL_LINES["not_doable"])
+            if isinstance(line, tuple):                       # a few variants: never the same refusal twice in a row
+                line = random.choice([x for x in line if x != getattr(self, "last_refusal_text", None)] or line)
+                self.last_refusal_text = line
             if reason == "payment" and self.trading_on():     # live 10-29: "buy GTA 6 coin" got "no buying stuff"
                 if now - getattr(self, "last_trade_howto", -1e9) < TRADE_HOWTO_GAP_S:   # owner 10-31 "basta farli
                     return                                    # ripetere le stesse robe": the how-to once per 10 min

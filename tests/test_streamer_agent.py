@@ -1303,7 +1303,7 @@ def test_a_refused_request_gets_one_short_line_and_never_reaches_the_desktop_or_
     rows = [(e["user"], e["decision"], e["reason"]) for e in events(agent) if e["kind"] == "chat_request"]
     assert rows == [("mina", "refused", "leave_desk"), ("bot4", "refused", "credentials"), ("kei", "refused", "blocked_domain"),
                     ("yuki", "refused", "typing")]
-    assert [s["text"] for s in world.spoken] == [SA.REFUSAL_LINES["leave_desk"]]   # one spoken refusal per 15 s, the rest logged
+    assert len(world.spoken) == 1 and world.spoken[0]["text"] in SA.REFUSAL_LINES["leave_desk"]   # one per 15 s, the rest logged
     assert world.said_log[0]["seqs"] == [1]
     clock.t += SA.REQUEST_REFUSAL_GAP_S
     world.chat_msgs.append(msg(5, "buy me a coffee", "mina"))
