@@ -140,6 +140,13 @@ SEGMENTS = (
      "Launch prep: hype each field SUB-01 fills on pump.fun in one line (what makes BOOKI fun), never promise gains or "
      "talk price, remind chat it is for fun and can go to zero.",
      "pump.fun create form, being filled in"),
+    ("ghosts", "Halloween ghost tour",
+     "Halloween ghost tour on Google Street View: the place on screen is one of the most haunted on Earth; tell its real "
+     "legend like a campfire story (only well-known facts), describe what you see on screen, ask your guest if he would "
+     "spend a night there, chat rates the creepiness 1 to 10; then the next place.",
+     "Halloween ghost tour: react to the haunted place SUB-01 shows: would you sleep there for a million dollars, a "
+     "spooky joke, a quick made-up-sounding but clearly joking ghost story of your own; keep it fun.",
+     "Google Maps Street View of haunted places"),
     ("packs", "Pokemon pack rips",
      "Pokemon pack rips on gotya.com: browse the packs, read a pack's odds and price out loud, react to the Biggest Hits "
      "feed, guess with your guest what a pack pulls; you never buy or press anything to buy, only the owner does; say "
