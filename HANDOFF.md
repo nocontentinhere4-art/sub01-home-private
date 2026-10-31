@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-31 02:50 UTC (SIMLI STACK, section below); 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -32,6 +32,24 @@ Keep it current: update at every milestone and before ending a turn that changed
   session opens the post and replies via the reply icon; X scroll false "nothing moved"; duplicate-reply gate in code;
   pause the old video tab before opening a new one; relay `/moment.jpg` for screenshot posts.
 
+
+
+## SIMLI STACK 2026-10-31 02:50 UTC (live planned 18:00 UTC today, ~10 h/day)
+
+- **Server:** RunPod CPU pod `28il9i6ngortgs` (`sub01-simli-cpu-20261031`, 8 vCPU / 16 GB, EU-SE-1, 0.24 $/h, no
+  volume). Same Jupyter password as `pods.json`; shell via `podterm_once.py`, files via the Jupyter contents API
+  (needs a browser User-Agent and the `_xsrf` cookie). Base install done: Xvfb, xdotool, pulseaudio, ffmpeg, Google
+  Chrome, cloudflared, unreal user, `/home/unreal/venv` (agent, desktop, director, relay) and `/home/unreal/voice-rt-venv`
+  (Kokoro on CPU, `am_puck`: 4.9 s of speech in 0.6 s). Code at `/home/unreal/sub01-src` (tarball of this branch).
+- **New code:** `scripts/simli_stage.py` (Simli face page on :99, token, audio feed), `scripts/backend_shim.py` (the
+  8830 calls the agent still makes), `voice_server.py --simli-url/--simli-lead-s` (the same audio to the face, the FIFO
+  delayed 0.4 s for lip sync), `tools/pod/onpod/simli_live.sh keys|prep|up|public|rest|schedule|down|status|console`.
+- **Verified 02:45 UTC:** the whole supervisor is up (desktop, voice, agent, director, monitor, hls), the director
+  grabs the stage window as PiP over the 1280x720 desktop (layout `desktop`), and the voice reaches the stage (`pcm_age_s`
+  0.1). Still missing: Simli key and Face ID (the face shows as a still image), Anthropic and Kimi keys, the owner's Vagon
+  login (`console`), the public tunnel (`public`, the owner's OK: the classifier refused it without), then the site's
+  `live-config.js` with the tunnel URL and a `railway up`.
+- Kimi could not review these changes (its key was on the deleted pod); review them once the key is back.
 
 ## NEW PLAN 2026-10-30 16:30 UTC (owner): Simli SUB-01 + Vagon PC, scheduled lives of about 10 h/day
 

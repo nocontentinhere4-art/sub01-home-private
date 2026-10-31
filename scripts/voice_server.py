@@ -637,6 +637,11 @@ class PcmSink:
         self.blocks = 0
         self.dropped_bytes = 0
         self.on_block = None  # observer of every emitted block (the mouth signal); runs on the clock thread, must stay cheap
+        # owner 10-30 Simli stage: every block as it is taken goes to on_tap (the face's audio), and the FIFO gets it
+        # lead_blocks later, so what is heard lines up with the lips the face video shows after Simli's own delay
+        self.on_tap = None
+        self.lead_blocks = 0
+        self._delay = collections.deque()
         if self.path:
             ensure_fifo(self.path)
 
@@ -723,6 +728,14 @@ class PcmSink:
             elif wait < -1.0:
                 next_time = self._clock()  # stalled for over a second: resync, no burst
             block = self._take(BLOCK_FRAMES * FRAME_BYTES)
+            if self.on_tap is not None:
+                try:
+                    self.on_tap(block)
+                except Exception as error:  # the face never stalls the voice
+                    self._warn(f"tap failed: {error}")
+            if self.lead_blocks:
+                self._delay.append(block)
+                block = self._delay.popleft() if len(self._delay) > self.lead_blocks else bytes(len(block))
             self._emit(block)
             self.blocks += 1
             next_time += interval
@@ -792,6 +805,62 @@ class PcmSink:
             self._written += drop
             self.dropped_bytes += drop
             self._warn(f"fifo reader is not keeping up: dropped {drop / (FRAME_BYTES * OUT_RATE) * 1000:.0f} ms of audio")
+
+
+class SimliTap:
+    """owner 10-30 Simli stage: the sink's blocks (48 kHz stereo s16le, 20 ms) as PCM16 mono 16 kHz, POSTed in 0.1 s
+    chunks to scripts/simli_stage.py /pcm from a thread of its own (the clock thread only queues). A stage that is down
+    loses the audio meanwhile; the voice itself never waits for it."""
+
+    def __init__(self, url, chunk_blocks=5):
+        from urllib.parse import urlsplit
+        parts = urlsplit(url)
+        self.host, self.port, self.path = parts.hostname, parts.port or 80, parts.path or "/pcm"
+        self.chunk_blocks = chunk_blocks
+        self._queue = collections.deque(maxlen=200)       # ~4 s: older audio is useless to lips anyway
+        self._event = threading.Event()
+        self._buf = []
+        self.sent = self.failed = 0
+        self._last_warning = 0.0
+        threading.Thread(target=self._run, name="simli-tap", daemon=True).start()
+
+    def feed(self, block):
+        self._buf.append(block)
+        if len(self._buf) >= self.chunk_blocks:
+            self._queue.append(b"".join(self._buf))
+            self._buf = []
+            self._event.set()
+
+    @staticmethod
+    def to_16k_mono(data):
+        x = np.frombuffer(data, dtype="<i2").astype(np.float32).reshape(-1, OUT_CHANNELS).mean(axis=1)
+        x = x[: len(x) - len(x) % 3].reshape(-1, 3).mean(axis=1)      # 48 kHz -> 16 kHz (box filter, lips only)
+        return np.clip(x, -32768, 32767).astype("<i2").tobytes()
+
+    def _run(self):
+        import http.client
+        conn = None
+        while True:
+            self._event.wait(1.0)
+            self._event.clear()
+            while self._queue:
+                body = self.to_16k_mono(self._queue.popleft())
+                try:
+                    if conn is None:
+                        conn = http.client.HTTPConnection(self.host, self.port, timeout=2)
+                    conn.request("POST", self.path, body=body, headers={"Content-Type": "application/octet-stream"})
+                    conn.getresponse().read()
+                    self.sent += 1
+                except (OSError, http.client.HTTPException) as error:
+                    self.failed += 1
+                    if conn is not None:
+                        conn.close()
+                    conn = None
+                    if time.monotonic() - self._last_warning > 30:
+                        self._last_warning = time.monotonic()
+                        log(f"simli tap: {type(error).__name__} (the stage is down?)")
+                    self._queue.clear()
+                    break
 
 
 # ---------------------------------------------------------------- mouth signal
@@ -1513,6 +1582,10 @@ async def serve(args, engine, token):
     streamer = Path(args.streamer_dir)
     streamer.mkdir(parents=True, exist_ok=True)
     sink = PcmSink(streamer / "voice.pcm")
+    if getattr(args, "simli_url", None):
+        sink.on_tap = SimliTap(args.simli_url).feed
+        sink.lead_blocks = max(0, round(args.simli_lead_s / BLOCK_SECONDS))
+        log(f"simli tap on, FIFO lead {sink.lead_blocks * BLOCK_SECONDS:.2f}s")
     service = VoiceService(engine, sink, streamer, keep_hours=args.keep_hours)
     service.start()
     threading.Thread(target=service.warmup, name="voice-warmup", daemon=True).start()
@@ -1557,6 +1630,9 @@ def build_parser():
     parser.add_argument("--speed", type=float, help="kokoro speaking speed (0.5-2.0), default 1.0")
     parser.add_argument("--threads", type=int, default=0, help="torch CPU threads for kokoro (0 = torch default)")
     parser.add_argument("--eleven-model", default="eleven_flash_v2_5")
+    parser.add_argument("--simli-url", help="Simli stage: also send the audio to this /pcm URL (scripts/simli_stage.py)")
+    parser.add_argument("--simli-lead-s", type=float, default=0.0,
+                        help="Simli stage: delay the FIFO by this much so the voice lines up with the face's lips")
     parser.add_argument("--keep-hours", type=float, default=24.0, help="delete speech WAVs older than this (0 = keep all)")
     parser.add_argument("--offline", action="store_true", help="never contact HuggingFace (model must be in HF_HOME)")
     return parser
