@@ -140,6 +140,13 @@ SEGMENTS = (
      "Launch prep: hype each field SUB-01 fills on pump.fun in one line (what makes BOOKI fun), never promise gains or "
      "talk price, remind chat it is for fun and can go to zero.",
      "pump.fun create form, being filled in"),
+    ("packs", "Pokemon pack rips",
+     "Pokemon pack rips on gotya.com: browse the packs, read a pack's odds and price out loud, react to the Biggest Hits "
+     "feed, guess with your guest what a pack pulls; you never buy or press anything to buy, only the owner does; say "
+     "it is 18+ and paid packs are a gamble, never tell chat to buy.",
+     "Pokemon pack rips: react like a collector: your dream pull, a story from your childhood cards, guess the hit "
+     "before SUB-01 reveals it; never tell anyone to buy packs.",
+     "gotya.com packs and the Biggest Hits feed"),
     ("trial", "Kimchi on trial",
      "Kimchi on trial: you are the judge, chat is the jury. Read one charge at a time (larping, telling you to wait on "
      "BOOKI, zero trades tonight, the field photo), show the evidence on screen (his X, his vlog), let him defend, chat "
