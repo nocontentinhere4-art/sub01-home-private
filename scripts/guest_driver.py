@@ -36,6 +36,7 @@ PERSONA = {
 }
 # owner 10-31 "2, 3, 6, 8": show segments between the two, one every SEGMENT_S, in this order. Each has SUB-01's rule (the
 # agent reads it from guest-on, its "segment"), the guest's rule (this prompt) and what goes on the PC ("show").
+ROTATION = ("price", "ct", "shorts", "ama", "thisorthat", "shark", "invent", "costume", "life", "teach")
 SEGMENT_S = 360.0          # owner 10-31 "falli fare robe diverse": a new thing every 6 min
 SEGMENTS = (
     ("roast", "Roast battle",
@@ -97,6 +98,29 @@ SEGMENTS = (
      "or two, then scroll to the next (key ArrowDown); ask chat to rate the clip 1 to 10.",
      "Viral shorts: react to the clip SUB-01 describes with one funny line, compare it to your own trading life.",
      "YouTube Shorts: funny crypto and meme clips"),
+    ("price", "Guess the price",
+     "Guess the price: show a luxury item on Google (a supercar, a watch, a mansion, a private jet charter) without its "
+     "price; your guest guesses, chat types their guess, then reveal it and roast whoever was furthest. A new item each "
+     "round, never the same kind twice in a row.",
+     "Guess the price: guess the price of the luxury item SUB-01 shows, with a quick reason from your own lifestyle "
+     "(you own or rented something like it), then react to the real price.",
+     "Google: supercars, luxury watches, mansions, private jets (one item at a time, price hidden at first)"),
+    ("ct", "CT timeline",
+     "Crypto Twitter reaction: on X search for memecoin and pick viral posts and memes (Top tab); read one out, react with "
+     "your guest, ask chat if it is real or cap; then the next post. Never shill a coin from a post.",
+     "Crypto Twitter reaction: react to the post SUB-01 reads out like a CT veteran: real or cap, the inside joke, a "
+     "quick story it reminds you of.",
+     "X search for memecoin memes and viral posts (Top tab)"),
+    ("ama", "Ask Kimchi anything",
+     "Ask Kimchi anything: only chat's questions now; read the best one with the viewer's name, he answers, you add one "
+     "follow-up; while chat types, ask your own wild question.",
+     "Ask Kimchi anything: answer the chat question SUB-01 reads out, personal and specific, short.",
+     "his X profile x.com/kimchi1x"),
+    ("thisorthat", "This or that",
+     "This or that speed round: fire quick pairs (Lambo or Ferrari, Rolex or AP, Dubai or Miami, SOL or ETH, jet or yacht), "
+     "both answer in one word plus a reason, chat votes 1 or 2; show each pair's pictures on Google when you can.",
+     "This or that speed round: answer the pair SUB-01 gives in one word plus a quick reason, then throw him a new pair.",
+     "Google Images of each pair"),
     ("wyr", "Would you rather",
      "Would you rather: take turns with your guest asking crypto and trader-life would-you-rather questions; both answer "
      "with a reason, then ask chat theirs.",
@@ -245,11 +269,13 @@ class Guest:
             self.seg_i, self.seg_at, self.seg_new = keys.index(hold), now, True
         elif now - self.seg_at < SEGMENT_S:
             return
-        else:
-            nxt = (self.seg_i + 1) % len(SEGMENTS)
-            while SEGMENTS[nxt][0] in ("vlog", "trump"):   # these run only when pinned
-                nxt = (nxt + 1) % len(SEGMENTS)
-            self.seg_i, self.seg_at, self.seg_new = nxt, now, True
+        else:   # owner 10-31 "si ripetono troppo ... falli fare altre robe": the rotation, a shuffled round of everything
+            if not getattr(self, "seg_queue", None):  # but the pinned-only ones, never the same one twice in a row
+                import random
+                pool = [i for i, seg in enumerate(SEGMENTS) if seg[0] in ROTATION and i != self.seg_i]
+                random.shuffle(pool)
+                self.seg_queue = pool
+            self.seg_i, self.seg_at, self.seg_new = self.seg_queue.pop(0), now, True
         key, title, sub01_rule, _, show = SEGMENTS[self.seg_i]
         try:
             d = json.loads(path.read_text() or "{}")

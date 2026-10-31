@@ -180,15 +180,20 @@ def test_stage_guest_config_and_face_byte(tmp_path):
 
 
 def test_guest_rotates_segments_into_guest_on(tmp_path):
-    g, calls, clock, sdir = make_guest(tmp_path, replies=["hi"] * 10)
+    g, calls, clock, sdir = make_guest(tmp_path, replies=[f"{w} line" for w in "abcdefghij"])
     (sdir / "guest-on").write_text(json.dumps({"name": "Kimchi", "show": "old"}))
-    g.step()
-    d = json.loads((sdir / "guest-on").read_text())
-    assert d["name"] == "Kimchi" and d["segment"].startswith("Roast battle") and "kimchi1x" in d["show"]
-    assert "Current segment: Roast battle with SUB-01" in g.prompt()
-    clock.t += G.SEGMENT_S + 1
-    g.step()
-    assert json.loads((sdir / "guest-on").read_text())["segment"].startswith("Memecoin Shark Tank")
+    titles = {seg[0]: seg[1] for seg in G.SEGMENTS}
+    seen = []
+    for _ in range(len(G.ROTATION) + 2):
+        g.step()
+        d = json.loads((sdir / "guest-on").read_text())
+        assert d["name"] == "Kimchi" and d["show"] != "old"
+        seen.append(d["segment"].split(":")[0])
+        assert f"Current segment: " in g.prompt()
+        clock.t += G.SEGMENT_S + 1
+    assert all(t in [titles[k] for k in G.ROTATION] for t in seen)
+    assert all(a != b for a, b in zip(seen, seen[1:]))
+    assert set(seen[:len(G.ROTATION)]) == {titles[k] for k in G.ROTATION}
 
 
 def test_guest_hold_pins_a_segment(tmp_path):
