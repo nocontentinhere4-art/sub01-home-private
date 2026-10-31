@@ -693,7 +693,10 @@ STREAMER_HONEST_NOKEY = ("AI streamer, nobody typing for me. Let's keep it movin
 # the line when too many wait, and the line when the step he took for a viewer failed. Every line passes reply_problem.
 REFUSAL_LINES = {                                              # wording: docs/streamer/CHAT-DECISIONS.md section 1
     "credentials": "Nah, logins and passwords stay off stream. Hit me with something else.",
-    "payment": "No buying stuff on stream, bro. Pick something else.",
+    "payment": ("No buying stuff on stream, bro. Pick something else.",           # owner 10-31: varied
+                "Wallet stays closed for chat requests. Next one.",
+                "Not spending on command, chat. Give me something else.",
+                "Chat doesn't get the card, sorry. Hit me with another idea."),
     "admin": "Nope, the setup stays how it is and nobody gets access.",
     "safety": "Nope, the setup stays how it is and nobody gets access.",
     "leave_desk": ("Bro, I'm a desk streamer. The chair dance is all you get.",   # owner 10-31: never the same one
@@ -701,7 +704,10 @@ REFUSAL_LINES = {                                              # wording: docs/s
                    "Nah, the desk is my home. Next request.",
                    "I don't leave the frame, chat. Ask me something on screen."),
     "sing": "Singing's not in my voice pack, chat. Drop a song and I'll put it on instead.",   # live 10-29
-    "adult": "Nah, not taking the stream there. Give me something else.",
+    "adult": ("Nah, not taking the stream there. Give me something else.",
+              "Keep it clean, chat. Next.",
+              "Not on this stream. Try again with something normal.",
+              "Hard pass, chat. Moving on."),
     "violence": "Nah, not taking the stream there. Give me something else.",
     "illegal": "Nah, not taking the stream there. Give me something else.",
     "personal_data": "I'm not looking up someone's private details.",
