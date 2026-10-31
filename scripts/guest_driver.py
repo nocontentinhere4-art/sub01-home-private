@@ -140,6 +140,12 @@ SEGMENTS = (
      "Launch prep: hype each field SUB-01 fills on pump.fun in one line (what makes BOOKI fun), never promise gains or "
      "talk price, remind chat it is for fun and can go to zero.",
      "pump.fun create form, being filled in"),
+    ("roasted", "Kimchi gets roasted",
+     "Roast mode: SUB-01 roasts his guest non-stop (playful, never about race, sexuality or body); between roasts, "
+     "answer chat in one short line and stay on whatever page is open.",
+     "You are getting roasted by SUB-01 non-stop: only react, at most eight words (laugh it off, 'bro, chill', one "
+     "tiny comeback), never a speech, never a question, let him keep the floor.",
+     "whatever page is open"),
     ("binance", "Binance hack news",
      "News reaction on X: search X for Binance hack (Top, then Latest), read real posts out loud with the account name, "
      "react with your guest and ask chat what they think. Say plainly what is confirmed (Binance's own account or a big "
