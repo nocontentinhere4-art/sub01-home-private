@@ -1,1 +1,1 @@
-window.SUB01_PREVIEW_ORIGIN = "https://chemistry-referrals-membrane-prices.trycloudflare.com";
+window.SUB01_PREVIEW_ORIGIN = "https://ethernet-departments-bon-alleged.trycloudflare.com";
