@@ -23,7 +23,7 @@
 set -u
 P=/home/unreal/.sub01-private; S=$P/streamer; SRC=/home/unreal/sub01-src; ON=$SRC/tools/pod/onpod
 PY=/home/unreal/venv/bin/python; VPY=/home/unreal/voice-rt-venv/bin/python; CHROME=/usr/bin/google-chrome
-VOICE_ENGINE=kokoro; VOICE=am_puck; LEAD_S=0.4; PIP=480x270; REMOTE_URL=; ENCODER=libx264
+VOICE_ENGINE=kokoro; VOICE=am_puck; LEAD_S=0.4; PIP=480x270; REMOTE_URL=; ENCODER=libx264; FPS=30
 [ -f $P/simli-live.env ] && . $P/simli-live.env
 
 say() { printf '%s simli-live: %s\n' "$(date -u +%H:%M:%S)" "$*"; }
@@ -93,7 +93,7 @@ up() {
       --desktop-python $PY --voice-python $VPY --agent-python $PY --director-python $PY --monitor-python $PY --hls-python $PY \
       --child-arg "desktop=--data-dir $S/desktop-vagon --pc-mode vagon --vagon-kind workstation --chromium $CHROME --operator-console --size 1280x720" \
       --child-arg "voice=$voice_args" $env_eleven \
-      --child-arg "director=--game-source x11 --window-prefix SUB01-STAGE --layout desktop --size 1280x720 --pip-size $PIP --fps 30 --desktop-fps 30 --encoder $ENCODER --recordings-dir $S/recordings --hls-dir $S/hls --min-free-gb 3 --keep-segments 12" \
+      --child-arg "director=--game-source x11 --window-prefix SUB01-STAGE --layout desktop --size 1280x720 --pip-size $PIP --fps $FPS --desktop-fps $FPS --encoder $ENCODER --recordings-dir $S/recordings --hls-dir $S/hls --min-free-gb 3 --keep-segments 12" \
       > $S/logs/up-start.log 2>&1 || say "supervisor start reported a problem (see logs/up-start.log)"
   fi
   alive lease || spawn lease python3 $ON/lease_renew.py
