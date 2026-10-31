@@ -533,10 +533,14 @@ class RemoteEngine(Engine):
                 log(f"{error}: this sentence uses the fallback voice")
             return self.fallback.synthesize(text)
 
-    def _remote(self, text):
+    def synthesize_as(self, text, voice):
+        """a guest's line in the guest's voice on the voices pod (no fallback: a guest never borrows SUB-01's voice)"""
+        return self._remote(text, voice)
+
+    def _remote(self, text, voice=None):
         import urllib.error
         import urllib.request
-        body = json.dumps({"text": text, "voice": self.voice}).encode()
+        body = json.dumps({"text": text, "voice": voice or self.voice}).encode()
         req = urllib.request.Request(self.url, data=body, method="POST", headers={
             "Content-Type": "application/json", "X-Admin-Token": self.token, "User-Agent": "sub01-voice/1"})
         try:
@@ -725,6 +729,8 @@ class PcmSink:
         self._clock = clock
         self._lock = threading.Lock()
         self._chunks = collections.deque()
+        self._whos = collections.deque()   # who speaks each chunk (None: SUB-01), for the Simli stage's face routing
+        self.last_who = None
         self._head = 0
         self._buffered = 0
         self._stop = threading.Event()
@@ -746,10 +752,11 @@ class PcmSink:
             ensure_fifo(self.path)
 
     # -- producer side (any thread)
-    def push(self, pcm):
+    def push(self, pcm, who=None):
         if pcm:
             with self._lock:
                 self._chunks.append(bytes(pcm))
+                self._whos.append(who)
                 self._buffered += len(pcm)
 
     def buffered_bytes(self):
@@ -775,9 +782,12 @@ class PcmSink:
                 if len(head) >= keep:
                     break
             tail = fade_out(head)
+            who = self._whos[0] if self._whos else None
             self._chunks.clear()
+            self._whos.clear()
             self._head = 0
             self._chunks.append(tail)
+            self._whos.append(who)
             self._buffered = len(tail)
             return total - keep, keep
 
@@ -801,6 +811,7 @@ class PcmSink:
     def _take(self, nbytes):
         out = bytearray()
         with self._lock:
+            self.last_who = self._whos[0] if self._whos else None
             while len(out) < nbytes and self._chunks:
                 first = self._chunks[0]
                 available = len(first) - self._head
@@ -808,6 +819,7 @@ class PcmSink:
                 if available <= need:
                     out += first[self._head:]
                     self._chunks.popleft()
+                    self._whos.popleft()
                     self._head = 0
                 else:
                     out += first[self._head: self._head + need]
@@ -830,7 +842,7 @@ class PcmSink:
             block = self._take(BLOCK_FRAMES * FRAME_BYTES)
             if self.on_tap is not None:
                 try:
-                    self.on_tap(block)
+                    self.on_tap(block, self.last_who)
                 except Exception as error:  # the face never stalls the voice
                     self._warn(f"tap failed: {error}")
             if self.lead_blocks:
@@ -920,16 +932,23 @@ class SimliTap:
         self._queue = collections.deque(maxlen=200)       # ~4 s: older audio is useless to lips anyway
         self._event = threading.Event()
         self._buf = []
+        self._who = None
         self.sent = self.failed = 0
         self._last_warning = 0.0
         threading.Thread(target=self._run, name="simli-tap", daemon=True).start()
 
-    def feed(self, block):
+    def feed(self, block, who=None):
+        if self._buf and who != self._who:      # a change of speaker flushes, so each chunk has one face
+            self._flush()
+        self._who = who
         self._buf.append(block)
         if len(self._buf) >= self.chunk_blocks:
-            self._queue.append(b"".join(self._buf))
-            self._buf = []
-            self._event.set()
+            self._flush()
+
+    def _flush(self):
+        self._queue.append((self._who, b"".join(self._buf)))
+        self._buf = []
+        self._event.set()
 
     @staticmethod
     def to_16k_mono(data):
@@ -944,11 +963,13 @@ class SimliTap:
             self._event.wait(1.0)
             self._event.clear()
             while self._queue:
-                body = self.to_16k_mono(self._queue.popleft())
+                who, raw = self._queue.popleft()
+                body = self.to_16k_mono(raw)
+                path = self.path + (f"?face={who}" if who else "")
                 try:
                     if conn is None:
                         conn = http.client.HTTPConnection(self.host, self.port, timeout=2)
-                    conn.request("POST", self.path, body=body, headers={"Content-Type": "application/octet-stream"})
+                    conn.request("POST", path, body=body, headers={"Content-Type": "application/octet-stream"})
                     conn.getresponse().read()
                     self.sent += 1
                 except (OSError, http.client.HTTPException) as error:
@@ -1326,11 +1347,14 @@ class VoiceService:
                 except Exception:
                     pass
 
-    def _submit_synth(self, sentence):
-        return self._pool.submit(self._synth, sentence)
+    def _submit_synth(self, sentence, who=None):
+        return self._pool.submit(self._synth, sentence, who)
 
-    def _synth(self, sentence):
-        samples, rate = self.engine.synthesize(sentence)
+    def _synth(self, sentence, who=None):
+        if who and hasattr(self.engine, "synthesize_as"):   # a guest's line (tag "guest:<voice>") in the guest's voice
+            samples, rate = self.engine.synthesize_as(sentence, who)
+        else:
+            samples, rate = self.engine.synthesize(sentence)
         pcm = to_stereo_48k(samples, rate)
         self.ready = True
         return pcm, len(pcm) / (FRAME_BYTES * OUT_RATE)
@@ -1357,7 +1381,8 @@ class VoiceService:
         parts, spoken = [], []
         seconds_played = 0.0
         error = None
-        future = self._submit_synth(item.sentences[0])
+        who = item.tag[len("guest:"):] if item.tag.startswith("guest:") else None
+        future = self._submit_synth(item.sentences[0], who)
         try:
             for index, sentence in enumerate(item.sentences):
                 try:
@@ -1393,7 +1418,7 @@ class VoiceService:
                             gap = silence(late)
                             parts.append(gap)
                             seconds_played += len(gap) / (FRAME_BYTES * OUT_RATE)
-                    sink.push(pcm)
+                    sink.push(pcm, who)
                     parts.append(pcm)
                     seconds_played += seconds
                     spoken.append(sentence)
@@ -1401,7 +1426,7 @@ class VoiceService:
                     item.ends_wall = item.started_wall + seconds_played + rest
                     self._write_speaking(item)
                 if index + 1 < count:
-                    future = self._submit_synth(item.sentences[index + 1])
+                    future = self._submit_synth(item.sentences[index + 1], who)
             while sink.buffered_bytes() > 0:  # let the pushed audio finish
                 if item.cut.wait(0.005):
                     break
