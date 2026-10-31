@@ -5,7 +5,7 @@ import aiohttp
 from aiohttp import web
 from PIL import Image
 ORIGIN = 'https://subzerone.live'
-LIVE_KEEP, START_OFFSET = 4, 4.0      # public playlist: newest 4 segments (8 s), start 4 s from the live edge (owner 10-28)
+LIVE_KEEP, START_OFFSET = 4, 2.0      # public playlist: newest 4 segments (8 s), start 2 s from the live edge (owner 10-28; 10-31 "correggi tutti i ritardi": 4 -> 2 s)
 CARTOON = re.compile(r'^\W{0,2}(?:!\s*cartoon\b|cartoon\s*:)', re.I)   # the agent's CARTOON_PREFIX: sent straight to it
 SEGMENT = re.compile(r'^sub01-[0-9]{8}-[0-9]{6}-[0-9]+\.ts$')
 NICK = re.compile(r'[A-Za-z0-9_.-]{2,16}')          # owner 10-28: self-chosen names (unverified, greetings only)

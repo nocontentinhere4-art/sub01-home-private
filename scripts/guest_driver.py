@@ -23,6 +23,7 @@ from pathlib import Path
 MODEL = "claude-haiku-5-5"
 GAP_S, QUIET_S, LINES_PER_HOUR, MAX_WORDS = 14.0, 45.0, 90, 28   # 28 words: about 8 s, so SUB-01 answers chat sooner
 HISTORY = 10
+YIELD_S = 2.5          # silence the guest waits for after anyone spoke, so a chat answer goes first
 PERSONA = {
     "kimchi": ("Kimchi", "Kimchi (kimchi1x on X), a Solana memecoin trader who started in April 2024 and scanned charts "
                "fifteen hours a day in his room, now known for a flashy lifestyle feed (cars, watches, travel) and lately "
@@ -129,7 +130,13 @@ class Guest:
             st = self.call("GET", self.cfg.voice_url + "/state", headers={"X-Admin-Token": self.cfg.token})
         except (urllib.error.URLError, OSError, ValueError):
             return False
-        return not st.get("speaking") and not st.get("queue")
+        idle = not st.get("speaking") and not st.get("queue")
+        now = self.clock()
+        if not idle:
+            self._busy_at = now
+            return False
+        # owner 10-31 "correggi tutti i ritardi": leave SUB-01 a beat after his own line to answer chat first
+        return now - getattr(self, "_busy_at", -1e9) >= YIELD_S
 
     # -- decision
     def due(self, now):
