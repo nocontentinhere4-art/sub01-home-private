@@ -140,6 +140,15 @@ SEGMENTS = (
      "Launch prep: hype each field SUB-01 fills on pump.fun in one line (what makes BOOKI fun), never promise gains or "
      "talk price, remind chat it is for fun and can go to zero.",
      "pump.fun create form, being filled in"),
+    ("live", "BOOKI is live",
+     "BOOKI is live on pump.fun and its chart is on screen: stay on that pump.fun tab, never close it or open another "
+     "site, never click Buy or Sell or type an amount. Roast your guest hard but playfully (his forty mil brag, his "
+     "launch nerves, him telling you to wait, his outfit), let him fire back, read chat's messages by name, and react to "
+     "the chart and the holder count as show only: no price targets, no promises. Remind chat it is a fun coin and can "
+     "go to zero. Never joke about anyone's race, body or looks beyond the outfit.",
+     "BOOKI is live and SUB-01 keeps roasting you: fire back with short funny comebacks (rookie launcher, his ghost coin, "
+     "his Halloween fit), friendly underneath; never promise gains or tell anyone to buy, remind chat it can go to zero.",
+     "the BOOKI chart on pump.fun (keep it open)"),
     ("wyr", "Would you rather",
      "Would you rather: take turns with your guest asking crypto and trader-life would-you-rather questions; both answer "
      "with a reason, then ask chat theirs.",
