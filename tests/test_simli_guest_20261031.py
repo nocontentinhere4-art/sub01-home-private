@@ -255,3 +255,14 @@ def test_guest_every_shortens_segments(tmp_path):
         seen.append(SEG_KEY[json.loads((sdir / "guest-on").read_text())["segment"].split(":")[0]])
         clock.t += 61
     assert seen == ["trivia", "hottakes", "trivia"]
+
+
+def test_business_segment_carries_the_ledger(tmp_path):
+    g, calls, clock, sdir = make_guest(tmp_path, replies=["hi"] * 5)
+    (sdir / "business.json").write_text(json.dumps({"day": 1, "spent": 12, "revenue": 5, "products": ["Larp King tee"],
+                                                     "next": "price the tee"}))
+    (sdir / "guest-on").write_text(json.dumps({"name": "Kimchi", "hold": "business"}))
+    g.step()
+    seg = json.loads((sdir / "guest-on").read_text())["segment"]
+    assert seg.startswith("SUB-01 Inc.") and "$38 of $50 left" in seg and "Larp King tee" in seg
+    assert len(seg) < 400                              # the agent keeps 400 chars of it
