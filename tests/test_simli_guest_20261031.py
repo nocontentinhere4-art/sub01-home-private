@@ -266,3 +266,17 @@ def test_business_segment_carries_the_ledger(tmp_path):
     seg = json.loads((sdir / "guest-on").read_text())["segment"]
     assert seg.startswith("SUB-01 Inc.") and "$38 of $50 left" in seg and "Larp King tee" in seg
     assert len(seg) < 400                              # the agent keeps 400 chars of it
+
+
+def test_guest_unsticks_a_stuck_topic(tmp_path):
+    g, calls, clock, sdir = make_guest(tmp_path, replies=["hi"] * 5)
+    (sdir / "guest-on").write_text(json.dumps({"name": "Kimchi", "hold": "trivia,hottakes", "every": 600}))
+    g.step()
+    first = json.loads((sdir / "guest-on").read_text())["segment"]
+    for i in range(12):
+        g.history.append(("SUB-01" if i % 2 else "Kimchi", f"the cold coffee chart at four, line {i}"))
+    clock.t += 30
+    g.step()
+    d = json.loads((sdir / "guest-on").read_text())
+    assert d["segment"] != first and "coffee" in d["banned"] and "Topic was stuck" in d["segment"]
+    assert "never use these words" in g.prompt()

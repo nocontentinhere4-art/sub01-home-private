@@ -506,7 +506,9 @@ class Guest:
         except (OSError, ValueError):
             d = {}
         d = d if isinstance(d, dict) else {}
-        d.update(segment=f"{title}: {sub01_rule}", show=show)
+        ban = (f" Topic was stuck: do not mention {', '.join(self.banned)}." if getattr(self, "banned", None)
+               and self.clock() < getattr(self, "banned_until", 0) else "")
+        d.update(segment=f"{title}: {sub01_rule}{ban}"[:395], show=show)
         tmp = path.with_name(".guest-on.tmp")
         tmp.write_text(json.dumps(d))
         os.replace(tmp, path)
@@ -527,6 +529,9 @@ class Guest:
             ask += (" Say something NEW: no opening, phrase, poll or point from your own earlier lines (above); no "
                     "\"Honestly bro\" opener, at most one chat poll every three lines.")
         seg = f"Current segment: {SEGMENTS[self.seg_i][3]}{self.build_progress() or ''}\n" if self.seg_i >= 0 else ""
+        if getattr(self, "banned", None) and self.clock() < getattr(self, "banned_until", 0):
+            seg += (f"The talk got stuck: change the topic completely, never use these words or their stories now: "
+                    f"{', '.join(self.banned)}.\n")
         return f"{seg}Conversation so far:\n{convo}\n\n{ask}"
 
     def _claude(self, system, user):
@@ -551,6 +556,39 @@ class Guest:
         return False
 
     # -- one step
+    STOP = set("the a an and or to of in on is it i you that this for with my your me we be at bro chat sub01 so just "
+               "like but if what was are not do its it's i'm you're one up all about from have that's here there would "
+               "they get got no yes okay your you'll i'd i've don't can't when then than into over more most very".split())
+
+    def stale_words(self, lines=HISTORY, hits=4):
+        """owner 10-31 "si ripetono in continuo": content words that sit in `hits` or more of the last `lines` lines (both speakers)"""
+        recent = [t for _, t in self.history[-lines:]]
+        if len(recent) < lines:
+            return []
+        counts = {}
+        for t in recent:
+            for w in set(re.findall(r"[a-z']{4,}", t.lower())) - self.STOP - {self.name.lower()}:
+                counts[w] = counts.get(w, 0) + 1
+        return sorted((w for w, n in counts.items() if n >= hits), key=lambda w: -counts[w])[:6]
+
+    def unstick(self, now):
+        """a stuck topic: jump to the next segment now and ban its words for both of them for ten minutes"""
+        words = self.stale_words()
+        if not words or now - getattr(self, "_unstuck_at", -1e9) < 120:
+            return
+        self._unstuck_at, self.banned, self.banned_until = now, words, now + 600
+        self.seg_at = -1e9                                # rotate() moves on right away (a hold list rotates too)
+        log(f"unstick: {', '.join(words)}")
+        path = Path(self.cfg.streamer_dir) / "guest-on"
+        try:
+            d = json.loads(path.read_text() or "{}")
+            d["banned"] = words
+            tmp = path.with_name(".guest-on.tmp")
+            tmp.write_text(json.dumps(d))
+            os.replace(tmp, path)
+        except (OSError, ValueError):
+            pass
+
     def step(self):
         now = self.clock()
         if not self.on():
@@ -559,6 +597,7 @@ class Guest:
             self.was_on = False
             return None
         self.poll_timeline()
+        self.unstick(now)
         self.rotate(now)
         if now - getattr(self, "_last_beat", 0) > 60:  # a heartbeat: why the guest is (not) talking
             self._last_beat = now
