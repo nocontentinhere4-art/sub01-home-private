@@ -131,6 +131,15 @@ SEGMENTS = (
      "option for the step that is NOW ON in one line, then push SUB-01 to lock it right away; never stall waiting for "
      "chat. A creative concept only: never talk about launching, buying, price or gains.",
      "Google Images for mascot ideas; the fomo.family trending list for inspiration"),
+    ("launch", "Launch prep on pump.fun",
+     "Launch prep on pump.fun (the owner launches it; Kimchi agreed): open pump.fun and its create form, then fill it on "
+     "air one field at a time, telling chat each step: name BOOKI, ticker BOOKI, the description (the slogan and the "
+     "lore), the image booki.png from Downloads (in the file dialog click Downloads in the sidebar, then the file), the X "
+     "link x.com/subzeroneperson. STOP there: never connect a wallet, never sign, never press Create; say the owner does "
+     "that part. Say plainly on air: a fun Halloween coin, not financial advice, it can go to zero.",
+     "Launch prep: hype each field SUB-01 fills on pump.fun in one line (what makes BOOKI fun), never promise gains or "
+     "talk price, remind chat it is for fun and can go to zero.",
+     "pump.fun create form, being filled in"),
     ("wyr", "Would you rather",
      "Would you rather: take turns with your guest asking crypto and trader-life would-you-rather questions; both answer "
      "with a reason, then ask chat theirs.",
