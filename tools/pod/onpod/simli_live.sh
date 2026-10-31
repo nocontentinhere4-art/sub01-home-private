@@ -23,7 +23,7 @@
 set -u
 P=/home/unreal/.sub01-private; S=$P/streamer; SRC=/home/unreal/sub01-src; ON=$SRC/tools/pod/onpod
 PY=/home/unreal/venv/bin/python; VPY=/home/unreal/voice-rt-venv/bin/python; CHROME=/usr/bin/google-chrome
-VOICE_ENGINE=kokoro; VOICE=am_puck; LEAD_S=0.4; PIP=480x270; REMOTE_URL=; ENCODER=libx264; FPS=30
+VOICE_ENGINE=kokoro; VOICE=am_puck; LEAD_S=0.4; PIP=360x202; REMOTE_URL=; ENCODER=libx264; FPS=30
 [ -f $P/simli-live.env ] && . $P/simli-live.env
 
 say() { printf '%s simli-live: %s\n' "$(date -u +%H:%M:%S)" "$*"; }
