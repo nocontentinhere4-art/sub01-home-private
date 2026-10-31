@@ -560,6 +560,9 @@ class Guest:
                "like but if what was are not do its it's i'm you're one up all about from have that's here there would "
                "they get got no yes okay your you'll i'd i've don't can't when then than into over more most very".split())
 
+    SHOW_WORDS = set("coin coins percent market holders holder volume chart charts hours minutes dollars bucks trending "
+                     "price thousand million billion round score next first chat".split())   # the show's own vocabulary
+
     def stale_words(self, lines=HISTORY, hits=4):
         """owner 10-31 "si ripetono in continuo": content words that sit in `hits` or more of the last `lines` lines (both speakers)"""
         recent = [t for _, t in self.history[-lines:]]
@@ -568,7 +571,7 @@ class Guest:
         counts = {}
         for t in recent:
             own = set(re.findall(r"[a-z']{4,}", " ".join(SEGMENTS[self.seg_i][1:4]).lower())) if self.seg_i >= 0 else set()
-            for w in set(re.findall(r"[a-z']{4,}", t.lower())) - self.STOP - own - {self.name.lower(), "coin", "coins"}:
+            for w in set(re.findall(r"[a-z']{4,}", t.lower())) - self.STOP - own - self.SHOW_WORDS - {self.name.lower()}:
                 counts[w] = counts.get(w, 0) + 1
         return sorted((w for w, n in counts.items() if n >= hits), key=lambda w: -counts[w])[:6]
 
