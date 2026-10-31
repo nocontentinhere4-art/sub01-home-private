@@ -36,7 +36,7 @@ PERSONA = {
 }
 # owner 10-31 "2, 3, 6, 8": show segments between the two, one every SEGMENT_S, in this order. Each has SUB-01's rule (the
 # agent reads it from guest-on, its "segment"), the guest's rule (this prompt) and what goes on the PC ("show").
-SEGMENT_S = 540.0
+SEGMENT_S = 360.0          # owner 10-31 "falli fare robe diverse": a new thing every 6 min
 SEGMENTS = (
     ("roast", "Roast battle",
      "Roast battle with your guest: three rounds, you and he roast each other in turns (friendly, about each other only, "
@@ -80,6 +80,23 @@ SEGMENTS = (
      "'forty million, bro, this was crazy'), how it felt, what you did right after. It is your story, never advice: "
      "now and then say most people lose on these and that it was insane timing and luck.",
      "his X profile x.com/kimchi1x while he tells it"),
+    ("invent", "Invent a memecoin",
+     "Invent a memecoin live with your guest, as a joke only (never launched, never bought): a Halloween name, ticker, "
+     "mascot and slogan; take ideas from chat, roast the bad ones, and search images on Google for the mascot to show it.",
+     "Invent a memecoin with SUB-01, as a joke only (never launched): pitch a funny Halloween name, ticker, mascot or "
+     "slogan, react to his and chat's ideas, roast the bad ones.",
+     "Google Images for mascot ideas (search terms like 'pumpkin frog cartoon')"),
+    ("costume", "Costume contest",
+     "Halloween costume contest: chat types their costume, you and your guest rate each one 1 to 10 and crown a winner; "
+     "between entries, search Google Images for wild crypto or meme Halloween costumes and rate those too.",
+     "Halloween costume contest: rate the costume SUB-01 or chat describes from 1 to 10 with a funny reason; say what you "
+     "would dress as.",
+     "Google Images: funny crypto and meme Halloween costumes"),
+    ("shorts", "Viral shorts",
+     "Viral shorts: open YouTube Shorts with funny crypto or meme clips and react to each one with your guest in a line "
+     "or two, then scroll to the next (key ArrowDown); ask chat to rate the clip 1 to 10.",
+     "Viral shorts: react to the clip SUB-01 describes with one funny line, compare it to your own trading life.",
+     "YouTube Shorts: funny crypto and meme clips"),
     ("wyr", "Would you rather",
      "Would you rather: take turns with your guest asking crypto and trader-life would-you-rather questions; both answer "
      "with a reason, then ask chat theirs.",
