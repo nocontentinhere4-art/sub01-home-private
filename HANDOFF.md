@@ -1,9 +1,28 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-31 19:35 UTC (LIVE: BOOKI launched, section below); 15:35 UTC (RESUMED on one server); 03:40 UTC (PAUSED, resume steps below); 02:50 UTC (SIMLI STACK, section below); 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-31 23:38 UTC (LIVE ENDED, pod stopped, section below); 19:35 UTC (LIVE: BOOKI launched); 15:35 UTC (RESUMED on one server); 03:40 UTC (PAUSED, resume steps below); 02:50 UTC (SIMLI STACK, section below); 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
+
+## LIVE ENDED 2026-10-31 23:38 UTC (owner: "spegni live, spegni tutto, pod etc")
+
+- 23:36 SUB-01 said goodbye on air; `simli_live.sh down` stopped every service; the TTS server and a Twitch push
+  ffmpeg (HLS -> rtmp, started by the owner around 19:56, ran 3 h 40 min, log `logs/twitch.log`) were killed.
+- Pod `6kek2pjhcg64va` stopped with one REST call (HTTP 200, desiredStatus EXITED, ledgered). Its disk keeps the code,
+  voices and recordings; restart needs a GPU of the same kind to be free. The Vagon PC is the owner's to stop.
+- Since 19:35: Pokemon pack rips on gotya.com (account via SUB-01's Google; owner deposited 100 USDC; 18 packs, every
+  card sold back; wallet left about $4.82 + $8.63 bonus; 1 entry in the Nov 1 20:00 UTC Pikachu PSA 10 giveaway;
+  deposit address `4Xj9JfQdECwfpoqnEdKJLHcn21A4hx4KQtLB6yEqnG8q`, USDC on Solana). Grok AI-vs-AI, ghost tour on
+  Street View, Kimchi vlog reaction, BOOKI check-in (MC $2.7K, 4 holders).
+- Fixes tonight: guest "unstick" (stuck topic -> next segment, words banned 10 min, show vocabulary excluded), varied
+  refusal lines in the agent (leave_desk, payment, adult, NO_INJECT), chat trade voting OFF (`streamer/trading-on`
+  renamed to `trading-on.off-20261031`), viewer video queue played a troll "explicit ASMR" video once (talk-only mode
+  then); a chat filter and a queue title filter are still to build.
+- Clips in docs/streamer/simli/: pack-rips-all-oct31.mp4, pack-rips-first-70s.mp4, pack-rip-screenrecord.mp4,
+  goodbye-oct31-clip.mp4 (plus the BOOKI/FOCO/larp clips above).
+- Pending: Kimi review of tonight's guest_driver/agent changes; SUB-01 Inc. (segment + ledger ready, announce.json set
+  until Nov 4); guest invents personal anecdotes about the real Kimchi (offer: mark them as jokes).
 
 ## LIVE 2026-10-31 18:00-19:35 UTC: BOOKI LAUNCHED, GUEST SEGMENTS (read first)
 
