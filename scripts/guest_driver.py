@@ -562,7 +562,7 @@ class Guest:
 
     SHOW_WORDS = set("coin coins percent market holders holder volume chart charts hours minutes dollars bucks trending "
                      "price thousand million billion round score next first chat question questions answer answers vote votes "
-                     "point points tier place stop".split())   # the show's own vocabulary
+                     "point points tier place stop meme memes memecoin memecoins trader traders trading halloween".split())   # the show's own vocabulary
 
     def stale_words(self, lines=HISTORY, hits=4):
         """owner 10-31 "si ripetono in continuo": content words that sit in `hits` or more of the last `lines` lines (both speakers)"""
