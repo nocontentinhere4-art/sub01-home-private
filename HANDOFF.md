@@ -50,6 +50,13 @@ Keep it current: update at every milestone and before ending a turn that changed
   login (`console`), the public tunnel (`public`, the owner's OK: the classifier refused it without), then the site's
   `live-config.js` with the tunnel URL and a `railway up`.
 - Kimi could not review these changes (its key was on the deleted pod); review them once the key is back.
+- **Voices pod 03:20 UTC (owner: "va bene gpu per le voci"):** `l0d0rgd4y47rlp` (`sub01-voices-gpu-20261031`, RTX
+  A5000 community, 0.16 $/h). `scripts/tts_gpu_server.py` (OmniVoice, the engine of the owner's Voice Studio) on port
+  8000 behind the RunPod proxy, token in `/root/voices/token` (same as the live pod's `$P/voices-token`). Voices `sub01`
+  and `kimchi` from the owner's samples (first 9 s as reference). 4.9 s of speech in about 2.4 s end to end. The live
+  pod runs `voice_server.py --engine remote` (env in `$P/simli-live.env`), with Kokoro am_puck for any sentence the pod
+  misses. OmniVoice on the CPU pod was 4.5-19x slower than real time, so it is not an option there. Stop the voices
+  pod outside live hours only when the owner asks; there is no automatic pod stop (CLAUDE.md).
 
 ## NEW PLAN 2026-10-30 16:30 UTC (owner): Simli SUB-01 + Vagon PC, scheduled lives of about 10 h/day
 
