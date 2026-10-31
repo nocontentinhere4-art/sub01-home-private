@@ -140,6 +140,34 @@ SEGMENTS = (
      "Launch prep: hype each field SUB-01 fills on pump.fun in one line (what makes BOOKI fun), never promise gains or "
      "talk price, remind chat it is for fun and can go to zero.",
      "pump.fun create form, being filled in"),
+    ("tierlist", "Memecoin tier list",
+     "Tier list: open tiermaker.com and search memecoins (or use a blank S to F list in a notes page), then place coins "
+     "one by one, S to F, arguing each with your guest in one line while chat types its tier; quick pace, one coin every "
+     "few seconds.",
+     "Tier list: give your tier for the coin SUB-01 names (S to F) with a one-line reason, argue if he disagrees.",
+     "tiermaker.com memecoin tier list"),
+    ("wheel", "Spin the wheel",
+     "Spin the wheel: open wheelofnames.com, type four or five dares or topics from chat (react to a random CT post, "
+     "guess a coin's market cap, roast a fomo trader's profile, tell a rug story), spin it on stream and do what it "
+     "lands on right away.",
+     "Spin the wheel: hype the spin, react to what it lands on, then do your part of it in one line.",
+     "wheelofnames.com with chat's dares"),
+    ("trivia", "Crypto trivia",
+     "Crypto trivia: fire quick quiz questions at your guest and chat (who made Bitcoin, what year was DOGE created, what "
+     "does rug mean, which chain is pump.fun on), first right answer in chat gets a shout-out by name; keep score.",
+     "Crypto trivia: answer SUB-01's question fast and confident, sometimes wrong on purpose for the laugh, then ask him "
+     "one back.",
+     "Google for each answer"),
+    ("hottakes", "Hot takes",
+     "Hot takes: rapid-fire spicy memecoin opinions (dev buys are fine, KOLs are exit liquidity, Solana beats Base, "
+     "influencer coins always rug), your guest agrees or disagrees in one word, chat types W or L for each.",
+     "Hot takes: agree or disagree with SUB-01's take in your first word, one line why, then drop one hot take of yours.",
+     "X search for the topic of each take"),
+    ("board", "Fresh launches",
+     "Fresh launches: open pump.fun's board sorted by newest, read the funniest names and tickers popping up live, guess "
+     "with your guest which one hits the highest market cap in the next minute, then check. Show only, never buy.",
+     "Fresh launches: pick one of the new coins SUB-01 reads as your winner with a funny reason, roast his pick.",
+     "pump.fun board, newest coins"),
     ("roasted", "Kimchi gets roasted",
      "Roast mode: SUB-01 roasts his guest non-stop (playful, never about race, sexuality or body); between roasts, "
      "answer chat in one short line and stay on whatever page is open.",
@@ -391,14 +419,16 @@ class Guest:
         """next segment every SEGMENT_S; its SUB-01 rule and PC goal go into guest-on (the agent's guest_on_air)"""
         path = Path(self.cfg.streamer_dir) / "guest-on"
         try:                                          # owner 10-31: {"hold": "<segment>"} pins one segment, no rotation
-            hold = str((json.loads(path.read_text() or "{}") or {}).get("hold") or "")
-        except (OSError, ValueError, AttributeError):
-            hold = ""
+            cfg = json.loads(path.read_text() or "{}") or {}
+            hold = str(cfg.get("hold") or "")
+            seg_s = max(30.0, float(cfg.get("every") or SEGMENT_S))   # owner 10-31 "ogni minuto qualcosa di diverso"
+        except (OSError, ValueError, AttributeError, TypeError):
+            hold, seg_s = "", SEGMENT_S
         keys = [seg[0] for seg in SEGMENTS]
         holds = [h for h in hold.replace(" ", "").split(",") if h in keys]
         if len(holds) > 1:                            # owner 10-31: {"hold": "a,b"} rotates among these only
             cur = SEGMENTS[self.seg_i][0] if self.seg_i >= 0 else ""
-            if cur in holds and now - self.seg_at < SEGMENT_S:
+            if cur in holds and now - self.seg_at < seg_s:
                 return
             nxt = holds[(holds.index(cur) + 1) % len(holds)] if cur in holds else holds[0]
             self.seg_i, self.seg_at, self.seg_new = keys.index(nxt), now, True
@@ -406,7 +436,7 @@ class Guest:
             if self.seg_i >= 0 and SEGMENTS[self.seg_i][0] == hold:
                 return
             self.seg_i, self.seg_at, self.seg_new = keys.index(hold), now, True
-        elif now - self.seg_at < SEGMENT_S:
+        elif now - self.seg_at < seg_s:
             return
         else:   # owner 10-31 "si ripetono troppo ... falli fare altre robe": the rotation, a shuffled round of everything
             if not getattr(self, "seg_queue", None):  # but the pinned-only ones, never the same one twice in a row
