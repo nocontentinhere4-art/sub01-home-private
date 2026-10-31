@@ -219,3 +219,14 @@ def test_guest_drops_repeats(tmp_path):
     g.sub01_since_me = True
     assert g.step() is None
     assert g.repeats("Honestly bro, a different thing") and not g.repeats("The jet was rented, chat.")
+
+
+def test_guest_records_memecoin_decisions(tmp_path):
+    g, calls, clock, sdir = make_guest(tmp_path)
+    g.poll_timeline()                                 # offset at the end
+    say(sdir, "Chat voted 2. Decision: ticker is $GHOUL. Next up, the mascot.")
+    say(sdir, "Decision: name is Ghoul Coin! Locked.")
+    g.poll_timeline()
+    book = json.loads((sdir / "memecoin.json").read_text())
+    assert book["ticker"]["choice"] == "$GHOUL" and book["name"]["choice"] == "Ghoul Coin"
+    assert len((sdir / "memecoin-log.jsonl").read_text().splitlines()) == 2

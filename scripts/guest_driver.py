@@ -121,6 +121,16 @@ SEGMENTS = (
      "both answer in one word plus a reason, chat votes 1 or 2; show each pair's pictures on Google when you can.",
      "This or that speed round: answer the pair SUB-01 gives in one word plus a quick reason, then throw him a new pair.",
      "Google Images of each pair"),
+    ("build", "Building our memecoin",
+     "Building our memecoin live with your guest, one decision at a time and in this order: name, ticker, mascot, slogan, "
+     "lore, first post. For each step: take chat's ideas, debate two options with him, let chat vote 1 or 2, then lock it "
+     "out loud in exactly this form: \"Decision: <step> is <choice>.\" (e.g. \"Decision: ticker is $GHOUL.\"), then go to "
+     "the next step. Show mascot ideas on Google Images. It is a creative concept for the show: never launch, buy or price "
+     "it, no promises of gains.",
+     "Building a memecoin with SUB-01, one step at a time (name, ticker, mascot, slogan, lore, first post): pitch your "
+     "option for the step he is on, argue for it with your memecoin instinct, react to chat's votes, agree when he locks "
+     "it. A creative concept only: never talk about launching, buying, price or gains.",
+     "Google Images for mascot ideas; the fomo.family trending list for inspiration"),
     ("wyr", "Would you rather",
      "Would you rather: take turns with your guest asking crypto and trader-life would-you-rather questions; both answer "
      "with a reason, then ask chat theirs.",
@@ -179,6 +189,7 @@ def read_new_lines(path, offset):
     return out, offset + end
 
 
+DECISION = re.compile(r"decision:\s*(name|ticker|mascot|slogan|lore|first post)\s*(?:is|=|:)\s*([^.!?\n]+(?:\.[A-Za-z0-9]+)*)", re.I)
 LAUGH = re.compile(r"^(?:ha(?:ha)*|heh|lol|lmao)\b[\s,.!]*", re.I)    # owner 10-31: "basta farli dire Ha prima di ogni frase"
 
 
@@ -230,8 +241,31 @@ class Guest:
             if tag.startswith("guest:"):
                 continue                              # our own lines are already in the history
             self.history.append(("SUB-01", str(e["text"])[:300]))
+            self.record_decisions(str(e["text"]), e)
             self.last_sub01, self.sub01_since_me = self.clock(), True
         self.history = self.history[-HISTORY:]
+
+    def record_decisions(self, text, entry):
+        """owner 10-31 "le loro decisioni vanno registrate": every "Decision: <step> is <choice>." SUB-01 says goes into
+        <streamer-dir>/memecoin.json ({step: {choice, utc, line}}, the latest wins) and memecoin-log.jsonl"""
+        found = DECISION.findall(text)
+        if not found:
+            return
+        d = Path(self.cfg.streamer_dir)
+        try:
+            book = json.loads((d / "memecoin.json").read_text())
+        except (OSError, ValueError):
+            book = {}
+        for step, choice in found:
+            step = step.lower().replace("  ", " ")
+            row = {"choice": choice.strip().rstrip(".!"), "utc": entry.get("start_utc"), "line": text[:300]}
+            book[step] = row
+            with open(d / "memecoin-log.jsonl", "a") as f:
+                f.write(json.dumps({"step": step, **row}) + "\n")
+            log(f"decision {step}: {row['choice'][:60]}")
+        tmp = d / ".memecoin.tmp"
+        tmp.write_text(json.dumps(book, indent=1))
+        os.replace(tmp, d / "memecoin.json")
 
     def voice_idle(self):
         try:
