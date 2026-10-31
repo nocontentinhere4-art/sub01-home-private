@@ -265,6 +265,7 @@ REQUEST_DROP_LINE_EVERY_S = 60.0        # "too many requests, one at a time" at 
 REQUEST_REFUSAL_GAP_S = 15.0            # one spoken refusal per 15 s; the rest are logged only
 TRADE_HOWTO_LINE = "Chat trades by vote: pick a coin from my list and everyone votes yes or no."
 TRADE_HOWTO_GAP_S = 600.0
+LAUGH_OPENER = re.compile(r"^(?:ha(?:ha)*|heh|lol|lmao)\b[\s,.!]*", re.I)
 THESIS_STEPS_MAX, THESIS_RUN_MAX_S = 8, 180.0   # owner 10-29: his own thesis on fomo (POST /fomo/thesis, operator only)
 THESIS_GAP_S = 3600.0                   # at most one thesis request an hour
 THESIS_TEXT = ("write your own short thesis on SUB-01 in the thesis box of the fomo.family tab (his coin page) and "
@@ -445,7 +446,7 @@ event. Level is intensity, not permission to speak: a level-1 observation may be
 to satisfy pacing. His own mistakes get one plain correction, not an apology speech.
 - Speak only about what you can see or what last_outcome verified. Never claim an action worked before last_outcome \
 says so; if it failed, do something else (see "avoid").
-- say: at most 30 words, no opener from recent_said, never a question, poll or point already in recent_said \
+- say: at most 30 words, never open with "Ha" or another laugh, no opener from recent_said, never a question, poll or point already in recent_said \
 (owner 10-31: no repeats; move the talk forward); by habit a reaction is 1-8 words and a comment 8-20 words in at \
 most two short sentences, and no sentence is long because the limit allows it. chat_replies: only to seqs listed in "chat", at most 4, each at most 40 words (12-28 by habit, not over 30), in his own voice; a group nod ("a few of you \
 said...") is fine.
@@ -4922,6 +4923,8 @@ class Agent:
         return plan
 
     def enqueue(self, text, kind, priority="normal", seqs=(), nick="", words=SAY_MAX_WORDS, ttl=25.0, hush_ok=False):
+        text = LAUGH_OPENER.sub("", text or "").strip()      # owner 10-31: "basta farli dire Ha prima di ogni frase"
+        text = text[:1].upper() + text[1:]
         if self.paused or not text:
             return False
         text = INTERNAL_WIDE.sub("", text)                    # live 10-29: "hunting for a wide video" (the prompt's word)
