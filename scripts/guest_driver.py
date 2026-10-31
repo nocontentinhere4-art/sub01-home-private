@@ -147,6 +147,14 @@ SEGMENTS = (
      "Binance hack news: give your take as a trader on the post SUB-01 reads: confirmed or rumor, what it means for "
      "people who keep coins on exchanges, a quick story of your own; no advice to buy, sell or move funds.",
      "X search: Binance hack (Top and Latest)"),
+    ("creators", "Trader YouTube",
+     "Trader YouTube reaction: on YouTube open a recent video from a memecoin or trading creator (Orangie, Brez "
+     "youtube.com/@brezscales, TJR), play it with sound, pause every minute or so (key k) to react with your guest: the "
+     "trade, the lifestyle, what you would do; ask chat whose channel to watch next. Never repeat their trade calls as "
+     "advice.",
+     "Trader YouTube reaction: react to the creator's video SUB-01 is playing like a fellow trader: respect or roast "
+     "the play, compare it to your own story in a line; no advice.",
+     "YouTube: recent videos from Orangie, Brez (@brezscales) and TJR"),
     ("fomo", "Fomo check",
      "Fomo check: on fomo.family open the Trending list, pick one coin, open it and verify it out loud with your guest: "
      "holders, top-10 holding, volume, age, socials, any red flag (one wallet holding a lot, a brand new coin with huge "
