@@ -567,7 +567,8 @@ class Guest:
             return []
         counts = {}
         for t in recent:
-            for w in set(re.findall(r"[a-z']{4,}", t.lower())) - self.STOP - {self.name.lower()}:
+            own = set(re.findall(r"[a-z']{4,}", " ".join(SEGMENTS[self.seg_i][1:4]).lower())) if self.seg_i >= 0 else set()
+            for w in set(re.findall(r"[a-z']{4,}", t.lower())) - self.STOP - own - {self.name.lower(), "coin", "coins"}:
                 counts[w] = counts.get(w, 0) + 1
         return sorted((w for w, n in counts.items() if n >= hits), key=lambda w: -counts[w])[:6]
 
