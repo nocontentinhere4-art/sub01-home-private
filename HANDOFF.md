@@ -57,6 +57,9 @@ Keep it current: update at every milestone and before ending a turn that changed
   pod runs `voice_server.py --engine remote` (env in `$P/simli-live.env`), with Kokoro am_puck for any sentence the pod
   misses. OmniVoice on the CPU pod was 4.5-19x slower than real time, so it is not an option there. Stop the voices
   pod outside live hours only when the owner asks; there is no automatic pod stop (CLAUDE.md).
+- **Voice references 03:27 UTC:** `kimchi` = the first 10 s of a clip of Kimchi himself (he agreed to join as his AI
+  avatar); `sub01` = the first 10 s of a clip of another creator, which the owner says that creator gave permission for
+  (owner 10-31: "mi e stato dato il permesso"). The earlier Voice Studio exports are kept in `/root/voices/old/`.
 
 ## NEW PLAN 2026-10-30 16:30 UTC (owner): Simli SUB-01 + Vagon PC, scheduled lives of about 10 h/day
 
