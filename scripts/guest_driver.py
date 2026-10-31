@@ -140,6 +140,13 @@ SEGMENTS = (
      "Launch prep: hype each field SUB-01 fills on pump.fun in one line (what makes BOOKI fun), never promise gains or "
      "talk price, remind chat it is for fun and can go to zero.",
      "pump.fun create form, being filled in"),
+    ("binance", "Binance hack news",
+     "News reaction on X: search X for Binance hack (Top, then Latest), read real posts out loud with the account name, "
+     "react with your guest and ask chat what they think. Say plainly what is confirmed (Binance's own account or a big "
+     "outlet) and what is only a rumor; never state a rumor as fact, never tell anyone to move, buy or sell anything.",
+     "Binance hack news: give your take as a trader on the post SUB-01 reads: confirmed or rumor, what it means for "
+     "people who keep coins on exchanges, a quick story of your own; no advice to buy, sell or move funds.",
+     "X search: Binance hack (Top and Latest)"),
     ("fomo", "Fomo check",
      "Fomo check: on fomo.family open the Trending list, pick one coin, open it and verify it out loud with your guest: "
      "holders, top-10 holding, volume, age, socials, any red flag (one wallet holding a lot, a brand new coin with huge "
