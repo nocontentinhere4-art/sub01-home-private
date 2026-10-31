@@ -506,6 +506,7 @@ class RemoteEngine(Engine):
     The token comes from a file and is sent only to that URL."""
 
     name = "remote"
+    first_chunk_chars = 70               # owner 10-31 "risponde lentamente": a long first sentence starts at a clause
 
     def __init__(self, url, voice, token_file, timeout=30.0, fallback=None):
         self.url, self.voice, self.timeout = url.rstrip("/") + "/tts", voice, timeout
@@ -523,6 +524,10 @@ class RemoteEngine(Engine):
             log(f"{error} at warmup (fallback {'on' if self.fallback else 'off'})")
 
     def synthesize(self, text):
+        try:
+            return self._remote(text)
+        except EngineError:
+            time.sleep(1.0)                  # owner 10-31: never his voice swapped for another one on a short blip
         try:
             return self._remote(text)
         except EngineError as error:
@@ -551,7 +556,20 @@ class RemoteEngine(Engine):
             raise EngineError(f"voices pod: {type(exc).__name__}") from None
         if len(pcm) < 2:
             raise EngineError("voices pod returned no audio")
-        return np.frombuffer(pcm[: len(pcm) - len(pcm) % 2], dtype="<i2").copy(), rate
+        return self.level(np.frombuffer(pcm[: len(pcm) - len(pcm) % 2], dtype="<i2")), rate
+
+    TARGET_DB, PEAK = -18.0, 0.89        # owner 10-31 "si sente bassa la sua voce": OmniVoice comes out around -31 dB RMS
+
+    @classmethod
+    def level(cls, samples):
+        """int16 speech brought to about TARGET_DB RMS (measured on the voiced part), peaks kept under PEAK."""
+        x = samples.astype(np.float32) / 32768.0
+        voiced = x[np.abs(x) > 0.003]
+        if not voiced.size:
+            return samples.copy()
+        rms, peak = float(np.sqrt(np.mean(voiced ** 2))), float(np.max(np.abs(x)))
+        gain = min(10 ** ((cls.TARGET_DB - 20 * np.log10(rms + 1e-9)) / 20), cls.PEAK / max(peak, 1e-6), 8.0)
+        return (np.clip(x * max(gain, 1.0), -1, 1) * 32767).astype(np.int16)
 
 
 class ChatterboxEngine(Engine):

@@ -23,7 +23,7 @@
 set -u
 P=/home/unreal/.sub01-private; S=$P/streamer; SRC=/home/unreal/sub01-src; ON=$SRC/tools/pod/onpod
 PY=/home/unreal/venv/bin/python; VPY=/home/unreal/voice-rt-venv/bin/python; CHROME=/usr/bin/google-chrome
-VOICE_ENGINE=kokoro; VOICE=am_puck; LEAD_S=0.4; PIP=360x202; REMOTE_URL=; ENCODER=libx264; FPS=30
+VOICE_ENGINE=kokoro; VOICE=am_puck; LEAD_S=0.4; PIP=300x168; FRAME=none; REMOTE_URL=; ENCODER=libx264; FPS=30
 [ -f $P/simli-live.env ] && . $P/simli-live.env
 
 say() { printf '%s simli-live: %s\n' "$(date -u +%H:%M:%S)" "$*"; }
@@ -72,7 +72,7 @@ up() {
   if ! alive xvfb-stage; then spawn xvfb-stage /usr/bin/Xvfb :99 -screen 0 960x540x24 -nolisten tcp -noreset; sleep 2; fi
   alive stage || spawn stage $PY $SRC/scripts/simli_stage.py --key-file $P/simli-key --face-id "$(cat $P/simli-face-id)" \
     --face-image $P/stage-face.jpg --guest-switch $S/guest-on --guest-face-file $P/kimchi-face-id --guest-voice kimchi \
-    --guest-name KIMCHI
+    --guest-name KIMCHI --frame $FRAME
   wait_http http://127.0.0.1:8842/healthz 20 || say "stage server not answering"
   alive stage-chrome || spawn stage-chrome env DISPLAY=:99 $CHROME --user-data-dir=$P/stage-chrome --no-first-run \
     --no-default-browser-check --password-store=basic --no-sandbox --kiosk --window-position=0,0 --window-size=960,540 \
@@ -80,8 +80,8 @@ up() {
     --app=http://127.0.0.1:8842/
   runuser -u unreal -- env HOME=/home/unreal STREAMER_DIR=$S bash $SRC/scripts/streamer_audio.sh up > $S/logs/audio-up.log 2>&1 || say "audio up failed (see logs/audio-up.log)"
   local voice_args="--engine $VOICE_ENGINE --voice $VOICE --fallback none --threads 4 --keep-hours 0 --simli-url http://127.0.0.1:8842/pcm --simli-lead-s $LEAD_S"
-  if [ "$VOICE_ENGINE" = remote ]; then   # the voices pod (OmniVoice on a GPU), Kokoro am_puck for a sentence it misses
-    voice_args="--engine remote --remote-url $REMOTE_URL --remote-token-file $P/voices-token --voice $VOICE --fallback kokoro --threads 4 --keep-hours 0 --simli-url http://127.0.0.1:8842/pcm --simli-lead-s $LEAD_S"
+  if [ "$VOICE_ENGINE" = remote ]; then   # the voices pod (OmniVoice on a GPU), one retry after 1 s, never another voice (owner 10-31)
+    voice_args="--engine remote --remote-url $REMOTE_URL --remote-token-file $P/voices-token --voice $VOICE --fallback none --threads 4 --keep-hours 0 --simli-url http://127.0.0.1:8842/pcm --simli-lead-s $LEAD_S"
   fi
   local env_eleven=""
   if [ "$VOICE_ENGINE" = elevenlabs ]; then env_eleven="--child-env voice=ELEVENLABS_API_KEY=$(cat $P/elevenlabs-key)"; fi

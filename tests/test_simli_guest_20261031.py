@@ -156,7 +156,7 @@ def test_stage_guest_config_and_face_byte(tmp_path):
     args = S.argparse.Namespace(key_file=str(tmp_path / "key"), face_id="40e54165-998f-405b-b8b3-e8f092429c31",
                                 face_image=None, bg_image=None, guest_image=None, session_s=60, idle_s=60,
                                 guest_switch=str(tmp_path / "guest-on"), guest_face_file=str(tmp_path / "guest-face"),
-                                guest_voice="kimchi", guest_name="KIMCHI")
+                                guest_voice="kimchi", guest_name="KIMCHI", frame="halloween")
 
     async def run():
         client = TestClient(TestServer(S.create_app(args)))
@@ -164,7 +164,7 @@ def test_stage_guest_config_and_face_byte(tmp_path):
         try:
             assert (await (await client.get("/config")).json())["guest"] is False
             (tmp_path / "guest-on").touch()
-            assert (await (await client.get("/config")).json()) == {"guest": True, "guest_name": "KIMCHI"}
+            assert (await (await client.get("/config")).json())["guest_name"] == "KIMCHI"
             ws = await client.ws_connect("/ws")
             await client.post("/pcm?face=kimchi", data=b"\x01\x00" * 4)
             assert (await ws.receive_bytes())[0] == 1

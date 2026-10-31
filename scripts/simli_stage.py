@@ -57,12 +57,26 @@ body.duo #v1{display:block}
 video{animation:breathe 7s ease-in-out infinite}
 #v1{animation-delay:-2.5s}
 video.talking{animation:talk 1.6s ease-in-out infinite}
+/* owner 10-31 "circondato in stile halloween": a glowing pumpkin-orange frame, a cobweb, pumpkins and a bat around the
+   face (drawn big: the director shows this window at about a third of its size). Off with --frame none. */
+#hw{position:fixed;inset:0;pointer-events:none;display:none}
+body.hw #hw{display:block}
+#hw .edge{position:absolute;inset:0;border:16px solid #ff7a1a;border-radius:26px;
+  box-shadow:inset 0 0 0 6px #2a0f3d,inset 0 0 38px 10px #ff7a1a88,0 0 0 4px #8b5cf6}
+#hw svg{position:absolute}
+#hw .web{top:6px;left:6px;width:190px;opacity:.85}
+#hw .web2{top:6px;right:6px;width:150px;opacity:.7;transform:scaleX(-1)}
+#hw .pk1{bottom:4px;left:14px;width:120px}
+#hw .pk2{bottom:4px;right:16px;width:96px}
+#hw .bat{top:30px;right:150px;width:120px;animation:hwbat 5s ease-in-out infinite}
+@keyframes hwbat{50%{translate:-30px 12px}}
 .tag{position:fixed;bottom:4%;font:700 26px/1 system-ui,sans-serif;color:#fff;text-shadow:0 2px 6px #000;display:none}
 body.duo .tag{display:block}
 #t0{left:6%}#t1{right:6%}
 </style></head><body><div id="bg"></div>
 <video id="v0" autoplay playsinline muted poster="/face.jpg"></video><audio id="a0" autoplay muted></audio>
 <video id="v1" autoplay playsinline muted poster="/guest.jpg"></video><audio id="a1" autoplay muted></audio>
+<div id="hw"><div class="edge"></div><svg viewBox="0 0 100 100" class="web" fill="none" stroke="#e9e4ff" stroke-width="1.6"><path d="M0 0l100 100M0 0l100 40M0 0l40 100M0 0l100 70M0 0l70 100"/><path d="M0 18q9 4 13 13 5-1 12 3 4-6 15-6"/><path d="M0 36q17 6 25 25 8-3 21 4 8-12 27-12"/><path d="M0 56q26 9 38 38 12-5 30 6 12-18 32-18"/></svg><svg viewBox="0 0 100 100" class="web2" fill="none" stroke="#e9e4ff" stroke-width="1.6"><path d="M0 0l100 100M0 0l100 40M0 0l40 100M0 0l100 70M0 0l70 100"/><path d="M0 18q9 4 13 13 5-1 12 3 4-6 15-6"/><path d="M0 36q17 6 25 25 8-3 21 4 8-12 27-12"/><path d="M0 56q26 9 38 38 12-5 30 6 12-18 32-18"/></svg><svg viewBox="0 0 64 28" class="bat"><path d="M32 8c2-3 3-4 4-7 1 3 1 5 0 7 6-1 10-5 13-8 0 6 5 9 11 9-4 2-7 6-8 11-3-3-7-4-11-2-2-3-6-4-9-4s-7 1-9 4c-4-2-8-1-11 2-1-5-4-9-8-11 6 0 11-3 11-9 3 3 7 7 13 8-1-2-1-4 0-7 1 3 2 4 4 7z" fill="#120b1c" stroke="#8b5cf6" stroke-width="1"/></svg><svg viewBox="0 0 64 56" class="pk1"><path d="M30 9c0-5 3-8 7-8l1 3c-3 0-4 2-4 5z" fill="#3f6212"/><ellipse cx="18" cy="32" rx="14" ry="20" fill="#e2580b"/><ellipse cx="46" cy="32" rx="14" ry="20" fill="#e2580b"/><ellipse cx="32" cy="32" rx="15" ry="22" fill="#ff7a1a"/><path d="M18 27l6-6 6 6zM34 27l6-6 6 6z" fill="#ffd166"/><path d="M17 37c5 7 25 7 30 0l-4 1-3 3-3-3-4 3-4-3-3 3-3-3z" fill="#ffd166"/></svg><svg viewBox="0 0 64 56" class="pk2"><path d="M30 9c0-5 3-8 7-8l1 3c-3 0-4 2-4 5z" fill="#3f6212"/><ellipse cx="18" cy="32" rx="14" ry="20" fill="#e2580b"/><ellipse cx="46" cy="32" rx="14" ry="20" fill="#e2580b"/><ellipse cx="32" cy="32" rx="15" ry="22" fill="#ff7a1a"/><path d="M18 27l6-6 6 6zM34 27l6-6 6 6z" fill="#ffd166"/><path d="M17 37c5 7 25 7 30 0l-4 1-3 3-3-3-4 3-4-3-3 3-3-3z" fill="#ffd166"/></svg></div>
 <span class="tag" id="t0">SUB-01</span><span class="tag" id="t1"></span>
 <script type="module">
 import { SimliClient } from "https://cdn.jsdelivr.net/npm/simli-client@3.2.0/+esm";
@@ -111,6 +125,7 @@ async function loop(f) {
 async function config() {               // the guest is on while the server says so (<streamer-dir>/guest-on)
   for (;;) {
     try { const c = await (await fetch("/config")).json();
+      document.body.classList.toggle("hw", c.frame === "halloween");
       faces[1].wanted = !!c.guest; document.body.classList.toggle("duo", !!c.guest); t1.textContent = c.guest_name || "";
     } catch (_) {}
     await sleep(3000);
@@ -153,7 +168,7 @@ def create_app(args):
 
     async def config(request):
         on = guest_on() and bool(guest_face())
-        return web.json_response({"guest": on, "guest_name": args.guest_name if on else ""},
+        return web.json_response({"guest": on, "guest_name": args.guest_name if on else "", "frame": args.frame},
                                  headers={"Cache-Control": "no-store"})
 
     async def index(request):
@@ -265,6 +280,7 @@ def main(argv=None):
     p.add_argument("--guest-voice", default="kimchi", help="the voice name whose audio goes to the guest's face")
     p.add_argument("--guest-name", default="KIMCHI")
     p.add_argument("--guest-image", help="the guest's still face, shown until its session is live")
+    p.add_argument("--frame", default="none", choices=("none", "halloween"), help="decoration around the face")
     p.add_argument("--session-s", type=int, default=3600, help="Simli maxSessionLength; the page reconnects after it")
     p.add_argument("--idle-s", type=int, default=600, help="Simli maxIdleTime (the audio feed is continuous anyway)")
     args = p.parse_args(argv)
