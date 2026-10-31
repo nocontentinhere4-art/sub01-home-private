@@ -264,6 +264,7 @@ REQUEST_RUN_MAX_S = 120.0               # a request in flight ends after this lo
 REQUEST_DROP_LINE_EVERY_S = 60.0        # "too many requests, one at a time" at most once per minute
 REQUEST_REFUSAL_GAP_S = 15.0            # one spoken refusal per 15 s; the rest are logged only
 TRADE_HOWTO_LINE = "Chat trades by vote: pick a coin from my list and everyone votes yes or no."
+TRADE_HOWTO_GAP_S = 600.0
 THESIS_STEPS_MAX, THESIS_RUN_MAX_S = 8, 180.0   # owner 10-29: his own thesis on fomo (POST /fomo/thesis, operator only)
 THESIS_GAP_S = 3600.0                   # at most one thesis request an hour
 THESIS_TEXT = ("write your own short thesis on SUB-01 in the thesis box of the fomo.family tab (his coin page) and "
@@ -444,7 +445,8 @@ event. Level is intensity, not permission to speak: a level-1 observation may be
 to satisfy pacing. His own mistakes get one plain correction, not an apology speech.
 - Speak only about what you can see or what last_outcome verified. Never claim an action worked before last_outcome \
 says so; if it failed, do something else (see "avoid").
-- say: at most 30 words, no opener from recent_said; by habit a reaction is 1-8 words and a comment 8-20 words in at \
+- say: at most 30 words, no opener from recent_said, never a question, poll or point already in recent_said \
+(owner 10-31: no repeats; move the talk forward); by habit a reaction is 1-8 words and a comment 8-20 words in at \
 most two short sentences, and no sentence is long because the limit allows it. chat_replies: only to seqs listed in "chat", at most 4, each at most 40 words (12-28 by habit, not over 30), in his own voice; a group nod ("a few of you \
 said...") is fine.
 - Polls: for a real 1-10 rating or vote from chat, ask it in "say" and add "poll": {"kind":"rate"} or {"kind":"vote", \
@@ -4645,6 +4647,9 @@ class Agent:
             self.last_refusal_line = now
             line = REFUSAL_LINES.get(reason, REFUSAL_LINES["not_doable"])
             if reason == "payment" and self.trading_on():     # live 10-29: "buy GTA 6 coin" got "no buying stuff"
+                if now - getattr(self, "last_trade_howto", -1e9) < TRADE_HOWTO_GAP_S:   # owner 10-31 "basta farli
+                    return                                    # ripetere le stesse robe": the how-to once per 10 min
+                self.last_trade_howto = now
                 line = TRADE_HOWTO_LINE                       # while chat can vote trades
             self.enqueue(line, "request", "normal", (req["seq"],), req["nick"], ttl=60.0, hush_ok=True)
 
@@ -5402,7 +5407,7 @@ class Agent:
                          if plan["open"] else "comment" if plan["comment"] else "reaction" if plan["reaction_speech"]
                          else "none", "reading_focus": plan["reading"], "reaction_ok": plan["reaction"],
                          "reaction_speech_needs_level": 2 if plan["reading"] else 1},
-              "memory": self.memory.lines(12), "recent_said": self.memory.said(6), "hints": hints, **self.poll_state(now)}
+              "memory": self.memory.lines(12), "recent_said": self.memory.said(12), "hints": hints, **self.poll_state(now)}
         if cur:
             st["chat_request"] = {"nick": cur["nick"] or "a viewer", "text": request_text(cur), "kind": cur["kind"],
                                   "phase": cur["phase"], "step": cur["steps"], "steps_max": self.request_budget(cur)[0],
@@ -7674,7 +7679,7 @@ class Agent:
                          if plan["open"] else "comment" if plan["comment"] else "reaction" if plan["reaction_speech"]
                          else "none", "reading_focus": plan["reading"], "reaction_ok": plan["reaction"],
                          "reaction_speech_needs_level": 2 if plan["reading"] else 1},
-              "memory": self.memory.lines(12), "recent_said": self.memory.said(6), "hints": hints, **self.poll_state(now),
+              "memory": self.memory.lines(12), "recent_said": self.memory.said(12), "hints": hints, **self.poll_state(now),
               **self.trade.state(now)}
         if cur and cur["kind"] == "deposit":
             st["deposit"] = {"show_s": TR.DEPOSIT_SHOW_S, "seconds": round(now - cur["started"])}

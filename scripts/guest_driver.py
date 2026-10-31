@@ -255,6 +255,10 @@ class Guest:
         else:
             ask = "It went quiet. Bring up a story from your memecoin journey or your lifestyle, or ask SUB-01 something."
         convo = "\n".join(f"{who}: {text}" for who, text in self.history[-HISTORY:]) or "(nothing yet)"
+        mine = [t for who, t in self.history if who == self.name][-6:]
+        if mine:                                      # owner 10-31 "basta farli ripetere le stesse robe"
+            ask += (" Say something NEW: no opening, phrase, poll or point from your own earlier lines (above); no "
+                    "\"Honestly bro\" opener, at most one chat poll every three lines.")
         seg = f"Current segment: {SEGMENTS[self.seg_i][3]}\n" if self.seg_i >= 0 else ""
         return f"{seg}Conversation so far:\n{convo}\n\n{ask}"
 
@@ -265,6 +269,19 @@ class Guest:
             model=self.cfg.model, max_tokens=600, system=system, messages=[{"role": "user", "content": user}],
             thinking={"type": "disabled"})            # one short spoken line: thinking only ate the token budget
         return "".join(getattr(b, "text", "") for b in msg.content)
+
+    def repeats(self, line):
+        """True when the line shares its opening words or most of its words with one of his last six lines"""
+        words = set(re.findall(r"[a-z']+", line.lower()))
+        head = re.findall(r"[a-z']+", line.lower())[:2]
+        for who, old in self.history[-12:]:
+            if who != self.name:
+                continue
+            ow = set(re.findall(r"[a-z']+", old.lower()))
+            if (len(head) == 2 and head == re.findall(r"[a-z']+", old.lower())[:2]) or \
+                    (words and len(words & ow) / len(words | ow) > 0.5):
+                return True
+        return False
 
     # -- one step
     def step(self):
@@ -284,6 +301,12 @@ class Guest:
         system = SYSTEM.format(name=self.name, persona=self.persona, words=MAX_WORDS)
         try:
             line = clean_line(self.llm(system, self.prompt()))
+            if self.repeats(line):                    # too close to one of his recent lines: one more try
+                line = clean_line(self.llm(system, self.prompt() + " Your last draft repeated yourself; take another angle."))
+                if self.repeats(line):
+                    log("dropped a repeat")
+                    self.last_spoke = now
+                    return None
         except Exception as exc:                      # the model is away: try again after the gap
             log(f"model failed: {type(exc).__name__}")
             self.last_spoke = now

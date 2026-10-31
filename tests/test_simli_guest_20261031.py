@@ -82,7 +82,8 @@ def test_guest_waits_while_voice_speaks_and_ignores_own_lines(tmp_path):
 
 
 def test_guest_stop_file_and_hourly_cap(tmp_path):
-    g, calls, clock, sdir = make_guest(tmp_path, replies=["hi"] * 200)
+    g, calls, clock, sdir = make_guest(tmp_path, replies=[" ".join("".join(chr(97 + (i * 7 + k * 3 + j) % 26) for j in range(5)) for k in range(5))
+                                                          for i in range(400)])
     (sdir / "guest-on").touch()
     (sdir / "STOP").touch()
     assert g.step() is None
@@ -202,3 +203,14 @@ def test_guest_hold_pins_a_segment(tmp_path):
     clock.t += G.SEGMENT_S + 1
     g.step()
     assert not json.loads((sdir / "guest-on").read_text())["segment"].startswith("Vlog")
+
+
+def test_guest_drops_repeats(tmp_path):
+    g, calls, clock, sdir = make_guest(tmp_path, replies=["Honestly bro that was wild chat", "Honestly bro that was wild chat",
+                                                          "Honestly bro that was wild chat"])
+    g.history.append(("Kimchi", "Honestly bro that was wild chat, vote 1 or 2"))
+    (sdir / "guest-on").touch()
+    g.was_on = True
+    g.sub01_since_me = True
+    assert g.step() is None
+    assert g.repeats("Honestly bro, a different thing") and not g.repeats("The jet was rented, chat.")
