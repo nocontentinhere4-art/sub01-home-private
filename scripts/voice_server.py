@@ -71,7 +71,7 @@ DEFAULT_PROMPT = "sub01-voice-reference-k07.wav"  # synthetic reference rendered
 DEFAULT_EXAGGERATION = 0.45
 DEFAULT_CFG_WEIGHT = 0.5
 VOICE_CONFIG_SCHEMA = "sub01.streamer-voice.v1"
-ENGINES = ("chatterbox", "kokoro", "elevenlabs", "mock")
+ENGINES = ("chatterbox", "kokoro", "elevenlabs", "omnivoice", "mock")
 
 OUT_RATE = 48000
 OUT_CHANNELS = 2
@@ -448,6 +448,57 @@ class KokoroEngine(Engine):
         if not chunks:
             raise EngineError("kokoro returned no audio")
         return to_int16(np.concatenate(chunks)), self.RATE
+
+
+class OmniVoiceEngine(Engine):
+    """owner 10-31 ("voice studio is free for every generation"): k2-fsa OmniVoice, the engine behind the owner's Voice
+    Studio, cloning the voice from a short reference WAV the owner made there. CPU or GPU; float32 on CPU."""
+
+    name = "omnivoice"
+    RATE = 24000
+    REPO = "k2-fsa/OmniVoice"
+
+    def __init__(self, ref_audio, ref_text=None, device="cpu", steps=None, threads=0):
+        if not Path(ref_audio).is_file():
+            raise ValueError(f"reference {ref_audio} is not a file")
+        self.ref_audio, self.ref_text = str(ref_audio), (ref_text or None)
+        self.voice = Path(ref_audio).name
+        self.device, self.steps, self.threads = device, steps, int(threads)
+        self.synth_rtf = 0.5 if device == "cpu" else 0.1
+        self._model = None
+        self._lock = threading.Lock()
+
+    def _load(self):
+        with self._lock:
+            if self._model is not None:
+                return
+            started = time.monotonic()
+            import torch
+            from omnivoice import OmniVoice
+
+            if self.threads > 0:
+                torch.set_num_threads(self.threads)
+            dtype = torch.float32 if self.device == "cpu" else torch.float16
+            self._model = OmniVoice.from_pretrained(self.REPO, device_map=self.device, dtype=dtype)
+            log(f"omnivoice loaded in {time.monotonic() - started:.1f}s (ref {self.voice}, device {self.device})")
+
+    def warmup(self):
+        self._load()
+        self.synthesize("Ready.")
+
+    def synthesize(self, text):
+        self._load()
+        kwargs = {"text": text, "ref_audio": self.ref_audio}
+        if self.ref_text:
+            kwargs["ref_text"] = self.ref_text
+        if self.steps:
+            kwargs["num_step"] = int(self.steps)
+        out = self._model.generate(**kwargs)
+        audio = out[0] if isinstance(out, (list, tuple)) else out
+        audio = np.asarray(audio.detach().cpu().numpy() if hasattr(audio, "detach") else audio, dtype=np.float32).reshape(-1)
+        if not audio.size:
+            raise EngineError("omnivoice returned no audio")
+        return to_int16(audio), self.RATE
 
 
 class ChatterboxEngine(Engine):
@@ -1541,7 +1592,13 @@ def resolve_settings(args, streamer_dir):
         speed=args.speed if args.speed is not None else 1.0, voice=args.voice, voice_prompt=None,
         exaggeration=args.exaggeration if args.exaggeration is not None else config.get("exaggeration", DEFAULT_EXAGGERATION),
         cfg_weight=args.cfg_weight if args.cfg_weight is not None else config.get("cfg_weight", DEFAULT_CFG_WEIGHT),
-        fallback_voice=None, fallback_speed=None, config=config)
+        fallback_voice=None, fallback_speed=None, config=config,
+        ref_text=getattr(args, "ref_text", None), omni_steps=getattr(args, "omni_steps", None))
+    if engine == "omnivoice":
+        settings.voice_prompt = args.voice_prompt or config.get("voice_prompt")
+        if not settings.voice_prompt:
+            raise ValueError("omnivoice needs --voice-prompt (the reference WAV)")
+        return settings
     if engine != "chatterbox":
         return settings
     prompt = args.voice_prompt or config.get("voice_prompt")
@@ -1570,6 +1627,9 @@ def build_engine(settings):
         key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
         voice = settings.voice or os.environ.get("ELEVENLABS_VOICE_ID", "").strip()
         return ElevenLabsEngine(key, voice, model_id=settings.eleven_model)
+    if settings.engine == "omnivoice":
+        return OmniVoiceEngine(settings.voice_prompt, getattr(settings, "ref_text", None), device=settings.device,
+                               steps=getattr(settings, "omni_steps", None), threads=settings.threads)
     if settings.engine == "kokoro":
         return KokoroEngine(settings.voice or DEFAULT_VOICE, speed=settings.speed, threads=settings.threads)
     primary = ChatterboxEngine(settings.voice_prompt, settings.exaggeration, settings.cfg_weight, device=settings.device)
@@ -1630,6 +1690,8 @@ def build_parser():
     parser.add_argument("--speed", type=float, help="kokoro speaking speed (0.5-2.0), default 1.0")
     parser.add_argument("--threads", type=int, default=0, help="torch CPU threads for kokoro (0 = torch default)")
     parser.add_argument("--eleven-model", default="eleven_flash_v2_5")
+    parser.add_argument("--ref-text", help="omnivoice: the reference WAV's transcript (else Whisper transcribes it)")
+    parser.add_argument("--omni-steps", type=int, help="omnivoice: diffusion steps (fewer is faster; default the model's)")
     parser.add_argument("--simli-url", help="Simli stage: also send the audio to this /pcm URL (scripts/simli_stage.py)")
     parser.add_argument("--simli-lead-s", type=float, default=0.0,
                         help="Simli stage: delay the FIFO by this much so the voice lines up with the face's lips")
