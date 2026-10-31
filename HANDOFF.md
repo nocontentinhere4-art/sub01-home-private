@@ -1,6 +1,6 @@
 # SUB-01 handoff (read first; re-injected after every compaction and at session start)
 
-Last update: 2026-10-31 03:40 UTC (PAUSED, resume steps below); 02:50 UTC (SIMLI STACK, section below); 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
+Last update: 2026-10-31 15:35 UTC (RESUMED on one server); 03:40 UTC (PAUSED, resume steps below); 02:50 UTC (SIMLI STACK, section below); 2026-10-30 16:30 UTC (NEW PLAN: Simli + PC, section below); 11:55 UTC (OFFLINE: RunPod balance ran out, see the section right below); 2026-10-29 20:25 UTC (state + tomorrow's list; same session section); 18:15 UTC (X sessions, new73); 2026-10-29 04:10 UTC (session section "2026-10-28 22:00 - 10-29 04:10"); 2026-10-28 02:00 UTC (live state + to-do section below); before that 2026-10-24 21:50 UTC (structure reviewed by Kimi: `docs/streamer/kimi/handoff-review.md`).
 Keep it current: update at every milestone and before ending a turn that changed the plan. Older history:
 `docs/HANDOFF.md` (2026-10-02 and earlier, partly stale).
 
@@ -34,6 +34,20 @@ Keep it current: update at every milestone and before ending a turn that changed
 
 
 
+
+
+## RESUMED 2026-10-31 15:35 UTC: ONE SERVER
+
+- **Owner's choice "un solo server":** everything runs on pod `6kek2pjhcg64va` (`sub01-voices-gpu-20261031b`, RTX 4090
+  secure, EU-RO-1, 0.89 $/h; the only GPU free today).
+  - The old voices pod `l0d0rgd4y47rlp` could not restart (no free GPU on its host) and was deleted.
+  - The CPU pod `28il9i6ngortgs` was deleted.
+  - Swap to a GPU of about 0.2-0.3 $/h when one is free.
+- **What runs there:**
+  - the full stack (`simli_live.sh up`, setup via `tools/pod/simli-setup/setup-base.sh` + `setup-voice.sh`);
+  - the TTS server on 127.0.0.1:8000 (`REMOTE_URL=http://127.0.0.1:8000`), about 1.2 s for 1.8 s of speech under load.
+- **NVENC:** refused in this container ("unsupported device"); the director falls back to libx264. CPU is about 28% busy.
+- **Still waiting on the owner:** the keys (in `/root/sub01-keys/` on this pod) and an OK for the two tunnels.
 
 ## PAUSED 2026-10-31 03:40 UTC (owner: "ferma tutto e continuiamo domani") - RESUME HERE
 
