@@ -15,12 +15,13 @@
 #   simli_live.sh down     everything above stopped (the keys and the private dir stay)
 #   simli_live.sh status   one line per piece
 #
-# Config: $P/simli-face-id (the SUB-01 face from app.simli.com), optional $P/simli-live.env (VOICE_ENGINE=kokoro|elevenlabs,
-# VOICE=am_puck or an ElevenLabs voice id, LEAD_S=0.4, PIP=480x270).
+# Config: $P/simli-face-id (the SUB-01 face from app.simli.com), optional $P/simli-live.env (VOICE_ENGINE=kokoro|remote|
+# elevenlabs, VOICE=am_puck / sub01 (remote) / an ElevenLabs voice id, REMOTE_URL=https://<voices pod>-8000.proxy.runpod.net,
+# LEAD_S=0.4, PIP=480x270). remote also needs $P/voices-token (the voices pod's token).
 set -u
 P=/home/unreal/.sub01-private; S=$P/streamer; SRC=/home/unreal/sub01-src; ON=$SRC/tools/pod/onpod
 PY=/home/unreal/venv/bin/python; VPY=/home/unreal/voice-rt-venv/bin/python; CHROME=/usr/bin/google-chrome
-VOICE_ENGINE=kokoro; VOICE=am_puck; LEAD_S=0.4; PIP=480x270
+VOICE_ENGINE=kokoro; VOICE=am_puck; LEAD_S=0.4; PIP=480x270; REMOTE_URL=
 [ -f $P/simli-live.env ] && . $P/simli-live.env
 
 say() { printf '%s simli-live: %s\n' "$(date -u +%H:%M:%S)" "$*"; }
@@ -76,6 +77,9 @@ up() {
     --app=http://127.0.0.1:8842/
   runuser -u unreal -- env HOME=/home/unreal STREAMER_DIR=$S bash $SRC/scripts/streamer_audio.sh up > $S/logs/audio-up.log 2>&1 || say "audio up failed (see logs/audio-up.log)"
   local voice_args="--engine $VOICE_ENGINE --voice $VOICE --fallback none --threads 4 --keep-hours 0 --simli-url http://127.0.0.1:8842/pcm --simli-lead-s $LEAD_S"
+  if [ "$VOICE_ENGINE" = remote ]; then   # the voices pod (OmniVoice on a GPU), Kokoro am_puck for a sentence it misses
+    voice_args="--engine remote --remote-url $REMOTE_URL --remote-token-file $P/voices-token --voice $VOICE --fallback kokoro --threads 4 --keep-hours 0 --simli-url http://127.0.0.1:8842/pcm --simli-lead-s $LEAD_S"
+  fi
   local env_eleven=""
   if [ "$VOICE_ENGINE" = elevenlabs ]; then env_eleven="--child-env voice=ELEVENLABS_API_KEY=$(cat $P/elevenlabs-key)"; fi
   if ! runuser -u unreal -- env HOME=/home/unreal python3 $SRC/scripts/streamer_up.py status --streamer-dir $S --token-file $P/operator-token >/dev/null 2>&1; then

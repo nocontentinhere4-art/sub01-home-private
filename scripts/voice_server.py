@@ -71,7 +71,7 @@ DEFAULT_PROMPT = "sub01-voice-reference-k07.wav"  # synthetic reference rendered
 DEFAULT_EXAGGERATION = 0.45
 DEFAULT_CFG_WEIGHT = 0.5
 VOICE_CONFIG_SCHEMA = "sub01.streamer-voice.v1"
-ENGINES = ("chatterbox", "kokoro", "elevenlabs", "omnivoice", "mock")
+ENGINES = ("chatterbox", "kokoro", "elevenlabs", "omnivoice", "remote", "mock")
 
 OUT_RATE = 48000
 OUT_CHANNELS = 2
@@ -499,6 +499,55 @@ class OmniVoiceEngine(Engine):
         if not audio.size:
             raise EngineError("omnivoice returned no audio")
         return to_int16(audio), self.RATE
+
+
+class RemoteEngine(Engine):
+    """owner 10-31: the voices pod (scripts/tts_gpu_server.py, OmniVoice on a GPU) through the RunPod HTTPS proxy.
+    The token comes from a file and is sent only to that URL."""
+
+    name = "remote"
+
+    def __init__(self, url, voice, token_file, timeout=30.0, fallback=None):
+        self.url, self.voice, self.timeout = url.rstrip("/") + "/tts", voice, timeout
+        self.token = Path(token_file).read_text().strip()
+        self.synth_rtf = 0.3
+        self.fallback = fallback          # used for one sentence when the pod does not answer (Kokoro on CPU)
+        self._last_warning = 0.0
+
+    def warmup(self):
+        if self.fallback is not None:
+            self.fallback.warmup()
+        try:
+            self._remote("Ready.")
+        except EngineError as error:
+            log(f"{error} at warmup (fallback {'on' if self.fallback else 'off'})")
+
+    def synthesize(self, text):
+        try:
+            return self._remote(text)
+        except EngineError as error:
+            if self.fallback is None:
+                raise
+            if time.monotonic() - self._last_warning > 60:
+                self._last_warning = time.monotonic()
+                log(f"{error}: this sentence uses the fallback voice")
+            return self.fallback.synthesize(text)
+
+    def _remote(self, text):
+        import urllib.error
+        import urllib.request
+        body = json.dumps({"text": text, "voice": self.voice}).encode()
+        req = urllib.request.Request(self.url, data=body, method="POST", headers={
+            "Content-Type": "application/json", "X-Admin-Token": self.token, "User-Agent": "sub01-voice/1"})
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as r:
+                rate = int(r.headers.get("X-Sample-Rate") or 24000)
+                pcm = r.read()
+        except (urllib.error.URLError, OSError, ValueError) as exc:
+            raise EngineError(f"voices pod: {type(exc).__name__}") from None
+        if len(pcm) < 2:
+            raise EngineError("voices pod returned no audio")
+        return np.frombuffer(pcm[: len(pcm) - len(pcm) % 2], dtype="<i2").copy(), rate
 
 
 class ChatterboxEngine(Engine):
@@ -1593,7 +1642,14 @@ def resolve_settings(args, streamer_dir):
         exaggeration=args.exaggeration if args.exaggeration is not None else config.get("exaggeration", DEFAULT_EXAGGERATION),
         cfg_weight=args.cfg_weight if args.cfg_weight is not None else config.get("cfg_weight", DEFAULT_CFG_WEIGHT),
         fallback_voice=None, fallback_speed=None, config=config,
-        ref_text=getattr(args, "ref_text", None), omni_steps=getattr(args, "omni_steps", None))
+        ref_text=getattr(args, "ref_text", None), omni_steps=getattr(args, "omni_steps", None),
+        remote_url=getattr(args, "remote_url", None), remote_token_file=getattr(args, "remote_token_file", None))
+    if engine == "remote":
+        if not settings.remote_url or not settings.remote_token_file:
+            raise ValueError("remote needs --remote-url and --remote-token-file")
+        if args.fallback != "none":
+            settings.fallback_voice = DEFAULT_VOICE             # Kokoro on CPU while the voices pod is away
+        return settings
     if engine == "omnivoice":
         settings.voice_prompt = args.voice_prompt or config.get("voice_prompt")
         if not settings.voice_prompt:
@@ -1627,6 +1683,10 @@ def build_engine(settings):
         key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
         voice = settings.voice or os.environ.get("ELEVENLABS_VOICE_ID", "").strip()
         return ElevenLabsEngine(key, voice, model_id=settings.eleven_model)
+    if settings.engine == "remote":
+        fallback = (KokoroEngine(settings.fallback_voice, speed=settings.speed, threads=settings.threads)
+                    if settings.fallback_voice else None)
+        return RemoteEngine(settings.remote_url, settings.voice or "sub01", settings.remote_token_file, fallback=fallback)
     if settings.engine == "omnivoice":
         return OmniVoiceEngine(settings.voice_prompt, getattr(settings, "ref_text", None), device=settings.device,
                                steps=getattr(settings, "omni_steps", None), threads=settings.threads)
@@ -1690,6 +1750,8 @@ def build_parser():
     parser.add_argument("--speed", type=float, help="kokoro speaking speed (0.5-2.0), default 1.0")
     parser.add_argument("--threads", type=int, default=0, help="torch CPU threads for kokoro (0 = torch default)")
     parser.add_argument("--eleven-model", default="eleven_flash_v2_5")
+    parser.add_argument("--remote-url", help="remote: the voices pod (scripts/tts_gpu_server.py), e.g. https://<pod>-8000.proxy.runpod.net")
+    parser.add_argument("--remote-token-file", help="remote: file holding the voices pod's token")
     parser.add_argument("--ref-text", help="omnivoice: the reference WAV's transcript (else Whisper transcribes it)")
     parser.add_argument("--omni-steps", type=int, help="omnivoice: diffusion steps (fewer is faster; default the model's)")
     parser.add_argument("--simli-url", help="Simli stage: also send the audio to this /pcm URL (scripts/simli_stage.py)")
