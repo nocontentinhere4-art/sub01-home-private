@@ -61,7 +61,7 @@ def test_guest_hello_then_replies_to_sub01_and_feeds_the_agent(tmp_path):
     speak = [c for c in calls if c[1].endswith("/speak")][-1]
     assert speak[2]["tag"] == "guest:kimchi"
     chat = [c for c in calls if c[1].endswith("/chat")][-1]
-    assert chat[2]["nick"] == "Kimchi" and "your guest on stream" in chat[2]["text"]
+    assert chat[2]["nick"] == "Kimchi" and chat[2]["text"].startswith("[guest Kimchi says]")
     clock.t += 5
     say(sdir, "Kimchi, what are you dressed as?")
     assert g.step() is None                          # the gap since his last line

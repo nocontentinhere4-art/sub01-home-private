@@ -21,7 +21,7 @@ import urllib.request
 from pathlib import Path
 
 MODEL = "claude-haiku-5-5"
-GAP_S, QUIET_S, LINES_PER_HOUR, MAX_WORDS = 14.0, 45.0, 90, 40
+GAP_S, QUIET_S, LINES_PER_HOUR, MAX_WORDS = 14.0, 45.0, 90, 28   # 28 words: about 8 s, so SUB-01 answers chat sooner
 HISTORY = 10
 PERSONA = {
     "kimchi": ("Kimchi", "Kimchi (kimchi1x on X), a Solana memecoin trader who started in April 2024 and scanned charts "
@@ -190,7 +190,7 @@ class Guest:
             return None
         try:                                          # SUB-01 hears him as a chat line from his guest
             self.call("POST", self.cfg.agent_url + "/chat",
-                      {"text": f"[{self.name}, your guest on stream, says out loud] {line}"[:280], "nick": self.name},
+                      {"text": f"[guest {self.name} says] {line}"[:200], "nick": self.name},
                       headers={"X-Admin-Token": self.cfg.token})
         except (urllib.error.URLError, OSError, ValueError) as exc:
             log(f"agent refused: {type(exc).__name__}")
