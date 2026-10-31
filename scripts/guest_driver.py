@@ -128,8 +128,8 @@ SEGMENTS = (
      "the next step. Show mascot ideas on Google Images. It is a creative concept for the show: never launch, buy or price "
      "it, no promises of gains.",
      "Building a memecoin with SUB-01, one step at a time (name, ticker, mascot, slogan, lore, first post): pitch your "
-     "option for the step he is on, argue for it with your memecoin instinct, react to chat's votes, agree when he locks "
-     "it. A creative concept only: never talk about launching, buying, price or gains.",
+     "option for the step that is NOW ON in one line, then push SUB-01 to lock it right away; never stall waiting for "
+     "chat. A creative concept only: never talk about launching, buying, price or gains.",
      "Google Images for mascot ideas; the fomo.family trending list for inspiration"),
     ("wyr", "Would you rather",
      "Would you rather: take turns with your guest asking crypto and trader-life would-you-rather questions; both answer "
@@ -239,6 +239,7 @@ class Guest:
         for e in entries:
             tag = str(e.get("tag") or "")
             if tag.startswith("guest:"):
+                self.record_decisions(str(e["text"]), e)
                 continue                              # our own lines are already in the history
             self.history.append(("SUB-01", str(e["text"])[:300]))
             self.record_decisions(str(e["text"]), e)
@@ -266,6 +267,36 @@ class Guest:
         tmp = d / ".memecoin.tmp"
         tmp.write_text(json.dumps(book, indent=1))
         os.replace(tmp, d / "memecoin.json")
+
+    BUILD_STEPS = ("name", "ticker", "mascot", "slogan", "lore", "first post")
+
+    def build_progress(self):
+        """owner 10-31 "si ripetono troppo, falli procedere": while the memecoin is being built, guest-on's segment says
+        what is locked and which step is next, with a hard rule to lock it fast; the guest's prompt gets the same"""
+        if self.seg_i < 0 or SEGMENTS[self.seg_i][0] != "build":
+            return None
+        d = Path(self.cfg.streamer_dir)
+        try:
+            book = json.loads((d / "memecoin.json").read_text())
+        except (OSError, ValueError):
+            book = {}
+        nxt = next((st for st in self.BUILD_STEPS if st not in book), None)
+        done = ", ".join(f"{k}: {book[k]['choice']}" for k in self.BUILD_STEPS if k in book) or "nothing yet"
+        note = (f" Locked so far: {done}. " + (f"NOW ON: {nxt}. Lock it within your next two lines: if chat has not "
+                f"voted, you two decide on the spot and say \"Decision: {nxt} is ...\"; never ask chat twice for the "
+                f"same step." if nxt else "All six are locked: recap the whole coin in one hype line, then wrap up."))
+        if note != getattr(self, "_build_note", None):
+            self._build_note = note
+            path = d / "guest-on"
+            try:
+                g = json.loads(path.read_text() or "{}")
+                g["segment"] = f"{SEGMENTS[self.seg_i][1]}: {SEGMENTS[self.seg_i][2]}{note}"
+                tmp = d / ".guest-on.tmp"
+                tmp.write_text(json.dumps(g))
+                os.replace(tmp, path)
+            except (OSError, ValueError):
+                pass
+        return note
 
     def voice_idle(self):
         try:
@@ -336,7 +367,7 @@ class Guest:
         if mine:                                      # owner 10-31 "basta farli ripetere le stesse robe"
             ask += (" Say something NEW: no opening, phrase, poll or point from your own earlier lines (above); no "
                     "\"Honestly bro\" opener, at most one chat poll every three lines.")
-        seg = f"Current segment: {SEGMENTS[self.seg_i][3]}\n" if self.seg_i >= 0 else ""
+        seg = f"Current segment: {SEGMENTS[self.seg_i][3]}{self.build_progress() or ''}\n" if self.seg_i >= 0 else ""
         return f"{seg}Conversation so far:\n{convo}\n\n{ask}"
 
     def _claude(self, system, user):
