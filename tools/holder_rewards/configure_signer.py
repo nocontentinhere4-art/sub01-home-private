@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Import a Phantom Solana private key locally. Never activates payments."""
+import argparse
+import hashlib
+import hmac
+import warnings
 import getpass
 import json
 import os
@@ -33,7 +37,44 @@ def save_signer(encoded, target):
     return str(key.pubkey())
 
 
+def slip10_seed(seed, indices):
+    """SLIP-0010 Ed25519 hardened derivation; verified against published vectors."""
+    node = hmac.new(b'ed25519 seed', seed, hashlib.sha512).digest()
+    for index in indices:
+        require(type(index) is int and 0 <= index < 2**31, 'Invalid derivation index')
+        node = hmac.new(node[32:], b'\0' + node[:32] + (index + 2**31).to_bytes(4, 'big'), hashlib.sha512).digest()
+    return node[:32]
+
+
+def recovery_key(words):
+    from mnemonic import Mnemonic
+    phrase = ' '.join(words.strip().split())
+    require(len(phrase.split()) in (12, 15, 18, 21, 24), 'Invalid recovery phrase length')
+    try:
+        language = Mnemonic.detect_language(phrase)
+        require(Mnemonic(language).check(phrase), 'Invalid recovery phrase checksum')
+    except Exception:
+        raise ValueError('Invalid recovery phrase; no file written.') from None
+    seed = Mnemonic.to_seed(phrase, passphrase='')
+    # Common Solana wallet paths. Match the exact expected public key, never guess.
+    paths = [(44, 501)]
+    for index in range(100):
+        paths.extend([(44, 501, index, 0), (44, 501, index), (44, 501, 0, index)])
+    for path in dict.fromkeys(paths):
+        key = Keypair.from_seed(slip10_seed(seed, path))
+        if str(key.pubkey()) == DEV:
+            return str(key)
+    legacy = Keypair.from_seed(seed[:32])
+    if str(legacy.pubkey()) == DEV:
+        return str(legacy)
+    raise ValueError('Dev wallet not found; no file written. Imported accounts or a separate passphrase may use a different seed.')
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--recovery', action='store_true')
+    args = parser.parse_args()
+    warnings.simplefilter('error', getpass.GetPassWarning)
     os.umask(0o077)
     require(sys.stdin.isatty(), 'Run this yourself in a local Terminal, not through chat or a pipe.')
     root = Path.home() / 'Library/Application Support/SUB01Rewards'
@@ -41,10 +82,16 @@ def main():
     print('SUB-01 local signer setup — no transactions will be sent.')
     print('This gives the local service full signing access to the DEV wallet.')
     print('Expected wallet: ' + DEV)
-    print('Enter only the Solana PRIVATE KEY exported from Phantom, never the recovery phrase.')
+    if args.recovery:
+        print('Recovery mode: enter your recovery words ONLY at the hidden prompt below.')
+        print('This command makes no network calls and saves only the matching DEV private key, not the recovery words.')
+    else:
+        print('Enter only the Solana PRIVATE KEY exported from Phantom, never the recovery phrase.')
     print('Input is hidden. Do not paste it into a command line or chat.')
-    secret = getpass.getpass('Private key (hidden): ')
+    secret = getpass.getpass('Recovery words (hidden): ' if args.recovery else 'Private key (hidden): ')
     try:
+        if args.recovery:
+            secret = recovery_key(secret)
         wallet = save_signer(secret, config['keypair_file'])
     finally:
         secret = None
