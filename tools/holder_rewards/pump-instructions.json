@@ -1,0 +1,215 @@
+{
+  "pump": {
+    "address": "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+    "instructions": {
+      "collect_creator_fee_v2": {
+        "discriminator": [
+          207,
+          17,
+          138,
+          242,
+          4,
+          34,
+          19,
+          56
+        ],
+        "accounts": [
+          {
+            "name": "creator",
+            "writable": true
+          },
+          {
+            "name": "creator_token_account",
+            "writable": true
+          },
+          {
+            "name": "creator_vault",
+            "writable": true
+          },
+          {
+            "name": "creator_vault_token_account",
+            "writable": true
+          },
+          {
+            "name": "quote_mint"
+          },
+          {
+            "name": "quote_token_program"
+          },
+          {
+            "name": "associated_token_program"
+          },
+          {
+            "name": "system_program"
+          },
+          {
+            "name": "event_authority"
+          },
+          {
+            "name": "program"
+          }
+        ]
+      },
+      "sweep_creator_fee": {
+        "discriminator": [
+          32,
+          246,
+          191,
+          52,
+          8,
+          201,
+          73,
+          186
+        ],
+        "accounts": [
+          {
+            "name": "payer",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "global"
+          },
+          {
+            "name": "base_mint"
+          },
+          {
+            "name": "quote_mint"
+          },
+          {
+            "name": "quote_token_program"
+          },
+          {
+            "name": "associated_token_program"
+          },
+          {
+            "name": "system_program"
+          },
+          {
+            "name": "bonding_curve",
+            "writable": true
+          },
+          {
+            "name": "associated_quote_bonding_curve",
+            "writable": true
+          },
+          {
+            "name": "recipient",
+            "writable": true
+          },
+          {
+            "name": "associated_quote_recipient",
+            "writable": true
+          },
+          {
+            "name": "event_authority"
+          },
+          {
+            "name": "program"
+          }
+        ]
+      }
+    }
+  },
+  "pump_amm": {
+    "address": "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+    "instructions": {
+      "collect_coin_creator_fee": {
+        "discriminator": [
+          160,
+          57,
+          89,
+          42,
+          181,
+          139,
+          43,
+          66
+        ],
+        "accounts": [
+          {
+            "name": "quote_mint"
+          },
+          {
+            "name": "quote_token_program"
+          },
+          {
+            "name": "coin_creator"
+          },
+          {
+            "name": "coin_creator_vault_authority"
+          },
+          {
+            "name": "coin_creator_vault_ata",
+            "writable": true
+          },
+          {
+            "name": "coin_creator_token_account",
+            "writable": true
+          },
+          {
+            "name": "event_authority"
+          },
+          {
+            "name": "program"
+          }
+        ]
+      },
+      "sweep_creator_fee": {
+        "discriminator": [
+          32,
+          246,
+          191,
+          52,
+          8,
+          201,
+          73,
+          186
+        ],
+        "accounts": [
+          {
+            "name": "payer",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "global_config"
+          },
+          {
+            "name": "pool",
+            "writable": true
+          },
+          {
+            "name": "quote_mint"
+          },
+          {
+            "name": "quote_token_program"
+          },
+          {
+            "name": "pool_quote_token_account",
+            "writable": true
+          },
+          {
+            "name": "recipient"
+          },
+          {
+            "name": "recipient_token_account",
+            "writable": true
+          },
+          {
+            "name": "system_program"
+          },
+          {
+            "name": "associated_token_program"
+          },
+          {
+            "name": "event_authority"
+          },
+          {
+            "name": "program"
+          }
+        ]
+      }
+    }
+  },
+  "source_commit": "639b87fb45c3adeffa6f7c4a1bf0cb85e392bf22"
+}

@@ -1,0 +1,94 @@
+SUB-01 AUTOMATIC WORKER — 2 November 2026
+
+Implemented: fee claim/sweep, fresh holder enumeration, allocation, local signing,
+durable submission and finalized reconciliation. DEFAULT DISABLED FOR PAYMENTS.
+No real transaction has been signed or sent during development.
+
+POLICY
+5% retained in HMPUiULXumamWDhuoKap6ty2hQ7V7GQwi8PZ7pGx6STQ;
+95% credited proportionally to holders worth >= $20 at each snapshot.
+New holders participate in subsequent snapshots. Owner confirmed this wallet's
+creator vaults contain fees ONLY for SUB-01. Revoke that assumption before using
+this wallet as creator for another token. Dev/pool/off-curve addresses excluded.
+Earned credits survive subsequent sales. Below 0.001 SOL accumulates.
+Check interval: 15 minutes. Pending transactions checked every 20 seconds.
+Default payout ceiling: 1 SOL per rolling 24 hours, including pending payouts.
+This is an adjustable initial operational limit, not a change to the 95% share;
+unpaid credits remain owed. Fees below 0.001 SOL wait before claiming.
+Network costs/rent are funded separately. Keep at least 0.02 SOL working capital
+in addition to unpaid holder liabilities (0.01 reserve + up to 0.01 for claims).
+The 5% is gross, not net of network costs.
+
+PRICE
+Finalized PumpSwap pool and both reserves are fetched together. The price uses
+signed virtual quote reserves, including negative values. Multiply by CoinGecko
+SOL/USD with provider last_updated_at <=120 seconds; require finalized slot time
+<=120 seconds and Dexscreener pool price within 10%. Unknown/changed creator,
+unsupported pool state, incomplete holder list or stale prices stop the cycle.
+Prices in this thin market can still be manipulated; this is not a TWAP oracle.
+
+CLAIMS
+Pinned official Pump IDL instruction subset at source commit
+639b87fb45c3adeffa6f7c4a1bf0cb85e392bf22. Sweeps precede collection.
+Pump: native SOL creator vault -> dev.
+PumpSwap: creator vault -> new temporary wrapped SOL account owned by dev ->
+close to dev within the SAME atomic transaction. The temporary account key exists
+only in memory while signing. Existing wrapped SOL accounts are not touched.
+Only finalized inner transfers from the exact creator vault are credited.
+Rent refunds and unrelated deposits are not counted as fee income.
+Only transactions generated and journaled by this worker are imported: manually
+claimed historical income is not silently redistributed.
+
+DURABILITY / LIMITS
+SQLite FULL synchronous + single process lock. Signed bytes and signature are
+committed BEFORE submission. Timeout retries retransmit identical signed bytes.
+Successful finalized transactions only. Crash after receipt/settlement but before
+outbox acknowledgement is idempotent. Never delete or restore an older live DB
+without reconciling every potentially broadcast signature.
+An expired signature missing from RPC history is ambiguous: the worker STOPS,
+retains reservations, and requires reconciliation. It does not automatically
+replace the blockhash. Finalized failures also need operator review. Thus routine
+operation is automatic; ambiguous failures intentionally require intervention.
+STOP file prevents new broadcasts, but cannot undo a transaction already sent.
+
+MAC INSTALLATION
+Python 3.10+, dependencies in requirements.txt. Use a private application directory
+outside git, with a virtual environment. Install in read-only mode first:
+  python install_mac.py --config /PRIVATE/config.json
+This registers live.subzerone.rewards in ~/Library/LaunchAgents. It checks every
+15 minutes while this Mac/user session is available. It does not prevent sleep.
+Check state/status.json and state/worker.log. Logs contain public amounts/status,
+not endpoint URLs or keys. Retain/rotate these locally as needed.
+
+OWNER ACTIVATION (NOT PERFORMED BY THE AGENT)
+1. Fund separate working capital; review the exclusions, limits and config.
+2. Configure the DEV signing key locally as a Solana CLI JSON keypair, owned by you,
+   permissions 0600. NEVER paste it into chat, source control, shell arguments or
+   logs. Do not export it through an untrusted webpage. An unattended local signer
+   has full authority over that dev wallet; application limits are not on-chain
+   restrictions. A dedicated restricted signer would be safer than the dev key.
+3. Put its absolute path in keypair_file. Set enabled=true in your private config.
+4. Run yourself using the installed virtual environment:
+   python install_mac.py --config /PRIVATE/config.json --live
+The installer verifies the signer address; the worker simulates every transaction
+before journaling/sending. No Phantom popup can provide unattended signatures.
+5. Verify first finalized claim/payout and public signatures before raising caps.
+
+STOP
+Create the configured STOP file, then:
+  launchctl bootout gui/$(id -u)/live.subzerone.rewards
+Stop does not cancel transactions already broadcast. Preserve the whole state
+folder, including SQLite sidecars. Do not launch the old manual CLI against the
+live database while the worker is active. Do not use two machines with copied DBs.
+
+VALIDATION
+38 unit tests initially passing (see final handoff for current count).
+Read-only mainnet testing exercises prices, holder enumeration and unsigned claim
+simulation. A successful simulation does not substitute for a real signed end-to-
+end acceptance test. No independent audit. Live activation remains outstanding.
+
+TECHNICAL REFERENCES
+https://github.com/pump-fun/pump-public-docs/blob/639b87fb45c3adeffa6f7c4a1bf0cb85e392bf22/docs/instructions/COLLECT_CREATOR_FEE.md
+https://github.com/pump-fun/pump-public-docs/blob/639b87fb45c3adeffa6f7c4a1bf0cb85e392bf22/docs/instructions/SWEEP_FEES.md
+https://github.com/pump-fun/pump-public-docs/blob/639b87fb45c3adeffa6f7c4a1bf0cb85e392bf22/docs/NEGATIVE_VIRTUAL_QUOTE_RESERVES.md
+https://docs.coingecko.com/reference/simple-price

@@ -1,0 +1,18 @@
+{
+  "enabled": false,
+  "sole_creator_token_confirmed": true,
+  "interval_seconds": 900,
+  "state_dir": "/PRIVATE/sub01-rewards/state",
+  "rpc_file": "/PRIVATE/sub01-rewards/rpc.txt",
+  "keypair_file": "/PRIVATE/sub01-rewards/dev-keypair.json",
+  "stop_file": "/PRIVATE/sub01-rewards/STOP",
+  "minimum_claim_lamports": 1000000,
+  "minimum_payout_lamports": 1000000,
+  "network_reserve_lamports": 10000000,
+  "daily_limit_lamports": 1000000000,
+  "excluded": [
+    "HMPUiULXumamWDhuoKap6ty2hQ7V7GQwi8PZ7pGx6STQ",
+    "11111111111111111111111111111111",
+    "4gAj3MmDM2yk41frM7twYTUazwVsUzhjH9ZNdW81qSpp"
+  ]
+}

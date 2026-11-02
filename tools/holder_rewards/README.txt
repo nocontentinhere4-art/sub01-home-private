@@ -1,3 +1,10 @@
+AUTOMATIC WORKER UPDATE — see AUTOMATIC.txt and automatic.example.json.
+The original manual CLI below remains available separately. The new automatic
+worker implements claiming/signing/scheduling but real payments are disabled
+until the owner configures the local signer and activates live mode.
+
+--- ORIGINAL MANUAL PROTOTYPE DOCUMENTATION ---
+
 SUB-01 REWARDS — operator-assisted version, 2 November 2026
 
 STATUS
