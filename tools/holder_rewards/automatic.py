@@ -208,7 +208,7 @@ class Worker:
             unpaid=self.l.db.execute('SELECT MAX(total) FROM (SELECT SUM(amount) total FROM (SELECT wallet,amount FROM credits UNION ALL SELECT wallet,-amount FROM debits) GROUP BY wallet)').fetchone()[0]
             if unpaid and unpaid>=self.c['minimum_payout_lamports']:reserved=(self.l.plan(self.c['minimum_payout_lamports'])['plan_id'],)
         if reserved:
-            pid=reserved[0];require(not self.l.db.execute('SELECT 1 FROM outbox WHERE plan_id=?',(pid,)).fetchone(),'Existing payout attempt requires reconciliation')
+            pid=reserved[0];require(not self.l.db.execute("SELECT 1 FROM outbox WHERE plan_id=? AND state!='expired'",(pid,)).fetchone(),'Existing payout attempt requires reconciliation')
             prepared=prepare(self.l,self.rpc,pid,self.c['network_reserve_lamports'])
             require(self.rpc.call('getBlockHeight',[{'commitment':'finalized'}])<=prepared['last_valid_block_height'],'Prepared payout expired; review required')
             body=json.loads(self.l.db.execute('SELECT body FROM plans WHERE id=?',(pid,)).fetchone()[0])
