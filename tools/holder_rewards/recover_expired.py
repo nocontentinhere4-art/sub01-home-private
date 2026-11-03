@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only expired-payout reconciliation; --apply is an owner-run recovery step."""
+"""Read-only expired-transaction reconciliation; --apply is an owner-run recovery step."""
 import argparse, base64, fcntl, json, os, sqlite3, time
 from pathlib import Path
 from solders.transaction import Transaction
@@ -42,17 +42,22 @@ def proof(rpcs,row):
     results=[check_source(rpc,sig,str(tx.message.recent_blockhash),height,created) for rpc in rpcs]
     return {'signature':sig,'plan_id':pid,'amount_lamports':amount,'checked_at':int(time.time()),'sources':results,'basis':'Expired blockhash; signature absent from transaction and signature endpoints and finalized dev address history on configured and public RPCs.'}
 
-def apply_recovery(db,row,evidence):
+def apply_recovery(db,row,evidence,kind="payout"):
     sig,pid,wire,height,created,amount=row
     db.execute('BEGIN IMMEDIATE')
     try:
-        current=db.execute("SELECT signature,plan_id,wire,last_height,created,amount FROM outbox WHERE state='pending' AND kind='payout'").fetchall()
+        current=db.execute("SELECT signature,plan_id,wire,last_height,created,amount FROM outbox WHERE state='pending' AND kind=?",(kind,)).fetchall()
         require(current==[tuple(row)],'Pending state changed; recheck')
-        require(db.execute('SELECT status FROM plans WHERE id=?',(pid,)).fetchone()==('reserved',),'Plan is not reserved')
+        require(kind in ('payout','amm','pump'),'Unsupported transaction kind')
+        if kind=='payout':
+            require(db.execute('SELECT status FROM plans WHERE id=?',(pid,)).fetchone()==('reserved',),'Plan is not reserved')
+        else:
+            require(pid is None,'Claim unexpectedly refers to a payout plan')
+            require(db.execute('SELECT 1 FROM receipts WHERE signature=?',(sig,)).fetchone() is None,'Claim already recorded; reconcile instead')
         db.execute('CREATE TABLE IF NOT EXISTS recovery_audit(signature TEXT PRIMARY KEY,evidence TEXT NOT NULL)')
         db.execute('INSERT INTO recovery_audit VALUES(?,?)',(sig,canonical(evidence)))
         db.execute("UPDATE outbox SET state='expired' WHERE signature=? AND state='pending'",(sig,))
-        db.execute('DELETE FROM prepared WHERE plan_id=?',(pid,))
+        if kind=='payout':db.execute('DELETE FROM prepared WHERE plan_id=?',(pid,))
         # Keep every original debit/reservation: the same plan will be prepared again.
         db.commit()
     except Exception:db.rollback();raise
@@ -65,11 +70,14 @@ def main():
         lock=(state/'worker.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     path=state/'live.sqlite'
     db=sqlite3.connect(path if args.apply else path.as_uri()+'?mode=ro',uri=not args.apply,isolation_level=None)
-    rows=db.execute("SELECT signature,plan_id,wire,last_height,created,amount FROM outbox WHERE state='pending' AND kind='payout'").fetchall()
+    pending=db.execute("SELECT kind,signature,plan_id,wire,last_height,created,amount FROM outbox WHERE state='pending'").fetchall()
+    require(len(pending)==1,'Expected exactly one pending transaction; no changes made')
+    kind=pending[0][0];require(kind in ('payout','amm','pump'),'Unsupported pending kind')
+    rows=[pending[0][1:]]
     require(len(rows)==1,'Expected exactly one pending payout; no changes made')
     url=private_file(c['rpc_file']);require(url.rstrip('/')!=PUBLIC_RPC,'Independent RPC required')
-    evidence=proof([RPC(url),RPC(PUBLIC_RPC)],rows[0]);evidence['applied']=False
-    if args.apply:apply_recovery(db,rows[0],evidence);evidence['applied']=True
+    evidence=proof([RPC(url),RPC(PUBLIC_RPC)],rows[0]);evidence['applied']=False;evidence['kind']=kind
+    if args.apply:apply_recovery(db,rows[0],evidence,kind);evidence['applied']=True
     if args.out:Path(args.out).write_text(json.dumps(evidence,indent=2)+'\n')
     print(json.dumps(evidence,indent=2))
 if __name__=='__main__':

@@ -28,3 +28,23 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(db.execute('SELECT amount FROM debits').fetchone()[0],55)
         self.assertEqual(db.execute('SELECT COUNT(*) FROM prepared').fetchone()[0],0)
         with self.assertRaises(ValueError):apply_recovery(db,row,{'verified':True})
+
+class ClaimRecoveryTests(unittest.TestCase):
+    def test_expired_claim_does_not_create_income_or_touch_holder_reservations(self):
+        db=sqlite3.connect(':memory:',isolation_level=None)
+        db.executescript('CREATE TABLE outbox(signature,plan_id,wire,last_height,created,amount,state,kind);CREATE TABLE receipts(signature,amount);CREATE TABLE debits(plan_id,wallet,amount);')
+        row=('claim',None,'wire',100,1000,0)
+        db.execute('INSERT INTO outbox VALUES(?,?,?,?,?,?,?,?)',row+('pending','amm'))
+        db.execute("INSERT INTO debits VALUES('other','holder',55)")
+        apply_recovery(db,row,{'verified':True},'amm')
+        self.assertEqual(db.execute('SELECT state FROM outbox').fetchone()[0],'expired')
+        self.assertEqual(db.execute('SELECT COUNT(*) FROM receipts').fetchone()[0],0)
+        self.assertEqual(db.execute('SELECT amount FROM debits').fetchone()[0],55)
+    def test_already_recorded_claim_is_not_replaced(self):
+        db=sqlite3.connect(':memory:',isolation_level=None)
+        db.executescript('CREATE TABLE outbox(signature,plan_id,wire,last_height,created,amount,state,kind);CREATE TABLE receipts(signature,amount);')
+        row=('claim',None,'wire',100,1000,0)
+        db.execute('INSERT INTO outbox VALUES(?,?,?,?,?,?,?,?)',row+('pending','amm'))
+        db.execute("INSERT INTO receipts VALUES('claim',123)")
+        with self.assertRaises(ValueError):apply_recovery(db,row,{},'amm')
+        self.assertEqual(db.execute('SELECT state FROM outbox').fetchone()[0],'pending')

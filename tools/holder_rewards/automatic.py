@@ -180,7 +180,7 @@ class Worker:
                 raise ValueError('Expired transaction has uncertain history; STOP and reconcile before replacement')
             self.guard()
             if self.live:
-                result=self.rpc.call('sendTransaction',[wire,{'encoding':'base64','skipPreflight':False,'preflightCommitment':'finalized','maxRetries':3}])
+                result=self.rpc.call('sendTransaction',[wire,{'encoding':'base64','skipPreflight':False,'preflightCommitment':'finalized','maxRetries':20}])
                 require(result==sig,'RPC returned unexpected signature')
         return bool(self.l.db.execute("SELECT 1 FROM outbox WHERE state='pending'").fetchone())
     def cycle(self):
@@ -252,7 +252,7 @@ def main():
             print(json.dumps(failure),flush=True)
             raise SystemExit(1)
         if not args.loop:break
-        delay=20 if result['state'] in ('claim_pending','payout_pending','awaiting_finalization') else c['interval_seconds']
+        delay=5 if result['state'] in ('claim_pending','payout_pending','awaiting_finalization') else c['interval_seconds']
         for _ in range(delay):
             if worker.stopped():raise SystemExit('STOP file present')
             time.sleep(1)
